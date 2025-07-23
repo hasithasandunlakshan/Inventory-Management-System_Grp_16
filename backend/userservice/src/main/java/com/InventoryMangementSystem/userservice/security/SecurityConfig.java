@@ -16,6 +16,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/secure/**").permitAll()  // Allow secure endpoints to be handled by custom filter
                 .anyRequest().authenticated()
             );
         return http.build();
