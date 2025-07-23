@@ -21,7 +21,7 @@ public class BarcodeService {
         return barcodeRepository.save(barcode);
     }
 
-    public Barcode getBarcodebyId(long id){
+    public Barcode getBarcodeById(long id){
         return barcodeRepository.findById(id).orElseThrow(()->new RuntimeException("No items with this Barcode"));
     }
 
