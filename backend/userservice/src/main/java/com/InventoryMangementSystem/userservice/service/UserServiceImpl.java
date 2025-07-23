@@ -1,13 +1,15 @@
 package com.InventoryMangementSystem.userservice.service;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.InventoryMangementSystem.userservice.dto.LoginRequest;
 import com.InventoryMangementSystem.userservice.dto.SignupRequest;
 import com.InventoryMangementSystem.userservice.entity.User;
 import com.InventoryMangementSystem.userservice.repository.UserRepository;
-import com.InventoryMangementSystem.userservice.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+import com.InventoryMangementSystem.userservice.security.JwtTokenUtil;
 
-import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 
 @Service
@@ -16,6 +18,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenUtil jwtTokenUtil;
 
     @Override
     @Transactional
@@ -44,5 +47,23 @@ public class UserServiceImpl implements UserService {
         // Optional: Set other fields like status or createdAt if needed (defaults are handled in entity)
 
         userRepository.save(user);
+    }
+
+    @Override
+    public String login(LoginRequest request) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        // Check if user has roles, if not assign a default role
+        String role = "USER"; // Default role
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            role = user.getRoles().get(0).getRole().getRoleName();
+        }
+        
+        return jwtTokenUtil.generateToken(user.getUserId(), user.getEmail(), role);
     }
 }

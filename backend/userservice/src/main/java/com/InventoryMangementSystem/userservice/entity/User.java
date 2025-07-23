@@ -1,10 +1,18 @@
 package com.InventoryMangementSystem.userservice.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "users")
@@ -32,21 +40,15 @@ public class User {
     private double longitude;
     private String formattedAddress;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = AccountStatusConverter.class)
     private AccountStatus accountStatus = AccountStatus.ACTIVE;
 
     private Boolean emailVerified = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-     private LocalDate dateOfBirth;
+    private LocalDate dateOfBirth;
 
-    // Getters and Setters
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
+    @OneToMany(mappedBy = "user")
+    private List<UserRole> roles;
 }
