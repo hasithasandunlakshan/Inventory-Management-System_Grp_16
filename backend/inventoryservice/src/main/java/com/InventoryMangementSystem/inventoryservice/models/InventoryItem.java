@@ -1,14 +1,14 @@
 package com.InventoryMangementSystem.inventoryservice.models;
 
 import jakarta.persistence.*;
-import lombok.*; // <- Lombok annotations
+import lombok.*;
 
 @Entity
 @Table(name = "inventory_items")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // ✅ This is required for .builder() to work
+@Builder //
 public class InventoryItem {
 
     @Id

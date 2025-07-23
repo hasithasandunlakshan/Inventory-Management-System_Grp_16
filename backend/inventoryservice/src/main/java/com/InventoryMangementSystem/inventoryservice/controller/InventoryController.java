@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/inventory")
-public class InventoryController {
+public class  InventoryController {
 
     private final InventoryService service;
 
@@ -19,8 +19,6 @@ public class InventoryController {
 
     @PostMapping
     public ResponseEntity<InventoryItem> createItem(@RequestBody InventoryItemDTO dto) {
-        System.out.println("hi");
-        System.out.println(dto);
         InventoryItem created = service.createItem(dto);
         return ResponseEntity.ok(created);
     }
