@@ -59,16 +59,25 @@ public class AuthController {
         
         try {
             System.out.println("Calling UserService.login...");
-            String token = userService.login(request);
-            System.out.println("Login successful. Token generated: " + 
-                (token != null ? token.substring(0, Math.min(20, token.length())) + "..." : "null"));
-            System.out.println("=== LOGIN REQUEST COMPLETED ===\n");
-            return ResponseEntity.ok(new LoginResponse(token));
+            LoginResponse response = userService.login(request);
+            
+            if (response.isSuccess()) {
+                System.out.println("Login successful. Token generated: " + 
+                    (response.getToken() != null ? response.getToken().substring(0, Math.min(20, response.getToken().length())) + "..." : "null"));
+                System.out.println("User info: " + response.getUser());
+                System.out.println("=== LOGIN REQUEST COMPLETED ===\n");
+                return ResponseEntity.ok(response);
+            } else {
+                System.out.println("Login failed: " + response.getError());
+                System.out.println("=== LOGIN REQUEST FAILED ===\n");
+                return ResponseEntity.status(401).body(response);
+            }
         } catch (Exception e) {
             System.err.println("ERROR during login: " + e.getMessage());
             e.printStackTrace();
             System.out.println("=== LOGIN REQUEST FAILED ===\n");
-            throw e;
+            LoginResponse errorResponse = new LoginResponse(false, "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
         }
     }
 
