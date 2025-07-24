@@ -4,7 +4,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.InventoryMangementSystem.userservice.dto.LoginRequest;
+import com.InventoryMangementSystem.userservice.dto.LoginResponse;
 import com.InventoryMangementSystem.userservice.dto.SignupRequest;
+import com.InventoryMangementSystem.userservice.dto.UserInfo;
 import com.InventoryMangementSystem.userservice.entity.User;
 import com.InventoryMangementSystem.userservice.repository.UserRepository;
 import com.InventoryMangementSystem.userservice.security.JwtTokenUtil;
@@ -50,20 +52,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String login(LoginRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public LoginResponse login(LoginRequest request) {
+        try {
+            User user = userRepository.findByUsername(request.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
-        }
+            if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+                return new LoginResponse(false, "Invalid credentials");
+            }
 
-        // Check if user has roles, if not assign a default role
-        String role = "USER"; // Default role
-        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
-            role = user.getRoles().get(0).getRole().getRoleName();
+            // Check if user has roles, if not assign a default role
+            String role = "USER"; // Default role
+            if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+                role = user.getRoles().get(0).getRole().getRoleName();
+            }
+            
+            String token = jwtTokenUtil.generateToken(user.getUserId(), user.getEmail(), role);
+            
+            // Create user info
+            UserInfo userInfo = new UserInfo(
+                user.getUserId().toString(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFullName()
+            );
+            
+            return new LoginResponse(true, token, userInfo, "Login successful");
+            
+        } catch (Exception e) {
+            return new LoginResponse(false, "Login failed: " + e.getMessage());
         }
-        
-        return jwtTokenUtil.generateToken(user.getUserId(), user.getEmail(), role);
     }
 }
