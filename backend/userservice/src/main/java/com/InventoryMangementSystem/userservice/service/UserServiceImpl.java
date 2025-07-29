@@ -69,13 +69,22 @@ public class UserServiceImpl implements UserService {
             
             String token = jwtTokenUtil.generateToken(user.getUserId(), user.getEmail(), role);
             
-            // Create user info with role
+            // Create user info with all user attributes
             UserInfo userInfo = new UserInfo(
                 user.getUserId().toString(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getFullName(),
-                role
+                role,
+                user.getPhoneNumber(),
+                user.getProfileImageUrl(),
+                user.getLatitude(),
+                user.getLongitude(),
+                user.getFormattedAddress(),
+                user.getAccountStatus() != null ? user.getAccountStatus().name() : null,
+                user.getEmailVerified(),
+                user.getCreatedAt(),
+                user.getDateOfBirth()
             );
             
             return new LoginResponse(true, token, userInfo, "Login successful");
