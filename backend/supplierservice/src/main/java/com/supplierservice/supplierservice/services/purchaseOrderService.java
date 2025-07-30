@@ -1,9 +1,9 @@
-package com.InventoryMangementSystem.supplierservice.services;
+package com.supplierservice.supplierservice.services;
 
-import com.InventoryMangementSystem.supplierservice.dto.PurchaseOrderDTO;
-import com.InventoryMangementSystem.supplierservice.dto.PurchaseOrderItemDTO;
-import com.InventoryMangementSystem.supplierservice.models.*;
-import com.InventoryMangementSystem.supplierservice.repository.*;
+import com.supplierservice.supplierservice.dto.PurchaseOrderDTO;
+import com.supplierservice.supplierservice.dto.PurchaseOrderItemDTO;
+import com.supplierservice.supplierservice.models.*;
+import com.supplierservice.supplierservice.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
