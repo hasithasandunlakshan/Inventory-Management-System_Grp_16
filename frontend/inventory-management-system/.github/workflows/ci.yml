@@ -1,0 +1,73 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/inventory-management-system/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd frontend/inventory-management-system
+        npm ci
+        
+    - name: Run linting
+      run: |
+        cd frontend/inventory-management-system
+        npm run lint
+        
+    - name: Run type checking
+      run: |
+        cd frontend/inventory-management-system
+        npx tsc --noEmit
+        
+    - name: Build application
+      run: |
+        cd frontend/inventory-management-system
+        npm run build
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-files
+        path: frontend/inventory-management-system/.next/
+        retention-days: 7
+
+  format-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/inventory-management-system/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd frontend/inventory-management-system
+        npm ci
+        
+    - name: Check formatting
+      run: |
+        cd frontend/inventory-management-system
+        npm run format:check 
