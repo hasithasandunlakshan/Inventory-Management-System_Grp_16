@@ -19,6 +19,10 @@ public class Product {
 
     private String description;
 
+    private String imageUrl;
+    
+    private int stock;
+
     @Column(name = "category_id")
     private Long categoryId;
 
