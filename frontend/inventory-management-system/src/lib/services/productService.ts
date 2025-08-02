@@ -4,9 +4,8 @@ const API_BASE_URL = 'http://localhost:8083/api/products'; // Adjust this to you
 
 export const productService = {
   async getAllProducts(): Promise<Product[]> {
-    console.log("Fetching products from:", API_BASE_URL);
     const response = await fetch(API_BASE_URL);
-    console.log('Response status:', response.status);
+
     if (!response.ok) {
       throw new Error('Failed to fetch products');
     }
