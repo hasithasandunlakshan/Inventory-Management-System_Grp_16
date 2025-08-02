@@ -24,6 +24,8 @@ public class ProductService {
                 .description(dto.getDescription())
                 .categoryId(dto.getCategoryId())
                 .price(dto.getPrice())
+                .imageUrl(dto.getImageUrl())
+                .stock(dto.getStock())
                 .build();
         return repository.save(product);
     }
