@@ -11,27 +11,28 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    console.log("fetching")
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    // Filter products based on search term
-    const filtered = products.filter(product => 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-  }, [searchTerm, products]);
+  // useEffect(() => {
+  //   // Filter products based on search term
+  //   const filtered = products.filter(product => 
+  //     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     product.description.toLowerCase().includes(searchTerm.toLowerCase())
+  //   );
+  //   setFilteredProducts(filtered);
+  // }, [searchTerm, products]);
 
-  const fetchProducts = async () => {
-    try {
-      const fetchedProducts = await productService.getAllProducts();
-      setProducts(fetchedProducts);
-      setFilteredProducts(fetchedProducts);
-    } catch (error) {
-      console.error('Failed to fetch products', error);
-    }
-  };
+const fetchProducts = async () => {
+  try {
+    const fetchedProducts = await productService.getAllProducts();
+    console.log("Fetched products:", fetchedProducts); // <--- Add this
+    setProducts(fetchedProducts);
+  } catch (error) {
+    console.error('Failed to fetch products', error);
+  }
+};
 
   const handleDeleteProduct = async (id: number) => {
     try {
@@ -45,12 +46,12 @@ export default function ProductsPage() {
   return (
     <div className="space-y-4">
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProducts.length === 0 ? (
+        {products.length === 0 ? (
           <p className="col-span-full text-center text-gray-500">
-            {searchTerm ? 'No products found matching your search' : 'No products available'}
+             No products available
           </p>
         ) : (
-          filteredProducts.map((product) => (
+          products.map((product,key) => (
             <div 
               key={product.id} 
               className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between"
