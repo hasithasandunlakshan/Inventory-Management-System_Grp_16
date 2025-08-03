@@ -8,6 +8,7 @@ interface ProductCardProps {
     price: number;
     stock: number;
     imageUrl: string;
+    barcode: string;
     onEdit?: () => void;
     onDelete?: () => void;
 }
@@ -19,6 +20,7 @@ export default function ProductCard({
     price, 
     stock, 
     imageUrl,
+    barcode,
     onEdit,
     onDelete 
 }: ProductCardProps) {
@@ -38,6 +40,9 @@ export default function ProductCard({
         )}
         <h3 className="font-bold text-lg mb-2">{name}</h3>
         <p className="text-gray-600 mb-2">{description}</p>
+        <div className="text-sm text-gray-500 mb-2">
+          <span className="font-semibold">Barcode:</span> {barcode} 
+        </div>
         <div className="flex justify-between text-sm text-gray-500">
           <span>Price: ${price.toFixed(2)}</span>
           <span>Qty: {stock}</span>

@@ -28,6 +28,7 @@ export default function ProductsPage() {
 
   const handleDeleteProduct = async (id: number) => {
     try {
+      console.log("Deleting product with id:", id);
       await productService.deleteProduct(id);
       fetchProducts();
     } catch (error) {
@@ -59,6 +60,7 @@ export default function ProductsPage() {
               imageUrl={product.imageUrl || ''}
               onEdit={() => handleEditProduct(product.id)}
               onDelete={() => handleDeleteProduct(Number(product.id))}
+              barcode={product.barcode || 'N/A'}
             />
           ))
         )}

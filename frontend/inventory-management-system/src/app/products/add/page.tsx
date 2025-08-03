@@ -17,6 +17,7 @@ export default function AddProductPage() {
     price: 0,
     stock: 0,
     imageUrl: "",
+    barcode: "", // Optional, can be generated in service
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

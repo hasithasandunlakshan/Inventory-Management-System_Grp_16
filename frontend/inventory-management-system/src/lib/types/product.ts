@@ -5,4 +5,5 @@ export interface Product {
   price: number;
   stock: number;
   imageUrl: string;
+  barcode: string; // Unique identifier for the product
 }
