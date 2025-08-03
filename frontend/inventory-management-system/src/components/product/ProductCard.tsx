@@ -1,7 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
-import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
+import { productUtils } from '@/lib/utils/productUtils'
 
 interface ProductCardProps {
     id: string;
@@ -11,8 +11,6 @@ interface ProductCardProps {
     stock: number;
     imageUrl: string;
     barcode: string;
-    onEdit?: () => void;
-    onDelete?: () => void;
 }
 
 export default function ProductCard({ 
@@ -22,24 +20,12 @@ export default function ProductCard({
     price, 
     stock, 
     imageUrl,
-    barcode,
-    onEdit,
-    onDelete 
+    barcode
 }: ProductCardProps) {
   const router = useRouter();
 
   const handleCardClick = () => {
-    router.push(`/products/${id}`);
-  };
-
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEdit?.();
-  };
-
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete?.();
+    productUtils.viewProductDetails(id, router);
   };
 
   return (
@@ -64,7 +50,7 @@ export default function ProductCard({
           </div>
         )}
         <h3 className="font-bold text-lg mb-2">{name}</h3>
-        <p className="text-gray-600 mb-2">{description}</p>
+        <p className="text-gray-600 mb-2 line-clamp-2">{description}</p>
         <div className="text-sm text-gray-500 mb-2">
           <span className="font-semibold">Barcode:</span> {barcode} 
         </div>
@@ -72,22 +58,6 @@ export default function ProductCard({
           <span>Price: ${price.toFixed(2)}</span>
           <span>Qty: {stock}</span>
         </div>
-      </div>
-      <div className="mt-4 flex justify-end space-x-2">
-        <Button 
-          variant="outline"
-          className="text-blue-600 border-blue-600 hover:bg-blue-50"
-          onClick={handleEditClick}
-        >
-          Edit
-        </Button>
-        <Button 
-          variant="destructive" 
-          onClick={handleDeleteClick}
-          className="bg-red-500 text-white hover:bg-red-600"
-        >
-          Delete
-        </Button>
       </div>
     </div>
   )

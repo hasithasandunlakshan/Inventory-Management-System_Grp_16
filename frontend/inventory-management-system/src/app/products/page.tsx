@@ -3,51 +3,45 @@
 import { useState, useEffect } from 'react';
 import { productService } from '@/lib/services/productService';
 import { Product } from '@/lib/types/product';
-import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/product/ProductCard';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("fetching")
     fetchProducts();
-    console.log("products", products);
   }, []);
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
       const fetchedProducts = await productService.getAllProducts();
-      console.log("Fetched products:", fetchedProducts);
       setProducts(fetchedProducts);
     } catch (error) {
       console.error('Failed to fetch products', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteProduct = async (id: number) => {
-    try {
-      console.log("Deleting product with id:", id);
-      await productService.deleteProduct(id);
-      fetchProducts();
-    } catch (error) {
-      console.error('Failed to delete product', error);
-    }
-  };
-
-  const handleEditProduct = (id: string) => {
-    // TODO: Implement edit functionality
-    console.log(`Editing product with id: ${id}`);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4">
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {products.length === 0 ? (
           <p className="col-span-full text-center text-gray-500">
-             No products available
+            No products available
           </p>
         ) : (
           products.map((product, index) => (
@@ -59,8 +53,6 @@ export default function ProductsPage() {
               price={product.price}
               stock={product.stock}
               imageUrl={product.imageUrl || ''}
-              onEdit={() => handleEditProduct(product.id)}
-              onDelete={() => handleDeleteProduct(Number(product.id))}
               barcode={product.barcode || 'N/A'}
             />
           ))

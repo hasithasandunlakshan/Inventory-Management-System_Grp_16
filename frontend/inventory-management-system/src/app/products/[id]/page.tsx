@@ -6,6 +6,7 @@ import { productService } from '@/lib/services/productService';
 import { Product } from '@/lib/types/product';
 import { Button } from '@/components/ui/button';
 import ProductDetails from '@/components/product/ProductDetails';
+import { productUtils } from '@/lib/utils/productUtils';
 
 export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -39,11 +40,6 @@ export default function ProductDetailPage() {
     router.push('/products');
   };
 
-  const handleEdit = () => {
-    // TODO: Implement edit functionality
-    console.log('Edit product:', product?.id);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -69,5 +65,5 @@ export default function ProductDetailPage() {
     );
   }
 
-  return <ProductDetails product={product} onBack={handleBack} onEdit={handleEdit} />;
+  return <ProductDetails product={product} onBack={handleBack} />;
 }

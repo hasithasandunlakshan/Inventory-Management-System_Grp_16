@@ -2,10 +2,10 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Product } from '@/lib/types/product';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { 
   Package, 
   DollarSign, 
@@ -16,14 +16,20 @@ import {
   Tag,
   Info
 } from 'lucide-react';
+import { productUtils } from '@/lib/utils/productUtils';
 
 interface ProductDetailsProps {
   product: Product;
   onBack: () => void;
-  onEdit: () => void;
 }
 
-export default function ProductDetails({ product, onBack, onEdit }: ProductDetailsProps) {
+export default function ProductDetails({ product, onBack }: ProductDetailsProps) {
+  const router = useRouter();
+
+  const handleEdit = () => {
+    productUtils.editProduct(product, router);
+  };
+
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 overflow-y-auto">
       <div className="w-full px-6 sm:px-8 lg:px-12 py-8">
@@ -160,7 +166,7 @@ export default function ProductDetails({ product, onBack, onEdit }: ProductDetai
               <CardContent className="pt-8">
                 <div className="space-y-4">
                   <Button 
-                    onClick={onEdit}
+                    onClick={handleEdit}
                     size="lg"
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-white font-semibold text-lg py-6 rounded-xl shadow-lg hover:shadow-xl"
                   >
