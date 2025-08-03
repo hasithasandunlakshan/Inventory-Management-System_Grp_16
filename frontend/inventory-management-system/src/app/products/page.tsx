@@ -14,6 +14,7 @@ export default function ProductsPage() {
   useEffect(() => {
     console.log("fetching")
     fetchProducts();
+    console.log("products", products);
   }, []);
 
   const fetchProducts = async () => {

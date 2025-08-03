@@ -12,6 +12,15 @@ export const productService = {
     return response.json();
   },
 
+  async getProductById(id: string): Promise<Product> {
+    const response = await fetch(`${API_BASE_URL}/${id}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch product');
+    }
+    return response.json();
+  },
+
   async addProduct(product: Omit<Product, 'id'>): Promise<Product> {
     const response = await fetch(API_BASE_URL, {
       method: 'POST',

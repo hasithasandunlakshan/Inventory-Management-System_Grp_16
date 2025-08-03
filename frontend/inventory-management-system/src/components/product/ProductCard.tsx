@@ -1,5 +1,7 @@
 import React from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 
 interface ProductCardProps {
     id: string;
@@ -24,19 +26,42 @@ export default function ProductCard({
     onEdit,
     onDelete 
 }: ProductCardProps) {
+  const router = useRouter();
+
+  const handleCardClick = () => {
+    router.push(`/products/${id}`);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit?.();
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete?.();
+  };
+
   return (
-    <div className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between">
+    <div 
+      className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between cursor-pointer hover:shadow-lg transition-shadow duration-200"
+      onClick={handleCardClick}
+    >
       <div>
-        {imageUrl && (
-          <img 
-            src={imageUrl} 
-            alt={name} 
-            className="w-full h-48 object-cover rounded-md mb-4"
-            onError={(e) => {
-              const imgElement = e.target as HTMLImageElement;
-              imgElement.src = '/placeholder-image.png'; // Fallback image
-            }}
-          />
+        {imageUrl ? (
+          <div className="relative w-full h-48 mb-4">
+            <Image 
+              src={imageUrl} 
+              alt={name} 
+              fill
+              className="object-cover rounded-md"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          </div>
+        ) : (
+          <div className="w-full h-48 bg-gray-200 rounded-md mb-4 flex items-center justify-center">
+            <p className="text-gray-500">No image</p>
+          </div>
         )}
         <h3 className="font-bold text-lg mb-2">{name}</h3>
         <p className="text-gray-600 mb-2">{description}</p>
@@ -52,13 +77,13 @@ export default function ProductCard({
         <Button 
           variant="outline"
           className="text-blue-600 border-blue-600 hover:bg-blue-50"
-          onClick={onEdit}
+          onClick={handleEditClick}
         >
           Edit
         </Button>
         <Button 
           variant="destructive" 
-          onClick={onDelete}
+          onClick={handleDeleteClick}
           className="bg-red-500 text-white hover:bg-red-600"
         >
           Delete

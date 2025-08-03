@@ -8,18 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import axios from "axios";
+import { Product } from "@/lib/types/product";
 
 export default function AddProductPage() {
   const router = useRouter();
-  const [newProduct, setNewProduct] = useState({
+  const [newProduct, setNewProduct] = useState<Product>({
+    id: "",
     name: "",
     description: "",
     price: 0,
     stock: 0,
     imageUrl: "",
-    barcode: "", // Optional, can be generated in service
+    barcode: "",
+    barcodeImageUrl: "",
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
