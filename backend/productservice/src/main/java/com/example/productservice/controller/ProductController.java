@@ -57,6 +57,7 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         try {
+            System.out.println("Deleting product with ID: " + id);
             service.deleteProduct(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
