@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+
 @Service
 @Transactional
 public class PaymentService {
@@ -28,6 +29,11 @@ public class PaymentService {
     
     @Autowired
     private InvoiceRepository invoiceRepository;
+    
+
+    
+
+    
     
     public PaymentIntentResponse createPaymentIntent(CreatePaymentIntentRequest request) {
         try {
@@ -122,7 +128,7 @@ public class PaymentService {
         for (CreatePaymentIntentRequest.Item item : request.getItems()) {
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
-            orderItem.setItemId(item.getProductId());
+            orderItem.setProductId(item.getProductId());
             orderItem.setQuantity(item.getQuantity());
             orderItem.setPrice(item.getPrice());
             order.getOrderItems().add(orderItem);
