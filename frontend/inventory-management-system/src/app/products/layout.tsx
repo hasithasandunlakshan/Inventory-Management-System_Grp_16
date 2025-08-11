@@ -13,7 +13,7 @@ export default function ProductLayout({
   const [searchTerm, setSearchTerm] = useState('');
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6">
+    <div className="w-full">
       {/* Header with Search and Add Product */}
       <header className="flex justify-between items-center mb-6">
         <div className="flex-grow max-w-md mr-4">

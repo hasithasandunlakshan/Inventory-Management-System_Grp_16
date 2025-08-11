@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { navItems } from './navItems';
-import { Menu } from 'lucide-react';
+import { Menu, ChevronDown, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 type SidebarProps = Readonly<{
@@ -14,6 +14,7 @@ type SidebarProps = Readonly<{
 
 export default function Sidebar({ title = 'IMS' }: SidebarProps) {
   const [open, setOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -29,6 +30,28 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
     setOpen(false);
   }, [pathname]);
 
+  const toggleExpanded = (label: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(label)) {
+        newSet.delete(label);
+      } else {
+        newSet.add(label);
+      }
+      return newSet;
+    });
+  };
+
+  const isActive = (item: any) => {
+    if (item.href) {
+      return pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
+    }
+    if (item.children) {
+      return item.children.some((child: any) => isActive(child));
+    }
+    return false;
+  };
+
   return (
     <>
       <div className="sticky top-0 left-0 w-screen z-40 flex h-14 items-center border-b bg-background px-4">
@@ -38,19 +61,66 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
         <div className="ml-2 text-lg font-semibold tracking-tight">{title}</div>
       </div>
 
-      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-64 md:flex-col md:border-r md:bg-background">
+      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-60 md:flex-col md:border-r md:bg-background">
         <div className="h-14 border-b px-4 flex items-center text-lg font-semibold tracking-tight">
           {title}
         </div>
         <nav className="flex-1 overflow-y-auto p-2">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
+          {navItems.map((item) => {
+            const { href, label, icon: Icon, children } = item;
+            const itemIsActive = isActive(item);
+            const isExpanded = expandedItems.has(label);
+
+            if (children) {
+              return (
+                <div key={label} className="space-y-1">
+                  <button
+                    onClick={() => toggleExpanded(label)}
+                    className={cn(
+                      'w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+                      itemIsActive && 'bg-accent text-accent-foreground'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="h-4 w-4" />
+                      <span>{label}</span>
+                    </div>
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </button>
+                  {isExpanded && (
+                    <div className="ml-4 space-y-1">
+                      {children.map((child) => {
+                        const childIsActive = isActive(child);
+                        return (
+                          <Link key={child.href} href={child.href!} className="block">
+                            <div
+                              className={cn(
+                                'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+                                childIsActive && 'bg-accent text-accent-foreground'
+                              )}
+                            >
+                              <child.icon className="h-4 w-4" />
+                              <span>{child.label}</span>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             return (
-              <Link key={href} href={href} className="block">
+              <Link key={href} href={href!} className="block">
                 <div
                   className={cn(
                     'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                    isActive && 'bg-accent text-accent-foreground'
+                    itemIsActive && 'bg-accent text-accent-foreground'
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -73,14 +143,61 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
               {title}
             </div>
             <nav className="mt-2 space-y-1">
-              {navItems.map(({ href, label, icon: Icon }) => {
-                const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
+              {navItems.map((item) => {
+                const { href, label, icon: Icon, children } = item;
+                const itemIsActive = isActive(item);
+                const isExpanded = expandedItems.has(label);
+
+                if (children) {
+                  return (
+                    <div key={label} className="space-y-1">
+                      <button
+                        onClick={() => toggleExpanded(label)}
+                        className={cn(
+                          'w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+                          itemIsActive && 'bg-accent text-accent-foreground'
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className="h-4 w-4" />
+                          <span>{label}</span>
+                        </div>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </button>
+                      {isExpanded && (
+                        <div className="ml-4 space-y-1">
+                          {children.map((child) => {
+                            const childIsActive = isActive(child);
+                            return (
+                              <Link key={child.href} href={child.href!} className="block" onClick={() => setOpen(false)}>
+                                <div
+                                  className={cn(
+                                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+                                    childIsActive && 'bg-accent text-accent-foreground'
+                                  )}
+                                >
+                                  <child.icon className="h-4 w-4" />
+                                  <span>{child.label}</span>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
                 return (
-                  <Link key={href} href={href} className="block" onClick={() => setOpen(false)}>
+                  <Link key={href} href={href!} className="block" onClick={() => setOpen(false)}>
                     <div
                       className={cn(
                         'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                        isActive && 'bg-accent text-accent-foreground'
+                        itemIsActive && 'bg-accent text-accent-foreground'
                       )}
                     >
                       <Icon className="h-4 w-4" />
