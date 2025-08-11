@@ -22,8 +22,15 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
     };
+    const onToggleSidebar = () => setOpen(true);
+    
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    document.addEventListener('toggleSidebar', onToggleSidebar);
+    
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('toggleSidebar', onToggleSidebar);
+    };
   }, []);
 
   useEffect(() => {
@@ -54,16 +61,12 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
 
   return (
     <>
-      <div className="sticky top-0 left-0 w-screen z-40 flex h-14 items-center border-b bg-background px-4">
-        <Button variant="ghost" size="icon" onClick={() => setOpen(true)} className="md:hidden">
-          <Menu className="h-5 w-5" />
-        </Button>
-        <div className="ml-2 text-lg font-semibold tracking-tight">{title}</div>
-      </div>
-
       <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-60 md:flex-col md:border-r md:bg-background">
-        <div className="h-14 border-b px-4 flex items-center text-lg font-semibold tracking-tight">
-          {title}
+        <div className="h-14 border-b px-4 flex items-center justify-between">
+          <div className="text-lg font-semibold tracking-tight">{title}</div>
+          <Button variant="ghost" size="icon" onClick={() => setOpen(true)} className="md:hidden">
+            <Menu className="h-5 w-5" />
+          </Button>
         </div>
         <nav className="flex-1 overflow-y-auto p-2">
           {navItems.map((item) => {

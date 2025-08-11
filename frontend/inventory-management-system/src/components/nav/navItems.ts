@@ -41,34 +41,34 @@ export const navItems: NavItem[] = [
     label: 'Sales',
     icon: ShoppingCart,
     children: [
-      { href: '/orders', label: 'Orders', icon: ShoppingCart },
-      { href: '/customers', label: 'Customers', icon: Users },
-      { href: '/reviews', label: 'Reviews', icon: MessageSquare },
+      { href: '/sales/orders', label: 'Orders', icon: ShoppingCart },
+      { href: '/sales/customers', label: 'Customers', icon: Users },
+      { href: '/sales/reviews', label: 'Reviews', icon: MessageSquare },
     ]
   },
   {
     label: 'Operations',
     icon: Factory,
     children: [
-      { href: '/suppliers', label: 'Suppliers', icon: Factory },
-      { href: '/inventory', label: 'Inventory', icon: Boxes },
-      { href: '/returns', label: 'Returns', icon: RotateCcw },
+      { href: '/operations/suppliers', label: 'Suppliers', icon: Factory },
+      { href: '/operations/inventory', label: 'Inventory', icon: Boxes },
+      { href: '/operations/returns', label: 'Returns', icon: RotateCcw },
     ]
   },
   {
     label: 'Analytics',
     icon: BarChart3,
     children: [
-      { href: '/reports', label: 'Reports', icon: BarChart3 },
-      { href: '/promotions', label: 'Promotions', icon: BadgePercent },
+      { href: '/analytics/reports', label: 'Reports', icon: BarChart3 },
+      { href: '/analytics/promotions', label: 'Promotions', icon: BadgePercent },
     ]
   },
   {
-    label: 'Shipping & Payments',
+    label: 'Logistics',
     icon: Truck,
     children: [
-      { href: '/shipping', label: 'Shipping', icon: Truck },
-      { href: '/payments', label: 'Payments', icon: CreditCard },
+      { href: '/logistics/shipping', label: 'Shipping', icon: Truck },
+      { href: '/logistics/payments', label: 'Payments', icon: CreditCard },
     ]
   },
   { href: '/settings', label: 'Settings', icon: Settings },
