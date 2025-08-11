@@ -27,9 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="min-h-dvh">
+        <div className="min-h-dvh overflow-hidden">
           <Sidebar title="Inventory" />
-          <main className="md:ml-60 p-2 md:p-4">
+          <main className="md:ml-60 p-2 md:p-4 overflow-hidden">
             {children}
           </main>
         </div>

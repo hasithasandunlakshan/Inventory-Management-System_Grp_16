@@ -7,6 +7,7 @@ import { Product } from '@/lib/types/product';
 import { Button } from '@/components/ui/button';
 import ProductDetails from '@/components/product/ProductDetails';
 import { productUtils } from '@/lib/utils/productUtils';
+import LoadingScreen from '@/components/ui/loading';
 
 export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -41,14 +42,7 @@ export default function ProductDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading product details...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (error || !product) {
@@ -57,7 +51,7 @@ export default function ProductDetailPage() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Product Not Found</h2>
           <p className="text-gray-600 mb-4">{error || 'The product you are looking for does not exist.'}</p>
-          <Button onClick={handleBack} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleBack} className="bg-gray-600 hover:bg-gray-700">
             Back to Products
           </Button>
         </div>
