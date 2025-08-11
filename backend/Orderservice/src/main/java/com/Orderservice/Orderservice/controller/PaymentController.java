@@ -2,6 +2,7 @@ package com.Orderservice.Orderservice.controller;
 
 import com.Orderservice.Orderservice.dto.*;
 import com.Orderservice.Orderservice.service.PaymentService;
+import com.Orderservice.Orderservice.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,9 @@ public class PaymentController {
     
     @Autowired
     private PaymentService paymentService;
+    
+    @Autowired  // Make sure this annotation is present
+    private OrderService orderService;
     
     @PostMapping("/create-intent")
     public ResponseEntity<PaymentIntentResponse> createPaymentIntent(
@@ -43,5 +47,27 @@ public class PaymentController {
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Payment service is running!");
+    }
+    
+    @GetMapping("/orders/all")
+    public ResponseEntity<AllOrdersResponse> getAllOrders() {
+        AllOrdersResponse response = orderService.getAllOrders();
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    @GetMapping("/orders/{orderId}")
+    public ResponseEntity<OrderDetailResponse> getOrderById(@PathVariable Long orderId) {
+        OrderDetailResponse response = orderService.getOrderById(orderId);
+
+        if (response != null) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

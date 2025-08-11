@@ -24,8 +24,8 @@ public class OrderItem {
     @JoinColumn(name = "order_id")
     private Order order;
     
-    @Column(name = "item_id")
-    private Long itemId;
+    @Column(name = "product_id") // Changed from item_id to product_id
+    private Long productId;
     
     private Integer quantity;
     
