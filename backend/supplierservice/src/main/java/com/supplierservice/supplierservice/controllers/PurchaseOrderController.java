@@ -1,4 +1,4 @@
-package com.supplierservice.supplierservice.controller;
+package com.supplierservice.supplierservice.controllers;
 
 import com.supplierservice.supplierservice.dto.PurchaseOrderDTO;
 import com.supplierservice.supplierservice.models.PurchaseOrder;
