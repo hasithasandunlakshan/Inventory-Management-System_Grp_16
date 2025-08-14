@@ -1,13 +1,13 @@
 package com.InventoryMangementSystem.userservice.controller;
 
-import com.InventoryMangementSystem.userservice.dto.LoginRequest;
-import com.InventoryMangementSystem.userservice.dto.LoginResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.InventoryMangementSystem.userservice.dto.LoginRequest;
+import com.InventoryMangementSystem.userservice.dto.LoginResponse;
 import com.InventoryMangementSystem.userservice.dto.SignupRequest;
 import com.InventoryMangementSystem.userservice.service.UserService;
 
