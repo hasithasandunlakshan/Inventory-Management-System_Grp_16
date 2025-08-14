@@ -12,46 +12,46 @@ import java.util.stream.Collectors;
 @Service
 public class PurchaseOrderService {
 
-    private final PurchaseOrderRepository purchaseOrderRepository;
-    private final PurchaseOrderItemRepository itemRepository;
-    private final SupplierRepository supplierRepository;
+        private final PurchaseOrderRepository purchaseOrderRepository;
+        private final PurchaseOrderItemRepository itemRepository;
+        private final SupplierRepository supplierRepository;
 
-    public PurchaseOrderService(PurchaseOrderRepository purchaseOrderRepository,
-                                PurchaseOrderItemRepository itemRepository,
-                                SupplierRepository supplierRepository) {
-        this.purchaseOrderRepository = purchaseOrderRepository;
-        this.itemRepository = itemRepository;
-        this.supplierRepository = supplierRepository;
-    }
+        public PurchaseOrderService(PurchaseOrderRepository purchaseOrderRepository,
+                        PurchaseOrderItemRepository itemRepository,
+                        SupplierRepository supplierRepository) {
+                this.purchaseOrderRepository = purchaseOrderRepository;
+                this.itemRepository = itemRepository;
+                this.supplierRepository = supplierRepository;
+        }
 
-    public PurchaseOrder createPurchaseOrder(PurchaseOrderDTO dto) {
-        Supplier supplier = supplierRepository.findById(dto.getSupplierId())
-                .orElseThrow(() -> new IllegalArgumentException("Supplier not found"));
+        public PurchaseOrder createPurchaseOrder(PurchaseOrderDTO dto) {
+                Supplier supplier = supplierRepository.findById(dto.getSupplierId())
+                                .orElseThrow(() -> new IllegalArgumentException("Supplier not found"));
 
-        PurchaseOrder order = PurchaseOrder.builder()
-                .supplier(supplier)
-                .date(dto.getDate())
-                .status(dto.getStatus())
-                .build();
+                PurchaseOrder order = PurchaseOrder.builder()
+                                .supplier(supplier)
+                                .date(dto.getDate())
+                                .status(dto.getStatus())
+                                .build();
 
-        order = purchaseOrderRepository.save(order);
+                final PurchaseOrder savedOrder = purchaseOrderRepository.save(order);
 
-        List<PurchaseOrderItem> items = dto.getItems().stream()
-                .map(itemDTO -> PurchaseOrderItem.builder()
-                        .purchaseOrder(order)
-                        .itemId(itemDTO.getItemId())
-                        .quantity(itemDTO.getQuantity())
-                        .unitPrice(itemDTO.getUnitPrice())
-                        .build())
-                .collect(Collectors.toList());
+                List<PurchaseOrderItem> items = dto.getItems().stream()
+                                .map(itemDTO -> PurchaseOrderItem.builder()
+                                                .purchaseOrder(savedOrder)
+                                                .itemId(itemDTO.getItemId())
+                                                .quantity(itemDTO.getQuantity())
+                                                .unitPrice(itemDTO.getUnitPrice())
+                                                .build())
+                                .collect(Collectors.toList());
 
-        itemRepository.saveAll(items);
+                itemRepository.saveAll(items);
 
-        order.setItems(items); // attach items to the order object
-        return order;
-    }
+                savedOrder.setItems(items); // attach items to the order object
+                return savedOrder;
+        }
 
-    public List<PurchaseOrder> getAllOrders() {
-        return purchaseOrderRepository.findAll();
-    }
+        public List<PurchaseOrder> getAllOrders() {
+                return purchaseOrderRepository.findAll();
+        }
 }
