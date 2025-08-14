@@ -31,7 +31,7 @@ export default function ProductDetails({ product, onBack }: ProductDetailsProps)
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 overflow-y-auto">
+    <div className="w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 min-h-screen">
       <div className="w-full px-6 sm:px-8 lg:px-12 py-8">
         {/* Header */}
         <div className="mb-12">
@@ -52,7 +52,7 @@ export default function ProductDetails({ product, onBack }: ProductDetailsProps)
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 lg:gap-12 max-w-none">
           {/* Product Images Section */}
           <div className="xl:col-span-3 space-y-8">
             {/* Main Product Image */}
@@ -84,10 +84,10 @@ export default function ProductDetails({ product, onBack }: ProductDetailsProps)
             {product.barcodeImageUrl && (
               <Card className="shadow-xl border-0">
                 <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center text-2xl font-bold">
-                    <Hash className="w-6 h-6 mr-3 text-blue-600" />
-                    Product Barcode
-                  </CardTitle>
+                                  <CardTitle className="flex items-center text-2xl font-bold">
+                  <Hash className="w-6 h-6 mr-3 text-gray-600" />
+                  Product Barcode
+                </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="relative h-40 w-full bg-white rounded-xl border-2 border-gray-100">
@@ -113,21 +113,21 @@ export default function ProductDetails({ product, onBack }: ProductDetailsProps)
             <Card className="shadow-xl border-0">
               <CardHeader className="pb-6">
                 <CardTitle className="flex items-center text-3xl font-bold">
-                  <Info className="w-7 h-7 mr-3 text-blue-600" />
+                  <Info className="w-7 h-7 mr-3 text-gray-600" />
                   Product Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8">
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200">
-                    <DollarSign className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                    <p className="text-4xl font-bold text-green-700">${product.price.toFixed(2)}</p>
-                    <p className="text-lg text-green-600 font-medium">Price</p>
+                  <div className="text-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200">
+                    <DollarSign className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-4xl font-bold text-gray-700">${product.price.toFixed(2)}</p>
+                    <p className="text-lg text-gray-600 font-medium">Price</p>
                   </div>
-                  <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
-                    <Package className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                    <p className="text-4xl font-bold text-blue-700">{product.stock}</p>
-                    <p className="text-lg text-blue-600 font-medium">Stock</p>
+                  <div className="text-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200">
+                    <Package className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-4xl font-bold text-gray-700">{product.stock}</p>
+                    <p className="text-lg text-gray-600 font-medium">Stock</p>
                   </div>
                 </div>
 
@@ -168,7 +168,7 @@ export default function ProductDetails({ product, onBack }: ProductDetailsProps)
                   <Button 
                     onClick={handleEdit}
                     size="lg"
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-white font-semibold text-lg py-6 rounded-xl shadow-lg hover:shadow-xl"
+                    className="w-full bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 transition-all duration-200 text-white font-semibold text-lg py-6 rounded-xl shadow-lg hover:shadow-xl"
                   >
                     <Edit3 className="w-6 h-6 mr-3" />
                     Edit Product
