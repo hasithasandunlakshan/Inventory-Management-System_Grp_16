@@ -1,10 +1,10 @@
-package com.suppplierservice.supplierservice.services;
+package com.supplierservice.supplierservice.services;
 
-import com.suppplierservice.supplierservice.dto.DeliveryLogDTO;
-import com.suppplierservice.supplierservice.models.DeliveryLog;
-import com.suppplierservice.supplierservice.models.PurchaseOrder;
-import com.suppplierservice.supplierservice.repository.DeliveryLogRepository;
-import com.suppplierservice.supplierservice.repository.PurchaseOrderRepository;
+import com.supplierservice.supplierservice.dto.DeliveryLogDTO;
+import com.supplierservice.supplierservice.models.DeliveryLog;
+import com.supplierservice.supplierservice.models.PurchaseOrder;
+import com.supplierservice.supplierservice.repository.DeliveryLogRepository;
+import com.supplierservice.supplierservice.repository.PurchaseOrderRepository;
 import org.springframework.stereotype.Service;
 
 @Service
