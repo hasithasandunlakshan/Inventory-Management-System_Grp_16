@@ -17,6 +17,7 @@ import com.Orderservice.Orderservice.dto.PaymentConfirmationRequest;
 import com.Orderservice.Orderservice.dto.PaymentConfirmationResponse;
 import com.Orderservice.Orderservice.dto.PaymentIntentResponse;
 import com.Orderservice.Orderservice.dto.UpdateOrderStatusRequest;
+import com.Orderservice.Orderservice.dto.OrderStatusRequest;
 import com.Orderservice.Orderservice.service.OrderService;
 import com.Orderservice.Orderservice.service.PaymentService;
 
@@ -71,10 +72,10 @@ public class PaymentController {
         return ResponseEntity.ok("Payment service is running!");
     }
     
-    @GetMapping("/orders/all")
-    public ResponseEntity<AllOrdersResponse> getAllOrders() {
-        AllOrdersResponse response = orderService.getAllOrders();
-
+    @PostMapping("/orders/all")
+    public ResponseEntity<AllOrdersResponse> getAllOrdersByStatus(@RequestBody(required = false) OrderStatusRequest request) {
+        String status = request != null ? request.getStatus() : null;
+        AllOrdersResponse response = orderService.getAllOrdersByStatus(status);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {

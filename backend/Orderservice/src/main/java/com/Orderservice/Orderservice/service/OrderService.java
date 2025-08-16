@@ -17,6 +17,75 @@ import com.Orderservice.Orderservice.repository.ProductRepository;
 
 @Service
 public class OrderService {
+    public AllOrdersResponse getAllOrdersByStatus(String statusStr) {
+        try {
+            List<Order> orders;
+            if (statusStr != null && !statusStr.isEmpty()) {
+                com.Orderservice.Orderservice.enums.OrderStatus status = com.Orderservice.Orderservice.enums.OrderStatus.valueOf(statusStr.toUpperCase());
+                orders = orderRepository.findByStatus(status);
+            } else {
+                orders = orderRepository.findAllConfirmedOrdersWithItems();
+            }
+            List<OrderDetailResponse> orderDetails = new ArrayList<>();
+            for (Order order : orders) {
+                List<OrderDetailResponse.OrderItemDetail> itemDetails = new ArrayList<>();
+                for (OrderItem orderItem : order.getOrderItems()) {
+                    String productName = "Unknown Product";
+                    String productImageUrl = null;
+                    String barcode = null;
+                    if (orderItem.getProductId() != null) {
+                        Optional<Product> productOpt = productRepository.findById(orderItem.getProductId());
+                        if (productOpt.isPresent()) {
+                            Product product = productOpt.get();
+                            productName = product.getName();
+                            productImageUrl = product.getImageUrl();
+                            barcode = product.getBarcode();
+                        } else {
+                            productName = "Product Not Found";
+                        }
+                    } else {
+                        productName = "No Product ID";
+                    }
+                    OrderDetailResponse.OrderItemDetail itemDetail = OrderDetailResponse.OrderItemDetail.builder()
+                        .orderItemId(orderItem.getOrderItemId())
+                        .productId(orderItem.getProductId())
+                        .productName(productName)
+                        .productImageUrl(productImageUrl)
+                        .quantity(orderItem.getQuantity())
+                        .price(orderItem.getPrice())
+                        .createdAt(orderItem.getCreatedAt())
+                        .barcode(barcode)
+                        .build();
+                    itemDetails.add(itemDetail);
+                }
+                OrderDetailResponse orderDetail = OrderDetailResponse.builder()
+                    .orderId(order.getOrderId())
+                    .customerId(order.getCustomerId())
+                    .orderDate(order.getOrderDate())
+                    .status(order.getStatus().toString())
+                    .totalAmount(order.getTotalAmount())
+                    .createdAt(order.getCreatedAt())
+                    .updatedAt(order.getUpdatedAt())
+                    .orderItems(itemDetails)
+                    .build();
+                orderDetails.add(orderDetail);
+            }
+            return AllOrdersResponse.builder()
+                .success(true)
+                .message("Orders retrieved successfully")
+                .orders(orderDetails)
+                .totalOrders(orderDetails.size())
+                .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return AllOrdersResponse.builder()
+                .success(false)
+                .message("Error retrieving orders: " + e.getMessage())
+                .orders(new ArrayList<>())
+                .totalOrders(0)
+                .build();
+        }
+    }
     public boolean updateOrderStatus(Long orderId, String statusStr) {
         Optional<Order> orderOpt = orderRepository.findById(orderId);
         if (orderOpt.isPresent()) {
