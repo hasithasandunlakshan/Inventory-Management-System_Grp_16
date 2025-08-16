@@ -38,6 +38,9 @@ public class Product {
     @Column(name = "category_id")
     private Long categoryId;
 
-    @Column(name = "image_url") // Add this field
+    @Column(name = "image_url")
     private String imageUrl;
+
+    @Column(name = "barcode")
+    private String barcode;
 }
