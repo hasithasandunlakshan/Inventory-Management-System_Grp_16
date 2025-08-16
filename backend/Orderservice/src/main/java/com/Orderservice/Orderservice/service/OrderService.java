@@ -1,5 +1,12 @@
 package com.Orderservice.Orderservice.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
 import com.Orderservice.Orderservice.dto.OrderDetailResponse;
 import com.Orderservice.Orderservice.entity.Order;
@@ -7,15 +14,25 @@ import com.Orderservice.Orderservice.entity.OrderItem;
 import com.Orderservice.Orderservice.entity.Product;
 import com.Orderservice.Orderservice.repository.OrderRepository;
 import com.Orderservice.Orderservice.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class OrderService {
+    public boolean updateOrderStatus(Long orderId, String statusStr) {
+        Optional<Order> orderOpt = orderRepository.findById(orderId);
+        if (orderOpt.isPresent()) {
+            Order order = orderOpt.get();
+            try {
+                com.Orderservice.Orderservice.enums.OrderStatus status = com.Orderservice.Orderservice.enums.OrderStatus.valueOf(statusStr.toUpperCase());
+                order.setStatus(status);
+                orderRepository.save(order);
+                return true;
+            } catch (IllegalArgumentException e) {
+                // Invalid status string
+                return false;
+            }
+        }
+        return false;
+    }
     
     @Autowired
     private OrderRepository orderRepository;
@@ -36,6 +53,7 @@ public class OrderService {
                 for (OrderItem orderItem : order.getOrderItems()) {
                     String productName = "Unknown Product";
                     String productImageUrl = null;
+                    String barcode = null;
                     
                     // Check if productId is not null before querying
                     if (orderItem.getProductId() != null) {
@@ -45,6 +63,7 @@ public class OrderService {
                                 Product product = productOpt.get();
                                 productName = product.getName();
                                 productImageUrl = product.getImageUrl();
+                                barcode = product.getBarcode(); // Fetch barcode
                             } else {
                                 productName = "Product Not Found";
                             }
@@ -57,14 +76,17 @@ public class OrderService {
                         productName = "No Product ID";
                     }
                     
+                    
+                    
                     OrderDetailResponse.OrderItemDetail itemDetail = OrderDetailResponse.OrderItemDetail.builder()
                         .orderItemId(orderItem.getOrderItemId())
                         .productId(orderItem.getProductId())
                         .productName(productName)
-                        .productImageUrl(productImageUrl) // Add image URL
+                        .productImageUrl(productImageUrl)
                         .quantity(orderItem.getQuantity())
                         .price(orderItem.getPrice())
                         .createdAt(orderItem.getCreatedAt())
+                        .barcode(barcode)
                         .build();
                     
                     itemDetails.add(itemDetail);

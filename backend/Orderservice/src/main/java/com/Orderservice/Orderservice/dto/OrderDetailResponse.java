@@ -26,7 +26,7 @@ public class OrderDetailResponse {
         private String productName;
         private String productImageUrl; 
         private Integer quantity;
-        private Integer barcode;
+        private String barcode;
         private BigDecimal price;
         private LocalDateTime createdAt;
     }
