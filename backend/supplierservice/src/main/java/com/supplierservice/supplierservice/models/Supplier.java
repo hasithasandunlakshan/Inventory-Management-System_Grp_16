@@ -1,5 +1,7 @@
 package com.supplierservice.supplierservice.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Supplier {
 
     @Id
@@ -22,13 +25,24 @@ public class Supplier {
 
     private String contactInfo;
 
-    @ManyToOne
+    // ManyToOne is EAGER by default; switch to LAZY to avoid extra queries
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private SupplierCategory category;
 
-    @OneToMany(mappedBy = "supplier")
+    // Large back-ref: keep LAZY and ignore in JSON & Lombok methods
+    @OneToMany(mappedBy = "supplier", fetch = FetchType.LAZY)
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<PurchaseOrder> purchaseOrders;
 
-    @OneToOne(mappedBy = "supplier")
+    // One-to-one is EAGER by default; make it LAZY if supported by your JPA
+    // provider
+    @OneToOne(mappedBy = "supplier", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private SupplierScore score;
 }

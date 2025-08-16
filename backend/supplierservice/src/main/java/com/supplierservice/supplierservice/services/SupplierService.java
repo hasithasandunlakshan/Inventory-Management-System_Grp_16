@@ -6,6 +6,9 @@ import com.supplierservice.supplierservice.models.SupplierCategory;
 import com.supplierservice.supplierservice.repository.SupplierCategoryRepository;
 import com.supplierservice.supplierservice.repository.SupplierRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -20,9 +23,11 @@ public class SupplierService {
         this.categoryRepository = categoryRepository;
     }
 
-    public Supplier createSupplier(SupplierDTO dto) {
+    /** Create and return the saved supplier as a DTO (flattened). */
+    @Transactional
+    public SupplierDTO createSupplier(SupplierDTO dto) {
         SupplierCategory category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid category ID"));
 
         Supplier supplier = Supplier.builder()
                 .name(dto.getName())
@@ -30,15 +35,25 @@ public class SupplierService {
                 .category(category)
                 .build();
 
-        return supplierRepository.save(supplier);
+        Supplier saved = supplierRepository.save(supplier);
+
+        // Reuse the projection so the response includes categoryName and latest score
+        // (if any)
+        return supplierRepository.findByIdAsDto(saved.getSupplierId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Failed to load created supplier"));
     }
 
-    public List<Supplier> getAllSuppliers() {
-        return supplierRepository.findAll();
+    /** Read all suppliers as DTOs to avoid lazy-loading issues. */
+    @Transactional(readOnly = true)
+    public List<SupplierDTO> getAllSuppliers() {
+        return supplierRepository.findAllAsDto();
     }
 
-    public Supplier getSupplierById(Long id) {
-        return supplierRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Supplier not found"));
+    /** Read one supplier as a DTO. */
+    @Transactional(readOnly = true)
+    public SupplierDTO getSupplierById(Long id) {
+        return supplierRepository.findByIdAsDto(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found"));
     }
 }
