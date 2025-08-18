@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -18,17 +19,21 @@ public class PurchaseOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long poId;
 
-    @ManyToOne
-    @JoinColumn(name = "supplier_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
 
+    // Keep the same column name as your DB
     private LocalDate date;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PurchaseOrderStatus status;
 
-    @OneToMany(mappedBy = "purchaseOrder")
-    private List<PurchaseOrderItem> items;
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PurchaseOrderItem> items = new ArrayList<>();
 
-    @OneToOne(mappedBy = "purchaseOrder")
+    @OneToOne(mappedBy = "purchaseOrder", fetch = FetchType.LAZY)
     private DeliveryLog deliveryLog;
 }

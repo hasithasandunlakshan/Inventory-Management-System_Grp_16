@@ -10,8 +10,14 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PurchaseOrderDTO {
+    private Long id; // poId
     private Long supplierId;
+    private String supplierName; // convenience for UI
     private LocalDate date;
-    private String status;
-    private List<PurchaseOrderItemDTO> items; // Nested DTOs for order lines
+    private String status; // enum name as string
+    private List<PurchaseOrderItemDTO> items;
+
+    // computed totals (optional for now)
+    private Double subtotal;
+    private Double total;
 }

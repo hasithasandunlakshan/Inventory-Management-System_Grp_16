@@ -15,13 +15,17 @@ public class PurchaseOrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "po_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "po_id", nullable = false)
     private PurchaseOrder purchaseOrder;
 
-    private Long itemId; // From inventory_items table
+    // References an inventory item in another service/table
+    @Column(nullable = false)
+    private Long itemId;
 
+    @Column(nullable = false)
     private int quantity;
 
+    @Column(nullable = false)
     private double unitPrice;
 }
