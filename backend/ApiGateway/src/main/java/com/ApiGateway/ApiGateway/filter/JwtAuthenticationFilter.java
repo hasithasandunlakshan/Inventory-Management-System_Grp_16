@@ -70,7 +70,7 @@ public class JwtAuthenticationFilter implements GatewayFilter {
 
         // Product service - MANAGER only
         if (path.startsWith("/api/products")) {
-            return role.contains("MANAGER");
+            return role.contains("MANAGER") || role.contains("User");
         }
 
         // Order service - STOREKEEPER, MANAGER
