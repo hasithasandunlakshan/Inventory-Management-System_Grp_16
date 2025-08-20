@@ -40,4 +40,10 @@ public class PurchaseOrderSpecs {
             );
         };
     }
+
+    public static Specification<PurchaseOrder> statusIn(java.util.Set<PurchaseOrderStatus> statuses) {
+        return (root, q, cb) -> (statuses == null || statuses.isEmpty())
+                ? cb.conjunction()
+                : root.get("status").in(statuses);
+    }
 }

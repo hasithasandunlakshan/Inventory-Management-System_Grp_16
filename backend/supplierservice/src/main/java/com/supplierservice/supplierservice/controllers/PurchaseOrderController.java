@@ -1,15 +1,16 @@
 package com.supplierservice.supplierservice.controllers;
 
-import com.supplierservice.supplierservice.dto.PurchaseOrderUpdateDTO;
-import com.supplierservice.supplierservice.dto.CancelRequestDTO;
-import com.supplierservice.supplierservice.dto.PurchaseOrderDTO;
-import com.supplierservice.supplierservice.dto.PurchaseOrderSummaryDTO;
 import com.supplierservice.supplierservice.services.PurchaseOrderService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.supplierservice.supplierservice.dto.StatusUpdateDTO;
-import com.supplierservice.supplierservice.dto.ReceiveRequestDTO;
 
+import org.springframework.web.bind.annotation.*;
+
+import com.supplierservice.supplierservice.dto.*;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -67,4 +68,60 @@ public class PurchaseOrderController {
             @RequestBody(required = false) ReceiveRequestDTO body) {
         return ResponseEntity.ok(orderService.markReceived(id, body));
     }
+
+    // GET /api/purchase-orders/search
+    @GetMapping("/search")
+    public ResponseEntity<Page<PurchaseOrderSummaryDTO>> search(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @RequestParam(required = false) Double minTotal,
+            @RequestParam(required = false) Double maxTotal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity
+                .ok(orderService.search(q, status, supplierId, dateFrom, dateTo, minTotal, maxTotal, page, size, sort));
+    }
+
+    // GET /api/purchase-orders/stats/summary
+    @GetMapping("/stats/summary")
+    public ResponseEntity<StatsSummaryDTO> statsSummary(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo) {
+        return ResponseEntity.ok(orderService.kpiSummary(q, status, supplierId, dateFrom, dateTo));
+    }
+
+    // GET /api/purchase-orders/{id}/totals
+    @GetMapping("/{id}/totals")
+    public ResponseEntity<TotalsDTO> totals(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.computeTotals(id));
+    }
+
+    // GET /api/purchase-orders/export (CSV)
+    @GetMapping(value = "/export", produces = "text/csv")
+    public ResponseEntity<byte[]> exportCsv(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo) {
+        byte[] bytes = orderService.exportCsv(q, status, supplierId, dateFrom, dateTo);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=purchase_orders.csv");
+        headers.set(HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8");
+        return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
+    }
+
+    // POST /api/purchase-orders/import (CSV multipart)
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ImportReportDTO> importCsv(@RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok(orderService.importCsv(file));
+    }
+
 }
