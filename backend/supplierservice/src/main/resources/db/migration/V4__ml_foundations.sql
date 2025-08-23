@@ -1,4 +1,4 @@
--- 1) Daily historical scores (do NOT reuse supplier_scores to avoid breaking your snapshot)
+-- Daily history for dashboards (keeps your snapshot table untouched)
 CREATE TABLE IF NOT EXISTS supplier_scores_daily (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   supplier_id BIGINT NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS supplier_scores_daily (
   CONSTRAINT fk_ssd_supplier FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
 ) ENGINE=InnoDB;
 
--- 2) Supplier-level daily feature store for ML training
+-- Supplier-level feature store (for model training)
 CREATE TABLE IF NOT EXISTS features_supplier_daily (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   supplier_id BIGINT NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS features_supplier_daily (
   CONSTRAINT fk_fsd_supplier FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
 ) ENGINE=InnoDB;
 
--- 3) PO-level features captured at creation time (for predictions)
+-- PO-level features captured at creation time (for predictions)
 CREATE TABLE IF NOT EXISTS features_po_at_creation (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   po_id BIGINT NOT NULL,
