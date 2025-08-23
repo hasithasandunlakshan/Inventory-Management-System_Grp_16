@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore real secret configs
+src/main/resources/application-*.properties
+# But keep the example file
+!src/main/resources/application-example.properties
