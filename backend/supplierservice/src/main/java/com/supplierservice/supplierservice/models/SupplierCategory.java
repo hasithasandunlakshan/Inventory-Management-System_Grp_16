@@ -1,5 +1,6 @@
 package com.supplierservice.supplierservice.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,9 @@ public class SupplierCategory {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    @JsonIgnore // <-- Prevent Jackson from triggering lazy load
+    @ToString.Exclude // <-- Avoid toString() causing lazy init
+    @EqualsAndHashCode.Exclude // <-- Avoid equals/hashCode traversing the collection
     private List<Supplier> suppliers;
 }

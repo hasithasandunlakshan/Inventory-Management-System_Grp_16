@@ -3,13 +3,15 @@ package com.supplierservice.supplierservice.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 @Entity
-@Table(name = "purchase_order_items")
+@Table(name = "po_attachments")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PurchaseOrderItem {
+public class PurchaseOrderAttachment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,13 +21,22 @@ public class PurchaseOrderItem {
     @JoinColumn(name = "po_id", nullable = false)
     private PurchaseOrder purchaseOrder;
 
-    // References an inventory item in another service/table
     @Column(nullable = false)
-    private Long itemId;
+    private String filename;
 
     @Column(nullable = false)
-    private int quantity;
+    private String contentType;
 
     @Column(nullable = false)
-    private double unitPrice;
+    private long sizeBytes;
+
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(nullable = false, columnDefinition = "LONGBLOB")
+    private byte[] data;
+
+    @Column(nullable = false)
+    private Instant uploadedAt;
+
+    private String uploadedBy; // optional
 }

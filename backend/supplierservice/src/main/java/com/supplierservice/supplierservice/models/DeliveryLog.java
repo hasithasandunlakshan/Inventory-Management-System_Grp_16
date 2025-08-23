@@ -1,5 +1,6 @@
 package com.supplierservice.supplierservice.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,9 +17,12 @@ public class DeliveryLog {
     @Id
     private Long poId;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY) // make it lazy to avoid eager graph pulls
     @MapsId
     @JoinColumn(name = "po_id")
+    @JsonIgnore // <-- prevent Jackson from triggering lazy init
+    @ToString.Exclude // <-- avoid toString() walking into proxies
+    @EqualsAndHashCode.Exclude
     private PurchaseOrder purchaseOrder;
 
     private int receivedQuantity;
