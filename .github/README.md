@@ -39,6 +39,26 @@ Use this template when reporting bugs:
 - **Environment Information**: System details for debugging
 - **Priority**: How critical the issue is
 
+## Branch Management
+
+### Automatic Branch Deletion
+
+We've configured automatic branch deletion to keep the repository clean:
+
+1. **GitHub Settings**: Branches are automatically deleted after PRs are merged
+2. **GitHub Actions**: Automated workflow handles branch cleanup
+3. **Branch Protection**: Rules ensure clean merges to main
+
+### Branch Naming Convention
+
+Follow our standardized naming convention:
+- `feature/feature-name` - New features
+- `bugfix/bug-description` - Bug fixes
+- `hotfix/critical-issue` - Urgent fixes
+- `release/version` - Release preparation
+
+See [BRANCH_NAMING.md](./BRANCH_NAMING.md) for detailed guidelines.
+
 ## Best Practices
 
 ### For Pull Requests
@@ -55,6 +75,13 @@ Use this template when reporting bugs:
 2. **Be specific**: Provide detailed information to help developers
 3. **Include context**: Screenshots, error messages, and environment details
 4. **Set priorities**: Help with project planning and resource allocation
+
+### For Branch Management
+
+1. **Use descriptive names**: Make branches easy to identify
+2. **Keep branches short-lived**: Merge within 2-3 weeks
+3. **Delete after merge**: Branches are automatically cleaned up
+4. **Follow naming convention**: Use standardized prefixes
 
 ## Template Customization
 

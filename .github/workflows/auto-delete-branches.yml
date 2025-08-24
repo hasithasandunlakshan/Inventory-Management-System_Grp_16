@@ -1,0 +1,37 @@
+name: Auto Delete Merged Branches
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  delete-merged-branches:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Delete merged branch
+        run: |
+          # Get the branch name from the merged PR
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          
+          # Delete the branch if it's not main/master
+          if [ "$BRANCH_NAME" != "main" ] && [ "$BRANCH_NAME" != "master" ]; then
+            echo "Deleting merged branch: $BRANCH_NAME"
+            git push origin --delete "$BRANCH_NAME"
+            echo "Successfully deleted branch: $BRANCH_NAME"
+          else
+            echo "Skipping deletion of main/master branch"
+          fi
+      
+      - name: Clean up local references
+        run: |
+          git remote prune origin
+          git gc --prune=now
