@@ -151,6 +151,14 @@ const dummyOrders: Order[] = [
   },
 ];
 
+// Store location (starting point for all deliveries)
+const storeLocation = {
+  name: "Main Store",
+  address: "Kegalle, Sri Lanka",
+  lat: 7.2513,
+  lng: 80.3464,
+};
+
 // Dummy Drivers with more details
 const drivers = [
   { id: 1, name: "John Silva", vehicle: "Truck T-001" },
@@ -216,22 +224,21 @@ function ShippingPage() {
     if (!isLoaded || !window.google || !clusters[clusterIndex]) return;
 
     const cluster = clusters[clusterIndex];
-    if (cluster.length < 2) return;
+    if (cluster.length === 0) return;
 
     const directionsService = new window.google.maps.DirectionsService();
 
-    const waypoints = cluster.slice(1, cluster.length - 1).map((o) => ({
-      location: { lat: o.lat, lng: o.lng },
+    // Create waypoints from all orders in the cluster
+    const waypoints = cluster.map((order) => ({
+      location: { lat: order.lat, lng: order.lng },
       stopover: true,
     }));
 
+    // Route: Store -> All Orders -> Back to Store
     directionsService.route(
       {
-        origin: { lat: cluster[0].lat, lng: cluster[0].lng },
-        destination: {
-          lat: cluster[cluster.length - 1].lat,
-          lng: cluster[cluster.length - 1].lng,
-        },
+        origin: { lat: storeLocation.lat, lng: storeLocation.lng },
+        destination: { lat: storeLocation.lat, lng: storeLocation.lng },
         waypoints,
         optimizeWaypoints: true,
         travelMode: window.google.maps.TravelMode.DRIVING,
@@ -299,6 +306,9 @@ function ShippingPage() {
               <p className="text-gray-600 mt-1">Optimize delivery routes and manage orders</p>
             </div>
             <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-500">
+                Store: <span className="font-semibold text-gray-900">{storeLocation.address}</span>
+              </div>
               <div className="text-sm text-gray-500">
                 Total Orders: <span className="font-semibold text-gray-900">{dummyOrders.length}</span>
               </div>
@@ -459,8 +469,18 @@ function ShippingPage() {
                       </div>
 
                       {selectedCluster === idx && (
-                        <div className="mt-3 text-sm text-blue-600 font-medium">
-                          Click to hide route • Route displayed on map
+                        <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="text-sm text-blue-800 font-medium mb-2">
+                            📍 Route Details:
+                          </div>
+                          <div className="text-xs text-blue-700 space-y-1">
+                            <div>• Start: {storeLocation.name} ({storeLocation.address})</div>
+                            <div>• Deliveries: {cluster.length} locations</div>
+                            <div>• End: Return to {storeLocation.name}</div>
+                          </div>
+                          <div className="text-sm text-blue-600 font-medium mt-2">
+                            Click cluster again to hide route
+                          </div>
                         </div>
                       )}
                     </div>
@@ -475,10 +495,24 @@ function ShippingPage() {
             <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
               <div className="h-96 lg:h-[600px]">
                 <GoogleMap
-                  center={{ lat: 7.2, lng: 80.5 }}
-                  zoom={7}
+                  center={{ lat: storeLocation.lat, lng: storeLocation.lng }}
+                  zoom={8}
                   mapContainerStyle={{ height: "100%", width: "100%" }}
                 >
+                  {/* Always show store location */}
+                  <Marker
+                    position={{ lat: storeLocation.lat, lng: storeLocation.lng }}
+                    title={`${storeLocation.name} - ${storeLocation.address}`}
+                    icon={{
+                      path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                      fillColor: "#DC2626",
+                      fillOpacity: 1,
+                      strokeColor: "#ffffff",
+                      strokeWeight: 2,
+                      scale: 10,
+                    }}
+                  />
+
                   {/* Show all orders when no clustering */}
                   {showAllOrders && dummyOrders.map((order) => (
                     <Marker
