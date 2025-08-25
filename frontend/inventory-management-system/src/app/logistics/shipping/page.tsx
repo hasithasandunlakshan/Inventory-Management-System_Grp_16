@@ -1,9 +1,532 @@
-export default function ShippingPage() {
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  GoogleMap,
+  DirectionsRenderer,
+  Marker,
+  useJsApiLoader,
+} from "@react-google-maps/api";
+
+type Order = {
+  id: number;
+  name: string;
+  lat: number;
+  lng: number;
+  address: string;
+  status: string;
+};
+
+type ClusteredOrder = Order & {
+  cluster: number;
+};
+
+// Improved k-means implementation with better initialization
+function kMeansCluster(points: number[][], k: number): number[] {
+  if (points.length === 0 || k <= 0) return [];
+  if (k >= points.length) {
+    return points.map((_, i) => i);
+  }
+  
+  // Use k-means++ initialization for better centroids
+  const centroids: number[][] = [];
+  
+  // First centroid is random
+  centroids.push([...points[Math.floor(Math.random() * points.length)]]);
+  
+  // Choose remaining centroids using k-means++
+  for (let c = 1; c < k; c++) {
+    const distances = points.map(point => {
+      const minDist = Math.min(...centroids.map(centroid => 
+        Math.sqrt(Math.pow(point[0] - centroid[0], 2) + Math.pow(point[1] - centroid[1], 2))
+      ));
+      return minDist * minDist;
+    });
+    
+    const totalDist = distances.reduce((sum, d) => sum + d, 0);
+    const target = Math.random() * totalDist;
+    
+    let cumulative = 0;
+    for (let i = 0; i < points.length; i++) {
+      cumulative += distances[i];
+      if (cumulative >= target) {
+        centroids.push([...points[i]]);
+        break;
+      }
+    }
+  }
+  
+  let assignments = new Array(points.length).fill(0);
+  let changed = true;
+  
+  // Iterate until convergence
+  for (let iter = 0; iter < 100 && changed; iter++) {
+    changed = false;
+    
+    // Assign points to closest centroid
+    for (let i = 0; i < points.length; i++) {
+      let minDistance = Infinity;
+      let closestCentroid = 0;
+      
+      for (let j = 0; j < centroids.length; j++) {
+        const distance = Math.sqrt(
+          Math.pow(points[i][0] - centroids[j][0], 2) +
+          Math.pow(points[i][1] - centroids[j][1], 2)
+        );
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestCentroid = j;
+        }
+      }
+      
+      if (assignments[i] !== closestCentroid) {
+        assignments[i] = closestCentroid;
+        changed = true;
+      }
+    }
+    
+    // Update centroids
+    for (let j = 0; j < k; j++) {
+      const clusterPoints = points.filter((_, i) => assignments[i] === j);
+      if (clusterPoints.length > 0) {
+        centroids[j][0] = clusterPoints.reduce((sum, p) => sum + p[0], 0) / clusterPoints.length;
+        centroids[j][1] = clusterPoints.reduce((sum, p) => sum + p[1], 0) / clusterPoints.length;
+      }
+    }
+  }
+  
+  return assignments;
+}
+
+// Dummy Orders with complete data
+const dummyOrders: Order[] = [
+  { 
+    id: 1, 
+    name: "Order #001", 
+    lat: 6.9271, 
+    lng: 79.8612, 
+    address: "Colombo, Sri Lanka",
+    status: "Pending"
+  },
+  { 
+    id: 2, 
+    name: "Order #002", 
+    lat: 7.2906, 
+    lng: 80.6337, 
+    address: "Kandy, Sri Lanka",
+    status: "Processing"
+  },
+  { 
+    id: 3, 
+    name: "Order #003", 
+    lat: 6.0535, 
+    lng: 80.221, 
+    address: "Galle, Sri Lanka",
+    status: "Ready"
+  },
+  { 
+    id: 4, 
+    name: "Order #004", 
+    lat: 7.2083, 
+    lng: 79.8358, 
+    address: "Negombo, Sri Lanka",
+    status: "Pending"
+  },
+  { 
+    id: 5, 
+    name: "Order #005", 
+    lat: 5.9549, 
+    lng: 80.555, 
+    address: "Matara, Sri Lanka",
+    status: "Processing"
+  },
+  { 
+    id: 6, 
+    name: "Order #006", 
+    lat: 7.8731, 
+    lng: 80.7718, 
+    address: "Anuradhapura, Sri Lanka",
+    status: "Ready"
+  },
+];
+
+// Dummy Drivers with more details
+const drivers = [
+  { id: 1, name: "John Silva", vehicle: "Truck T-001" },
+  { id: 2, name: "Mary Fernando", vehicle: "Van V-002" },
+  { id: 3, name: "David Perera", vehicle: "Truck T-003" },
+];
+
+// Cluster colors for better visualization
+const clusterColors = [
+  "#3B82F6", // Blue
+  "#EF4444", // Red
+  "#10B981", // Green
+  "#F59E0B", // Yellow
+  "#8B5CF6", // Purple
+  "#EC4899", // Pink
+];
+
+function ShippingPage() {
+  const [clusters, setClusters] = useState<ClusteredOrder[][]>([]);
+  const [numClusters, setNumClusters] = useState<number>(2);
+  const [assignedDrivers, setAssignedDrivers] = useState<Record<number, string>>(
+    {}
+  );
+  const [routes, setRoutes] = useState<(google.maps.DirectionsResult | null)[]>(
+    []
+  );
+  const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
+  const [showAllOrders, setShowAllOrders] = useState(true);
+
+  // Load Google Maps API
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env
+      .NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
+  });
+
+  // Cluster Orders
+  const handleClustering = () => {
+    const coords = dummyOrders.map((o) => [o.lat, o.lng]);
+    const clusterAssignments = kMeansCluster(coords, numClusters);
+
+    const clustered: ClusteredOrder[] = dummyOrders.map((order, i) => ({
+      ...order,
+      cluster: clusterAssignments[i],
+    }));
+
+    // Group by cluster and filter out empty clusters
+    const grouped: ClusteredOrder[][] = [];
+    for (let i = 0; i < numClusters; i++) {
+      const clusterOrders = clustered.filter((o) => o.cluster === i);
+      if (clusterOrders.length > 0) {
+        grouped.push(clusterOrders);
+      }
+    }
+
+    setClusters(grouped);
+    setRoutes([]); // reset routes
+    setShowAllOrders(false);
+    setSelectedCluster(null);
+  };
+
+  // Get Optimized Route for Specific Cluster
+  const getRouteForCluster = (clusterIndex: number) => {
+    if (!isLoaded || !window.google || !clusters[clusterIndex]) return;
+
+    const cluster = clusters[clusterIndex];
+    if (cluster.length < 2) return;
+
+    const directionsService = new window.google.maps.DirectionsService();
+
+    const waypoints = cluster.slice(1, cluster.length - 1).map((o) => ({
+      location: { lat: o.lat, lng: o.lng },
+      stopover: true,
+    }));
+
+    directionsService.route(
+      {
+        origin: { lat: cluster[0].lat, lng: cluster[0].lng },
+        destination: {
+          lat: cluster[cluster.length - 1].lat,
+          lng: cluster[cluster.length - 1].lng,
+        },
+        waypoints,
+        optimizeWaypoints: true,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK" && result) {
+          setRoutes((prev) => {
+            const newRoutes = [...prev];
+            newRoutes[clusterIndex] = result;
+            return newRoutes;
+          });
+        }
+      }
+    );
+  };
+
+  // Handle cluster click
+  const handleClusterClick = (clusterIndex: number) => {
+    if (selectedCluster === clusterIndex) {
+      setSelectedCluster(null);
+      setRoutes([]);
+    } else {
+      setSelectedCluster(clusterIndex);
+      getRouteForCluster(clusterIndex);
+    }
+  };
+
+  // Reset to show all orders
+  const resetView = () => {
+    setClusters([]);
+    setRoutes([]);
+    setShowAllOrders(true);
+    setSelectedCluster(null);
+  };
+
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Pending": return "bg-yellow-100 text-yellow-800";
+      case "Processing": return "bg-blue-100 text-blue-800";
+      case "Ready": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-xl text-gray-600">Loading Maps...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <h1 className="text-2xl font-semibold tracking-tight">Shipping</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
+      <div className="bg-white shadow-lg border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Shipping Management</h1>
+              <p className="text-gray-600 mt-1">Optimize delivery routes and manage orders</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-500">
+                Total Orders: <span className="font-semibold text-gray-900">{dummyOrders.length}</span>
+              </div>
+              <div className="text-sm text-gray-500">
+                Clusters: <span className="font-semibold text-gray-900">{clusters.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Control Panel */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Clustering Controls */}
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Route Optimization
+              </h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Clusters
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={dummyOrders.length}
+                    value={numClusters}
+                    onChange={(e) => setNumClusters(Number(e.target.value))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleClustering}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-md"
+                  >
+                    Create Clusters
+                  </button>
+                  <button
+                    onClick={resetView}
+                    className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium"
+                  >
+                    Reset View
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Orders List */}
+            {showAllOrders && (
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  All Orders
+                </h2>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {dummyOrders.map((order) => (
+                    <div key={order.id} className="p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-gray-900">{order.name}</h3>
+                          <p className="text-sm text-gray-600">{order.address}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Clusters List */}
+            {clusters.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Delivery Clusters
+                </h2>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {clusters.map((cluster, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                        selectedCluster === idx 
+                          ? 'border-blue-500 bg-blue-50 shadow-md' 
+                          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                      }`}
+                      onClick={() => handleClusterClick(idx)}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900 flex items-center">
+                          <div 
+                            className="w-4 h-4 rounded-full mr-2"
+                            style={{ backgroundColor: clusterColors[idx % clusterColors.length] }}
+                          ></div>
+                          Cluster {idx + 1}
+                        </h3>
+                        <span className="text-sm text-gray-500">{cluster.length} orders</span>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {cluster.map((order) => (
+                          <div key={order.id} className="text-sm">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-700">{order.name}</span>
+                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
+                                {order.status}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500">{order.address}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Driver Assignment */}
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Assign Driver:
+                        </label>
+                        <select
+                          value={assignedDrivers[idx] || ""}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setAssignedDrivers({
+                              ...assignedDrivers,
+                              [idx]: e.target.value,
+                            });
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <option value="">Select Driver</option>
+                          {drivers.map((driver) => (
+                            <option key={driver.id} value={`${driver.name} (${driver.vehicle})`}>
+                              {driver.name} ({driver.vehicle})
+                            </option>
+                          ))}
+                        </select>
+                        {assignedDrivers[idx] && (
+                          <p className="text-sm text-green-600 mt-2 font-medium">
+                            ✓ Assigned to: {assignedDrivers[idx]}
+                          </p>
+                        )}
+                      </div>
+
+                      {selectedCluster === idx && (
+                        <div className="mt-3 text-sm text-blue-600 font-medium">
+                          Click to hide route • Route displayed on map
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Map */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+              <div className="h-96 lg:h-[600px]">
+                <GoogleMap
+                  center={{ lat: 7.2, lng: 80.5 }}
+                  zoom={7}
+                  mapContainerStyle={{ height: "100%", width: "100%" }}
+                >
+                  {/* Show all orders when no clustering */}
+                  {showAllOrders && dummyOrders.map((order) => (
+                    <Marker
+                      key={order.id}
+                      position={{ lat: order.lat, lng: order.lng }}
+                      title={`${order.name} - ${order.address}`}
+                    />
+                  ))}
+
+                  {/* Show clustered orders */}
+                  {!showAllOrders && clusters.map((cluster, clusterIdx) =>
+                    cluster.map((order) => (
+                      <Marker
+                        key={order.id}
+                        position={{ lat: order.lat, lng: order.lng }}
+                        title={`${order.name} - Cluster ${clusterIdx + 1}`}
+                        icon={{
+                          path: google.maps.SymbolPath.CIRCLE,
+                          fillColor: clusterColors[clusterIdx % clusterColors.length],
+                          fillOpacity: 0.8,
+                          strokeColor: "#ffffff",
+                          strokeWeight: 2,
+                          scale: 8,
+                        }}
+                      />
+                    ))
+                  )}
+
+                  {/* Show selected cluster route */}
+                  {selectedCluster !== null && routes[selectedCluster] && (
+                    <DirectionsRenderer 
+                      directions={routes[selectedCluster]} 
+                      options={{
+                        polylineOptions: {
+                          strokeColor: clusterColors[selectedCluster % clusterColors.length],
+                          strokeWeight: 4,
+                        }
+                      }}
+                    />
+                  )}
+                </GoogleMap>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-
+export default ShippingPage;
