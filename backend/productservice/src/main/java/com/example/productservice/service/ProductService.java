@@ -1,17 +1,16 @@
 package com.example.productservice.service;
 
-import com.example.productservice.dto.ProductDTO;
-import com.example.productservice.models.Product;
-import com.example.productservice.repository.ProductRepository;
-import com.example.productservice.exception.ProductNotFoundException;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.example.productservice.dto.ProductDTO;
+import com.example.productservice.exception.ProductNotFoundException;
+import com.example.productservice.models.Product;
+import com.example.productservice.repository.ProductRepository;
 
 @Service
 public class ProductService {
@@ -44,6 +43,8 @@ public class ProductService {
                 .price(dto.getPrice())
                 .imageUrl(dto.getImageUrl())
                 .stock(dto.getStock())
+                .reserved(0) // Initialize reserved to 0
+                .availableStock(dto.getStock()) // Initial available stock equals physical stock
                 .build();
         
         Product savedProduct= repository.save(product);
@@ -79,8 +80,41 @@ public class ProductService {
         existingProduct.setDescription(dto.getDescription());
         existingProduct.setCategoryId(dto.getCategoryId());
         existingProduct.setPrice(dto.getPrice());
+        
+        // If stock is being updated, recalculate available stock
+        if (dto.getStock() != existingProduct.getStock()) {
+            existingProduct.setStock(dto.getStock());
+            existingProduct.setAvailableStock(dto.getStock() - existingProduct.getReserved());
+        }
 
         return repository.save(existingProduct);
+    }
+    
+    /**
+     * Update only the physical stock and recalculate available stock
+     */
+    public Product updateStock(Long productId, int newStock) {
+        Product product = repository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
+        
+        product.setStock(newStock);
+        product.setAvailableStock(newStock - product.getReserved());
+        
+        return repository.save(product);
+    }
+    
+    /**
+     * Get products with available stock > 0 (for display to customers)
+     */
+    public List<Product> getAvailableProducts() {
+        return repository.findByAvailableStockGreaterThan(0);
+    }
+    
+    /**
+     * Get products by category with available stock > 0
+     */
+    public List<Product> getAvailableProductsByCategory(Long categoryId) {
+        return repository.findByCategoryIdAndAvailableStockGreaterThan(categoryId, 0);
     }
 
     public void deleteProduct(Long id) {
