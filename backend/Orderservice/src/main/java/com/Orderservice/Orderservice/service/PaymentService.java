@@ -1,20 +1,30 @@
 package com.Orderservice.Orderservice.service;
 
-import com.Orderservice.Orderservice.dto.*;
-import com.Orderservice.Orderservice.entity.*;
-import com.Orderservice.Orderservice.enums.OrderStatus;
-import com.Orderservice.Orderservice.enums.PaymentStatus;
-import com.Orderservice.Orderservice.repository.*;
-import com.stripe.exception.StripeException;
-import com.stripe.model.PaymentIntent;
-import com.stripe.param.PaymentIntentCreateParams;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+import com.Orderservice.Orderservice.dto.CreatePaymentIntentRequest;
+import com.Orderservice.Orderservice.dto.PaymentConfirmationRequest;
+import com.Orderservice.Orderservice.dto.PaymentConfirmationResponse;
+import com.Orderservice.Orderservice.dto.PaymentIntentDto;
+import com.Orderservice.Orderservice.dto.PaymentIntentResponse;
+import com.Orderservice.Orderservice.entity.Invoice;
+import com.Orderservice.Orderservice.entity.Order;
+import com.Orderservice.Orderservice.entity.OrderItem;
+import com.Orderservice.Orderservice.entity.Payment;
+import com.Orderservice.Orderservice.enums.OrderStatus;
+import com.Orderservice.Orderservice.enums.PaymentStatus;
+import com.Orderservice.Orderservice.repository.InvoiceRepository;
+import com.Orderservice.Orderservice.repository.OrderRepository;
+import com.Orderservice.Orderservice.repository.PaymentRepository;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
+import com.stripe.param.PaymentIntentCreateParams;
 
 
 @Service
@@ -29,6 +39,9 @@ public class PaymentService {
     
     @Autowired
     private InvoiceRepository invoiceRepository;
+    
+    @Autowired
+    private EventPublisherService eventPublisherService;
     
 
     
@@ -94,6 +107,18 @@ public class PaymentService {
             // Update order status
             order.setStatus(OrderStatus.CONFIRMED);
             orderRepository.save(order);
+            
+            // Publish inventory reservation event
+            try {
+                eventPublisherService.publishInventoryReservationRequest(
+                    order.getOrderId(), 
+                    order.getCustomerId(), 
+                    order.getOrderItems()
+                );
+            } catch (Exception e) {
+                // Log the error but don't fail the payment confirmation
+                System.err.println("Failed to publish inventory reservation event: " + e.getMessage());
+            }
             
             // Update invoice status
             Invoice invoice = invoiceRepository.findByOrder(order)
