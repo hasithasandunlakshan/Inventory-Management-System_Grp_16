@@ -1,20 +1,32 @@
 package com.Orderservice.Orderservice.service;
 
-import com.Orderservice.Orderservice.dto.*;
-import com.Orderservice.Orderservice.entity.*;
-import com.Orderservice.Orderservice.enums.OrderStatus;
-import com.Orderservice.Orderservice.enums.PaymentStatus;
-import com.Orderservice.Orderservice.repository.*;
-import com.stripe.exception.StripeException;
-import com.stripe.model.PaymentIntent;
-import com.stripe.param.PaymentIntentCreateParams;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+import com.Orderservice.Orderservice.dto.CreatePaymentIntentRequest;
+import com.Orderservice.Orderservice.dto.PaymentConfirmationRequest;
+import com.Orderservice.Orderservice.dto.PaymentConfirmationResponse;
+import com.Orderservice.Orderservice.dto.PaymentIntentDto;
+import com.Orderservice.Orderservice.dto.PaymentIntentResponse;
+import com.Orderservice.Orderservice.entity.Invoice;
+import com.Orderservice.Orderservice.entity.Order;
+import com.Orderservice.Orderservice.entity.OrderItem;
+import com.Orderservice.Orderservice.entity.Payment;
+import com.Orderservice.Orderservice.entity.Product;
+import com.Orderservice.Orderservice.enums.OrderStatus;
+import com.Orderservice.Orderservice.enums.PaymentStatus;
+import com.Orderservice.Orderservice.repository.InvoiceRepository;
+import com.Orderservice.Orderservice.repository.OrderRepository;
+import com.Orderservice.Orderservice.repository.PaymentRepository;
+import com.Orderservice.Orderservice.repository.ProductRepository;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
+import com.stripe.param.PaymentIntentCreateParams;
 
 
 @Service
@@ -29,6 +41,12 @@ public class PaymentService {
     
     @Autowired
     private InvoiceRepository invoiceRepository;
+    
+    @Autowired
+    private ProductRepository productRepository;
+    
+    @Autowired
+    private EventPublisherService eventPublisherService;
     
 
     
@@ -92,8 +110,36 @@ public class PaymentService {
             paymentRepository.save(payment);
             
             // Update order status
+            System.out.println("=== ORDER CONFIRMATION & INVENTORY RESERVATION ===");
+            System.out.println("Order ID: " + order.getOrderId());
+            System.out.println("Customer ID: " + order.getCustomerId());
+            System.out.println("Updating order status from " + order.getStatus() + " to CONFIRMED");
+            
             order.setStatus(OrderStatus.CONFIRMED);
             orderRepository.save(order);
+            
+            System.out.println("Order confirmed successfully!");
+            System.out.println("Publishing inventory reservation request to Kafka...");
+            System.out.println("Items to reserve:");
+            for (var item : order.getOrderItems()) {
+                System.out.println("  - Product ID: " + item.getProductId() + 
+                                 ", Barcode: " + item.getBarcode() + 
+                                 ", Quantity: " + item.getQuantity());
+            }
+            
+            // Publish inventory reservation event
+            try {
+                eventPublisherService.publishInventoryReservationRequest(
+                    order.getOrderId(), 
+                    order.getCustomerId(), 
+                    order.getOrderItems()
+                );
+                System.out.println("✅ Inventory reservation request sent to Kafka successfully!");
+            } catch (Exception e) {
+                // Log the error but don't fail the payment confirmation
+                System.err.println("❌ Failed to publish inventory reservation event: " + e.getMessage());
+                e.printStackTrace();
+            }
             
             // Update invoice status
             Invoice invoice = invoiceRepository.findByOrder(order)
@@ -115,6 +161,11 @@ public class PaymentService {
     }
     
     private Order createOrder(CreatePaymentIntentRequest request) {
+        System.out.println("--- CREATING ORDER IN DATABASE ---");
+        System.out.println("Customer ID: " + request.getCustomerId());
+        System.out.println("Amount (cents): " + request.getAmount());
+        System.out.println("Total Amount (dollars): " + new BigDecimal(request.getAmount()).divide(new BigDecimal(100)));
+        
         Order order = new Order();
         order.setCustomerId(request.getCustomerId());
         order.setOrderDate(LocalDateTime.now());
@@ -123,18 +174,60 @@ public class PaymentService {
         order.setOrderItems(new ArrayList<>());
         
         order = orderRepository.save(order);
+        System.out.println("Order saved with ID: " + order.getOrderId());
         
         // Create order items
-        for (CreatePaymentIntentRequest.Item item : request.getItems()) {
+        System.out.println("Creating order items...");
+        for (CreatePaymentIntentRequest.OrderItem item : request.getOrderItems()) {
+            System.out.println("Adding item - Product ID: " + item.getProductId() + 
+                             ", Quantity: " + item.getQuantity() + 
+                             ", Unit Price: " + item.getUnitPrice() +
+                             ", Barcode from request: " + item.getBarcode());
+            
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
             orderItem.setProductId(item.getProductId());
             orderItem.setQuantity(item.getQuantity());
-            orderItem.setPrice(item.getPrice());
+            orderItem.setPrice(item.getUnitPrice());
+            
+            // Set barcode - prefer from request, fallback to product lookup
+            if (item.getBarcode() != null && !item.getBarcode().trim().isEmpty()) {
+                try {
+                    // Use barcode from request
+                    orderItem.setBarcode(Integer.parseInt(item.getBarcode().replaceAll("[^0-9]", "")));
+                    System.out.println("Using barcode from request: " + orderItem.getBarcode());
+                } catch (NumberFormatException e) {
+                    // If barcode is not numeric, use hashCode as fallback
+                    orderItem.setBarcode(item.getBarcode().hashCode());
+                    System.out.println("Non-numeric barcode from request, using hash: " + orderItem.getBarcode());
+                }
+            } else {
+                // Fallback: fetch product details to get barcode
+                System.out.println("No barcode in request, fetching from product...");
+                Product product = productRepository.findById(item.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Product not found with ID: " + item.getProductId()));
+                
+                System.out.println("Found product: " + product.getName() + ", Product barcode: " + product.getBarcode());
+                
+                if (product.getBarcode() != null) {
+                    try {
+                        orderItem.setBarcode(Integer.parseInt(product.getBarcode().replaceAll("[^0-9]", "")));
+                    } catch (NumberFormatException e) {
+                        orderItem.setBarcode(product.getBarcode().hashCode());
+                        System.out.println("Non-numeric product barcode, using hash: " + orderItem.getBarcode());
+                    }
+                }
+            }
+            
             order.getOrderItems().add(orderItem);
         }
         
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        System.out.println("Order created successfully with " + savedOrder.getOrderItems().size() + " items");
+        System.out.println("Order Status: " + savedOrder.getStatus());
+        System.out.println("------------------------------------");
+        
+        return savedOrder;
     }
     
     private void createInvoice(Order order) {
