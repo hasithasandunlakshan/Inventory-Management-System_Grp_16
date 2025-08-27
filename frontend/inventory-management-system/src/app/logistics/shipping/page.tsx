@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   GoogleMap,
   DirectionsRenderer,
@@ -286,17 +288,14 @@ function ShippingPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-xl text-gray-600">Loading Maps...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -335,32 +334,26 @@ function ShippingPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="num-clusters" className="block text-sm font-medium text-gray-700 mb-2">
                     Number of Clusters
                   </label>
-                  <input
+                  <Input
+                    id="num-clusters"
                     type="number"
                     min={1}
                     max={dummyOrders.length}
                     value={numClusters}
                     onChange={(e) => setNumClusters(Number(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 
                 <div className="flex space-x-3">
-                  <button
-                    onClick={handleClustering}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-md"
-                  >
+                  <Button className="flex-1" onClick={handleClustering}>
                     Create Clusters
-                  </button>
-                  <button
-                    onClick={resetView}
-                    className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium"
-                  >
+                  </Button>
+                  <Button variant="outline" className="flex-1" onClick={resetView}>
                     Reset View
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -402,15 +395,18 @@ function ShippingPage() {
                   Delivery Clusters
                 </h2>
                 <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {clusters.map((cluster, idx) => (
-                    <div 
-                      key={idx} 
+                  {clusters.map((cluster, idx) => {
+                    const clusterKey = cluster.map(o => o.id).join('-') || String(idx);
+                    return (
+                    <button 
+                      key={clusterKey} 
                       className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
                         selectedCluster === idx 
                           ? 'border-blue-500 bg-blue-50 shadow-md' 
                           : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                       }`}
                       onClick={() => handleClusterClick(idx)}
+                      type="button"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="font-semibold text-gray-900 flex items-center">
@@ -439,10 +435,11 @@ function ShippingPage() {
 
                       {/* Driver Assignment */}
                       <div className="mt-3 pt-3 border-t border-gray-200">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor={`driver-select-${idx}`} className="block text-sm font-medium text-gray-700 mb-2">
                           Assign Driver:
                         </label>
                         <select
+                          id={`driver-select-${idx}`}
                           value={assignedDrivers[idx] || ""}
                           onChange={(e) => {
                             e.stopPropagation();
@@ -483,8 +480,8 @@ function ShippingPage() {
                           </div>
                         </div>
                       )}
-                    </div>
-                  ))}
+                    </button>
+                  );})}
                 </div>
               </div>
             )}
