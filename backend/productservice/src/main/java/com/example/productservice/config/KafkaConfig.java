@@ -20,9 +20,15 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableKafka
+@Slf4j
 public class KafkaConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
@@ -58,12 +64,19 @@ public class KafkaConfig {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        
+        // Use ErrorHandlingDeserializer for robust error handling
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        
+        // Delegate to actual deserializers
+        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
         
         // JSON deserializer configuration
         props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.productservice.events.BaseEvent");
+        props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.productservice.events.InventoryReservationRequestEvent");
         
         // Consumer reliability configs
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
@@ -80,8 +93,17 @@ public class KafkaConfig {
         // Manual acknowledgment
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         
-        // Error handling
-        factory.setCommonErrorHandler(new org.springframework.kafka.listener.DefaultErrorHandler());
+        // Enhanced error handling with retry mechanism
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
+            (consumerRecord, exception) -> {
+                log.error("Error processing message from topic '{}' at offset {}: {}. Message: {}", 
+                    consumerRecord.topic(), consumerRecord.offset(), exception.getMessage(), consumerRecord.value());
+                // After retries are exhausted, just log and skip the problematic message
+            },
+            new FixedBackOff(1000L, 3L) // Retry 3 times with 1 second intervals
+        );
+        
+        factory.setCommonErrorHandler(errorHandler);
         
         return factory;
     }
