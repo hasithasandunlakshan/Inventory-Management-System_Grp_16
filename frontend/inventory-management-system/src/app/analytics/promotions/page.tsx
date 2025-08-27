@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Beautiful Icon Components
 const Icons = {
@@ -306,38 +311,35 @@ export default function PromotionsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-lg shadow-xl border-b border-gray-200/50">
+      <div className="border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent flex items-center">
+              <h1 className="text-3xl font-bold tracking-tight flex items-center">
                 <Icons.Gift />
                 <span className="ml-3">Promotions & Offers</span>
               </h1>
-              <p className="text-gray-600 mt-2 text-lg">Manage marketing campaigns and promotional offers</p>
+              <p className="text-muted-foreground mt-2">Manage marketing campaigns and promotional offers</p>
             </div>
             <div className="flex items-center space-x-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold">
                   {stats.active}
                 </div>
-                <div className="text-sm text-gray-500">Active Promotions</div>
+                <div className="text-sm text-muted-foreground">Active Promotions</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold">
                   LKR {stats.totalSavings.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-500">Customer Savings</div>
+                <div className="text-sm text-muted-foreground">Customer Savings</div>
               </div>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-gradient-to-r from-blue-600 to-teal-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-teal-700 transition-all duration-200 font-semibold shadow-lg flex items-center"
-              >
+              <Button onClick={() => setShowCreateModal(true)}>
                 <Icons.Plus />
                 <span className="ml-2">Create Promotion</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -345,129 +347,116 @@ export default function PromotionsPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-green-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-600">Active Campaigns</p>
-                <p className="text-3xl font-bold text-green-700">{stats.active}</p>
-              </div>
-              <div className="text-green-500">
-                <Icons.CheckCircle />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-600">Scheduled</p>
-                <p className="text-3xl font-bold text-blue-700">{stats.scheduled}</p>
-              </div>
-              <div className="text-blue-500">
-                <Icons.Clock />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-teal-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-teal-600">Avg. Click Rate</p>
-                <p className="text-3xl font-bold text-teal-700">{stats.avgClickThrough.toFixed(1)}%</p>
-              </div>
-              <div className="text-teal-500">
-                <Icons.TrendingUp />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-cyan-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-cyan-600">Total Campaigns</p>
-                <p className="text-3xl font-bold text-cyan-700">{dummyPromotions.length}</p>
-              </div>
-              <div className="text-cyan-500">
-                <Icons.Gift />
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
+              <Icons.CheckCircle />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.active}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+              <Icons.Clock />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.scheduled}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Avg. Click Rate</CardTitle>
+              <Icons.TrendingUp />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.avgClickThrough.toFixed(1)}%</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
+              <Icons.Gift />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dummyPromotions.length}</div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Search & Filters</CardTitle>
+            <CardDescription>Find specific promotions</CardDescription>
+          </CardHeader>
+          <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                <Icons.Search />
-                <span className="ml-2">Search Promotions</span>
-              </label>
-              <input
-                type="text"
+              <Label className="flex items-center"><Icons.Search /><span className="ml-2">Search Promotions</span></Label>
+              <Input
                 placeholder="Search by title, description, or ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
               />
             </div>
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                <Icons.Filter />
-                <span className="ml-2">Status</span>
-              </label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as PromotionStatus | "All")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-              >
-                <option value="All">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Scheduled">Scheduled</option>
-                <option value="Expired">Expired</option>
-                <option value="Draft">Draft</option>
-                <option value="Paused">Paused</option>
-              </select>
+              <Label className="flex items-center"><Icons.Filter /><span className="ml-2">Status</span></Label>
+              <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as PromotionStatus | "All")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Statuses</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Scheduled">Scheduled</SelectItem>
+                  <SelectItem value="Expired">Expired</SelectItem>
+                  <SelectItem value="Draft">Draft</SelectItem>
+                  <SelectItem value="Paused">Paused</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Type Filter */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                <Icons.Tag />
-                <span className="ml-2">Promotion Type</span>
-              </label>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value as PromotionType | "All")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-              >
-                <option value="All">All Types</option>
-                <option value="Percentage">Percentage Discount</option>
-                <option value="Fixed Amount">Fixed Amount</option>
-                <option value="Buy One Get One">Buy One Get One</option>
-                <option value="Bundle">Bundle Discount</option>
-                <option value="Free Shipping">Free Shipping</option>
-              </select>
+              <Label className="flex items-center"><Icons.Tag /><span className="ml-2">Promotion Type</span></Label>
+              <Select value={selectedType} onValueChange={(v) => setSelectedType(v as PromotionType | "All")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Types</SelectItem>
+                  <SelectItem value="Percentage">Percentage Discount</SelectItem>
+                  <SelectItem value="Fixed Amount">Fixed Amount</SelectItem>
+                  <SelectItem value="Buy One Get One">Buy One Get One</SelectItem>
+                  <SelectItem value="Bundle">Bundle Discount</SelectItem>
+                  <SelectItem value="Free Shipping">Free Shipping</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Reset Filters */}
             <div className="flex items-end">
-              <button
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => {
                   setSelectedStatus("All");
                   setSelectedType("All");
                   setSearchTerm("");
                 }}
-                className="w-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 px-4 py-3 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 font-semibold"
               >
                 Reset Filters
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Promotions Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -477,28 +466,21 @@ export default function PromotionsPage() {
             const usagePercentage = promotion.usageLimit ? (promotion.usageCount / promotion.usageLimit) * 100 : 0;
             
             return (
-              <div key={promotion.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300">
-                {/* Card Header */}
-                <div className="bg-gradient-to-r from-blue-500 to-teal-500 p-6 text-white">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center">
-                      {typeDisplay.icon}
-                      <span className="ml-2 text-2xl font-bold">{typeDisplay.display}</span>
-                    </div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
+              <Card key={promotion.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center"><span className="mr-2">{typeDisplay.icon}</span>{typeDisplay.display}</span>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border bg-muted`}>
                       {statusStyle.icon}
                       <span className="ml-1">{promotion.status}</span>
                     </span>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{promotion.title}</h3>
-                  <p className="text-blue-100 text-sm">{promotion.description}</p>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-6">
+                  </CardTitle>
+                  <CardDescription>{promotion.title} — {promotion.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-4">
                     {/* Date Range */}
-                    <div className="flex items-center text-sm text-gray-600">
+                    <div className="flex items-center text-sm text-muted-foreground">
                       <Icons.Calendar />
                       <span className="ml-2">
                         {new Date(promotion.startDate).toLocaleDateString()} - {new Date(promotion.endDate).toLocaleDateString()}
@@ -509,12 +491,12 @@ export default function PromotionsPage() {
                     {promotion.usageLimit && (
                       <div>
                         <div className="flex justify-between text-sm mb-2">
-                          <span className="text-gray-600">Usage</span>
+                          <span className="text-muted-foreground">Usage</span>
                           <span className="font-medium">{promotion.usageCount}/{promotion.usageLimit}</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-muted rounded-full h-2">
                           <div 
-                            className="bg-gradient-to-r from-blue-500 to-teal-500 h-2 rounded-full transition-all duration-300"
+                            className="bg-foreground h-2 rounded-full transition-all duration-300"
                             style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                           ></div>
                         </div>
@@ -523,25 +505,25 @@ export default function PromotionsPage() {
 
                     {/* Metrics */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-3 bg-gray-50 rounded-lg">
-                        <div className="text-lg font-bold text-gray-900">LKR {promotion.totalSavings.toLocaleString()}</div>
-                        <div className="text-xs text-gray-600">Total Savings</div>
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <div className="text-lg font-bold">LKR {promotion.totalSavings.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">Total Savings</div>
                       </div>
-                      <div className="text-center p-3 bg-gray-50 rounded-lg">
-                        <div className="text-lg font-bold text-gray-900">{promotion.clickThroughRate}%</div>
-                        <div className="text-xs text-gray-600">Click Rate</div>
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <div className="text-lg font-bold">{promotion.clickThroughRate}%</div>
+                        <div className="text-xs text-muted-foreground">Click Rate</div>
                       </div>
                     </div>
 
                     {/* Customer Segment */}
                     <div className="flex items-center text-sm">
                       <Icons.Users />
-                      <span className="ml-2 text-gray-600">Target: {promotion.customerSegment}</span>
+                      <span className="ml-2 text-muted-foreground">Target: {promotion.customerSegment}</span>
                     </div>
 
                     {/* Minimum Order */}
                     {promotion.minimumOrderValue && (
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-muted-foreground">
                         Min. Order: LKR {promotion.minimumOrderValue.toLocaleString()}
                       </div>
                     )}
@@ -549,28 +531,28 @@ export default function PromotionsPage() {
 
                   {/* Action Buttons */}
                   <div className="flex space-x-3 mt-6">
-                    <button className="flex-1 bg-gradient-to-r from-blue-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-teal-600 transition-all duration-200 font-medium flex items-center justify-center">
+                    <Button className="flex-1" variant="default">
                       <Icons.Eye />
                       <span className="ml-2">View Details</span>
-                    </button>
-                    <button className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium flex items-center justify-center">
+                    </Button>
+                    <Button className="flex-1" variant="outline">
                       <Icons.Edit />
                       <span className="ml-2">Edit</span>
-                    </button>
+                    </Button>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
 
         {filteredPromotions.length === 0 && (
           <div className="text-center py-12">
-            <div className="flex justify-center mb-4 text-gray-400">
+            <div className="flex justify-center mb-4 text-muted-foreground">
               <Icons.Gift />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No promotions found</h3>
-            <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
+            <h3 className="text-lg font-semibold mb-2">No promotions found</h3>
+            <p className="text-muted-foreground">Try adjusting your search or filter criteria.</p>
           </div>
         )}
       </div>
