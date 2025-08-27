@@ -36,7 +36,7 @@ public class ApiGatewayApplication {
             .route("product-service", r -> r
                 .path("/api/products/**")
                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                .uri("http://localhost:8081"))
+                .uri("http://localhost:8083"))
 
             // Order Service (STOREKEEPER, MANAGER)
             .route("order-service-payments", r -> r

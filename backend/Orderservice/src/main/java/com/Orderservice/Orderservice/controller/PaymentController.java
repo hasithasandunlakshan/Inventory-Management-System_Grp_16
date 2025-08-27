@@ -45,6 +45,25 @@ public class PaymentController {
     public ResponseEntity<PaymentIntentResponse> createPaymentIntent(
             @RequestBody CreatePaymentIntentRequest request) {
         
+        System.out.println("=== INCOMING ORDER CREATION REQUEST ===");
+        System.out.println("Customer ID: " + request.getCustomerId());
+        System.out.println("Total Amount: " + request.getAmount());
+        System.out.println("Currency: " + request.getCurrency());
+        System.out.println("Order Items Count: " + (request.getOrderItems() != null ? request.getOrderItems().size() : 0));
+        
+        if (request.getOrderItems() != null) {
+            System.out.println("--- Order Items Details ---");
+            for (int i = 0; i < request.getOrderItems().size(); i++) {
+                var item = request.getOrderItems().get(i);
+                System.out.println("Item " + (i + 1) + ":");
+                System.out.println("  Product ID: " + item.getProductId());
+                System.out.println("  Barcode: " + item.getBarcode());
+                System.out.println("  Quantity: " + item.getQuantity());
+                System.out.println("  Unit Price: " + item.getUnitPrice());
+            }
+        }
+        System.out.println("=====================================");
+        
         PaymentIntentResponse response = paymentService.createPaymentIntent(request);
         
         if (response.isSuccess()) {
