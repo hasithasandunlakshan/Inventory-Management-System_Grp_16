@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Beautiful Icon Components
 const Icons = {
@@ -273,30 +278,30 @@ export default function ReportsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-lg shadow-2xl border-b border-gray-200/50">
+      <div className="border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-700 to-indigo-600 bg-clip-text text-transparent flex items-center">
+              <h1 className="text-3xl font-bold tracking-tight flex items-center">
                 <Icons.ChartBar />
                 <span className="ml-3">Analytics & Reports</span>
               </h1>
-              <p className="text-gray-600 mt-2 text-lg">Comprehensive business insights and analytics</p>
+              <p className="text-muted-foreground mt-2">Comprehensive business insights and analytics</p>
             </div>
             <div className="flex items-center space-x-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-indigo-600">
+                <div className="text-2xl font-bold">
                   LKR {summaryStats.totalStockValue.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-500">Total Stock Value</div>
+                <div className="text-sm text-muted-foreground">Total Stock Value</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold">
                   LKR {summaryStats.totalRevenue.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-500">Total Revenue</div>
+                <div className="text-sm text-muted-foreground">Total Revenue</div>
               </div>
             </div>
           </div>
@@ -305,181 +310,155 @@ export default function ReportsPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-600">Total Products</p>
-                <p className="text-3xl font-bold text-blue-700">{inventoryData.length}</p>
-              </div>
-              <div className="text-blue-500">
-                <Icons.Package />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-red-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-red-600">Low Stock Alerts</p>
-                <p className="text-3xl font-bold text-red-700">{summaryStats.lowStockItems}</p>
-              </div>
-              <div className="text-red-500">
-                <Icons.Warning />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-green-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-600">Total Orders</p>
-                <p className="text-3xl font-bold text-green-700">{summaryStats.totalOrders}</p>
-              </div>
-              <div className="text-green-500">
-                <Icons.ShoppingCart />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-purple-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-600">Active Suppliers</p>
-                <p className="text-3xl font-bold text-purple-700">{supplierData.length}</p>
-              </div>
-              <div className="text-purple-500">
-                <Icons.Building />
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+              <Icons.Package />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{inventoryData.length}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Low Stock Alerts</CardTitle>
+              <Icons.Warning />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{summaryStats.lowStockItems}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <Icons.ShoppingCart />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{summaryStats.totalOrders}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Suppliers</CardTitle>
+              <Icons.Building />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{supplierData.length}</div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Report Navigation */}
           <div className="lg:col-span-1">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
                 <Icons.DocumentReport />
                 <span className="ml-2">Report Categories</span>
-              </h2>
-              
-              <div className="space-y-3">
-                {reportTypes.map((report) => (
-                  <button
-                    key={report.id}
-                    onClick={() => setActiveReport(report.id as ReportType)}
-                    className={`w-full text-left p-4 rounded-xl transition-all duration-200 flex items-center space-x-3 ${
-                      activeReport === report.id
-                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg transform scale-105'
-                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:shadow-md'
-                    }`}
-                  >
-                    <div className={`${activeReport === report.id ? 'text-white' : 'text-gray-600'}`}>
+                </CardTitle>
+                <CardDescription>Select a report type</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {reportTypes.map((report) => (
+                    <Button
+                      key={report.id}
+                      variant={activeReport === report.id ? "default" : "outline"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveReport(report.id as ReportType)}
+                    >
                       <report.icon />
-                    </div>
-                    <span className="font-semibold">{report.name}</span>
-                  </button>
-                ))}
-              </div>
-
+                      <span className="ml-2">{report.name}</span>
+                    </Button>
+                  ))}
+                </div>
+                </CardContent>
               {/* Date Range Selector */}
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <div className="mt-6 pt-6 border-t">
+                <CardTitle className="text-base flex items-center">
                   <Icons.Calendar />
                   <span className="ml-2">Date Range</span>
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
-                    <select
-                      value={timeRange}
-                      onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
-                    >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
-                      <option value="yearly">Yearly</option>
-                    </select>
+                </CardTitle>
+                <div className="px-0 pt-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Time Period</Label>
+                    <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
-                    <input
-                      type="date"
-                      value={dateFrom}
-                      onChange={(e) => setDateFrom(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
-                    />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">From Date</Label>
+                    <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
-                    <input
-                      type="date"
-                      value={dateTo}
-                      onChange={(e) => setDateTo(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white/80"
-                    />
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">To Date</Label>
+                    <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                   </div>
-
-                  <button className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 font-semibold shadow-md flex items-center justify-center">
+                  <Button className="w-full">
                     <Icons.ChartBar />
                     <span className="ml-2">Generate Report</span>
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Report Content */}
           <div className="lg:col-span-3">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100">
+            <Card>
               {/* Inventory Report */}
               {activeReport === "inventory" && (
                 <div>
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <div className="px-6 py-4 border-b">
+                    <h2 className="text-2xl font-bold flex items-center">
                       <Icons.Package />
                       <span className="ml-3">Inventory Report</span>
                     </h2>
-                    <p className="text-gray-600 mt-1">Current stock levels and inventory analysis</p>
+                    <p className="text-muted-foreground mt-1">Current stock levels and inventory analysis</p>
                   </div>
                   
                   <div className="p-6">
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50/50">
+                        <thead className="bg-muted/50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock Level</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock Value</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Turnover Rate</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Product</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Stock Level</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Stock Value</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Turnover Rate</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white/30 divide-y divide-gray-200">
+                        <tbody className="bg-white divide-y divide-gray-200">
                           {inventoryData.map((item) => (
-                            <tr key={item.productId} className="hover:bg-white/50 transition-all duration-200">
+                            <tr key={item.productId} className="hover:bg-muted/30">
                               <td className="px-6 py-4">
                                 <div>
-                                  <div className="text-sm font-semibold text-gray-900">{item.productName}</div>
-                                  <div className="text-sm text-gray-600">{item.category}</div>
-                                  <div className="text-xs text-gray-500">{item.productId}</div>
+                                  <div className="text-sm font-semibold">{item.productName}</div>
+                                  <div className="text-sm text-muted-foreground">{item.category}</div>
+                                  <div className="text-xs text-muted-foreground">{item.productId}</div>
                                 </div>
                               </td>
                               <td className="px-6 py-4">
-                                <div className="text-sm font-medium text-gray-900">{item.currentStock} units</div>
-                                <div className="text-xs text-gray-500">Reorder at: {item.reorderLevel}</div>
+                                <div className="text-sm font-medium">{item.currentStock} units</div>
+                                <div className="text-xs text-muted-foreground">Reorder at: {item.reorderLevel}</div>
                               </td>
                               <td className="px-6 py-4">
-                                <div className="text-lg font-bold text-gray-900">LKR {item.stockValue.toLocaleString()}</div>
+                                <div className="text-lg font-bold">LKR {item.stockValue.toLocaleString()}</div>
                               </td>
                               <td className="px-6 py-4">
-                                <div className="text-sm font-medium text-gray-900">{item.turnoverRate}x</div>
+                                <div className="text-sm font-medium">{item.turnoverRate}x</div>
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getInventoryStatusColor(item.status)}`}>
@@ -502,63 +481,67 @@ export default function ReportsPage() {
               {/* Sales Report */}
               {activeReport === "sales" && (
                 <div>
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <div className="px-6 py-4 border-b">
+                    <h2 className="text-2xl font-bold flex items-center">
                       <Icons.TrendingUp />
                       <span className="ml-3">Sales Report</span>
                     </h2>
-                    <p className="text-gray-600 mt-1">Revenue, orders, and sales performance analysis</p>
+                    <p className="text-muted-foreground mt-1">Revenue, orders, and sales performance analysis</p>
                   </div>
                   
                   <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       {salesData.map((period, index) => (
-                        <div key={index} className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl p-6 border border-green-200">
-                          <h3 className="text-lg font-bold text-green-800">{period.period}</h3>
+                        <Card key={index}>
+                          <CardHeader>
+                            <CardTitle className="text-base">{period.period}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
                           <div className="mt-4 space-y-2">
                             <div className="flex justify-between">
-                              <span className="text-sm text-green-600 flex items-center">
+                              <span className="text-sm text-muted-foreground flex items-center">
                                 <Icons.CurrencyDollar />
                                 <span className="ml-1">Revenue:</span>
                               </span>
-                              <span className="font-semibold text-green-800">LKR {period.revenue.toLocaleString()}</span>
+                              <span className="font-semibold">LKR {period.revenue.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-green-600 flex items-center">
+                              <span className="text-sm text-muted-foreground flex items-center">
                                 <Icons.ShoppingCart />
                                 <span className="ml-1">Orders:</span>
                               </span>
-                              <span className="font-semibold text-green-800">{period.orders}</span>
+                              <span className="font-semibold">{period.orders}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-green-600 flex items-center">
+                              <span className="text-sm text-muted-foreground flex items-center">
                                 <Icons.TrendingUp />
                                 <span className="ml-1">Avg Order:</span>
                               </span>
-                              <span className="font-semibold text-green-800">LKR {period.averageOrderValue.toLocaleString()}</span>
+                              <span className="font-semibold">LKR {period.averageOrderValue.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-green-600 flex items-center">
+                              <span className="text-sm text-muted-foreground flex items-center">
                                 <Icons.ChartBar />
                                 <span className="ml-1">Growth:</span>
                               </span>
-                              <span className={`font-semibold flex items-center ${period.growth > 0 ? 'text-green-800' : 'text-red-600'}`}>
+                              <span className={`font-semibold flex items-center`}>
                                 {period.growth > 0 ? <Icons.TrendingUp /> : <Icons.XCircle />}
                                 <span className="ml-1">{period.growth > 0 ? '+' : ''}{period.growth}%</span>
                               </span>
                             </div>
                           </div>
                           <div className="mt-4">
-                            <div className="text-xs text-green-600 mb-1">Top Products:</div>
+                            <div className="text-xs text-muted-foreground mb-1">Top Products:</div>
                             <div className="flex flex-wrap gap-1">
                               {period.topProducts.map((product, idx) => (
-                                <span key={idx} className="px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full">
+                                <span key={idx} className="px-2 py-1 bg-muted text-xs rounded-full">
                                   {product}
                                 </span>
                               ))}
                             </div>
                           </div>
-                        </div>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   </div>
@@ -568,61 +551,58 @@ export default function ReportsPage() {
               {/* Logistics Report */}
               {activeReport === "logistics" && (
                 <div>
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-amber-50">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <div className="px-6 py-4 border-b">
+                    <h2 className="text-2xl font-bold flex items-center">
                       <Icons.Truck />
                       <span className="ml-3">Logistics Report</span>
                     </h2>
-                    <p className="text-gray-600 mt-1">Delivery performance and logistics efficiency</p>
+                    <p className="text-muted-foreground mt-1">Delivery performance and logistics efficiency</p>
                   </div>
                   
                   <div className="p-6">
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50/50">
+                        <thead className="bg-muted/50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Orders Delivered</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Delivery Time</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Success Rate</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Fuel Cost</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Driver Efficiency</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Orders Delivered</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Avg Delivery Time</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Success Rate</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fuel Cost</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Driver Efficiency</th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white/30 divide-y divide-gray-200">
+                        <tbody className="bg-white divide-y divide-gray-200">
                           {logisticsData.map((item, index) => (
-                            <tr key={index} className="hover:bg-white/50 transition-all duration-200">
-                              <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                            <tr key={index} className="hover:bg-muted/30">
+                              <td className="px-6 py-4 text-sm font-medium">
                                 {new Date(item.deliveryDate).toLocaleDateString()}
                               </td>
-                              <td className="px-6 py-4 text-sm text-gray-900">{item.ordersDelivered}</td>
-                              <td className="px-6 py-4 text-sm text-gray-900 flex items-center">
+                              <td className="px-6 py-4 text-sm">{item.ordersDelivered}</td>
+                              <td className="px-6 py-4 text-sm flex items-center">
                                 <Icons.Clock />
                                 <span className="ml-2">{item.averageDeliveryTime} hours</span>
                               </td>
                               <td className="px-6 py-4">
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center ${
-                                  item.deliverySuccess >= 95 ? 'bg-green-100 text-green-800' : 
-                                  item.deliverySuccess >= 90 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                                }`}>
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center bg-muted`}>
                                   {item.deliverySuccess >= 95 ? <Icons.CheckCircle /> : 
                                    item.deliverySuccess >= 90 ? <Icons.Warning /> : <Icons.XCircle />}
                                   <span className="ml-1">{item.deliverySuccess}%</span>
                                 </span>
                               </td>
-                              <td className="px-6 py-4 text-sm text-gray-900 flex items-center">
+                              <td className="px-6 py-4 text-sm flex items-center">
                                 <Icons.CurrencyDollar />
                                 <span className="ml-2">LKR {item.fuelCost.toLocaleString()}</span>
                               </td>
                               <td className="px-6 py-4">
                                 <div className="flex items-center">
-                                  <div className="w-full bg-gray-200 rounded-full h-2 mr-2">
+                                  <div className="w-full bg-muted rounded-full h-2 mr-2">
                                     <div 
-                                      className="bg-orange-500 h-2 rounded-full" 
+                                      className="bg-foreground h-2 rounded-full" 
                                       style={{ width: `${item.driverEfficiency}%` }}
                                     ></div>
                                   </div>
-                                  <span className="text-sm font-medium text-gray-900">{item.driverEfficiency}%</span>
+                                  <span className="text-sm font-medium">{item.driverEfficiency}%</span>
                                 </div>
                               </td>
                             </tr>
@@ -637,62 +617,64 @@ export default function ReportsPage() {
               {/* Supplier Report */}
               {activeReport === "supplier" && (
                 <div>
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <div className="px-6 py-4 border-b">
+                    <h2 className="text-2xl font-bold flex items-center">
                       <Icons.Building />
                       <span className="ml-3">Supplier Report</span>
                     </h2>
-                    <p className="text-gray-600 mt-1">Supplier performance and partnership analysis</p>
+                    <p className="text-muted-foreground mt-1">Supplier performance and partnership analysis</p>
                   </div>
                   
                   <div className="p-6">
                     <div className="grid gap-6">
                       {supplierData.map((supplier) => (
-                        <div key={supplier.supplierId} className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
+                        <Card key={supplier.supplierId}>
+                          <CardContent className="p-6">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="text-xl font-bold text-indigo-900">{supplier.supplierName}</h3>
-                              <p className="text-indigo-600">{supplier.supplierId}</p>
+                              <h3 className="text-xl font-bold">{supplier.supplierName}</h3>
+                              <p className="text-muted-foreground">{supplier.supplierId}</p>
                             </div>
                             <div className="text-right">
-                              <div className="text-2xl font-bold text-indigo-800">
+                              <div className="text-2xl font-bold">
                                 LKR {supplier.totalValue.toLocaleString()}
                               </div>
-                              <div className="text-sm text-indigo-600">Total Value</div>
+                              <div className="text-sm text-muted-foreground">Total Value</div>
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                             <div className="text-center">
-                              <div className="text-lg font-semibold text-indigo-800 flex items-center justify-center">
+                              <div className="text-lg font-semibold flex items-center justify-center">
                                 <Icons.ShoppingCart />
                                 <span className="ml-1">{supplier.totalOrders}</span>
                               </div>
-                              <div className="text-sm text-indigo-600">Total Orders</div>
+                              <div className="text-sm text-muted-foreground">Total Orders</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-lg font-semibold text-indigo-800 flex items-center justify-center">
+                              <div className="text-lg font-semibold flex items-center justify-center">
                                 <Icons.Clock />
                                 <span className="ml-1">{supplier.deliveryTime} days</span>
                               </div>
-                              <div className="text-sm text-indigo-600">Avg Delivery</div>
+                              <div className="text-sm text-muted-foreground">Avg Delivery</div>
                             </div>
                             <div className="text-center">
                               <div className="flex items-center justify-center">
-                                <div className="text-lg font-semibold text-indigo-800 mr-1">{supplier.qualityRating}</div>
+                                <div className="text-lg font-semibold mr-1">{supplier.qualityRating}</div>
                                 <Icons.Star />
                               </div>
-                              <div className="text-sm text-indigo-600">Quality Rating</div>
+                              <div className="text-sm text-muted-foreground">Quality Rating</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-lg font-semibold text-indigo-800 flex items-center justify-center">
+                              <div className="text-lg font-semibold flex items-center justify-center">
                                 <Icons.CreditCard />
                                 <span className="ml-1">{supplier.paymentTerms}</span>
                               </div>
-                              <div className="text-sm text-indigo-600">Payment Terms</div>
+                              <div className="text-sm text-muted-foreground">Payment Terms</div>
                             </div>
                           </div>
-                        </div>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   </div>
@@ -702,25 +684,22 @@ export default function ReportsPage() {
               {/* Orders Report */}
               {activeReport === "orders" && (
                 <div>
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <div className="px-6 py-4 border-b">
+                    <h2 className="text-2xl font-bold flex items-center">
                       <Icons.ShoppingCart />
                       <span className="ml-3">Orders Report</span>
                     </h2>
-                    <p className="text-gray-600 mt-1">Order processing and fulfillment analysis</p>
+                    <p className="text-muted-foreground mt-1">Order processing and fulfillment analysis</p>
                   </div>
                   
                   <div className="p-6">
                     <div className="text-center py-12">
-                      <div className="flex justify-center mb-4 text-purple-500">
-                        <Icons.ShoppingCart />
-                      </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">Orders Report</h3>
-                      <p className="text-gray-600 mb-4">Detailed order analysis and processing metrics</p>
-                      <button className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-200 font-semibold flex items-center mx-auto">
+                      <h3 className="text-2xl font-bold mb-2">Orders Report</h3>
+                      <p className="text-muted-foreground mb-4">Detailed order analysis and processing metrics</p>
+                      <Button className="mx-auto">
                         <Icons.ChartBar />
                         <span className="ml-2">Generate Order Report</span>
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -729,30 +708,27 @@ export default function ReportsPage() {
               {/* Financial Report */}
               {activeReport === "financial" && (
                 <div>
-                  <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-red-50 to-rose-50">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <div className="px-6 py-4 border-b">
+                    <h2 className="text-2xl font-bold flex items-center">
                       <Icons.CurrencyDollar />
                       <span className="ml-3">Financial Report</span>
                     </h2>
-                    <p className="text-gray-600 mt-1">Financial performance and profitability analysis</p>
+                    <p className="text-muted-foreground mt-1">Financial performance and profitability analysis</p>
                   </div>
                   
                   <div className="p-6">
                     <div className="text-center py-12">
-                      <div className="flex justify-center mb-4 text-red-500">
-                        <Icons.CurrencyDollar />
-                      </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">Financial Report</h3>
-                      <p className="text-gray-600 mb-4">Comprehensive financial analysis and insights</p>
-                      <button className="bg-gradient-to-r from-red-500 to-rose-600 text-white px-6 py-3 rounded-lg hover:from-red-600 hover:to-rose-700 transition-all duration-200 font-semibold flex items-center mx-auto">
+                      <h3 className="text-2xl font-bold mb-2">Financial Report</h3>
+                      <p className="text-muted-foreground mb-4">Comprehensive financial analysis and insights</p>
+                      <Button className="mx-auto">
                         <Icons.ChartBar />
                         <span className="ml-2">Generate Financial Report</span>
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
               )}
-            </div>
+            </Card>
           </div>
         </div>
       </div>
