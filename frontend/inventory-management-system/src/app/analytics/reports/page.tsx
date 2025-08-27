@@ -383,7 +383,7 @@ export default function ReportsPage() {
                 </CardTitle>
                 <div className="px-0 pt-4 space-y-4">
                   <div className="space-y-2">
-                    <Label>Time Period</Label>
+                    <Label className="text-sm font-medium">Time Period</Label>
                     <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select period" />
@@ -398,11 +398,11 @@ export default function ReportsPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>From Date</Label>
+                    <Label className="text-sm font-medium">From Date</Label>
                     <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label>To Date</Label>
+                    <Label className="text-sm font-medium">To Date</Label>
                     <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                   </div>
                   <Button className="w-full">

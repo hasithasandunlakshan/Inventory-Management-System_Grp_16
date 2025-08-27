@@ -215,7 +215,7 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
+            <div>
           <h1 className="text-3xl font-bold tracking-tight">Payment Management</h1>
           <p className="text-muted-foreground">Track and manage all payment transactions</p>
         </div>
@@ -254,8 +254,8 @@ export default function PaymentsPage() {
             <div className="text-2xl font-bold">{stats.count > 0 ? Math.round((stats.completed / stats.count) * 100) : 0}%</div>
           </CardContent>
         </Card>
-      </div>
-
+          </div>
+          
       <Card>
         <CardHeader>
           <CardTitle>Search & Filters</CardTitle>
@@ -264,7 +264,7 @@ export default function PaymentsPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="search">Search Payments</Label>
+              <Label htmlFor="search" className="text-sm font-medium">Search Payments</Label>
               <Input
                 id="search"
                 placeholder="Search by customer, order, or payment ID..."
@@ -273,7 +273,7 @@ export default function PaymentsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Payment Status</Label>
+              <Label className="text-sm font-medium">Payment Status</Label>
               <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as PaymentStatus | "All")}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Statuses" />
@@ -289,7 +289,7 @@ export default function PaymentsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Filter by Month</Label>
+              <Label className="text-sm font-medium">Filter by Month</Label>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Months" />

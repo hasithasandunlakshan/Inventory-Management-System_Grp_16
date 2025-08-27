@@ -396,7 +396,7 @@ export default function PromotionsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div>
-              <Label className="flex items-center"><Icons.Search /><span className="ml-2">Search Promotions</span></Label>
+              <Label className="flex items-center text-sm font-medium"><Icons.Search /><span className="ml-2">Search Promotions</span></Label>
               <Input
                 placeholder="Search by title, description, or ID..."
                 value={searchTerm}
@@ -406,7 +406,7 @@ export default function PromotionsPage() {
 
             {/* Status Filter */}
             <div>
-              <Label className="flex items-center"><Icons.Filter /><span className="ml-2">Status</span></Label>
+              <Label className="flex items-center text-sm font-medium"><Icons.Filter /><span className="ml-2">Status</span></Label>
               <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as PromotionStatus | "All")}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Statuses" />
@@ -424,7 +424,7 @@ export default function PromotionsPage() {
 
             {/* Type Filter */}
             <div>
-              <Label className="flex items-center"><Icons.Tag /><span className="ml-2">Promotion Type</span></Label>
+              <Label className="flex items-center text-sm font-medium"><Icons.Tag /><span className="ml-2">Promotion Type</span></Label>
               <Select value={selectedType} onValueChange={(v) => setSelectedType(v as PromotionType | "All")}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Types" />
