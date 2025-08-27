@@ -21,7 +21,14 @@ public class Product {
 
     private String imageUrl;
     
+    @Column(name = "physical_stock")
     private int stock;
+    
+    @Column(name = "reserved")
+    private int reserved = 0;
+    
+    @Column(name = "available_stock")
+    private int availableStock;
 
     @Column(name = "category_id")
     private Long categoryId;

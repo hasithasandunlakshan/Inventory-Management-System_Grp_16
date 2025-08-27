@@ -1,12 +1,22 @@
 package com.example.productservice.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.example.productservice.dto.ProductDTO;
+import com.example.productservice.dto.StockUpdateRequest;
 import com.example.productservice.models.Product;
 import com.example.productservice.service.ProductService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
@@ -42,6 +52,28 @@ public class ProductController {
     public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Long categoryId) {
         List<Product> products = service.getProductsByCategory(categoryId);
         return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<List<Product>> getAvailableProducts() {
+        List<Product> products = service.getAvailableProducts();
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/category/{categoryId}/available")
+    public ResponseEntity<List<Product>> getAvailableProductsByCategory(@PathVariable Long categoryId) {
+        List<Product> products = service.getAvailableProductsByCategory(categoryId);
+        return ResponseEntity.ok(products);
+    }
+
+    @PutMapping("/{id}/stock")
+    public ResponseEntity<Product> updateStock(@PathVariable Long id, @RequestBody StockUpdateRequest request) {
+        try {
+            Product updatedProduct = service.updateStock(id, request.getStock());
+            return ResponseEntity.ok(updatedProduct);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/{id}")
