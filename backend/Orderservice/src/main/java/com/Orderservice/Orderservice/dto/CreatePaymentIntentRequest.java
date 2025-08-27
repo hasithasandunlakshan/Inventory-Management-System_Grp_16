@@ -9,12 +9,23 @@ public class CreatePaymentIntentRequest {
     private Long amount; // in cents
     private String currency;
     private Long customerId;
-    private List<Item> items;
+    private List<OrderItem> orderItems; // Changed from items to orderItems to match frontend
     
     @Data
-    public static class Item {
+    public static class OrderItem {
+        private String barcode;       // Added barcode field
         private Long productId;
         private Integer quantity;
-        private BigDecimal price;
+        private BigDecimal unitPrice; // Changed from price to unitPrice to match frontend
+        
+        // Add getter for price to maintain backward compatibility
+        public BigDecimal getPrice() {
+            return unitPrice;
+        }
+    }
+    
+    // Add getter for items to maintain backward compatibility
+    public List<OrderItem> getItems() {
+        return orderItems;
     }
 }
