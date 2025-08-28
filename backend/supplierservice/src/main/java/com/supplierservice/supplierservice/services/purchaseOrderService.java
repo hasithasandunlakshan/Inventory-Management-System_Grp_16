@@ -167,7 +167,7 @@ public class PurchaseOrderService {
                                 .id(po.getPoId())
                                 .poNumber(null) // add when you implement numbering
                                 .supplierId(po.getSupplier().getSupplierId())
-                                .supplierName(po.getSupplier().getName())
+                                .supplierName(po.getSupplier().getUser().getFullName())
                                 .date(po.getDate())
                                 .status(po.getStatus().name())
                                 .total(total)
@@ -191,7 +191,7 @@ public class PurchaseOrderService {
                 return PurchaseOrderDTO.builder()
                                 .id(po.getPoId())
                                 .supplierId(po.getSupplier().getSupplierId())
-                                .supplierName(po.getSupplier().getName())
+                                .supplierName(po.getSupplier().getUser().getFullName())
                                 .date(po.getDate())
                                 .status(po.getStatus().name())
                                 .items(items)
