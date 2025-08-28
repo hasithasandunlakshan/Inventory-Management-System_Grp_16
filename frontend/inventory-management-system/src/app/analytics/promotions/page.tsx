@@ -351,7 +351,7 @@ export default function PromotionsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
-              <Icons.CheckCircle />
+                <Icons.CheckCircle />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.active}</div>
@@ -360,7 +360,7 @@ export default function PromotionsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
-              <Icons.Clock />
+                <Icons.Clock />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.scheduled}</div>
@@ -369,7 +369,7 @@ export default function PromotionsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Avg. Click Rate</CardTitle>
-              <Icons.TrendingUp />
+                <Icons.TrendingUp />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.avgClickThrough.toFixed(1)}%</div>
@@ -378,7 +378,7 @@ export default function PromotionsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
-              <Icons.Gift />
+                <Icons.Gift />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dummyPromotions.length}</div>
