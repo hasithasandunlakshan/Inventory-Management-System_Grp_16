@@ -11,9 +11,8 @@ public class SupplierserviceApplication {
     public static void main(String[] args) {
         SpringApplication.run(SupplierserviceApplication.class, args);
         System.out.println("Supplier Service is running...");
-        System.out.println("Access the API at: http://localhost:8080/supplier");
+        System.out.println("Access the API at: http://localhost:8082/supplier");
 
     }
 
 }
-
