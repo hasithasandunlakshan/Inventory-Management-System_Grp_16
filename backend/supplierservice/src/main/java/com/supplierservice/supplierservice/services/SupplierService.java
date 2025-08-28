@@ -29,16 +29,16 @@ public class SupplierService {
         SupplierCategory category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid category ID"));
 
+        // Note: You'll need to handle User creation/lookup based on your business logic
+        // For now, assuming userId is provided and valid
         Supplier supplier = Supplier.builder()
-                .name(dto.getName())
-                .contactInfo(dto.getContactInfo())
                 .category(category)
+                // .user(...) // You'll need to set this based on your logic
                 .build();
 
         Supplier saved = supplierRepository.save(supplier);
 
-        // Reuse the projection so the response includes categoryName and latest score
-        // (if any)
+        // Reuse the projection so the response includes categoryName and user info
         return supplierRepository.findByIdAsDto(saved.getSupplierId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                         "Failed to load created supplier"));
