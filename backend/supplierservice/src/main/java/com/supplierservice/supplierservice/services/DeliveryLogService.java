@@ -5,6 +5,9 @@ import com.supplierservice.supplierservice.models.DeliveryLog;
 import com.supplierservice.supplierservice.models.PurchaseOrder;
 import com.supplierservice.supplierservice.repository.DeliveryLogRepository;
 import com.supplierservice.supplierservice.repository.PurchaseOrderRepository;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,7 +16,8 @@ public class DeliveryLogService {
     private final DeliveryLogRepository deliveryLogRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
 
-    public DeliveryLogService(DeliveryLogRepository deliveryLogRepository, PurchaseOrderRepository purchaseOrderRepository) {
+    public DeliveryLogService(DeliveryLogRepository deliveryLogRepository,
+            PurchaseOrderRepository purchaseOrderRepository) {
         this.deliveryLogRepository = deliveryLogRepository;
         this.purchaseOrderRepository = purchaseOrderRepository;
     }
@@ -30,4 +34,9 @@ public class DeliveryLogService {
 
         return deliveryLogRepository.save(log);
     }
+
+    public List<DeliveryLog> getDeliveryLogsByPoId(Long poId) {
+        return deliveryLogRepository.findAllByPoId(poId);
+    }
+
 }
