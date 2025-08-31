@@ -114,19 +114,16 @@ export interface StatsSummary {
 
 // Delivery Log types
 export interface DeliveryLog {
-  id: number;
   purchaseOrderId: number;
   deliveryDate: string;
-  receivedBy: string;
-  notes?: string;
   status: string;
 }
 
 export interface DeliveryLogCreateRequest {
   purchaseOrderId: number;
   deliveryDate: string;
-  receivedBy: string;
-  notes?: string;
+  itemID: number;
+  receivedQuantity: number;
 }
 
 // Pagination response wrapper

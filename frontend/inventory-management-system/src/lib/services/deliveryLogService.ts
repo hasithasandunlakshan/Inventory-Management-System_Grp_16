@@ -49,5 +49,28 @@ export const deliveryLogService = {
       console.error('Failed to fetch delivery logs:', error);
       throw new Error('Failed to fetch delivery logs - backend not available');
     }
+  },
+
+  /**
+   * Get all delivery logs (for recent logs display)
+   */
+  async getAllDeliveryLogs(): Promise<DeliveryLog[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/all`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch all delivery logs');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch all delivery logs:', error);
+      throw new Error('Failed to fetch all delivery logs - backend not available');
+    }
   }
 };

@@ -28,4 +28,5 @@ public class DeliveryLog {
     private int receivedQuantity;
 
     private LocalDate receivedDate;
+    private Long item_id;
 }
