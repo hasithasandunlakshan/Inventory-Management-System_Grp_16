@@ -36,8 +36,8 @@ public class User {
     private String phoneNumber;
     private String profileImageUrl;
 
-    private double latitude;
-    private double longitude;
+    private Double latitude;
+    private Double longitude;
     private String formattedAddress;
 
     @Convert(converter = AccountStatusConverter.class)

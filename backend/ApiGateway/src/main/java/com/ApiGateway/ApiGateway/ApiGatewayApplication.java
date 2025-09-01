@@ -22,43 +22,53 @@ public class ApiGatewayApplication {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-            // User Service (Public + Secure)
-            .route("user-service-auth", r -> r
-                .path("/api/auth/**")
-                .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
-                .uri("http://localhost:8080"))
-            .route("user-service-secure", r -> r
-                .path("/api/secure/**")
-                .filters(f -> f.filter(jwtAuthenticationFilter))
-                .uri("http://localhost:8080"))
+                // User Service (Public + Secure)
+                .route("user-service-auth", r -> r
+                        .path("/api/auth/**")
+                        .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
+                        .uri("http://localhost:8080"))
+                .route("user-service-admin", r -> r
+                        .path("/api/admin/**")
+                        .filters(f -> f.filter(jwtAuthenticationFilter))
+                        .uri("http://localhost:8080"))
+                .route("user-service-secure", r -> r
+                        .path("/api/secure/**")
+                        .filters(f -> f.filter(jwtAuthenticationFilter))
+                        .uri("http://localhost:8080"))
 
-            // Product Service (MANAGER only)
-            .route("product-service", r -> r
-                .path("/api/products/**")
-                .filters(f -> f.filter(jwtAuthenticationFilter))
-                .uri("http://localhost:8083"))
+                // Product Service (MANAGER only)
+                .route("product-service", r -> r
+                        .path("/api/products/**")
+                        .filters(f -> f.filter(jwtAuthenticationFilter))
+                        .uri("http://localhost:8083"))
 
-            // Order Service (STOREKEEPER, MANAGER)
-            .route("order-service-payments", r -> r
-                .path("/api/payments/**")
-                .filters(f -> f.filter(jwtAuthenticationFilter))
-                .uri("http://localhost:8084"))
-            .route("order-service-orders", r -> r
-                .path("/api/orders/**")
-                .filters(f -> f.filter(jwtAuthenticationFilter))
-                .uri("http://localhost:8084"))
+                // Order Service (STOREKEEPER, MANAGER)
+                .route("order-service-payments", r -> r
+                        .path("/api/payments/**")
+                        .filters(f -> f.filter(jwtAuthenticationFilter))
+                        .uri("http://localhost:8084"))
+                .route("order-service-orders", r -> r
+                        .path("/api/orders/**")
+                        .filters(f -> f.filter(jwtAuthenticationFilter))
+                        .uri("http://localhost:8084"))
 
-            // Inventory Service (STOREKEEPER, MANAGER)
-            .route("inventory-service", r -> r
-                .path("/api/inventory/**")
-                .filters(f -> f.filter(jwtAuthenticationFilter))
-                .uri("http://localhost:8083"))
+                // Inventory Service (STOREKEEPER, MANAGER)
+                .route("inventory-service", r -> r
+                        .path("/api/inventory/**")
+                        .filters(f -> f.filter(jwtAuthenticationFilter))
+                        .uri("http://localhost:8083"))
 
-            // Health Check
-            .route("health-check", r -> r
-                .path("/health")
-                .uri("http://localhost:8090"))
+                // Supplier Service (MANAGER, STOREKEEPER)
+                .route("supplier-service", r -> r
+                        .path("/api/delivery-logs/**", "/api/suppliers/**", "/api/purchase-orders/**")
+                        .filters(f -> f.filter(jwtAuthenticationFilter))
+                        .uri("http://localhost:8082"))
 
-            .build();
+                // Health Check
+                .route("health-check", r -> r
+                        .path("/health")
+                        .uri("http://localhost:8090"))
+
+                .build();
     }
 }

@@ -26,17 +26,14 @@ public class SignupRequest {
     // From frontend: after image upload and map selection
     private String profileImageUrl;
 
-    private double latitude;
+    private Double latitude;
 
-    private double longitude;
+    private Double longitude;
 
     private String formattedAddress;
-    
 
     private LocalDate dateOfBirth;
 
     // existing getters and setters
-
-    
 
 }

@@ -5,26 +5,56 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, DollarSign, Calendar, Phone, Mail, MapPin, User, Building2, Tag, X } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, DollarSign, Calendar, Phone, Mail, MapPin, User, Building2, Tag, X, CheckCircle, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { deliveryLogService } from "@/lib/services/deliveryLogService";
-import { DeliveryLog, DeliveryLogCreateRequest } from "@/lib/types/supplier";
+import { DeliveryLog } from "@/lib/types/supplier";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthModal } from "@/components/AuthModal";
+import { UserHeader } from "@/components/UserHeader";
 
-export default function SuppliersPage() {
+// Define DeliveryLogCreateRequest to match the imported type
+interface DeliveryLogCreateRequest {
+  poId: number;
+  itemID: number;
+  receivedDate: string;
+  receivedQuantity: number;
+}
+
+// Main component wrapped with authentication
+function SuppliersPageContent() {
   const [activeTab, setActiveTab] = useState("purchase-orders");
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  
+  const { isAuthenticated, isLoading } = useAuth();
 
   const handleViewSupplier = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setIsSheetOpen(true);
   };
 
+  const handleLoginClick = () => {
+    setIsAuthModalOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      <UserHeader onLoginClick={handleLoginClick} />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Supplier Management</h1>
@@ -33,15 +63,15 @@ export default function SuppliersPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" disabled={!isAuthenticated}>
             <Upload className="mr-2 h-4 w-4" />
             Import
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" disabled={!isAuthenticated}>
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button>
+          <Button disabled={!isAuthenticated}>
             <Plus className="mr-2 h-4 w-4" />
             New Purchase Order
           </Button>
@@ -132,7 +162,22 @@ export default function SuppliersPage() {
         isOpen={isSheetOpen}
         onOpenChange={setIsSheetOpen}
       />
+      
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode="login"
+      />
     </div>
+  );
+}
+
+// Export the main component wrapped with AuthProvider
+export default function SuppliersPage() {
+  return (
+    <AuthProvider>
+      <SuppliersPageContent />
+    </AuthProvider>
   );
 }
 
@@ -294,18 +339,22 @@ function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier)
 
 // Delivery Logs Tab Component
 function DeliveryLogsTab() {
+  const { isAuthenticated, canAccessSupplierService } = useAuth();
   const [deliveryLogs, setDeliveryLogs] = useState<DeliveryLog[]>([]);
   const [filteredLogs, setFilteredLogs] = useState<DeliveryLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [poFilter, setPoFilter] = useState('');
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [newDeliveryLog, setNewDeliveryLog] = useState<DeliveryLogCreateRequest>({
-    purchaseOrderId: 0,
+    poId: 0,
     itemID: 0,
-    deliveryDate: '',
+    receivedDate: '',
     receivedQuantity: 0
   });
   const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Mock data for recent delivery logs (replace with actual API call)
   const mockDeliveryLogs: DeliveryLog[] = [
@@ -323,24 +372,42 @@ function DeliveryLogsTab() {
     { purchaseOrderId: 1009, deliveryDate: '2025-08-19', status: 'delivered' },
   ];
 
-  // Load delivery logs on component mount
+  // Load delivery logs on component mount and when authentication changes
   useEffect(() => {
     loadDeliveryLogs();
-  }, []);
+  }, [isAuthenticated]);
 
   const loadDeliveryLogs = async () => {
+    if (!isAuthenticated) {
+      // Show mock data when not authenticated
+      const sortedLogs = mockDeliveryLogs
+        .sort((a, b) => new Date(b.deliveryDate).getTime() - new Date(a.deliveryDate).getTime())
+        .slice(0, 10);
+      
+      setDeliveryLogs(sortedLogs);
+      setFilteredLogs(sortedLogs);
+      return;
+    }
+
     setLoading(true);
+    setApiError(null);
     try {
-      // For demo purposes, using mock data
-      // In real implementation, you might want to fetch all logs and then filter
+      // Try to fetch from the actual API with authentication
+      const apiLogs = await deliveryLogService.getAllDeliveryLogs();
+      setDeliveryLogs(apiLogs);
+      setFilteredLogs(apiLogs);
+    } catch (apiError) {
+      const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
+      console.warn('API call failed:', errorMessage);
+      setApiError(errorMessage);
+      
+      // Fallback to mock data if API is not available
       const sortedLogs = mockDeliveryLogs
         .sort((a, b) => new Date(b.deliveryDate).getTime() - new Date(a.deliveryDate).getTime())
         .slice(0, 10); // Show only 10 most recent
       
       setDeliveryLogs(sortedLogs);
       setFilteredLogs(sortedLogs);
-    } catch (error) {
-      console.error('Failed to load delivery logs:', error);
     } finally {
       setLoading(false);
     }
@@ -359,25 +426,44 @@ function DeliveryLogsTab() {
   }, [poFilter, deliveryLogs]);
 
   const handleCreateDeliveryLog = async () => {
-    if (!newDeliveryLog.purchaseOrderId || !newDeliveryLog.deliveryDate || !newDeliveryLog.receivedQuantity) {
+    if (!newDeliveryLog.poId || !newDeliveryLog.receivedDate || !newDeliveryLog.receivedQuantity) {
+      setErrorMessage('Please fill in all required fields');
       return;
     }
 
     setSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    
     try {
-      await deliveryLogService.logDelivery(newDeliveryLog);
+      const response = await deliveryLogService.logDelivery(newDeliveryLog);
+      
+      // Show success message from backend response
+      setSuccessMessage(response.message);
+      
       // Reload the delivery logs
       await loadDeliveryLogs();
+      
       // Reset form
       setNewDeliveryLog({
-        purchaseOrderId: 0,
+        poId: 0,
         itemID: 0,
-        deliveryDate: '',
+        receivedDate: '',
         receivedQuantity: 0
       });
+      
       setIsCreateSheetOpen(false);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000);
+      
     } catch (error) {
       console.error('Failed to create delivery log:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to create delivery log';
+      setErrorMessage(errorMsg);
+      
+      // Clear error message after 5 seconds
+      setTimeout(() => setErrorMessage(null), 5000);
     } finally {
       setSubmitting(false);
     }
@@ -398,7 +484,7 @@ function DeliveryLogsTab() {
             </div>
             <Sheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
               <SheetTrigger asChild>
-                <Button>
+                <Button disabled={!isAuthenticated || !canAccessSupplierService()}>
                   <Plus className="mr-2 h-4 w-4" />
                   New Delivery Log
                 </Button>
@@ -412,15 +498,15 @@ function DeliveryLogsTab() {
                 </SheetHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="purchaseOrderId">Purchase Order ID</Label>
+                    <Label htmlFor="poId">Purchase Order ID</Label>
                     <Input
-                      id="purchaseOrderId"
+                      id="poId"
                       type="number"
                       placeholder="Enter PO ID"
-                      value={newDeliveryLog.purchaseOrderId || ''}
+                      value={newDeliveryLog.poId || ''}
                       onChange={(e) => setNewDeliveryLog(prev => ({
                         ...prev,
-                        purchaseOrderId: parseInt(e.target.value) || 0
+                        poId: parseInt(e.target.value) || 0
                       }))}
                     />
                   </div>
@@ -438,14 +524,14 @@ function DeliveryLogsTab() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="deliveryDate">Delivery Date</Label>
+                    <Label htmlFor="receivedDate">Received Date</Label>
                     <Input
-                      id="deliveryDate"
+                      id="receivedDate"
                       type="date"
-                      value={newDeliveryLog.deliveryDate}
+                      value={newDeliveryLog.receivedDate}
                       onChange={(e) => setNewDeliveryLog(prev => ({
                         ...prev,
-                        deliveryDate: e.target.value
+                        receivedDate: e.target.value
                       }))}
                     />
                   </div>
@@ -484,6 +570,53 @@ function DeliveryLogsTab() {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Success Message */}
+          {successMessage && (
+            <Alert className="mb-4 border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">Success</AlertTitle>
+              <AlertDescription className="text-green-700">
+                {successMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error Message */}
+          {errorMessage && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {errorMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Authentication Status */}
+          {!isAuthenticated && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
+                <span className="text-sm font-medium text-yellow-800">Demo Mode</span>
+              </div>
+              <p className="text-sm text-yellow-700 mt-1">
+                Showing sample delivery logs. Login to access real-time data and create new delivery logs.
+              </p>
+            </div>
+          )}
+          
+          {isAuthenticated && apiError && (
+            <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
+                <span className="text-sm font-medium text-orange-800">API Connection Issue</span>
+              </div>
+              <p className="text-sm text-orange-700 mt-1">
+                Using cached data. Some features may be limited. Error: {apiError}
+              </p>
+            </div>
+          )}
+          
           {/* Filter Section */}
           <div className="flex items-center gap-4 mb-6 p-4 bg-muted/30 rounded-lg">
             <div className="flex-1">

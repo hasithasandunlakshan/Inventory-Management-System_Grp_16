@@ -15,18 +15,23 @@ import java.time.LocalDate;
 public class DeliveryLog {
 
     @Id
-    private Long poId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "delivery_log_id")
+    private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY) // make it lazy to avoid eager graph pulls
-    @MapsId
-    @JoinColumn(name = "po_id")
-    @JsonIgnore // <-- prevent Jackson from triggering lazy init
-    @ToString.Exclude // <-- avoid toString() walking into proxies
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "po_id", nullable = false)
+    @JsonIgnore
+    @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private PurchaseOrder purchaseOrder;
 
-    private int receivedQuantity;
+    @Column(name = "item_id", nullable = false)
+    private Long itemId;
 
+    @Column(name = "received_quantity")
+    private Integer receivedQuantity;
+
+    @Column(name = "received_date")
     private LocalDate receivedDate;
-    private Long item_id;
 }

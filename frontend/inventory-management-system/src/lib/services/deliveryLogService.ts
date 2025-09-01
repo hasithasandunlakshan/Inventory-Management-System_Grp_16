@@ -1,76 +1,75 @@
 import { DeliveryLog, DeliveryLogCreateRequest } from '../types/supplier';
+import { authService } from './authService';
 
-const API_BASE_URL = 'http://localhost:8090/api/delivery-logs'; // Through API Gateway
+const API_BASE_URL = 'http://localhost:8090'; // Use API Gateway
+
+// Response type for delivery log creation
+interface DeliveryLogResponse {
+  success: boolean;
+  message: string;
+  data: DeliveryLog | null;
+}
 
 export const deliveryLogService = {
-  /**
-   * Create/log a new delivery
-   */
-  async logDelivery(delivery: DeliveryLogCreateRequest): Promise<DeliveryLog> {
-    try {
-      const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(delivery)
-      });
+  // Create a new delivery log
+  async logDelivery(deliveryLog: DeliveryLogCreateRequest): Promise<DeliveryLogResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/delivery-logs/log`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authService.getAuthHeader(), // Add JWT token
+      },
+      body: JSON.stringify(deliveryLog),
+    });
 
-      if (!response.ok) {
-        throw new Error('Failed to log delivery');
-      }
-      
-      return response.json();
-    } catch (error) {
-      console.error('Failed to log delivery:', error);
-      throw new Error('Failed to log delivery - backend not available');
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to create delivery log: ${response.status} ${response.statusText} - ${errorText}`);
     }
+
+    const result: DeliveryLogResponse = await response.json();
+    
+    // If the backend returns success: false, throw an error so it gets caught by the frontend
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to create delivery log');
+    }
+
+    return result;
   },
 
-  /**
-   * Get delivery logs for a purchase order
-   */
-  async getDeliveryLogs(purchaseOrderId: number): Promise<DeliveryLog[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}?purchaseOrderId=${purchaseOrderId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch delivery logs');
-      }
-      
-      return response.json();
-    } catch (error) {
-      console.error('Failed to fetch delivery logs:', error);
-      throw new Error('Failed to fetch delivery logs - backend not available');
+  // Get delivery logs by purchase order ID
+  async getDeliveryLogs(poId: number): Promise<DeliveryLog[]> {
+    const response = await fetch(`${API_BASE_URL}/api/delivery-logs?purchaseOrderId=${poId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authService.getAuthHeader(), // Add JWT token
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch delivery logs: ${response.status} ${response.statusText} - ${errorText}`);
     }
+
+    return response.json();
   },
 
-  /**
-   * Get all delivery logs (for recent logs display)
-   */
+  // Get 10 most recent delivery logs
   async getAllDeliveryLogs(): Promise<DeliveryLog[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/all`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch all delivery logs');
-      }
-      
-      return response.json();
-    } catch (error) {
-      console.error('Failed to fetch all delivery logs:', error);
-      throw new Error('Failed to fetch all delivery logs - backend not available');
+    const response = await fetch(`${API_BASE_URL}/api/delivery-logs/recent`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authService.getAuthHeader(), // Add JWT token
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch recent delivery logs: ${response.status} ${response.statusText} - ${errorText}`);
     }
-  }
+
+    return response.json();
+  },
 };

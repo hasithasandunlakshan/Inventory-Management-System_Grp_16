@@ -120,8 +120,8 @@ export interface DeliveryLog {
 }
 
 export interface DeliveryLogCreateRequest {
-  purchaseOrderId: number;
-  deliveryDate: string;
+  poId: number;
+  receivedDate: string;
   itemID: number;
   receivedQuantity: number;
 }

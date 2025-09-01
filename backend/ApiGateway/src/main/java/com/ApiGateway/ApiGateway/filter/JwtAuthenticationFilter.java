@@ -25,6 +25,13 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
+        String path = request.getPath().value();
+
+        // Skip JWT validation for auth endpoints (login/signup)
+        if (path.startsWith("/api/auth")) {
+            return chain.filter(exchange);
+        }
+
         String authHeader = request.getHeaders().getFirst("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -43,17 +50,16 @@ public class JwtAuthenticationFilter implements GatewayFilter {
             String role = jwtUtil.extractRole(token);
             String email = jwtUtil.extractEmail(token);
 
-            String path = request.getPath().value();
             if (!hasAccess(path, role)) {
                 return handleError(response, "Access denied", HttpStatus.FORBIDDEN);
             }
 
             ServerHttpRequest modifiedRequest = request.mutate()
-                .header("X-User-Id", userId.toString())
-                .header("X-Username", username)
-                .header("X-User-Email", email)
-                .header("X-User-Roles", String.join(",", role))
-                .build();
+                    .header("X-User-Id", userId.toString())
+                    .header("X-Username", username)
+                    .header("X-User-Email", email)
+                    .header("X-User-Roles", String.join(",", role))
+                    .build();
 
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
 
@@ -68,6 +74,11 @@ public class JwtAuthenticationFilter implements GatewayFilter {
             return true;
         }
 
+        // Admin endpoints - ADMIN or MANAGER only
+        if (path.startsWith("/api/admin")) {
+            return role.contains("ADMIN") || role.contains("MANAGER");
+        }
+
         // Product service - MANAGER only
         if (path.startsWith("/api/products")) {
             return role.contains("MANAGER");
@@ -80,6 +91,12 @@ public class JwtAuthenticationFilter implements GatewayFilter {
 
         // Inventory service - STOREKEEPER, MANAGER
         if (path.startsWith("/api/inventory")) {
+            return role.contains("Store Keeper") || role.contains("MANAGER");
+        }
+
+        // Supplier service - STOREKEEPER, MANAGER
+        if (path.startsWith("/api/suppliers") || path.startsWith("/api/delivery-logs")
+                || path.startsWith("/api/purchase-orders")) {
             return role.contains("Store Keeper") || role.contains("MANAGER");
         }
 
