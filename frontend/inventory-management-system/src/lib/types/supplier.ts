@@ -112,11 +112,20 @@ export interface StatsSummary {
   receivedOrders: number;
 }
 
-// Delivery Log types
+// Delivery Log types - Updated to match backend response
 export interface DeliveryLog {
-  purchaseOrderId: number;
-  deliveryDate: string;
-  status: string;
+  id: number;
+  itemId: number;
+  receivedQuantity: number;
+  receivedDate: string; // LocalDate from backend as string
+  purchaseOrder?: {
+    poId: number;
+    // Add other PO fields as needed
+  };
+  // Computed fields for UI compatibility
+  purchaseOrderId?: number; // Derived from purchaseOrder.poId
+  deliveryDate?: string;    // Alias for receivedDate
+  status?: string;          // You may need to derive this or add to backend
 }
 
 export interface DeliveryLogCreateRequest {
