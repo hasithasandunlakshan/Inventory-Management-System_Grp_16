@@ -34,4 +34,17 @@ public class DeliveryLog {
 
     @Column(name = "received_date")
     private LocalDate receivedDate;
+
+    // Add a getter method to expose the purchase order ID without exposing the full
+    // object
+    public Long getPurchaseOrderId() {
+        return purchaseOrder != null ? purchaseOrder.getPoId() : null;
+    }
+
+    // Add a getter method to expose the purchase order status
+    public String getPurchaseOrderStatus() {
+        return purchaseOrder != null && purchaseOrder.getStatus() != null
+                ? purchaseOrder.getStatus().name()
+                : null;
+    }
 }
