@@ -13,12 +13,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/secure/**").permitAll()  // Allow secure endpoints to be handled by custom filter
-                .anyRequest().authenticated()
-            );
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/secure/**").permitAll() // Allow secure endpoints to be handled by custom
+                                                                       // filter
+                        .requestMatchers("/api/admin/**").permitAll() // Allow admin endpoints (auth handled by API
+                                                                      // Gateway)
+                        .anyRequest().authenticated());
         return http.build();
     }
 }

@@ -34,6 +34,7 @@ public class PurchaseOrder {
     @Builder.Default
     private List<PurchaseOrderItem> items = new ArrayList<>();
 
-    @OneToOne(mappedBy = "purchaseOrder", fetch = FetchType.LAZY)
-    private DeliveryLog deliveryLog;
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<DeliveryLog> deliveryLogs = new ArrayList<>();
 }

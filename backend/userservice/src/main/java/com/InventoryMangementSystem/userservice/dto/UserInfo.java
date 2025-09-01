@@ -18,8 +18,8 @@ public class UserInfo {
     private String role;
     private String phoneNumber;
     private String profileImageUrl;
-    private double latitude;
-    private double longitude;
+    private Double latitude;
+    private Double longitude;
     private String formattedAddress;
     private String accountStatus;
     private Boolean emailVerified;
