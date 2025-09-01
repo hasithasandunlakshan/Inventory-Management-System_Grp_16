@@ -17,7 +17,11 @@ export default function LogisticsPanel() {
         <div className="space-y-3 text-sm">
           {deliveries.map((d) => (
             <div key={d.date} className="flex items-center justify-between">
-              <div className="text-muted-foreground">{new Date(d.date).toLocaleDateString()}</div>
+              <div className="text-muted-foreground">{new Date(d.date).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+              })}</div>
               <div>{d.delivered} delivered</div>
               <div className="text-muted-foreground">{d.avgTime}h • {d.success}%</div>
             </div>

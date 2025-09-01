@@ -1,28 +1,60 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, DollarSign, Calendar, Phone, Mail, MapPin, User, Building2, Tag } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, DollarSign, Calendar, Phone, Mail, MapPin, User, Building2, Tag, X, CheckCircle, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { deliveryLogService } from "@/lib/services/deliveryLogService";
+import { DeliveryLog } from "@/lib/types/supplier";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthModal } from "@/components/AuthModal";
+import { UserHeader } from "@/components/UserHeader";
 
-export default function SuppliersPage() {
+// Define DeliveryLogCreateRequest to match the imported type
+interface DeliveryLogCreateRequest {
+  poId: number;
+  itemID: number;
+  receivedDate: string;
+  receivedQuantity: number;
+}
+
+// Main component wrapped with authentication
+function SuppliersPageContent() {
   const [activeTab, setActiveTab] = useState("purchase-orders");
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  
+  const { isAuthenticated, isLoading } = useAuth();
 
   const handleViewSupplier = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setIsSheetOpen(true);
   };
 
+  const handleLoginClick = () => {
+    setIsAuthModalOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      <UserHeader onLoginClick={handleLoginClick} />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Supplier Management</h1>
@@ -31,15 +63,15 @@ export default function SuppliersPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" disabled={!isAuthenticated}>
             <Upload className="mr-2 h-4 w-4" />
             Import
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" disabled={!isAuthenticated}>
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button>
+          <Button disabled={!isAuthenticated}>
             <Plus className="mr-2 h-4 w-4" />
             New Purchase Order
           </Button>
@@ -130,7 +162,22 @@ export default function SuppliersPage() {
         isOpen={isSheetOpen}
         onOpenChange={setIsSheetOpen}
       />
+      
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode="login"
+      />
     </div>
+  );
+}
+
+// Export the main component wrapped with AuthProvider
+export default function SuppliersPage() {
+  return (
+    <AuthProvider>
+      <SuppliersPageContent />
+    </AuthProvider>
   );
 }
 
@@ -292,42 +339,337 @@ function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier)
 
 // Delivery Logs Tab Component
 function DeliveryLogsTab() {
+  const { isAuthenticated, canAccessSupplierService } = useAuth();
+  const [deliveryLogs, setDeliveryLogs] = useState<DeliveryLog[]>([]);
+  const [filteredLogs, setFilteredLogs] = useState<DeliveryLog[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [poFilter, setPoFilter] = useState('');
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
+  const [newDeliveryLog, setNewDeliveryLog] = useState<DeliveryLogCreateRequest>({
+    poId: 0,
+    itemID: 0,
+    receivedDate: '',
+    receivedQuantity: 0
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+
+  // Load delivery logs on component mount and when authentication changes
+  useEffect(() => {
+    loadDeliveryLogs();
+  }, [isAuthenticated]);
+
+  const loadDeliveryLogs = async () => {
+    console.log('Loading delivery logs... isAuthenticated:', isAuthenticated);
+    
+    if (!isAuthenticated) {
+      // No data when not authenticated
+      console.log('User not authenticated, setting empty arrays');
+      setDeliveryLogs([]);
+      setFilteredLogs([]);
+      return;
+    }
+
+    setLoading(true);
+    setApiError(null);
+    console.log('Making API call to fetch delivery logs...');
+    
+    try {
+      // Fetch from the actual API with authentication
+      const apiLogs = await deliveryLogService.getAllDeliveryLogs();
+      console.log('API response received:', apiLogs);
+      setDeliveryLogs(apiLogs);
+      setFilteredLogs(apiLogs);
+    } catch (apiError) {
+      const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
+      console.error('API call failed:', errorMessage);
+      setApiError(errorMessage);
+      
+      // Set empty arrays on API failure
+      setDeliveryLogs([]);
+      setFilteredLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter delivery logs by PO ID
+  useEffect(() => {
+    if (!poFilter) {
+      setFilteredLogs(deliveryLogs);
+    } else {
+      const filtered = deliveryLogs.filter(log => 
+        log.purchaseOrderId !== undefined && log.purchaseOrderId.toString().includes(poFilter)
+      );
+      setFilteredLogs(filtered);
+    }
+  }, [poFilter, deliveryLogs]);
+
+  const handleCreateDeliveryLog = async () => {
+    if (!newDeliveryLog.poId || !newDeliveryLog.receivedDate || !newDeliveryLog.receivedQuantity) {
+      setErrorMessage('Please fill in all required fields');
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    
+    try {
+      const response = await deliveryLogService.logDelivery(newDeliveryLog);
+      
+      // Show success message from backend response
+      setSuccessMessage(response.message);
+      
+      // Reload the delivery logs
+      await loadDeliveryLogs();
+      
+      // Reset form
+      setNewDeliveryLog({
+        poId: 0,
+        itemID: 0,
+        receivedDate: '',
+        receivedQuantity: 0
+      });
+      
+      setIsCreateSheetOpen(false);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000);
+      
+    } catch (error) {
+      console.error('Failed to create delivery log:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to create delivery log';
+      setErrorMessage(errorMsg);
+      
+      // Clear error message after 5 seconds
+      setTimeout(() => setErrorMessage(null), 5000);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const clearFilter = () => {
+    setPoFilter('');
+  };
+
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Delivery Tracking</CardTitle>
-          <CardDescription>Monitor shipment status and delivery progress</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Delivery Tracking</CardTitle>
+              <CardDescription>Monitor recent shipment status and delivery progress</CardDescription>
+            </div>
+            <Sheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
+              <SheetTrigger asChild>
+                <Button disabled={!isAuthenticated || !canAccessSupplierService()}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Delivery Log
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Create Delivery Log</SheetTitle>
+                  <SheetDescription>
+                    Record a new delivery for a purchase order
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="poId">Purchase Order ID</Label>
+                    <Input
+                      id="poId"
+                      type="number"
+                      placeholder="Enter PO ID"
+                      value={newDeliveryLog.poId || ''}
+                      onChange={(e) => setNewDeliveryLog(prev => ({
+                        ...prev,
+                        poId: parseInt(e.target.value) || 0
+                      }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="itemID">Item ID</Label>
+                    <Input
+                      id="itemID"
+                      type="number"
+                      placeholder="Enter Item ID"
+                      value={newDeliveryLog.itemID || ''}
+                      onChange={(e) => setNewDeliveryLog(prev => ({
+                        ...prev,
+                        itemID: parseInt(e.target.value) || 0
+                      }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="receivedDate">Received Date</Label>
+                    <Input
+                      id="receivedDate"
+                      type="date"
+                      value={newDeliveryLog.receivedDate}
+                      onChange={(e) => setNewDeliveryLog(prev => ({
+                        ...prev,
+                        receivedDate: e.target.value
+                      }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="receivedQuantity">Received Quantity</Label>
+                    <Input
+                      id="receivedQuantity"
+                      type="number"
+                      placeholder="Enter quantity received"
+                      value={newDeliveryLog.receivedQuantity || ''}
+                      onChange={(e) => setNewDeliveryLog(prev => ({
+                        ...prev,
+                        receivedQuantity: parseInt(e.target.value) || 0
+                      }))}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleCreateDeliveryLog} 
+                    disabled={submitting}
+                    className="flex-1"
+                  >
+                    {submitting ? 'Creating...' : 'Create Delivery Log'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsCreateSheetOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {sampleDeliveries.map((delivery) => (
-              <div key={delivery.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">#{delivery.id}</span>
-                    <Badge variant={getDeliveryStatusVariant(delivery.status)}>
-                      {delivery.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {delivery.carrier} • {delivery.trackingNumber}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Expected: {delivery.expectedDate}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
+          {/* Success Message */}
+          {successMessage && (
+            <Alert className="mb-4 border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">Success</AlertTitle>
+              <AlertDescription className="text-green-700">
+                {successMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error Message */}
+          {errorMessage && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {errorMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Authentication Status */}
+          {!isAuthenticated && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
+                <span className="text-sm font-medium text-yellow-800">Authentication Required</span>
+              </div>
+              <p className="text-sm text-yellow-700 mt-1">
+                Please login to access delivery logs and create new delivery entries.
+              </p>
+            </div>
+          )}
+          
+          {isAuthenticated && apiError && (
+            <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
+                <span className="text-sm font-medium text-orange-800">API Connection Issue</span>
+              </div>
+              <p className="text-sm text-orange-700 mt-1">
+                Using cached data. Some features may be limited. Error: {apiError}
+              </p>
+            </div>
+          )}
+          
+          {/* Filter Section */}
+          <div className="flex items-center gap-4 mb-6 p-4 bg-muted/30 rounded-lg">
+            <div className="flex-1">
+              <Label htmlFor="poFilter" className="text-sm font-medium">
+                Filter by Purchase Order ID
+              </Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  id="poFilter"
+                  placeholder="Enter PO ID to filter..."
+                  value={poFilter}
+                  onChange={(e) => setPoFilter(e.target.value)}
+                  className="flex-1"
+                />
+                {poFilter && (
+                  <Button variant="outline" size="sm" onClick={clearFilter}>
+                    <X className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
-                    <Truck className="h-4 w-4" />
-                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredLogs.length} of {deliveryLogs.length} recent logs
+            </div>
+          </div>
+
+          {/* Delivery Logs List */}
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-muted-foreground">Loading delivery logs...</div>
+            </div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <div className="text-muted-foreground">
+                  {poFilter ? 'No delivery logs found for the specified PO ID' : 'No recent delivery logs'}
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredLogs.map((log, index) => (
+                <div key={`${log.purchaseOrderId}-${log.receivedDate}-${index}`} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-sm transition-shadow">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">PO #{log.purchaseOrderId}</span>
+                      <Badge variant={getDeliveryStatusVariant(log.status || 'delivered')}>
+                        {log.status || 'delivered'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Delivery Date: {new Date(log.receivedDate).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Item ID: {log.itemId} • Quantity: {log.receivedQuantity}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" title="View Details">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" title="Track Delivery">
+                      <Truck className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
