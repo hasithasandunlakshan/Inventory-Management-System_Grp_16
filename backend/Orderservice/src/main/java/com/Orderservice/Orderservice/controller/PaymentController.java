@@ -23,7 +23,6 @@ import com.Orderservice.Orderservice.service.PaymentService;
 
 @RestController
 @RequestMapping("/api/payments")
-@CrossOrigin(origins = "*")
 public class PaymentController {
     @PostMapping("/update-order-status")
     public ResponseEntity<String> updateOrderStatus(@RequestBody UpdateOrderStatusRequest request) {
@@ -34,23 +33,24 @@ public class PaymentController {
             return ResponseEntity.badRequest().body("Failed to update order status.");
         }
     }
-    
+
     @Autowired
     private PaymentService paymentService;
-    
-    @Autowired  // Make sure this annotation is present
+
+    @Autowired // Make sure this annotation is present
     private OrderService orderService;
-    
+
     @PostMapping("/create-intent")
     public ResponseEntity<PaymentIntentResponse> createPaymentIntent(
             @RequestBody CreatePaymentIntentRequest request) {
-        
+
         System.out.println("=== INCOMING ORDER CREATION REQUEST ===");
         System.out.println("Customer ID: " + request.getCustomerId());
         System.out.println("Total Amount: " + request.getAmount());
         System.out.println("Currency: " + request.getCurrency());
-        System.out.println("Order Items Count: " + (request.getOrderItems() != null ? request.getOrderItems().size() : 0));
-        
+        System.out.println(
+                "Order Items Count: " + (request.getOrderItems() != null ? request.getOrderItems().size() : 0));
+
         if (request.getOrderItems() != null) {
             System.out.println("--- Order Items Details ---");
             for (int i = 0; i < request.getOrderItems().size(); i++) {
@@ -63,36 +63,37 @@ public class PaymentController {
             }
         }
         System.out.println("=====================================");
-        
+
         PaymentIntentResponse response = paymentService.createPaymentIntent(request);
-        
+
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @PostMapping("/confirm")
     public ResponseEntity<PaymentConfirmationResponse> confirmPayment(
             @RequestBody PaymentConfirmationRequest request) {
-        
+
         PaymentConfirmationResponse response = paymentService.confirmPayment(request);
-        
+
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Payment service is running!");
     }
-    
+
     @PostMapping("/orders/all")
-    public ResponseEntity<AllOrdersResponse> getAllOrdersByStatus(@RequestBody(required = false) OrderStatusRequest request) {
+    public ResponseEntity<AllOrdersResponse> getAllOrdersByStatus(
+            @RequestBody(required = false) OrderStatusRequest request) {
         String status = request != null ? request.getStatus() : null;
         AllOrdersResponse response = orderService.getAllOrdersByStatus(status);
         if (response.isSuccess()) {
@@ -101,7 +102,7 @@ public class PaymentController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     @GetMapping("/orders/{orderId}")
     public ResponseEntity<OrderDetailResponse> getOrderById(@PathVariable Long orderId) {
         OrderDetailResponse response = orderService.getOrderById(orderId);
