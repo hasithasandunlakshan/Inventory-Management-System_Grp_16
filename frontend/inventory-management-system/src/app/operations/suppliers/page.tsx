@@ -356,21 +356,6 @@ function DeliveryLogsTab() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Mock data for recent delivery logs (replace with actual API call)
-  const mockDeliveryLogs: DeliveryLog[] = [
-    { purchaseOrderId: 1001, deliveryDate: '2025-08-30', status: 'delivered' },
-    { purchaseOrderId: 1002, deliveryDate: '2025-08-29', status: 'in-transit' },
-    { purchaseOrderId: 1003, deliveryDate: '2025-08-28', status: 'delivered' },
-    { purchaseOrderId: 1001, deliveryDate: '2025-08-27', status: 'delayed' },
-    { purchaseOrderId: 1004, deliveryDate: '2025-08-26', status: 'delivered' },
-    { purchaseOrderId: 1005, deliveryDate: '2025-08-25', status: 'in-transit' },
-    { purchaseOrderId: 1002, deliveryDate: '2025-08-24', status: 'delivered' },
-    { purchaseOrderId: 1006, deliveryDate: '2025-08-23', status: 'delivered' },
-    { purchaseOrderId: 1003, deliveryDate: '2025-08-22', status: 'delayed' },
-    { purchaseOrderId: 1007, deliveryDate: '2025-08-21', status: 'delivered' },
-    { purchaseOrderId: 1008, deliveryDate: '2025-08-20', status: 'in-transit' },
-    { purchaseOrderId: 1009, deliveryDate: '2025-08-19', status: 'delivered' },
-  ];
 
   // Load delivery logs on component mount and when authentication changes
   useEffect(() => {
@@ -378,36 +363,34 @@ function DeliveryLogsTab() {
   }, [isAuthenticated]);
 
   const loadDeliveryLogs = async () => {
+    console.log('Loading delivery logs... isAuthenticated:', isAuthenticated);
+    
     if (!isAuthenticated) {
-      // Show mock data when not authenticated
-      const sortedLogs = mockDeliveryLogs
-        .sort((a, b) => new Date(b.deliveryDate).getTime() - new Date(a.deliveryDate).getTime())
-        .slice(0, 10);
-      
-      setDeliveryLogs(sortedLogs);
-      setFilteredLogs(sortedLogs);
+      // No data when not authenticated
+      console.log('User not authenticated, setting empty arrays');
+      setDeliveryLogs([]);
+      setFilteredLogs([]);
       return;
     }
 
     setLoading(true);
     setApiError(null);
+    console.log('Making API call to fetch delivery logs...');
+    
     try {
-      // Try to fetch from the actual API with authentication
+      // Fetch from the actual API with authentication
       const apiLogs = await deliveryLogService.getAllDeliveryLogs();
+      console.log('API response received:', apiLogs);
       setDeliveryLogs(apiLogs);
       setFilteredLogs(apiLogs);
     } catch (apiError) {
       const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
-      console.warn('API call failed:', errorMessage);
+      console.error('API call failed:', errorMessage);
       setApiError(errorMessage);
       
-      // Fallback to mock data if API is not available
-      const sortedLogs = mockDeliveryLogs
-        .sort((a, b) => new Date(b.deliveryDate).getTime() - new Date(a.deliveryDate).getTime())
-        .slice(0, 10); // Show only 10 most recent
-      
-      setDeliveryLogs(sortedLogs);
-      setFilteredLogs(sortedLogs);
+      // Set empty arrays on API failure
+      setDeliveryLogs([]);
+      setFilteredLogs([]);
     } finally {
       setLoading(false);
     }
@@ -419,7 +402,7 @@ function DeliveryLogsTab() {
       setFilteredLogs(deliveryLogs);
     } else {
       const filtered = deliveryLogs.filter(log => 
-        log.purchaseOrderId.toString().includes(poFilter)
+        log.purchaseOrderId !== undefined && log.purchaseOrderId.toString().includes(poFilter)
       );
       setFilteredLogs(filtered);
     }
@@ -597,10 +580,10 @@ function DeliveryLogsTab() {
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
-                <span className="text-sm font-medium text-yellow-800">Demo Mode</span>
+                <span className="text-sm font-medium text-yellow-800">Authentication Required</span>
               </div>
               <p className="text-sm text-yellow-700 mt-1">
-                Showing sample delivery logs. Login to access real-time data and create new delivery logs.
+                Please login to access delivery logs and create new delivery entries.
               </p>
             </div>
           )}
@@ -660,16 +643,19 @@ function DeliveryLogsTab() {
           ) : (
             <div className="space-y-4">
               {filteredLogs.map((log, index) => (
-                <div key={`${log.purchaseOrderId}-${log.deliveryDate}-${index}`} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-sm transition-shadow">
+                <div key={`${log.purchaseOrderId}-${log.receivedDate}-${index}`} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-sm transition-shadow">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">PO #{log.purchaseOrderId}</span>
-                      <Badge variant={getDeliveryStatusVariant(log.status)}>
-                        {log.status}
+                      <Badge variant={getDeliveryStatusVariant(log.status || 'delivered')}>
+                        {log.status || 'delivered'}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Delivery Date: {new Date(log.deliveryDate).toLocaleDateString()}
+                      Delivery Date: {new Date(log.receivedDate).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Item ID: {log.itemId} • Quantity: {log.receivedQuantity}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

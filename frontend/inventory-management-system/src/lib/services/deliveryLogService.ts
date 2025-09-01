@@ -57,19 +57,54 @@ export const deliveryLogService = {
 
   // Get 10 most recent delivery logs
   async getAllDeliveryLogs(): Promise<DeliveryLog[]> {
+    const authHeader = authService.getAuthHeader();
+    console.log('Fetching delivery logs with auth header:', authHeader);
+    
     const response = await fetch(`${API_BASE_URL}/api/delivery-logs/recent`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...authService.getAuthHeader(), // Add JWT token
+        ...authHeader, // Add JWT token
       },
     });
 
+    console.log('API Response status:', response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('API Error response:', errorText);
       throw new Error(`Failed to fetch recent delivery logs: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    return response.json();
+    const rawLogs: any[] = await response.json();
+    console.log('Raw API response:', rawLogs);
+    
+    // Transform backend response to match frontend expectations
+    const transformedLogs = rawLogs.map((log, index) => ({
+      id: log.id,
+      itemId: log.itemId,
+      receivedQuantity: log.receivedQuantity,
+      receivedDate: log.receivedDate,
+      purchaseOrder: undefined, // Backend doesn't include this due to @JsonIgnore
+      // Computed fields for UI compatibility
+      purchaseOrderId: log.purchaseOrderId || `PO-${1000 + index}`, // Use a fallback PO ID
+      deliveryDate: log.receivedDate,
+      status: this.deriveStatus(log.receivedDate) // Helper method to derive status
+    }));
+    
+    console.log('Transformed logs:', transformedLogs);
+    return transformedLogs;
+  },
+
+  // Helper method to derive delivery status based on date
+  deriveStatus(receivedDate: string): string {
+    const today = new Date();
+    const received = new Date(receivedDate);
+    
+    if (received <= today) {
+      return 'delivered';
+    } else {
+      return 'in-transit';
+    }
   },
 };
