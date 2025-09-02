@@ -1,4 +1,5 @@
 import { SupplierCategory, SupplierCategoryCreateRequest } from '../types/supplier';
+import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
 const API_BASE_URL = 'http://localhost:8090/api/supplier-categories'; // Through API Gateway
 
@@ -8,12 +9,7 @@ export const supplierCategoryService = {
    */
   async getAllCategories(): Promise<SupplierCategory[]> {
     try {
-      const response = await fetch(API_BASE_URL, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions());
       
       if (!response.ok) {
         throw new Error(`Failed to fetch supplier categories: ${response.status}`);
@@ -31,14 +27,7 @@ export const supplierCategoryService = {
    */
   async createCategory(category: SupplierCategoryCreateRequest): Promise<SupplierCategory> {
     try {
-      const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(category)
-      });
+      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions('POST', category));
 
       if (!response.ok) {
         throw new Error('Failed to create supplier category');
