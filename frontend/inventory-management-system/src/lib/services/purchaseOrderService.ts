@@ -23,7 +23,7 @@ export const purchaseOrderService = {
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(order)
@@ -47,7 +47,7 @@ export const purchaseOrderService = {
     try {
       const response = await fetch(API_BASE_URL, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -70,7 +70,7 @@ export const purchaseOrderService = {
     try {
       const response = await fetch(`${API_BASE_URL}/${id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -97,7 +97,7 @@ export const purchaseOrderService = {
       const response = await fetch(`${API_BASE_URL}/${id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(order)
@@ -127,7 +127,7 @@ export const purchaseOrderService = {
       const response = await fetch(url.toString(), {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         },
         body: body ? JSON.stringify(body) : undefined
@@ -150,7 +150,7 @@ export const purchaseOrderService = {
       const response = await fetch(`${API_BASE_URL}/${id}/status`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(statusUpdate)
@@ -175,7 +175,7 @@ export const purchaseOrderService = {
       const response = await fetch(`${API_BASE_URL}/${id}/receive`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         },
         body: receiveData ? JSON.stringify(receiveData) : undefined
@@ -208,7 +208,7 @@ export const purchaseOrderService = {
 
       const response = await fetch(url.toString(), {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -247,7 +247,7 @@ export const purchaseOrderService = {
 
       const response = await fetch(url.toString(), {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -286,7 +286,7 @@ export const purchaseOrderService = {
 
       const response = await fetch(url.toString(), {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`
         }
       });
       
@@ -310,7 +310,7 @@ export const purchaseOrderService = {
     try {
       const response = await fetch(`${API_BASE_URL}/${orderId}/items`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -334,7 +334,7 @@ export const purchaseOrderService = {
       const response = await fetch(`${API_BASE_URL}/${orderId}/items`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(items)
@@ -359,7 +359,7 @@ export const purchaseOrderService = {
       const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(item)
@@ -384,7 +384,7 @@ export const purchaseOrderService = {
       const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
           'Content-Type': 'application/json'
         }
       });
