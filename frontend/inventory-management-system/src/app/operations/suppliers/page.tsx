@@ -12,7 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { deliveryLogService } from "@/lib/services/deliveryLogService";
-import { DeliveryLog } from "@/lib/types/supplier";
+import { supplierService } from "@/lib/services/supplierService";
+import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
+import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -286,51 +289,208 @@ function PurchaseOrdersTab() {
 
 // Suppliers Tab Component
 function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier) => void }) {
+  const { isAuthenticated } = useAuth();
+  const [suppliers, setSuppliers] = useState<EnhancedSupplier[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  // Load suppliers on component mount and when authentication changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadSuppliers();
+    } else {
+      setSuppliers([]);
+      setApiError(null);
+    }
+  }, [isAuthenticated]);
+
+  const loadSuppliers = async () => {
+    setLoading(true);
+    setApiError(null);
+    
+    try {
+      const enhancedSuppliers = await enhancedSupplierService.getAllSuppliersWithUserDetails();
+      setSuppliers(enhancedSuppliers);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Failed to load suppliers:', errorMessage);
+      setApiError(errorMessage);
+      // Fall back to sample data for now
+      setSuppliers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const convertToDisplaySupplier = (enhancedSupplier: EnhancedSupplier): Supplier => ({
+    id: enhancedSupplier.supplierId,
+    name: enhancedSupplier.userName || `Supplier ${enhancedSupplier.supplierId}`,
+    category: enhancedSupplier.categoryName || 'Unknown',
+    email: enhancedSupplier.userDetails?.email || 'N/A',
+    phone: enhancedSupplier.userDetails?.phoneNumber || 'N/A',
+    status: 'active', // Default since backend doesn't have this field
+    orders: 0, // Backend doesn't track order count in supplier entity
+    address: enhancedSupplier.userDetails?.formattedAddress || 'N/A',
+    contactPerson: enhancedSupplier.userDetails?.fullName || enhancedSupplier.userName || 'Unknown'
+  });
+
+  // If not authenticated, show sample data
+  const displaySuppliers = isAuthenticated && suppliers.length > 0 
+    ? suppliers.map(convertToDisplaySupplier)
+    : sampleSuppliers;
+
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Suppliers Directory</CardTitle>
-          <CardDescription>Manage supplier information and contacts</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Suppliers Directory</CardTitle>
+            <CardDescription>
+              {isAuthenticated 
+                ? "Manage supplier information and contacts" 
+                : "Please log in to view real supplier data"
+              }
+            </CardDescription>
+          </div>
+          <Button disabled={!isAuthenticated}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Supplier
+          </Button>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sampleSuppliers.map((supplier) => (
-              <Card key={supplier.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-lg">{supplier.name}</CardTitle>
-                  <CardDescription>{supplier.category}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm">{supplier.email}</p>
-                  <p className="text-sm">{supplier.phone}</p>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'}>
-                      {supplier.status}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {supplier.orders} orders
-                    </span>
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => onViewSupplier(supplier)}
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      View
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="text-lg">Loading suppliers...</div>
+            </div>
+          ) : apiError ? (
+            <div className="space-y-4">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>API Error</AlertTitle>
+                <AlertDescription>{apiError}</AlertDescription>
+              </Alert>
+              <div className="text-sm text-muted-foreground">
+                Showing sample data instead:
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {sampleSuppliers.map((supplier) => (
+                  <Card key={supplier.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="text-lg">{supplier.name}</CardTitle>
+                      <CardDescription>{supplier.category}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm">{supplier.email}</p>
+                      </div>
+                      {supplier.phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-sm">{supplier.phone}</p>
+                        </div>
+                      )}
+                      {supplier.address && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">{supplier.address}</p>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          Contact: {supplier.contactPerson}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 pt-2">
+                        <Badge variant="default">
+                          {supplier.status}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {supplier.orders} orders
+                        </span>
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => onViewSupplier(supplier)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {displaySuppliers.map((supplier) => (
+                <Card key={supplier.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{supplier.name}</CardTitle>
+                    <CardDescription>{supplier.category}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-sm">{supplier.email}</p>
+                    </div>
+                    {supplier.phone && supplier.phone !== 'N/A' && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm">{supplier.phone}</p>
+                      </div>
+                    )}
+                    {supplier.address && supplier.address !== 'N/A' && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">{supplier.address}</p>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Contact: {supplier.contactPerson}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 pt-2">
+                      <Badge variant="default">
+                        {supplier.status}
+                      </Badge>
+                      {!isAuthenticated && (
+                        <span className="text-sm text-muted-foreground">
+                          {supplier.orders} orders
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => onViewSupplier(supplier)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        View
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1" disabled={!isAuthenticated}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

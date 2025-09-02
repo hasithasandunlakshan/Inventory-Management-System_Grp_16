@@ -1,7 +1,9 @@
 import { Supplier, SupplierCreateRequest } from '../types/supplier';
+import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
 // Use API Gateway URL instead of direct service
 const API_BASE_URL = 'http://localhost:8090/api/suppliers'; // Through API Gateway
+const DIRECT_API_BASE_URL = 'http://localhost:8082/api/suppliers'; // Direct to Supplier Service
 
 export const supplierService = {
   /**
@@ -9,12 +11,7 @@ export const supplierService = {
    */
   async getAllSuppliers(): Promise<Supplier[]> {
     try {
-      const response = await fetch(API_BASE_URL, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions());
       
       if (!response.ok) {
         throw new Error(`Failed to fetch suppliers: ${response.status}`);
@@ -32,12 +29,7 @@ export const supplierService = {
    */
   async getSupplierById(id: string): Promise<Supplier> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions());
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -58,20 +50,28 @@ export const supplierService = {
    */
   async createSupplier(supplier: SupplierCreateRequest): Promise<Supplier> {
     try {
-      const response = await fetch(API_BASE_URL, {
+      // First try through API Gateway
+      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions('POST', supplier));
+
+      if (response.ok) {
+        return response.json();
+      }
+      
+      // If API Gateway fails, try direct access for development
+      console.log('API Gateway failed for create, trying direct access to supplier service...');
+      const directResponse = await fetch(DIRECT_API_BASE_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(supplier)
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to create supplier');
+      
+      if (directResponse.ok) {
+        return directResponse.json();
       }
       
-      return response.json();
+      throw new Error(`Failed to create supplier: API Gateway: ${response.status}, Direct: ${directResponse.status}`);
     } catch (error) {
       console.error('Failed to create supplier:', error);
       throw new Error('Failed to create supplier - backend not available');
@@ -83,14 +83,7 @@ export const supplierService = {
    */
   async updateSupplier(supplier: Supplier): Promise<Supplier> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${supplier.supplierId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(supplier)
-      });
+      const response = await fetch(`${API_BASE_URL}/${supplier.supplierId}`, createAuthenticatedRequestOptions('PUT', supplier));
 
       if (!response.ok) {
         throw new Error('Failed to update supplier');
@@ -108,13 +101,7 @@ export const supplierService = {
    */
   async deleteSupplier(id: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions('DELETE'));
 
       if (!response.ok) {
         throw new Error('Failed to delete supplier');

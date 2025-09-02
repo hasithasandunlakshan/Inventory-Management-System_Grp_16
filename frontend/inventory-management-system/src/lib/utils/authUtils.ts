@@ -1,4 +1,5 @@
 /**
+<<<<<<< Updated upstream
  * Authentication utilities for consistent token handling across services
  */
 
@@ -96,3 +97,27 @@ export const hasAnyRole = (roles: string[]): boolean => {
   const userRole = getCurrentUserRole();
   return userRole ? roles.includes(userRole) : false;
 };
+=======
+ * Creates request options with authentication headers
+ */
+export function createAuthenticatedRequestOptions(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  body?: any
+): RequestInit {
+  const token = localStorage.getItem('inventory_auth_token');
+  
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  };
+
+  if (body && (method === 'POST' || method === 'PUT')) {
+    options.body = JSON.stringify(body);
+  }
+
+  return options;
+}
+>>>>>>> Stashed changes
