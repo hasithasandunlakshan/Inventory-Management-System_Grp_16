@@ -96,7 +96,7 @@ public class JwtAuthenticationFilter implements GatewayFilter {
 
         // Supplier service - STOREKEEPER, MANAGER
         if (path.startsWith("/api/suppliers") || path.startsWith("/api/delivery-logs")
-                || path.startsWith("/api/purchase-orders")) {
+                || path.startsWith("/api/purchase-orders") || path.startsWith("/api/supplier-categories")) {
             return role.contains("Store Keeper") || role.contains("MANAGER");
         }
 
