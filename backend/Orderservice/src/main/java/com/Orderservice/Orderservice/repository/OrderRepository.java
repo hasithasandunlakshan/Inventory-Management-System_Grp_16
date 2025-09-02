@@ -19,4 +19,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      @Query("SELECT o FROM Order o JOIN FETCH o.orderItems WHERE o.status = 'CONFIRMED'")
     List<Order> findAllConfirmedOrdersWithItems();
     
+    @Query("SELECT o FROM Order o JOIN FETCH o.orderItems WHERE o.customerId = :customerId")
+    List<Order> findByCustomerIdWithOrderItems(Long customerId);
+    
 }
