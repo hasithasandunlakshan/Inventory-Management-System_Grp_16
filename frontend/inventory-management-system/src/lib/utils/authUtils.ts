@@ -24,30 +24,6 @@ export const getAuthHeadersWithoutContentType = (): HeadersInit => {
   return authService.getAuthHeader();
 };
 
-/**
- * Create authenticated fetch request options
- */
-export const createAuthenticatedRequestOptions = (
-  method: string = 'GET',
-  body?: any,
-  additionalHeaders?: HeadersInit
-): RequestInit => {
-  const headers = {
-    ...getAuthHeaders(),
-    ...additionalHeaders
-  };
-
-  const options: RequestInit = {
-    method,
-    headers
-  };
-
-  if (body) {
-    options.body = typeof body === 'string' ? body : JSON.stringify(body);
-  }
-
-  return options;
-};
 
 /**
  * Create authenticated fetch request options for file uploads
@@ -98,11 +74,7 @@ export const hasAnyRole = (roles: string[]): boolean => {
   const userRole = getCurrentUserRole();
   return userRole ? roles.includes(userRole) : false;
 };
-=======
-=======
->>>>>>> Stashed changes
- * Creates request options with authentication headers
- */
+
 export function createAuthenticatedRequestOptions(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
   body?: any
@@ -123,7 +95,4 @@ export function createAuthenticatedRequestOptions(
 
   return options;
 }
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
