@@ -1,7 +1,11 @@
 import { supplierService } from './supplierService';
 import { userService } from './userService';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { EnhancedSupplier } from '../types/supplier';
+=======
+import { Supplier, EnhancedSupplier } from '../types/supplier';
+>>>>>>> Stashed changes
 =======
 import { Supplier, EnhancedSupplier } from '../types/supplier';
 >>>>>>> Stashed changes

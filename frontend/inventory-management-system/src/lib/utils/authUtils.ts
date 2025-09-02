@@ -1,5 +1,6 @@
 /**
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
  * Authentication utilities for consistent token handling across services
  */
 
@@ -98,6 +99,8 @@ export const hasAnyRole = (roles: string[]): boolean => {
   return userRole ? roles.includes(userRole) : false;
 };
 =======
+=======
+>>>>>>> Stashed changes
  * Creates request options with authentication headers
  */
 export function createAuthenticatedRequestOptions(
@@ -120,4 +123,7 @@ export function createAuthenticatedRequestOptions(
 
   return options;
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
