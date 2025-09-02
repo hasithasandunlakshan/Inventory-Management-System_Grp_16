@@ -13,7 +13,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { deliveryLogService } from "@/lib/services/deliveryLogService";
 import { supplierService } from "@/lib/services/supplierService";
-import { DeliveryLog, Supplier as BackendSupplier } from "@/lib/types/supplier";
+import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -288,7 +289,7 @@ function PurchaseOrdersTab() {
 // Suppliers Tab Component
 function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier) => void }) {
   const { isAuthenticated, canAccessSupplierService } = useAuth();
-  const [suppliers, setSuppliers] = useState<BackendSupplier[]>([]);
+  const [suppliers, setSuppliers] = useState<EnhancedSupplier[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -298,7 +299,7 @@ function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier)
   }, [isAuthenticated]);
 
   const loadSuppliers = async () => {
-    console.log('Loading suppliers... isAuthenticated:', isAuthenticated);
+    console.log('Loading suppliers with user details... isAuthenticated:', isAuthenticated);
     
     if (!isAuthenticated) {
       console.log('User not authenticated, setting empty array');
@@ -315,34 +316,53 @@ function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier)
 
     setLoading(true);
     setError(null);
-    console.log('Making API call to fetch suppliers...');
+    console.log('Making API call to fetch suppliers with user details...');
     
     try {
-      const apiSuppliers = await supplierService.getAllSuppliers();
-      console.log('Suppliers API response received:', apiSuppliers);
-      setSuppliers(apiSuppliers);
+      const enhancedSuppliers = await enhancedSupplierService.getAllSuppliersWithUserDetails();
+      console.log('Enhanced suppliers API response received:', enhancedSuppliers);
+      setSuppliers(enhancedSuppliers);
     } catch (apiError) {
       const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
       console.error('API call failed:', errorMessage);
       setError(errorMessage);
-      setSuppliers([]);
+      
+      // Fallback to basic suppliers if enhanced loading fails
+      try {
+        console.log('Fallback: trying to load basic suppliers...');
+        const basicSuppliers = await supplierService.getAllSuppliers();
+        const enhancedFallback: EnhancedSupplier[] = basicSuppliers.map(supplier => ({
+          ...supplier,
+          userDetails: undefined
+        }));
+        setSuppliers(enhancedFallback);
+        setError('User details could not be loaded, showing basic supplier information');
+      } catch (fallbackError) {
+        setSuppliers([]);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Convert backend supplier to frontend supplier format for compatibility
-  const convertSupplier = (backendSupplier: BackendSupplier): Supplier => ({
-    id: backendSupplier.supplierId,
-    name: backendSupplier.userName,
-    category: backendSupplier.categoryName || 'Unknown',
-    email: 'contact@' + backendSupplier.userName.toLowerCase().replace(/\s+/g, '') + '.com', // Placeholder
-    phone: '+1-555-0123', // Placeholder
-    status: 'active' as const,
-    orders: 0, // Placeholder - could be fetched from purchase orders
-    address: 'Address not available',
-    contactPerson: backendSupplier.userName
-  });
+  // Convert enhanced supplier to frontend supplier format for compatibility with existing UI components
+  const convertSupplier = (enhancedSupplier: EnhancedSupplier): Supplier => {
+    const userDetails = enhancedSupplier.userDetails;
+    
+    return {
+      id: enhancedSupplier.supplierId,
+      name: userDetails?.fullName || enhancedSupplier.userName,
+      category: enhancedSupplier.categoryName || 'Unknown',
+      email: userDetails?.email || `contact@${enhancedSupplier.userName.toLowerCase().replace(/\s+/g, '')}.com`,
+      phone: userDetails?.phoneNumber || '+1-555-0123',
+      status: userDetails?.accountStatus?.toLowerCase() === 'active' ? 'active' as const : 
+              userDetails?.accountStatus?.toLowerCase() === 'inactive' ? 'inactive' as const : 
+              'active' as const, // Default to active if not specified
+      orders: 0, // Placeholder - could be fetched from purchase orders
+      address: userDetails?.formattedAddress || 'Address not available',
+      contactPerson: userDetails?.fullName || enhancedSupplier.userName
+    };
+  };
 
   return (
     <div className="space-y-4">
@@ -406,25 +426,68 @@ function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier)
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {suppliers.map((backendSupplier) => {
-                const supplier = convertSupplier(backendSupplier);
+              {suppliers.map((enhancedSupplier) => {
+                const supplier = convertSupplier(enhancedSupplier);
+                const hasUserDetails = enhancedSupplier.userDetails !== undefined;
+                
                 return (
                   <Card key={supplier.id} className="hover:shadow-md transition-shadow">
                     <CardHeader>
-                      <CardTitle className="text-lg">{supplier.name}</CardTitle>
-                      <CardDescription>{supplier.category}</CardDescription>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{supplier.name}</CardTitle>
+                          <CardDescription>{supplier.category}</CardDescription>
+                        </div>
+                        {hasUserDetails && enhancedSupplier.userDetails?.profileImageUrl && (
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                            <img 
+                              src={enhancedSupplier.userDetails.profileImageUrl} 
+                              alt={supplier.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <p className="text-sm">{supplier.email}</p>
-                      <p className="text-sm">{supplier.phone}</p>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'}>
-                          {supplier.status}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          User ID: {backendSupplier.userId}
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className={hasUserDetails ? '' : 'text-muted-foreground italic'}>
+                          {supplier.email}
                         </span>
                       </div>
+                      
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className={hasUserDetails ? '' : 'text-muted-foreground italic'}>
+                          {supplier.phone}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-start gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <span className={`line-clamp-2 ${hasUserDetails ? '' : 'text-muted-foreground italic'}`}>
+                          {supplier.address}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={supplier.status === 'active' ? 'default' : 
+                                        supplier.status === 'inactive' ? 'secondary' : 'outline'}>
+                            {supplier.status.charAt(0).toUpperCase() + supplier.status.slice(1)}
+                          </Badge>
+                          {!hasUserDetails && (
+                            <Badge variant="outline" className="text-xs">
+                              Basic Info
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          ID: {enhancedSupplier.userId}
+                        </span>
+                      </div>
+                      
                       <div className="flex gap-2 pt-2">
                         <Button 
                           variant="outline" 
