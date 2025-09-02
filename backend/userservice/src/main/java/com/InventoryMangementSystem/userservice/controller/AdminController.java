@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 import com.InventoryMangementSystem.userservice.dto.RoleAssignmentRequest;
+import com.InventoryMangementSystem.userservice.dto.UserInfo;
 import com.InventoryMangementSystem.userservice.service.AdminService;
 
 import java.util.List;
@@ -57,6 +58,16 @@ public class AdminController {
             return ResponseEntity.ok(roles);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(List.of("Error fetching roles"));
+        }
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<UserInfo> getUserById(@PathVariable Long id) {
+        try {
+            UserInfo userInfo = adminService.getUserById(id);
+            return ResponseEntity.ok(userInfo);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(null);
         }
     }
 }
