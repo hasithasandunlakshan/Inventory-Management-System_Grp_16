@@ -32,8 +32,8 @@ public class OrderItem {
     @JoinColumn(name = "order_id")
     private Order order;
     
-    @Column(name = "item_id") // Fixed: Database column is item_id, not product_id
-    private Long productId;  // Keep the field name as productId for code consistency
+    @Column(name = "product_id") // Database column is product_id
+    private Long productId;  // Field name as productId for code consistency
     
     private Integer quantity;
     private Integer barcode;
