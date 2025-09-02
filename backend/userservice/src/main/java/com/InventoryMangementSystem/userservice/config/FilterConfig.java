@@ -12,7 +12,7 @@ public class FilterConfig {
     public FilterRegistrationBean<JwtAuthFilter> jwtFilter(JwtAuthFilter jwtAuthFilter) {
         FilterRegistrationBean<JwtAuthFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(jwtAuthFilter);
-        registrationBean.addUrlPatterns("/api/secure/profile"); // Adjust path to your secured APIs
+        registrationBean.addUrlPatterns("/api/secure/*"); // Apply to all secure endpoints
         return registrationBean;
     }
 }

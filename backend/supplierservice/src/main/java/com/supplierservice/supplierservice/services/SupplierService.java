@@ -3,8 +3,10 @@ package com.supplierservice.supplierservice.services;
 import com.supplierservice.supplierservice.dto.SupplierDTO;
 import com.supplierservice.supplierservice.models.Supplier;
 import com.supplierservice.supplierservice.models.SupplierCategory;
+import com.supplierservice.supplierservice.models.User;
 import com.supplierservice.supplierservice.repository.SupplierCategoryRepository;
 import com.supplierservice.supplierservice.repository.SupplierRepository;
+import com.supplierservice.supplierservice.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,10 +19,14 @@ public class SupplierService {
 
     private final SupplierRepository supplierRepository;
     private final SupplierCategoryRepository categoryRepository;
+    private final UserRepository userRepository;
 
-    public SupplierService(SupplierRepository supplierRepository, SupplierCategoryRepository categoryRepository) {
+    public SupplierService(SupplierRepository supplierRepository,
+            SupplierCategoryRepository categoryRepository,
+            UserRepository userRepository) {
         this.supplierRepository = supplierRepository;
         this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
     }
 
     /** Create and return the saved supplier as a DTO (flattened). */
@@ -29,11 +35,12 @@ public class SupplierService {
         SupplierCategory category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid category ID"));
 
-        // Note: You'll need to handle User creation/lookup based on your business logic
-        // For now, assuming userId is provided and valid
+        User user = userRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID"));
+
         Supplier supplier = Supplier.builder()
                 .category(category)
-                // .user(...) // You'll need to set this based on your logic
+                .user(user)
                 .build();
 
         Supplier saved = supplierRepository.save(supplier);

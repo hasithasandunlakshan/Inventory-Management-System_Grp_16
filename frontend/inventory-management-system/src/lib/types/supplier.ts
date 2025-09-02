@@ -7,6 +7,18 @@ export interface Supplier {
   categoryName?: string; // Optional field from backend
 }
 
+// Enhanced supplier with user details for display
+export interface EnhancedSupplier extends Supplier {
+  userDetails?: {
+    email: string;
+    fullName: string;
+    phoneNumber?: string;
+    formattedAddress?: string;
+    accountStatus?: string;
+    profileImageUrl?: string;
+  };
+}
+
 // For creating new suppliers
 export interface SupplierCreateRequest {
   userId: number;

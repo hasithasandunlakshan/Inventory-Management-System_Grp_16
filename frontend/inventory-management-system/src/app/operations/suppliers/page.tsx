@@ -12,7 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { deliveryLogService } from "@/lib/services/deliveryLogService";
-import { DeliveryLog } from "@/lib/types/supplier";
+import { supplierService } from "@/lib/services/supplierService";
+import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -286,51 +288,227 @@ function PurchaseOrdersTab() {
 
 // Suppliers Tab Component
 function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier) => void }) {
+  const { isAuthenticated, canAccessSupplierService } = useAuth();
+  const [suppliers, setSuppliers] = useState<EnhancedSupplier[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load suppliers on component mount and when authentication changes
+  useEffect(() => {
+    loadSuppliers();
+  }, [isAuthenticated]);
+
+  const loadSuppliers = async () => {
+    console.log('Loading suppliers with user details... isAuthenticated:', isAuthenticated);
+    
+    if (!isAuthenticated) {
+      console.log('User not authenticated, setting empty array');
+      setSuppliers([]);
+      return;
+    }
+
+    // Debug: Check user role and token
+    const token = localStorage.getItem('inventory_auth_token');
+    const user = localStorage.getItem('inventory_user_info');
+    console.log('Token present:', !!token);
+    console.log('User info:', user ? JSON.parse(user) : null);
+    console.log('Can access supplier service:', canAccessSupplierService());
+
+    setLoading(true);
+    setError(null);
+    console.log('Making API call to fetch suppliers with user details...');
+    
+    try {
+      const enhancedSuppliers = await enhancedSupplierService.getAllSuppliersWithUserDetails();
+      console.log('Enhanced suppliers API response received:', enhancedSuppliers);
+      setSuppliers(enhancedSuppliers);
+    } catch (apiError) {
+      const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
+      console.error('API call failed:', errorMessage);
+      setError(errorMessage);
+      
+      // Fallback to basic suppliers if enhanced loading fails
+      try {
+        console.log('Fallback: trying to load basic suppliers...');
+        const basicSuppliers = await supplierService.getAllSuppliers();
+        const enhancedFallback: EnhancedSupplier[] = basicSuppliers.map(supplier => ({
+          ...supplier,
+          userDetails: undefined
+        }));
+        setSuppliers(enhancedFallback);
+        setError('User details could not be loaded, showing basic supplier information');
+      } catch (fallbackError) {
+        setSuppliers([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Convert enhanced supplier to frontend supplier format for compatibility with existing UI components
+  const convertSupplier = (enhancedSupplier: EnhancedSupplier): Supplier => {
+    const userDetails = enhancedSupplier.userDetails;
+    
+    return {
+      id: enhancedSupplier.supplierId,
+      name: userDetails?.fullName || enhancedSupplier.userName,
+      category: enhancedSupplier.categoryName || 'Unknown',
+      email: userDetails?.email || `contact@${enhancedSupplier.userName.toLowerCase().replace(/\s+/g, '')}.com`,
+      phone: userDetails?.phoneNumber || '+1-555-0123',
+      status: userDetails?.accountStatus?.toLowerCase() === 'active' ? 'active' as const : 
+              userDetails?.accountStatus?.toLowerCase() === 'inactive' ? 'inactive' as const : 
+              'active' as const, // Default to active if not specified
+      orders: 0, // Placeholder - could be fetched from purchase orders
+      address: userDetails?.formattedAddress || 'Address not available',
+      contactPerson: userDetails?.fullName || enhancedSupplier.userName
+    };
+  };
+
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Suppliers Directory</CardTitle>
-          <CardDescription>Manage supplier information and contacts</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Suppliers Directory</CardTitle>
+              <CardDescription>Manage supplier information and contacts</CardDescription>
+            </div>
+            <Button 
+              onClick={loadSuppliers} 
+              variant="outline" 
+              size="sm"
+              disabled={!isAuthenticated || loading}
+            >
+              {loading ? 'Loading...' : 'Refresh'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sampleSuppliers.map((supplier) => (
-              <Card key={supplier.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-lg">{supplier.name}</CardTitle>
-                  <CardDescription>{supplier.category}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm">{supplier.email}</p>
-                  <p className="text-sm">{supplier.phone}</p>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'}>
-                      {supplier.status}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {supplier.orders} orders
-                    </span>
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => onViewSupplier(supplier)}
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      View
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {/* Authentication Status */}
+          {!isAuthenticated && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
+                <span className="text-sm font-medium text-yellow-800">Authentication Required</span>
+              </div>
+              <p className="text-sm text-yellow-700 mt-1">
+                Please login to access suppliers data.
+              </p>
+            </div>
+          )}
+          
+          {/* Error Status */}
+          {isAuthenticated && error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm font-medium text-red-800">API Connection Issue</span>
+              </div>
+              <p className="text-sm text-red-700 mt-1">
+                Failed to load suppliers data. Error: {error}
+              </p>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-muted-foreground">Loading suppliers...</div>
+            </div>
+          ) : suppliers.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <div className="text-muted-foreground">
+                  {!isAuthenticated ? 'Login to view suppliers' : 'No suppliers found'}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {suppliers.map((enhancedSupplier) => {
+                const supplier = convertSupplier(enhancedSupplier);
+                const hasUserDetails = enhancedSupplier.userDetails !== undefined;
+                
+                return (
+                  <Card key={supplier.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{supplier.name}</CardTitle>
+                          <CardDescription>{supplier.category}</CardDescription>
+                        </div>
+                        {hasUserDetails && enhancedSupplier.userDetails?.profileImageUrl && (
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                            <img 
+                              src={enhancedSupplier.userDetails.profileImageUrl} 
+                              alt={supplier.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span className={hasUserDetails ? '' : 'text-muted-foreground italic'}>
+                          {supplier.email}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className={hasUserDetails ? '' : 'text-muted-foreground italic'}>
+                          {supplier.phone}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-start gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <span className={`line-clamp-2 ${hasUserDetails ? '' : 'text-muted-foreground italic'}`}>
+                          {supplier.address}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={supplier.status === 'active' ? 'default' : 
+                                        supplier.status === 'inactive' ? 'secondary' : 'outline'}>
+                            {supplier.status.charAt(0).toUpperCase() + supplier.status.slice(1)}
+                          </Badge>
+                          {!hasUserDetails && (
+                            <Badge variant="outline" className="text-xs">
+                              Basic Info
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          ID: {enhancedSupplier.userId}
+                        </span>
+                      </div>
+                      
+                      <div className="flex gap-2 pt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => onViewSupplier(supplier)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -844,8 +1022,8 @@ function getDeliveryStatusVariant(status: string) {
   }
 }
 
-// Types
-interface Supplier {
+// Types for local UI compatibility
+interface LocalSupplier {
   id: number;
   name: string;
   category: string;
@@ -856,6 +1034,9 @@ interface Supplier {
   address: string;
   contactPerson: string;
 }
+
+// Use LocalSupplier for UI components
+type Supplier = LocalSupplier;
 
 // Sample data
 const samplePurchaseOrders = [
