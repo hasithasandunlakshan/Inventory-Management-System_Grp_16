@@ -104,6 +104,44 @@ public class ProductService {
     }
     
     /**
+     * Reduce physical stock by the specified quantity
+     * @param productId The ID of the product
+     * @param quantity The quantity to reduce from physical stock
+     * @return Updated product
+     * @throws ProductNotFoundException if product not found
+     * @throws IllegalArgumentException if insufficient stock
+     */
+    public Product reducePhysicalStock(Long productId, int quantity) {
+        Product product = repository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
+        
+        // Check if we have enough physical stock
+        if (product.getStock() < quantity) {
+            throw new IllegalArgumentException("Insufficient physical stock. Available: " + 
+                product.getStock() + ", Requested: " + quantity);
+        }
+        
+        // Check if we have enough reserved stock
+        if (product.getReserved() < quantity) {
+            throw new IllegalArgumentException("Insufficient reserved stock. Available: " + 
+                product.getReserved() + ", Requested: " + quantity);
+        }
+        
+        // Reduce physical stock
+        int newPhysicalStock = product.getStock() - quantity;
+        product.setStock(newPhysicalStock);
+        
+        // Reduce reserved stock
+        int newReservedStock = product.getReserved() - quantity;
+        product.setReserved(newReservedStock);
+        
+        // Recalculate available stock (physical stock - reserved)
+        product.setAvailableStock(newPhysicalStock - newReservedStock);
+        
+        return repository.save(product);
+    }
+    
+    /**
      * Get products with available stock > 0 (for display to customers)
      */
     public List<Product> getAvailableProducts() {

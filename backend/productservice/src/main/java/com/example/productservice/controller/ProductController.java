@@ -75,6 +75,20 @@ public class ProductController {
         }
     }
 
+    @PutMapping("/{id}/reduce/{quantity}")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity<?> reducePhysicalStock(@PathVariable Long id, @PathVariable int quantity) {
+        try {
+            Product updatedProduct = service.reducePhysicalStock(id, quantity);
+            return ResponseEntity.ok(updatedProduct);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Insufficient")) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body("Product not found with ID: " + id);
+        }
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductDTO dto) {
         try {
