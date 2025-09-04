@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>🚨 Emergency Authentication Fix</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        min-height: 100vh;
+      }
+      .container {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+      .status {
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 18px;
+      }
+      .success {
+        background: rgba(40, 167, 69, 0.8);
+      }
+      .error {
+        background: rgba(220, 53, 69, 0.8);
+      }
+      .info {
+        background: rgba(23, 162, 184, 0.8);
+      }
+      .warning {
+        background: rgba(255, 193, 7, 0.8);
+        color: black;
+      }
+
+      button {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 10px;
+        cursor: pointer;
+        margin: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        transition: all 0.3s;
+      }
+      button:hover {
+        background: #218838;
+        transform: translateY(-2px);
+      }
+      .emergency {
+        background: #dc3545;
+        animation: pulse 1s infinite;
+      }
+      .emergency:hover {
+        background: #c82333;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      pre {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border-radius: 10px;
+        overflow-x: auto;
+        text-align: left;
+        max-height: 300px;
+      }
+
+      .step {
+        background: rgba(255, 255, 255, 0.1);
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #28a745;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚨 Emergency Authentication Fix</h1>
+      <p>This tool will fix your authentication issues immediately.</p>
+
+      <div id="status" class="status info">Ready to authenticate...</div>
+
+      <button id="emergencyFix" class="emergency" onclick="emergencyAuth()">
+        🚨 EMERGENCY AUTH FIX
+      </button>
+
+      <button onclick="checkStatus()">🔍 Check Status</button>
+      <button onclick="clearAuth()">🧹 Clear Auth</button>
+      <button onclick="testAPI()">🌐 Test API</button>
+
+      <div class="step">
+        <h3>📋 Manual Steps (if auto-fix fails):</h3>
+        <ol>
+          <li>Click the "🚨 EMERGENCY AUTH FIX" button above</li>
+          <li>Wait for success message</li>
+          <li>Go back to your application (http://localhost:3000)</li>
+          <li>Refresh the page</li>
+          <li>Check suppliers page - should work now!</li>
+        </ol>
+      </div>
+
+      <pre id="log">Click 'EMERGENCY AUTH FIX' to start...</pre>
+    </div>
+
+    <script>
+      function log(message) {
+        const logElement = document.getElementById("log");
+        logElement.textContent +=
+          new Date().toLocaleTimeString() + ": " + message + "\n";
+        logElement.scrollTop = logElement.scrollHeight;
+      }
+
+      function setStatus(message, type = "info") {
+        const status = document.getElementById("status");
+        status.textContent = message;
+        status.className = "status " + type;
+      }
+
+      async function emergencyAuth() {
+        setStatus("🚨 Starting emergency authentication fix...", "warning");
+        log("Starting emergency authentication fix...");
+
+        try {
+          // Clear existing auth data
+          localStorage.removeItem("inventory_auth_token");
+          localStorage.removeItem("inventory_user_info");
+          log("✅ Cleared existing authentication data");
+
+          // Try primary credentials
+          log("🔑 Trying primary credentials (storekeeper)...");
+          let response = await fetch("http://localhost:8090/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: "storekeeper",
+              password: "password123",
+            }),
+          });
+
+          let data = await response.json();
+
+          if (!data.success) {
+            log("⚠️ Primary credentials failed, trying backup...");
+            response = await fetch("http://localhost:8090/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                username: "testuser",
+                password: "password123",
+              }),
+            });
+            data = await response.json();
+          }
+
+          if (data.success) {
+            // Store authentication data
+            localStorage.setItem("inventory_auth_token", data.token);
+            localStorage.setItem(
+              "inventory_user_info",
+              JSON.stringify(data.user)
+            );
+
+            log("✅ Authentication successful!");
+            log("👤 User: " + data.user.fullName + " (" + data.user.role + ")");
+
+            // Verify token
+            log("🔍 Verifying token...");
+            const verifyResponse = await fetch(
+              "http://localhost:8090/api/secure/user/current",
+              {
+                method: "GET",
+                headers: {
+                  Authorization: "Bearer " + data.token,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            if (verifyResponse.ok) {
+              setStatus(
+                "✅ AUTHENTICATION FIXED! You can now use your application.",
+                "success"
+              );
+              log("✅ Token verification successful!");
+              log("🎉 AUTHENTICATION COMPLETELY FIXED!");
+              log("📱 Go to http://localhost:3000 and refresh the page");
+
+              // Auto-open the application
+              setTimeout(() => {
+                window.open(
+                  "http://localhost:3000/operations/suppliers",
+                  "_blank"
+                );
+              }, 2000);
+            } else {
+              log("❌ Token verification failed: " + verifyResponse.status);
+              setStatus("❌ Token verification failed", "error");
+            }
+          } else {
+            log(
+              "❌ All authentication attempts failed: " +
+                (data.error || "Unknown error")
+            );
+            setStatus("❌ Authentication failed - check backend", "error");
+          }
+        } catch (error) {
+          log("❌ Network error: " + error.message);
+          setStatus("❌ Network error - check if backend is running", "error");
+        }
+      }
+
+      function checkStatus() {
+        const token = localStorage.getItem("inventory_auth_token");
+        const user = localStorage.getItem("inventory_user_info");
+
+        if (token && user) {
+          const userData = JSON.parse(user);
+          setStatus("✅ Authenticated as: " + userData.fullName, "success");
+          log(
+            "✅ Authentication found: " +
+              userData.username +
+              " (" +
+              userData.role +
+              ")"
+          );
+        } else {
+          setStatus("❌ Not authenticated", "error");
+          log("❌ No authentication data found");
+        }
+      }
+
+      function clearAuth() {
+        localStorage.removeItem("inventory_auth_token");
+        localStorage.removeItem("inventory_user_info");
+        setStatus("🧹 Authentication cleared", "info");
+        log("🧹 Authentication data cleared");
+      }
+
+      async function testAPI() {
+        const token = localStorage.getItem("inventory_auth_token");
+        if (!token) {
+          setStatus("❌ No token to test", "error");
+          log("❌ No token found for testing");
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            "http://localhost:8090/api/secure/user/current",
+            {
+              method: "GET",
+              headers: {
+                Authorization: "Bearer " + token,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            setStatus("✅ API test successful", "success");
+            log("✅ API test successful: " + data.username);
+          } else {
+            setStatus("❌ API test failed: " + response.status, "error");
+            log("❌ API test failed: " + response.status);
+          }
+        } catch (error) {
+          setStatus("❌ API test error", "error");
+          log("❌ API test error: " + error.message);
+        }
+      }
+
+      // Auto-check status on load
+      window.onload = checkStatus;
+    </script>
+  </body>
+</html>

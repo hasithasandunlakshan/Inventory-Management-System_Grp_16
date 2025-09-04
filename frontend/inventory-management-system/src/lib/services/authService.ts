@@ -51,6 +51,8 @@ class AuthService {
   // Login user and store token
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
+      console.log('🔐 AuthService: Attempting login...', credentials.username);
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -60,13 +62,27 @@ class AuthService {
       });
 
       const data: LoginResponse = await response.json();
+      console.log('🔐 AuthService: Login response:', { 
+        success: data.success, 
+        hasToken: !!data.token, 
+        tokenLength: data.token?.length || 0 
+      });
 
       if (data.success && data.token) {
         // Store token and user info in localStorage
+        console.log('🔐 AuthService: Storing token in localStorage...');
         localStorage.setItem(this.tokenKey, data.token);
         if (data.user) {
           localStorage.setItem(this.userKey, JSON.stringify(data.user));
         }
+        
+        // Verify storage
+        const storedToken = localStorage.getItem(this.tokenKey);
+        console.log('🔐 AuthService: Token storage verification:', {
+          stored: !!storedToken,
+          length: storedToken?.length || 0,
+          matches: storedToken === data.token
+        });
       }
 
       return data;

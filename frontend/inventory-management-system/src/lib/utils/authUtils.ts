@@ -81,6 +81,13 @@ export function createAuthenticatedRequestOptions(
 ): RequestInit {
   const token = localStorage.getItem('inventory_auth_token');
   
+  console.log('🔑 Creating authenticated request:', {
+    method,
+    hasToken: !!token,
+    tokenLength: token?.length || 0,
+    tokenStart: token?.substring(0, 20) + '...' || 'null'
+  });
+  
   const options: RequestInit = {
     method,
     headers: {
@@ -93,6 +100,8 @@ export function createAuthenticatedRequestOptions(
     options.body = JSON.stringify(body);
   }
 
+  console.log('🔑 Request headers:', options.headers);
+  
   return options;
 }
 

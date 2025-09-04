@@ -7,5 +7,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class SupplierCategoryDTO {
+    private Long categoryId;
     private String name;
 }

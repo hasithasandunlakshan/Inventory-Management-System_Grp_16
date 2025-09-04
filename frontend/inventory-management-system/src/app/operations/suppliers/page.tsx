@@ -19,6 +19,7 @@ import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCre
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
+import { authDebug } from "@/lib/utils/authDebug";
 
 // Define DeliveryLogCreateRequest to match the imported type
 interface DeliveryLogCreateRequest {
@@ -66,6 +67,20 @@ function SuppliersPageContent() {
           </p>
         </div>
         <div className="flex gap-2">
+          {/* Debug button for development */}
+          {process.env.NODE_ENV === 'development' && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                console.log('🔧 Authentication Debug Report:');
+                authDebug.debugAll();
+              }}
+              title="Debug Authentication (Dev Only)"
+            >
+              🔧 Debug Auth
+            </Button>
+          )}
           <Button variant="outline" disabled={!isAuthenticated}>
             <Upload className="mr-2 h-4 w-4" />
             Import
@@ -147,7 +162,7 @@ function SuppliersPageContent() {
         </TabsContent>
 
         <TabsContent value="suppliers" className="space-y-4">
-          <SuppliersTab onViewSupplier={handleViewSupplier} />
+          <SuppliersTab onViewSupplier={handleViewSupplier} onLoginClick={handleLoginClick} />
         </TabsContent>
 
         <TabsContent value="delivery-logs" className="space-y-4">
@@ -288,7 +303,10 @@ function PurchaseOrdersTab() {
 }
 
 // Suppliers Tab Component
-function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier) => void }) {
+function SuppliersTab({ onViewSupplier, onLoginClick }: { 
+  onViewSupplier: (supplier: Supplier) => void;
+  onLoginClick: () => void;
+}) {
   const { isAuthenticated } = useAuth();
   const [suppliers, setSuppliers] = useState<EnhancedSupplier[]>([]);
   const [loading, setLoading] = useState(false);
@@ -314,9 +332,26 @@ function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Failed to load suppliers:', errorMessage);
-      setApiError(errorMessage);
-      // Fall back to sample data for now
-      setSuppliers([]);
+      
+      // Check if it's an authentication error that requires re-login
+      if (errorMessage.includes('login') || 
+          errorMessage.includes('Authentication') || 
+          errorMessage.includes('token')) {
+        setApiError('Authentication expired. Please log in again to access suppliers.');
+        // Trigger login modal or redirect to login
+        // You could add logic here to automatically open login modal
+      } else {
+        setApiError(errorMessage);
+      }
+      
+      // Fall back to empty list for authentication errors, sample data for others
+      if (errorMessage.includes('login') || 
+          errorMessage.includes('Authentication') || 
+          errorMessage.includes('token')) {
+        setSuppliers([]);
+      } else {
+        setSuppliers([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -366,14 +401,48 @@ function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier)
             <div className="space-y-4">
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>API Error</AlertTitle>
-                <AlertDescription>{apiError}</AlertDescription>
+                <AlertTitle>
+                  {apiError.includes('login') || apiError.includes('Authentication') || apiError.includes('token')
+                    ? 'Authentication Required'
+                    : 'API Error'
+                  }
+                </AlertTitle>
+                <AlertDescription>
+                  {apiError}
+                  {(apiError.includes('login') || apiError.includes('Authentication') || apiError.includes('token')) && (
+                    <div className="mt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={onLoginClick}
+                        className="mr-2"
+                      >
+                        Login Now
+                      </Button>
+                      {process.env.NODE_ENV === 'development' && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            console.log('🔧 Running auth diagnostics...');
+                            authDebug.debugAll();
+                          }}
+                        >
+                          Debug Auth
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </AlertDescription>
               </Alert>
-              <div className="text-sm text-muted-foreground">
-                Showing sample data instead:
-              </div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {sampleSuppliers.map((supplier) => (
+              {!(apiError.includes('login') || apiError.includes('Authentication') || apiError.includes('token')) && (
+                <div className="text-sm text-muted-foreground">
+                  Showing sample data instead:
+                </div>
+              )}
+              {!(apiError.includes('login') || apiError.includes('Authentication') || apiError.includes('token')) && (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {sampleSuppliers.map((supplier) => (
                   <Card key={supplier.id} className="hover:shadow-md transition-shadow">
                     <CardHeader>
                       <CardTitle className="text-lg">{supplier.name}</CardTitle>
@@ -427,8 +496,9 @@ function SuppliersTab({ onViewSupplier }: { onViewSupplier: (supplier: Supplier)
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -13,8 +13,8 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onLoginSuccess, onSwitchToSignup }: LoginFormProps) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('storekeeper');
+  const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -26,14 +26,18 @@ export function LoginForm({ onLoginSuccess, onSwitchToSignup }: LoginFormProps) 
     setIsLoading(true);
 
     try {
+      console.log('🔐 Attempting login with:', { username, password: '***' });
       const result = await login(username, password);
+      console.log('🔐 Login result:', { success: result.success, error: result.error });
       
       if (result.success) {
+        console.log('✅ Login successful, calling onLoginSuccess');
         onLoginSuccess?.();
       } else {
         setError(result.error || 'Login failed');
       }
     } catch (err) {
+      console.error('🚫 Login error:', err);
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -46,6 +50,8 @@ export function LoginForm({ onLoginSuccess, onSwitchToSignup }: LoginFormProps) 
         <CardTitle>Login</CardTitle>
         <CardDescription>
           Enter your credentials to access the inventory management system
+          <br />
+          <small className="text-green-600 mt-1 block">Default credentials: storekeeper / password123</small>
         </CardDescription>
       </CardHeader>
       <CardContent>
