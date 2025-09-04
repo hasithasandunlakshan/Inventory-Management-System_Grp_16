@@ -6,10 +6,12 @@ import lombok.RequiredArgsConstructor;
 
 import com.InventoryMangementSystem.userservice.dto.RoleAssignmentRequest;
 import com.InventoryMangementSystem.userservice.dto.UserInfo;
+
 import com.InventoryMangementSystem.userservice.entity.User;
 import com.InventoryMangementSystem.userservice.entity.UserRole;
 import com.InventoryMangementSystem.userservice.repository.UserRepository;
 import com.InventoryMangementSystem.userservice.repository.UserRoleRepository;
+
 import com.InventoryMangementSystem.userservice.service.AdminService;
 
 import java.util.List;
@@ -70,6 +72,7 @@ public class AdminController {
 
     @GetMapping("/user/{id}")
     public ResponseEntity<UserInfo> getUserById(@PathVariable Long id) {
+
         System.out.println("\n=== ADMIN GET USER BY ID ENDPOINT CALLED ===");
         System.out.println("Timestamp: " + java.time.LocalDateTime.now());
         System.out.println("Requested userId: " + id);

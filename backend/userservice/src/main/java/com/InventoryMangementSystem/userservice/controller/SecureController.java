@@ -17,10 +17,16 @@ import com.InventoryMangementSystem.userservice.repository.UserRoleRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.InventoryMangementSystem.userservice.dto.UserInfo;
+import com.InventoryMangementSystem.userservice.service.UserService;
+
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/secure")
 @RequiredArgsConstructor
 public class SecureController {
+
 
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
@@ -58,6 +64,7 @@ public class SecureController {
         }
 
         String role = (String) request.getAttribute("role");
+
         if (role == null) {
             role = request.getHeader("X-User-Roles");
         }
@@ -75,6 +82,7 @@ public class SecureController {
 
         return response;
     }
+
 
     @GetMapping("/user/current")
     public ResponseEntity<UserInfo> getCurrentUser(HttpServletRequest request) {
@@ -257,6 +265,58 @@ public class SecureController {
             System.out.println("ERROR in getUserById: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
+    @GetMapping("/user/{id}")
+    public ResponseEntity<UserInfo> getUserDetails(@PathVariable Long id) {
+        System.out.println("\n=== GET USER DETAILS ENDPOINT CALLED ===");
+        System.out.println("Timestamp: " + java.time.LocalDateTime.now());
+        System.out.println("Requested User ID: " + id);
+
+        try {
+            UserInfo userInfo = userService.getUserById(id);
+            System.out.println("User details retrieved successfully for ID: " + id);
+            System.out.println("=== GET USER DETAILS ENDPOINT COMPLETED ===\n");
+            return ResponseEntity.ok(userInfo);
+        } catch (Exception e) {
+            System.err.println("Error getting user details: " + e.getMessage());
+            e.printStackTrace();
+            System.out.println("=== GET USER DETAILS ENDPOINT FAILED ===\n");
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/user/current")
+    public ResponseEntity<UserInfo> getCurrentUserDetails(HttpServletRequest request) {
+        System.out.println("\n=== GET CURRENT USER DETAILS ENDPOINT CALLED ===");
+        System.out.println("Timestamp: " + java.time.LocalDateTime.now());
+
+        try {
+            // Extract user ID from JWT token attributes set by the filter
+            Object userIdObj = request.getAttribute("userId");
+            Long userId = null;
+            if (userIdObj != null) {
+                if (userIdObj instanceof Integer) {
+                    userId = ((Integer) userIdObj).longValue();
+                } else if (userIdObj instanceof Long) {
+                    userId = (Long) userIdObj;
+                }
+            }
+
+            if (userId == null) {
+                System.err.println("User ID not found in request attributes");
+                System.out.println("=== GET CURRENT USER DETAILS ENDPOINT FAILED ===\n");
+                return ResponseEntity.badRequest().build();
+            }
+
+            System.out.println("Current User ID: " + userId);
+            UserInfo userInfo = userService.getUserById(userId);
+            System.out.println("Current user details retrieved successfully");
+            System.out.println("=== GET CURRENT USER DETAILS ENDPOINT COMPLETED ===\n");
+            return ResponseEntity.ok(userInfo);
+        } catch (Exception e) {
+            System.err.println("Error getting current user details: " + e.getMessage());
+            e.printStackTrace();
+            System.out.println("=== GET CURRENT USER DETAILS ENDPOINT FAILED ===\n");
+            return ResponseEntity.badRequest().build();
         }
     }
 }

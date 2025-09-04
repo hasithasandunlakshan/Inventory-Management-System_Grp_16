@@ -113,7 +113,6 @@ export const userService = {
       return response.json();
     } catch (error) {
       console.error('Failed to fetch current user details:', error);
-      
       // Re-throw authentication errors as-is
       if (error instanceof Error && 
           (error.message.includes('login') || 
@@ -121,7 +120,6 @@ export const userService = {
            error.message.includes('token'))) {
         throw error;
       }
-      
       throw new Error('Failed to fetch current user details - backend not available');
     }
   }
