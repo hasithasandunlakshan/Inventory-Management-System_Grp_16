@@ -3,7 +3,7 @@ export interface Supplier {
   supplierId: number;
   userId: number;
   userName: string;
-  categoryId: number;
+  categoryId: number | null; // Can be null
   categoryName?: string; // Optional field from backend
 }
 

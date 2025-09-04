@@ -19,12 +19,17 @@ public class SupplierCategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<SupplierCategory> createCategory(@RequestBody SupplierCategoryDTO dto) {
-        return ResponseEntity.ok(categoryService.createCategory(dto));
+    public ResponseEntity<SupplierCategoryDTO> createCategory(@RequestBody SupplierCategoryDTO dto) {
+        SupplierCategory created = categoryService.createCategory(dto);
+        return ResponseEntity.ok(new SupplierCategoryDTO(created.getCategoryId(), created.getName()));
     }
 
     @GetMapping
-    public ResponseEntity<List<SupplierCategory>> getAllCategories() {
-        return ResponseEntity.ok(categoryService.getAllCategories());
+    public ResponseEntity<List<SupplierCategoryDTO>> getAllCategories() {
+        List<SupplierCategory> categories = categoryService.getAllCategories();
+        List<SupplierCategoryDTO> dtos = categories.stream()
+                .map(cat -> new SupplierCategoryDTO(cat.getCategoryId(), cat.getName()))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 }

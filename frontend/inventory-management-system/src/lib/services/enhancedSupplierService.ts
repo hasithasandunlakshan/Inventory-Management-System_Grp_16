@@ -26,8 +26,18 @@ export const enhancedSupplierService = {
         }
       } catch (currentUserError) {
         console.error('Current user access test failed:', currentUserError);
-        // If we can't even access current user, there's a bigger authentication issue
-        throw new Error('User service authentication failed - cannot access current user endpoint');
+        
+        // Check if it's an authentication error that requires re-login
+        if (currentUserError instanceof Error && 
+            (currentUserError.message.includes('login') || 
+             currentUserError.message.includes('Authentication') || 
+             currentUserError.message.includes('token'))) {
+          // Re-throw authentication errors to trigger login flow
+          throw currentUserError;
+        }
+        
+        // For other errors, still try to continue but with limited functionality
+        console.warn('Continuing with limited user service access');
       }
       
       // Get all suppliers
