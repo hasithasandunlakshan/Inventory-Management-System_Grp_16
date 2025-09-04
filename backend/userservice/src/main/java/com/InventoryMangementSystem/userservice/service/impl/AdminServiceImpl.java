@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import com.InventoryMangementSystem.userservice.dto.UserInfo;
 import com.InventoryMangementSystem.userservice.entity.User;
 import com.InventoryMangementSystem.userservice.entity.Role;
 import com.InventoryMangementSystem.userservice.entity.UserRole;
@@ -100,5 +101,44 @@ public class AdminServiceImpl implements AdminService {
         return roles.stream()
                 .map(Role::getRoleName)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserInfo getUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        // Get user roles and determine the highest priority role
+        String role = "USER"; // Default role
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            // Priority order: ADMIN > MANAGER > Store Keeper > USER
+            String[] rolePriority = { "ADMIN", "MANAGER", "Store Keeper", "USER" };
+
+            for (String priorityRole : rolePriority) {
+                boolean hasRole = user.getRoles().stream()
+                        .anyMatch(ur -> priorityRole.equals(ur.getRole().getRoleName()));
+                if (hasRole) {
+                    role = priorityRole;
+                    break;
+                }
+            }
+        }
+
+        // Create and return UserInfo with all user attributes
+        return new UserInfo(
+                user.getUserId().toString(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFullName(),
+                role,
+                user.getPhoneNumber(),
+                user.getProfileImageUrl(),
+                user.getLatitude(),
+                user.getLongitude(),
+                user.getFormattedAddress(),
+                user.getAccountStatus() != null ? user.getAccountStatus().name() : null,
+                user.getEmailVerified(),
+                user.getCreatedAt(),
+                user.getDateOfBirth());
     }
 }

@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { deliveryLogService } from "@/lib/services/deliveryLogService";
 import { supplierService } from "@/lib/services/supplierService";
+
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
 import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory } from "@/lib/types/supplier";
@@ -350,6 +351,7 @@ function SuppliersTab({ onViewSupplier, onLoginClick }: {
           errorMessage.includes('token')) {
         setSuppliers([]);
       } else {
+
         setSuppliers([]);
       }
     } finally {
@@ -1074,8 +1076,8 @@ function getDeliveryStatusVariant(status: string) {
   }
 }
 
-// Types
-interface Supplier {
+// Types for local UI compatibility
+interface LocalSupplier {
   id: number;
   name: string;
   category: string;
@@ -1086,6 +1088,9 @@ interface Supplier {
   address: string;
   contactPerson: string;
 }
+
+// Use LocalSupplier for UI components
+type Supplier = LocalSupplier;
 
 // Sample data
 const samplePurchaseOrders = [

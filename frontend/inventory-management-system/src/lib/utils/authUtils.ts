@@ -1,8 +1,4 @@
-/**
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
- * Authentication utilities for consistent token handling across services
- */
+
 
 import { authService } from '../services/authService';
 
@@ -104,4 +100,5 @@ export function createAuthenticatedRequestOptions(
   
   return options;
 }
+
 
