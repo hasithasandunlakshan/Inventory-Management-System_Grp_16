@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Clear Authentication Data</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        background: #007cba;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px 5px;
+      }
+      button:hover {
+        background: #005a8a;
+      }
+      .status {
+        margin: 20px 0;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      pre {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        max-height: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔧 Authentication Troubleshooting Tool</h1>
+
+      <h2>Current Authentication Status</h2>
+      <div id="authStatus" class="status info">Checking...</div>
+
+      <h2>Actions</h2>
+      <button onclick="checkAuth()">🔍 Check Auth Status</button>
+      <button onclick="clearAuth()">🧹 Clear All Auth Data</button>
+      <button onclick="testAPI()">🌐 Test API Endpoint</button>
+      <button onclick="testLogin()">🔑 Test Login</button>
+
+      <h2>Debug Information</h2>
+      <pre id="debugOutput">
+Click "Check Auth Status" to see debug information...</pre
+      >
+
+      <h2>Manual Steps</h2>
+      <ol>
+        <li>
+          <strong>Clear Authentication:</strong> Click "Clear All Auth Data"
+          button above
+        </li>
+        <li><strong>Refresh Page:</strong> Refresh your application page</li>
+        <li>
+          <strong>Login Again:</strong> Use the login form in your application
+        </li>
+        <li>
+          <strong>Test API:</strong> Use the "Test API Endpoint" button to
+          verify
+        </li>
+      </ol>
+
+      <h2>Common Test Credentials</h2>
+      <p>Try these common credentials in your application:</p>
+      <ul>
+        <li>Username: <code>admin</code>, Password: <code>admin</code></li>
+        <li>Username: <code>user</code>, Password: <code>user</code></li>
+        <li>
+          Username: <code>storekeeper</code>, Password: <code>password</code>
+        </li>
+        <li>Username: <code>manager</code>, Password: <code>password</code></li>
+      </ul>
+    </div>
+
+    <script>
+      function checkAuth() {
+        const token = localStorage.getItem("inventory_auth_token");
+        const user = localStorage.getItem("inventory_user_info");
+
+        let status = "";
+        let output = "";
+
+        if (!token) {
+          status = "❌ No authentication token found";
+          output =
+            "No token in localStorage. This is expected if you haven't logged in yet.";
+          document.getElementById("authStatus").className = "status info";
+        } else {
+          try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            const currentTime = Date.now() / 1000;
+            const isExpired = payload.exp < currentTime;
+
+            if (isExpired) {
+              status = "⏰ Token found but EXPIRED";
+              document.getElementById("authStatus").className = "status error";
+            } else {
+              status = "✅ Valid token found";
+              document.getElementById("authStatus").className =
+                "status success";
+            }
+
+            output = `Token Details:
+- Subject: ${payload.sub || "N/A"}
+- Issued At: ${new Date(payload.iat * 1000).toLocaleString()}
+- Expires At: ${new Date(payload.exp * 1000).toLocaleString()}
+- Current Time: ${new Date().toLocaleString()}
+- Is Expired: ${isExpired}
+- Roles: ${payload.roles || payload.authorities || "N/A"}
+
+Raw Payload:
+${JSON.stringify(payload, null, 2)}`;
+
+            if (user) {
+              try {
+                const userData = JSON.parse(user);
+                output += `
+
+User Data:
+${JSON.stringify(userData, null, 2)}`;
+              } catch (e) {
+                output += "\n\nUser data is corrupted!";
+              }
+            }
+          } catch (error) {
+            status = "❌ Token found but INVALID format";
+            output = `Token parsing error: ${
+              error.message
+            }\n\nRaw token: ${token.substring(0, 50)}...`;
+            document.getElementById("authStatus").className = "status error";
+          }
+        }
+
+        document.getElementById("authStatus").textContent = status;
+        document.getElementById("debugOutput").textContent = output;
+      }
+
+      function clearAuth() {
+        localStorage.removeItem("inventory_auth_token");
+        localStorage.removeItem("inventory_user_info");
+
+        document.getElementById("authStatus").textContent =
+          "🧹 Authentication data cleared!";
+        document.getElementById("authStatus").className = "status success";
+        document.getElementById("debugOutput").textContent =
+          "All authentication data has been removed from localStorage.\nYou can now refresh your application and login again.";
+      }
+
+      async function testAPI() {
+        const token = localStorage.getItem("inventory_auth_token");
+        let output = "";
+
+        if (!token) {
+          output = "❌ No token available for testing.\nPlease login first.";
+          document.getElementById("debugOutput").textContent = output;
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            "http://localhost:8090/api/secure/user/current",
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          output = `API Test Results:
+Status: ${response.status} ${response.statusText}
+Headers: ${JSON.stringify(
+            Object.fromEntries(response.headers.entries()),
+            null,
+            2
+          )}
+
+`;
+
+          if (response.ok) {
+            const data = await response.json();
+            output += `✅ SUCCESS! Response Data:
+${JSON.stringify(data, null, 2)}`;
+            document.getElementById("authStatus").textContent =
+              "✅ API test successful!";
+            document.getElementById("authStatus").className = "status success";
+          } else {
+            const errorText = await response.text();
+            output += `❌ ERROR Response:
+${errorText}`;
+            document.getElementById(
+              "authStatus"
+            ).textContent = `❌ API test failed: ${response.status}`;
+            document.getElementById("authStatus").className = "status error";
+
+            if (response.status === 401 || response.status === 403) {
+              output +=
+                "\n\n🔧 Recommendation: Clear auth data and login again.";
+            }
+          }
+        } catch (error) {
+          output = `❌ Network Error: ${error.message}`;
+          document.getElementById("authStatus").textContent =
+            "❌ Network error during API test";
+          document.getElementById("authStatus").className = "status error";
+        }
+
+        document.getElementById("debugOutput").textContent = output;
+      }
+
+      async function testLogin() {
+        const credentials = [
+          { username: "admin", password: "admin" },
+          { username: "user", password: "user" },
+          { username: "storekeeper", password: "password" },
+          { username: "manager", password: "password" },
+          { username: "test", password: "test" },
+        ];
+
+        let output = "Testing common login credentials...\n\n";
+
+        for (const cred of credentials) {
+          try {
+            const response = await fetch(
+              "http://localhost:8090/api/auth/login",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(cred),
+              }
+            );
+
+            const data = await response.json();
+
+            if (data.success) {
+              output += `✅ SUCCESS: ${cred.username}/${cred.password}\n`;
+              output += `   Token: ${data.token?.substring(0, 50)}...\n`;
+              output += `   User: ${data.user?.username} (${data.user?.role})\n\n`;
+              break; // Stop on first successful login
+            } else {
+              output += `❌ FAILED: ${cred.username}/${cred.password} - ${data.error}\n`;
+            }
+          } catch (error) {
+            output += `❌ ERROR: ${cred.username}/${cred.password} - ${error.message}\n`;
+          }
+        }
+
+        output +=
+          "\n💡 If any credentials worked, you can use them in your application login form.";
+        document.getElementById("debugOutput").textContent = output;
+      }
+
+      // Auto-check on page load
+      window.onload = checkAuth;
+    </script>
+  </body>
+</html>

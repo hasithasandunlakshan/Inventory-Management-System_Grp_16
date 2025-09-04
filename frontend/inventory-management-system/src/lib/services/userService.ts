@@ -74,7 +74,37 @@ export const userService = {
    */
   async getCurrentUser(): Promise<UserInfo> {
     try {
+      // First check if we have a token
+      const token = localStorage.getItem('inventory_auth_token');
+      if (!token) {
+        throw new Error('No authentication token found - please login');
+      }
+
+      // Check if token is expired
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        if (payload.exp < currentTime) {
+          // Token expired, clear storage and throw error
+          localStorage.removeItem('inventory_auth_token');
+          localStorage.removeItem('inventory_user_info');
+          throw new Error('Authentication token expired - please login again');
+        }
+      } catch (tokenError) {
+        console.error('Invalid token format:', tokenError);
+        localStorage.removeItem('inventory_auth_token');
+        localStorage.removeItem('inventory_user_info');
+        throw new Error('Invalid authentication token - please login again');
+      }
+
       const response = await fetch(`${API_BASE_URL}/user/current`, createAuthenticatedRequestOptions());
+      
+      if (response.status === 401 || response.status === 403) {
+        // Clear invalid token
+        localStorage.removeItem('inventory_auth_token');
+        localStorage.removeItem('inventory_user_info');
+        throw new Error('Authentication failed - please login again');
+      }
       
       if (!response.ok) {
         throw new Error(`Failed to fetch current user details: ${response.status}`);
@@ -83,6 +113,13 @@ export const userService = {
       return response.json();
     } catch (error) {
       console.error('Failed to fetch current user details:', error);
+      // Re-throw authentication errors as-is
+      if (error instanceof Error && 
+          (error.message.includes('login') || 
+           error.message.includes('Authentication') || 
+           error.message.includes('token'))) {
+        throw error;
+      }
       throw new Error('Failed to fetch current user details - backend not available');
     }
   }

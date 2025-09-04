@@ -16,9 +16,10 @@ public class SupplierCategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "category_id") // Match your database column name
     private Long categoryId;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "name", nullable = false, unique = true, length = 100) // Match your database varchar(100)
     private String name;
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)

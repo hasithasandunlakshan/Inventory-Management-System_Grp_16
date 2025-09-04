@@ -34,4 +34,17 @@ public class SupplierController {
     public ResponseEntity<SupplierDTO> getSupplierById(@PathVariable Long id) {
         return ResponseEntity.ok(supplierService.getSupplierById(id));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<SupplierDTO> updateSupplier(@PathVariable Long id, @RequestBody SupplierDTO dto) {
+        dto.setSupplierId(id); // Ensure the ID matches the path parameter
+        SupplierDTO updated = supplierService.updateSupplier(dto);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSupplier(@PathVariable Long id) {
+        supplierService.deleteSupplier(id);
+        return ResponseEntity.noContent().build();
+    }
 }

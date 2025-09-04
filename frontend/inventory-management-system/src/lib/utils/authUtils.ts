@@ -1,6 +1,4 @@
-/**
- * Authentication utilities for consistent token handling across services
- */
+
 
 import { authService } from '../services/authService';
 
@@ -18,64 +16,89 @@ export const getAuthHeaders = (): HeadersInit => {
 /**
  * Get authentication headers without content-type (for file uploads)
  */
-export const getAuthHeadersOnly = (): HeadersInit => {
+export const getAuthHeadersWithoutContentType = (): HeadersInit => {
   return authService.getAuthHeader();
 };
 
+
 /**
- * Create authenticated fetch request options
+ * Create authenticated fetch request options for file uploads
  */
-export const createAuthenticatedRequestOptions = (
-  method: string = 'GET',
-  body?: any,
+export const createAuthenticatedFileUploadOptions = (
+  method: string = 'POST',
+  formData: FormData,
   additionalHeaders?: HeadersInit
 ): RequestInit => {
   const headers = {
-    ...getAuthHeaders(),
+    ...getAuthHeadersWithoutContentType(),
     ...additionalHeaders
   };
 
+  return {
+    method,
+    headers,
+    body: formData
+  };
+};
+
+/**
+ * Check if user is authenticated
+ */
+export const isAuthenticated = (): boolean => {
+  return authService.isAuthenticated();
+};
+
+/**
+ * Get current user role
+ */
+export const getCurrentUserRole = (): string | null => {
+  return authService.getUserRole();
+};
+
+/**
+ * Check if user has specific role
+ */
+export const hasRole = (role: string): boolean => {
+  const userRole = getCurrentUserRole();
+  return userRole === role;
+};
+
+/**
+ * Check if user has any of the specified roles
+ */
+export const hasAnyRole = (roles: string[]): boolean => {
+  const userRole = getCurrentUserRole();
+  return userRole ? roles.includes(userRole) : false;
+};
+
+export function createAuthenticatedRequestOptions(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  body?: any
+): RequestInit {
+  const token = localStorage.getItem('inventory_auth_token');
+  
+  console.log('🔑 Creating authenticated request:', {
+    method,
+    hasToken: !!token,
+    tokenLength: token?.length || 0,
+    tokenStart: token?.substring(0, 20) + '...' || 'null'
+  });
+  
   const options: RequestInit = {
     method,
-    headers
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
   };
 
-  if (body) {
-    options.body = typeof body === 'string' ? body : JSON.stringify(body);
+  if (body && (method === 'POST' || method === 'PUT')) {
+    options.body = JSON.stringify(body);
   }
 
-  return options;
-};
-
-/**
- * Check if user has required role
- */
-export const hasRole = (requiredRole: string): boolean => {
-  const user = authService.getUser();
-  if (!user || !user.role) return false;
+  console.log('🔑 Request headers:', options.headers);
   
-  // Handle multiple roles if needed
-  const userRoles = user.role.split(',').map(r => r.trim());
-  return userRoles.includes(requiredRole);
-};
+  return options;
+}
 
-/**
- * Check if user can access supplier services
- */
-export const canAccessSupplierService = (): boolean => {
-  return hasRole('Store Keeper') || hasRole('MANAGER');
-};
 
-/**
- * Check if user can access product services
- */
-export const canAccessProductService = (): boolean => {
-  return hasRole('MANAGER');
-};
-
-/**
- * Check if user can access order services  
- */
-export const canAccessOrderService = (): boolean => {
-  return hasRole('Store Keeper') || hasRole('MANAGER');
-};
