@@ -21,11 +21,7 @@ export const purchaseOrderService = {
    */
   async createPurchaseOrder(order: PurchaseOrderCreateRequest): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        ...createAuthenticatedRequestOptions(),
-        body: JSON.stringify(order)
-      });
+      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions('POST', order));
 
       if (!response.ok) {
         throw new Error('Failed to create purchase order');
@@ -94,12 +90,7 @@ export const purchaseOrderService = {
    */
   async getPurchaseOrderById(id: number): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions());
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -120,14 +111,7 @@ export const purchaseOrderService = {
    */
   async updatePurchaseOrder(id: number, order: PurchaseOrderUpdateRequest): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(order)
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions('PUT', order));
 
       if (!response.ok) {
         throw new Error('Failed to update purchase order');
@@ -150,14 +134,7 @@ export const purchaseOrderService = {
 
       const body = reason ? { reason } : undefined;
 
-      const response = await fetch(url.toString(), {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: body ? JSON.stringify(body) : undefined
-      });
+      const response = await fetch(url.toString(), createAuthenticatedRequestOptions('DELETE', body));
 
       if (!response.ok) {
         throw new Error('Failed to delete purchase order');
@@ -173,14 +150,7 @@ export const purchaseOrderService = {
    */
   async updateStatus(id: number, statusUpdate: StatusUpdateRequest): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(statusUpdate)
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}/status`, createAuthenticatedRequestOptions('PUT', statusUpdate));
 
       if (!response.ok) {
         throw new Error('Failed to update purchase order status');
@@ -198,14 +168,7 @@ export const purchaseOrderService = {
    */
   async markReceived(id: number, receiveData?: ReceiveRequest): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}/receive`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: receiveData ? JSON.stringify(receiveData) : undefined
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}/receive`, createAuthenticatedRequestOptions('POST', receiveData));
 
       if (!response.ok) {
         throw new Error('Failed to mark purchase order as received');
@@ -353,18 +316,11 @@ export const purchaseOrderService = {
   },
 
   /**
-   * Add items to a purchase order
+   * Add purchase order items
    */
   async addPurchaseOrderItems(orderId: number, items: PurchaseOrderItemCreateRequest[]): Promise<PurchaseOrderItem[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${orderId}/items`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(items)
-      });
+      const response = await fetch(`${API_BASE_URL}/${orderId}/items`, createAuthenticatedRequestOptions('POST', items));
 
       if (!response.ok) {
         throw new Error('Failed to add purchase order items');
@@ -382,14 +338,7 @@ export const purchaseOrderService = {
    */
   async updatePurchaseOrderItem(orderId: number, itemId: number, item: PurchaseOrderItem): Promise<PurchaseOrderItem> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(item)
-      });
+      const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, createAuthenticatedRequestOptions('PUT', item));
 
       if (!response.ok) {
         throw new Error('Failed to update purchase order item');
@@ -407,13 +356,7 @@ export const purchaseOrderService = {
    */
   async deletePurchaseOrderItem(orderId: number, itemId: number): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, createAuthenticatedRequestOptions('DELETE'));
 
       if (!response.ok) {
         throw new Error('Failed to delete purchase order item');

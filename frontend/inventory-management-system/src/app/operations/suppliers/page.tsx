@@ -17,7 +17,7 @@ import { purchaseOrderService } from "@/lib/services/purchaseOrderService";
 
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
-import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus } from "@/lib/types/supplier";
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus, PurchaseOrderCreateRequest } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -40,6 +40,7 @@ function SuppliersPageContent() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [isAddPurchaseOrderOpen, setIsAddPurchaseOrderOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const { isAuthenticated, isLoading } = useAuth();
@@ -95,7 +96,7 @@ function SuppliersPageContent() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button disabled={!isAuthenticated}>
+          <Button disabled={!isAuthenticated} onClick={() => setIsAddPurchaseOrderOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Purchase Order
           </Button>
@@ -164,7 +165,7 @@ function SuppliersPageContent() {
         </TabsList>
 
         <TabsContent value="purchase-orders" className="space-y-4">
-          <PurchaseOrdersTab />
+          <PurchaseOrdersTab refreshTrigger={refreshTrigger} />
         </TabsContent>
 
         <TabsContent value="suppliers" className="space-y-4">
@@ -197,6 +198,18 @@ function SuppliersPageContent() {
           setIsAddSupplierOpen(false);
         }}
       />
+      
+      {/* Add Purchase Order Sheet */}
+      <AddPurchaseOrderSheet
+        isOpen={isAddPurchaseOrderOpen}
+        onOpenChange={setIsAddPurchaseOrderOpen}
+        onPurchaseOrderAdded={() => {
+          // Trigger refresh of purchase orders
+          setRefreshTrigger(prev => prev + 1);
+          setIsAddPurchaseOrderOpen(false);
+        }}
+      />
+      
       {/* Add Category Sheet */}
       <AddCategorySheet
         isOpen={isAddCategoryOpen}
@@ -227,7 +240,7 @@ export default function SuppliersPage() {
 }
 
 // Purchase Orders Tab Component
-function PurchaseOrdersTab() {
+function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderSummary[]>([]);
   const [orderTotals, setOrderTotals] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(false);
@@ -247,7 +260,7 @@ function PurchaseOrdersTab() {
       setPurchaseOrders([]);
       setError(null);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshTrigger]);
 
   const loadPurchaseOrders = async () => {
     try {
@@ -1872,6 +1885,232 @@ function AddCategorySheet({
             >
               Cancel
             </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+// Add Purchase Order Sheet Component
+function AddPurchaseOrderSheet({ 
+  isOpen, 
+  onOpenChange, 
+  onPurchaseOrderAdded 
+}: { 
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onPurchaseOrderAdded: () => void;
+}) {
+  const [suppliers, setSuppliers] = useState<EnhancedSupplier[]>([]);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  // Load suppliers when sheet opens
+  useEffect(() => {
+    if (isOpen && isAuthenticated) {
+      loadSuppliers();
+    }
+  }, [isOpen, isAuthenticated]);
+
+  // Clear form when sheet closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedSupplierId('');
+      setSelectedDate(new Date().toISOString().split('T')[0]);
+      setError(null);
+      setSuccess(null);
+    }
+  }, [isOpen]);
+
+  const loadSuppliers = async () => {
+    try {
+      setLoadingSuppliers(true);
+      const suppliersData = await enhancedSupplierService.getAllSuppliersWithUserDetails();
+      setSuppliers(suppliersData);
+    } catch (error) {
+      console.error('Failed to load suppliers:', error);
+      setError('Failed to load suppliers. Please try again.');
+    } finally {
+      setLoadingSuppliers(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedSupplierId || !selectedDate) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError(null);
+      setSuccess(null);
+
+      const purchaseOrderRequest: PurchaseOrderCreateRequest = {
+        supplierId: parseInt(selectedSupplierId),
+        date: selectedDate,
+        status: 'DRAFT',
+        items: [] // Start with empty items, can be added later
+      };
+
+      await purchaseOrderService.createPurchaseOrder(purchaseOrderRequest);
+      
+      setSuccess('Purchase order created successfully!');
+      
+      // Call the callback after a short delay to show success message
+      setTimeout(() => {
+        onPurchaseOrderAdded();
+      }, 1500);
+
+    } catch (error) {
+      console.error('Failed to create purchase order:', error);
+      setError('Failed to create purchase order. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!submitting) {
+      onOpenChange(false);
+    }
+  };
+
+  const selectedSupplier = suppliers.find(s => s.supplierId === parseInt(selectedSupplierId));
+
+  return (
+    <Sheet open={isOpen} onOpenChange={handleClose}>
+      <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetHeader>
+          <SheetTitle>Create New Purchase Order</SheetTitle>
+          <SheetDescription>
+            Create a new purchase order for a supplier.
+          </SheetDescription>
+        </SheetHeader>
+        
+        <div className="mt-6 space-y-6">
+          {/* Authentication Warning */}
+          {!isAuthenticated && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription>
+                Please log in to create purchase orders.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">Success</AlertTitle>
+              <AlertDescription className="text-green-700">
+                {success}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Supplier Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="supplier">Supplier *</Label>
+            {loadingSuppliers ? (
+              <div className="text-sm text-muted-foreground">Loading suppliers...</div>
+            ) : (
+              <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId} disabled={!isAuthenticated}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((supplier) => (
+                    <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
+                      {supplier.userDetails?.fullName || supplier.userName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <p className="text-sm text-muted-foreground">
+              Choose the supplier for this purchase order.
+            </p>
+          </div>
+
+          {/* Date Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="date">Order Date *</Label>
+            <Input
+              id="date"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              disabled={!isAuthenticated}
+            />
+            <p className="text-sm text-muted-foreground">
+              Date when the purchase order is created.
+            </p>
+          </div>
+
+          {/* Preview */}
+          {selectedSupplier && selectedDate && (
+            <div className="p-4 bg-muted/30 rounded-lg space-y-3">
+              <h4 className="font-medium">Preview:</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{selectedSupplier.userDetails?.fullName || selectedSupplier.userName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{new Date(selectedDate).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  <Badge variant="secondary">Draft</Badge>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-4">
+            <Button 
+              onClick={handleSubmit} 
+              disabled={submitting || !selectedSupplierId || !selectedDate || !isAuthenticated}
+              className="flex-1"
+            >
+              {submitting ? 'Creating...' : !isAuthenticated ? 'Please Login' : 'Create Purchase Order'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleClose}
+              className="flex-1"
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+          </div>
+
+          {/* Note */}
+          <div className="text-sm text-muted-foreground p-3 bg-blue-50 rounded-lg">
+            <p><strong>Note:</strong> The purchase order will be created in draft status. You can add items and modify details after creation.</p>
           </div>
         </div>
       </SheetContent>
