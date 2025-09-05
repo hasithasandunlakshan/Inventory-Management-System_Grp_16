@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
@@ -17,19 +18,16 @@ import com.InventoryMangementSystem.userservice.repository.UserRoleRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.InventoryMangementSystem.userservice.dto.UserInfo;
 import com.InventoryMangementSystem.userservice.service.UserService;
-
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/secure")
 @RequiredArgsConstructor
 public class SecureController {
 
-
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+    private final UserService userService;
 
     @GetMapping("/profile")
     public String getProfile(HttpServletRequest request) {
@@ -82,7 +80,6 @@ public class SecureController {
 
         return response;
     }
-
 
     @GetMapping("/user/current")
     public ResponseEntity<UserInfo> getCurrentUser(HttpServletRequest request) {
@@ -265,58 +262,99 @@ public class SecureController {
             System.out.println("ERROR in getUserById: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
-    @GetMapping("/user/{id}")
-    public ResponseEntity<UserInfo> getUserDetails(@PathVariable Long id) {
-        System.out.println("\n=== GET USER DETAILS ENDPOINT CALLED ===");
-        System.out.println("Timestamp: " + java.time.LocalDateTime.now());
-        System.out.println("Requested User ID: " + id);
-
-        try {
-            UserInfo userInfo = userService.getUserById(id);
-            System.out.println("User details retrieved successfully for ID: " + id);
-            System.out.println("=== GET USER DETAILS ENDPOINT COMPLETED ===\n");
-            return ResponseEntity.ok(userInfo);
-        } catch (Exception e) {
-            System.err.println("Error getting user details: " + e.getMessage());
-            e.printStackTrace();
-            System.out.println("=== GET USER DETAILS ENDPOINT FAILED ===\n");
-            return ResponseEntity.notFound().build();
         }
     }
 
-    @GetMapping("/user/current")
-    public ResponseEntity<UserInfo> getCurrentUserDetails(HttpServletRequest request) {
-        System.out.println("\n=== GET CURRENT USER DETAILS ENDPOINT CALLED ===");
+    @GetMapping("/users/search")
+    public ResponseEntity<List<UserInfo>> searchUsers(@RequestParam String query, HttpServletRequest request) {
+        System.out.println("\n=== SECURE SEARCH USERS ENDPOINT CALLED ===");
+        System.out.println("Timestamp: " + java.time.LocalDateTime.now());
+        System.out.println("Search query: " + query);
+
+        try {
+            // Get current user role for access control
+            String currentUserRole = (String) request.getAttribute("role");
+            if (currentUserRole == null) {
+                currentUserRole = request.getHeader("X-User-Roles");
+            }
+
+            // Only allow ADMIN, MANAGER, or Store Keeper to search users
+            boolean hasAccess = currentUserRole != null &&
+                    (currentUserRole.contains("ADMIN") ||
+                            currentUserRole.contains("MANAGER") ||
+                            currentUserRole.contains("Store Keeper"));
+
+            if (!hasAccess) {
+                System.out.println("ACCESS DENIED: User with role " + currentUserRole +
+                        " cannot search users");
+                return ResponseEntity.status(403).build();
+            }
+
+            System.out.println("ACCESS GRANTED: User with role " + currentUserRole +
+                    " can search users");
+
+            List<UserInfo> users = userService.searchUsers(query);
+            System.out.println("Search returned " + users.size() + " users");
+            System.out.println("=== SECURE SEARCH USERS ENDPOINT COMPLETED ===\n");
+
+            return ResponseEntity.ok(users);
+
+        } catch (Exception e) {
+            System.err.println("ERROR in searchUsers: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserInfo>> getAllUsers(HttpServletRequest request) {
+        System.out.println("\n=== SECURE GET ALL USERS ENDPOINT CALLED ===");
         System.out.println("Timestamp: " + java.time.LocalDateTime.now());
 
         try {
-            // Extract user ID from JWT token attributes set by the filter
-            Object userIdObj = request.getAttribute("userId");
-            Long userId = null;
-            if (userIdObj != null) {
-                if (userIdObj instanceof Integer) {
-                    userId = ((Integer) userIdObj).longValue();
-                } else if (userIdObj instanceof Long) {
-                    userId = (Long) userIdObj;
-                }
+            // Get current user role for access control
+            String currentUserRole = (String) request.getAttribute("role");
+            if (currentUserRole == null) {
+                currentUserRole = request.getHeader("X-User-Roles");
             }
 
-            if (userId == null) {
-                System.err.println("User ID not found in request attributes");
-                System.out.println("=== GET CURRENT USER DETAILS ENDPOINT FAILED ===\n");
-                return ResponseEntity.badRequest().build();
+            // Only allow ADMIN, MANAGER, or Store Keeper to get all users
+            boolean hasAccess = currentUserRole != null &&
+                    (currentUserRole.contains("ADMIN") ||
+                            currentUserRole.contains("MANAGER") ||
+                            currentUserRole.contains("Store Keeper"));
+
+            if (!hasAccess) {
+                System.out.println("ACCESS DENIED: User with role " + currentUserRole +
+                        " cannot access all users");
+                return ResponseEntity.status(403).build();
             }
 
-            System.out.println("Current User ID: " + userId);
-            UserInfo userInfo = userService.getUserById(userId);
-            System.out.println("Current user details retrieved successfully");
-            System.out.println("=== GET CURRENT USER DETAILS ENDPOINT COMPLETED ===\n");
-            return ResponseEntity.ok(userInfo);
+            System.out.println("ACCESS GRANTED: User with role " + currentUserRole +
+                    " can access all users");
+
+            List<UserInfo> users = userService.getAllUsers();
+            System.out.println("Retrieved " + users.size() + " total users");
+            System.out.println("=== SECURE GET ALL USERS ENDPOINT COMPLETED ===\n");
+
+            return ResponseEntity.ok(users);
+
         } catch (Exception e) {
-            System.err.println("Error getting current user details: " + e.getMessage());
+            System.err.println("ERROR in getAllUsers: " + e.getMessage());
             e.printStackTrace();
-            System.out.println("=== GET CURRENT USER DETAILS ENDPOINT FAILED ===\n");
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.internalServerError().build();
         }
+    }
+
+    public UserRepository getUserRepository() {
+        return userRepository;
+    }
+
+    public UserRoleRepository getUserRoleRepository() {
+        return userRoleRepository;
+    }
+
+    public UserService getUserService() {
+        return userService;
     }
 }

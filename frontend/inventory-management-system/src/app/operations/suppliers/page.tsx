@@ -21,6 +21,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
 import { authDebug } from "@/lib/utils/authDebug";
+import { userService, UserInfo } from "@/lib/services/userService";
 
 // Define DeliveryLogCreateRequest to match the imported type
 interface DeliveryLogCreateRequest {
@@ -36,7 +37,9 @@ function SuppliersPageContent() {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  
+  const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const { isAuthenticated, isLoading } = useAuth();
 
   const handleViewSupplier = (supplier: Supplier) => {
@@ -163,7 +166,7 @@ function SuppliersPageContent() {
         </TabsContent>
 
         <TabsContent value="suppliers" className="space-y-4">
-          <SuppliersTab onViewSupplier={handleViewSupplier} onLoginClick={handleLoginClick} />
+          <SuppliersTab onViewSupplier={handleViewSupplier} onLoginClick={handleLoginClick} onAddSupplier={() => setIsAddSupplierOpen(true)} refreshTrigger={refreshTrigger} />
         </TabsContent>
 
         <TabsContent value="delivery-logs" className="space-y-4">
@@ -180,6 +183,17 @@ function SuppliersPageContent() {
         supplier={selectedSupplier}
         isOpen={isSheetOpen}
         onOpenChange={setIsSheetOpen}
+      />
+
+      {/* Add Supplier Sheet */}
+      <AddSupplierSheet
+        isOpen={isAddSupplierOpen}
+        onOpenChange={setIsAddSupplierOpen}
+        onSupplierAdded={() => {
+          // Trigger refresh of suppliers list
+          setRefreshTrigger(prev => prev + 1);
+          setIsAddSupplierOpen(false);
+        }}
       />
       
       <AuthModal
@@ -304,16 +318,18 @@ function PurchaseOrdersTab() {
 }
 
 // Suppliers Tab Component
-function SuppliersTab({ onViewSupplier, onLoginClick }: { 
+function SuppliersTab({ onViewSupplier, onLoginClick, onAddSupplier, refreshTrigger }: { 
   onViewSupplier: (supplier: Supplier) => void;
   onLoginClick: () => void;
+  onAddSupplier: () => void;
+  refreshTrigger: number;
 }) {
   const { isAuthenticated } = useAuth();
   const [suppliers, setSuppliers] = useState<EnhancedSupplier[]>([]);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // Load suppliers on component mount and when authentication changes
+  // Load suppliers on component mount and when authentication changes or refresh is triggered
   useEffect(() => {
     if (isAuthenticated) {
       loadSuppliers();
@@ -321,7 +337,7 @@ function SuppliersTab({ onViewSupplier, onLoginClick }: {
       setSuppliers([]);
       setApiError(null);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshTrigger]);
 
   const loadSuppliers = async () => {
     setLoading(true);
@@ -389,7 +405,7 @@ function SuppliersTab({ onViewSupplier, onLoginClick }: {
               }
             </CardDescription>
           </div>
-          <Button disabled={!isAuthenticated}>
+          <Button disabled={!isAuthenticated} onClick={onAddSupplier}>
             <Plus className="mr-2 h-4 w-4" />
             Add Supplier
           </Button>
@@ -1046,6 +1062,336 @@ function SupplierDetailsSheet({
             <Button variant="outline" className="flex-1">
               <Plus className="mr-2 h-4 w-4" />
               New Order
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+// Add Supplier Sheet Component
+function AddSupplierSheet({ 
+  isOpen, 
+  onOpenChange, 
+  onSupplierAdded 
+}: { 
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSupplierAdded: () => void;
+}) {
+  const [categories, setCategories] = useState<SupplierCategory[]>([]);
+  const [users, setUsers] = useState<UserInfo[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Get authentication context
+  const { isAuthenticated } = useAuth();
+
+  // Load categories when sheet opens
+  useEffect(() => {
+    if (isOpen) {
+      // Only load categories if user is authenticated
+      if (isAuthenticated) {
+        loadCategories();
+      } else {
+        setError('Please log in to access supplier categories');
+      }
+      setSelectedUserId('');
+      setSelectedCategoryId('');
+      setUserSearchTerm('');
+      if (isAuthenticated) {
+        setError(null);
+      }
+      setSuccess(null);
+    }
+  }, [isOpen, isAuthenticated]);
+
+  const loadCategories = async () => {
+    if (!isAuthenticated) {
+      setError('Please log in to access supplier categories');
+      return;
+    }
+    
+    setLoadingCategories(true);
+    try {
+      const categoriesData = await supplierCategoryService.getAllCategories();
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      setError('Failed to load supplier categories. Please check if you are logged in and try again.');
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  // Search for users (now using real API)
+  const searchUsers = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setUsers([]);
+      return;
+    }
+
+    setLoadingUsers(true);
+    try {
+      console.log('🔍 Searching for users with term:', searchTerm);
+      const searchResults = await userService.searchUsers(searchTerm);
+      console.log('🔍 Search results:', searchResults);
+      setUsers(searchResults);
+    } catch (error) {
+      console.error('Failed to search users:', error);
+      
+      // Check if it's a permission error
+      if (error instanceof Error && error.message.includes('Access denied')) {
+        console.log('🚫 Access denied, falling back to current user');
+        // Fallback to current user only
+        try {
+          const currentUser = await userService.getCurrentUser();
+          setUsers([currentUser]);
+        } catch (currentUserError) {
+          console.error('Failed to get current user as fallback:', currentUserError);
+          setUsers([]);
+        }
+      } else {
+        setUsers([]);
+      }
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Handle user search input with debouncing
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (userSearchTerm.length >= 2) {
+        searchUsers(userSearchTerm);
+      } else if (userSearchTerm.length === 0) {
+        // Optionally load all users when search is cleared (for admins)
+        loadAllUsersIfAllowed();
+      } else {
+        setUsers([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [userSearchTerm]);
+
+  // Load all users if user has permission (for admins/managers)
+  const loadAllUsersIfAllowed = async () => {
+    try {
+      console.log('👥 Attempting to load all users...');
+      const allUsers = await userService.getAllUsers();
+      console.log('👥 Loaded all users:', allUsers.length);
+      setUsers(allUsers);
+    } catch (error) {
+      console.log('👥 Cannot load all users (insufficient permissions), keeping empty');
+      setUsers([]);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!isAuthenticated) {
+      setError('Please log in to create a supplier');
+      return;
+    }
+
+    if (!selectedUserId || !selectedCategoryId) {
+      setError('Please select both a user and category');
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const supplierRequest: SupplierCreateRequest = {
+        userId: parseInt(selectedUserId),
+        categoryId: parseInt(selectedCategoryId)
+      };
+
+      await supplierService.createSupplier(supplierRequest);
+      setSuccess('Supplier created successfully!');
+      
+      // Clear form
+      setSelectedUserId('');
+      setSelectedCategoryId('');
+      setUserSearchTerm('');
+      setUsers([]);
+      
+      // Notify parent component
+      onSupplierAdded();
+      
+      // Close sheet after a short delay to show success message
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 1500);
+
+    } catch (error) {
+      console.error('Failed to create supplier:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create supplier';
+      setError(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    setSelectedUserId('');
+    setSelectedCategoryId('');
+    setUserSearchTerm('');
+    setUsers([]);
+    setError(null);
+    setSuccess(null);
+    onOpenChange(false);
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetHeader>
+          <SheetTitle>Add New Supplier</SheetTitle>
+          <SheetDescription>
+            Create a new supplier by associating a user with a supplier category.
+          </SheetDescription>
+        </SheetHeader>
+        
+        <div className="mt-6 space-y-6">
+          {/* Authentication Warning */}
+          {!isAuthenticated && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription>
+                Please log in to create suppliers and access supplier categories.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">Success</AlertTitle>
+              <AlertDescription className="text-green-700">
+                {success}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* User Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="userSearch">Search User</Label>
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="userSearch"
+                  placeholder="Type username or email to search..."
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              
+              {loadingUsers && (
+                <div className="text-sm text-muted-foreground">Searching users...</div>
+              )}
+              
+              {users.length > 0 && (
+                <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+                  {users.map((user) => (
+                    <div 
+                      key={user.id}
+                      className={`p-2 rounded-md cursor-pointer border ${
+                        selectedUserId === user.id ? 'bg-primary/10 border-primary' : 'hover:bg-muted'
+                      }`}
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setUserSearchTerm(user.username);
+                      }}
+                    >
+                      <div className="font-medium">{user.fullName}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {user.username} • {user.email}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Category Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Supplier Category</Label>
+            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} disabled={!isAuthenticated}>
+              <SelectTrigger>
+                <SelectValue placeholder={!isAuthenticated ? "Please log in to select category" : "Select a category"} />
+              </SelectTrigger>
+              <SelectContent>
+                {!isAuthenticated ? (
+                  <SelectItem value="auth-required" disabled>Please log in to view categories</SelectItem>
+                ) : loadingCategories ? (
+                  <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                ) : categories.length === 0 ? (
+                  <SelectItem value="no-categories" disabled>No categories available</SelectItem>
+                ) : (
+                  categories.map((category) => (
+                    <SelectItem key={category.categoryId} value={category.categoryId.toString()}>
+                      {category.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Selected Information */}
+          {selectedUserId && selectedCategoryId && (
+            <div className="p-3 bg-muted/30 rounded-lg space-y-2">
+              <h4 className="font-medium">Selected Information:</h4>
+              <div className="text-sm space-y-1">
+                <div>User: {users.find(u => u.id === selectedUserId)?.fullName || 'Selected User'}</div>
+                <div>Category: {categories.find(c => c.categoryId.toString() === selectedCategoryId)?.name || 'Selected Category'}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-4">
+            <Button 
+              onClick={handleSubmit} 
+              disabled={submitting || !selectedUserId || !selectedCategoryId || !isAuthenticated}
+              className="flex-1"
+            >
+              {submitting ? 'Creating...' : !isAuthenticated ? 'Please Login' : 'Create Supplier'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleClose}
+              className="flex-1"
+              disabled={submitting}
+            >
+              Cancel
             </Button>
           </div>
         </div>

@@ -122,5 +122,77 @@ export const userService = {
       }
       throw new Error('Failed to fetch current user details - backend not available');
     }
+  },
+
+  /**
+   * Search for users by query string (username, email, or full name)
+   */
+  async searchUsers(query: string): Promise<UserInfo[]> {
+    try {
+      console.log('🔍 Searching users with query:', query);
+      
+      if (!query.trim()) {
+        console.log('Empty query, returning empty array');
+        return [];
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/users/search?query=${encodeURIComponent(query)}`, 
+        createAuthenticatedRequestOptions()
+      );
+      
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('Access denied - insufficient permissions to search users');
+      }
+      
+      if (!response.ok) {
+        throw new Error(`Failed to search users: ${response.status}`);
+      }
+      
+      const users = await response.json();
+      console.log('🔍 Search returned', users.length, 'users');
+      return users;
+      
+    } catch (error) {
+      console.error('Failed to search users:', error);
+      if (error instanceof Error && 
+          (error.message.includes('Access denied') || 
+           error.message.includes('permissions'))) {
+        throw error;
+      }
+      throw new Error('Failed to search users - backend not available');
+    }
+  },
+
+  /**
+   * Get all users (for admin/manager use)
+   */
+  async getAllUsers(): Promise<UserInfo[]> {
+    try {
+      console.log('👥 Fetching all users');
+      
+      const response = await fetch(`${API_BASE_URL}/users`, createAuthenticatedRequestOptions());
+      
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('Access denied - insufficient permissions to view all users');
+      }
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch all users: ${response.status}`);
+      }
+      
+      const users = await response.json();
+      console.log('👥 Retrieved', users.length, 'total users');
+      return users;
+      
+    } catch (error) {
+      console.error('Failed to fetch all users:', error);
+      if (error instanceof Error && 
+          (error.message.includes('Access denied') || 
+           error.message.includes('permissions'))) {
+        throw error;
+      }
+      throw new Error('Failed to fetch all users - backend not available');
+    }
   }
 };
