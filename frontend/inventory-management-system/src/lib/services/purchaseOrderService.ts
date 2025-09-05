@@ -9,7 +9,10 @@ import {
   StatsSummary,
   PageResponse,
   PurchaseOrderItem,
-  PurchaseOrderItemCreateRequest
+  PurchaseOrderItemCreateRequest,
+  PurchaseOrderNote,
+  PurchaseOrderAttachment,
+  PurchaseOrderAudit
 } from '../types/supplier';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
@@ -364,6 +367,69 @@ export const purchaseOrderService = {
     } catch (error) {
       console.error('Failed to delete purchase order item:', error);
       throw new Error('Failed to delete purchase order item - backend not available');
+    }
+  },
+
+  /**
+   * Get purchase order notes
+   */
+  async getPurchaseOrderNotes(poId: number): Promise<PurchaseOrderNote[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/notes`, createAuthenticatedRequestOptions());
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return []; // No notes found
+        }
+        throw new Error(`Failed to fetch purchase order notes: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch purchase order notes:', error);
+      return []; // Return empty array on error
+    }
+  },
+
+  /**
+   * Get purchase order attachments
+   */
+  async getPurchaseOrderAttachments(poId: number): Promise<PurchaseOrderAttachment[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/attachments`, createAuthenticatedRequestOptions());
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return []; // No attachments found
+        }
+        throw new Error(`Failed to fetch purchase order attachments: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch purchase order attachments:', error);
+      return []; // Return empty array on error
+    }
+  },
+
+  /**
+   * Get purchase order audit log
+   */
+  async getPurchaseOrderAudit(poId: number): Promise<PurchaseOrderAudit[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/audit`, createAuthenticatedRequestOptions());
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return []; // No audit logs found
+        }
+        throw new Error(`Failed to fetch purchase order audit: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch purchase order audit:', error);
+      return []; // Return empty array on error
     }
   }
 };

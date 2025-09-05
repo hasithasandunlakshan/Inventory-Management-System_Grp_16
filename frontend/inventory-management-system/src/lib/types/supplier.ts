@@ -158,3 +158,37 @@ export interface PageResponse<T> {
   first: boolean;
   last: boolean;
 }
+
+// Purchase Order Notes
+export interface PurchaseOrderNote {
+  id: number;
+  poId: number;
+  note: string;
+  createdBy: string;
+  createdDate: string;
+  updatedDate?: string;
+}
+
+// Purchase Order Attachments
+export interface PurchaseOrderAttachment {
+  id: number;
+  poId: number;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  contentType: string;
+  uploadedBy: string;
+  uploadedDate: string;
+}
+
+// Purchase Order Audit Log
+export interface PurchaseOrderAudit {
+  id: number;
+  poId: number;
+  action: string;
+  oldValue?: string;
+  newValue?: string;
+  performedBy: string;
+  performedDate: string;
+  description?: string;
+}
