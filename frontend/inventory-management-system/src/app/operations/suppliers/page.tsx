@@ -229,7 +229,9 @@ export default function SuppliersPage() {
 // Purchase Orders Tab Component
 function PurchaseOrdersTab() {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderSummary[]>([]);
+  const [orderTotals, setOrderTotals] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(false);
+  const [loadingTotals, setLoadingTotals] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -253,11 +255,51 @@ function PurchaseOrdersTab() {
       setError(null);
       const orders = await purchaseOrderService.getAllPurchaseOrders();
       setPurchaseOrders(orders);
+      
+      // Load totals for each order
+      await loadOrderTotals(orders);
     } catch (error) {
       console.error('Failed to load purchase orders:', error);
       setError('Failed to load purchase orders. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadOrderTotals = async (orders: PurchaseOrderSummary[]) => {
+    try {
+      setLoadingTotals(true);
+      const totalsMap = new Map<number, number>();
+      
+      // Fetch totals for all orders in parallel
+      const totalPromises = orders.map(async (order) => {
+        try {
+          const totalResponse = await purchaseOrderService.getPurchaseOrderTotal(order.id);
+          return { id: order.id, total: totalResponse.total };
+        } catch (error) {
+          console.error(`Failed to fetch total for order ${order.id}:`, error);
+          // Return the existing total from the order if API call fails
+          return { id: order.id, total: order.total || 0 };
+        }
+      });
+      
+      const results = await Promise.all(totalPromises);
+      
+      results.forEach(({ id, total }) => {
+        totalsMap.set(id, total);
+      });
+      
+      setOrderTotals(totalsMap);
+    } catch (error) {
+      console.error('Failed to load order totals:', error);
+      // If loading totals fails, use the totals from the original orders
+      const fallbackTotals = new Map<number, number>();
+      orders.forEach(order => {
+        fallbackTotals.set(order.id, order.total || 0);
+      });
+      setOrderTotals(fallbackTotals);
+    } finally {
+      setLoadingTotals(false);
     }
   };
 
@@ -435,7 +477,13 @@ function PurchaseOrdersTab() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{formatCurrency(order.total)}</span>
+                    <div className="text-right">
+                      {loadingTotals ? (
+                        <div className="text-sm text-muted-foreground">Loading...</div>
+                      ) : (
+                        <span className="font-semibold">{formatCurrency(orderTotals.get(order.id) || order.total || 0)}</span>
+                      )}
+                    </div>
                     <Button variant="ghost" size="sm" title="View Details">
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -1113,7 +1161,9 @@ function SupplierDetailsSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const [supplierOrders, setSupplierOrders] = useState<PurchaseOrderSummary[]>([]);
+  const [orderTotals, setOrderTotals] = useState<Map<number, number>>(new Map());
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [loadingTotals, setLoadingTotals] = useState(false);
   const { isAuthenticated } = useAuth();
 
   // Load supplier-specific purchase orders when sheet opens
@@ -1130,10 +1180,47 @@ function SupplierDetailsSheet({
       // Filter orders for this supplier
       const filteredOrders = allOrders.filter(order => order.supplierId === supplierId);
       setSupplierOrders(filteredOrders);
+      
+      // Load totals for filtered orders
+      await loadOrderTotals(filteredOrders);
     } catch (error) {
       console.error('Failed to load supplier orders:', error);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const loadOrderTotals = async (orders: PurchaseOrderSummary[]) => {
+    try {
+      setLoadingTotals(true);
+      const totalsMap = new Map<number, number>();
+      
+      const totalPromises = orders.map(async (order) => {
+        try {
+          const totalResponse = await purchaseOrderService.getPurchaseOrderTotal(order.id);
+          return { id: order.id, total: totalResponse.total };
+        } catch (error) {
+          console.error(`Failed to fetch total for order ${order.id}:`, error);
+          return { id: order.id, total: order.total || 0 };
+        }
+      });
+      
+      const results = await Promise.all(totalPromises);
+      
+      results.forEach(({ id, total }) => {
+        totalsMap.set(id, total);
+      });
+      
+      setOrderTotals(totalsMap);
+    } catch (error) {
+      console.error('Failed to load order totals:', error);
+      const fallbackTotals = new Map<number, number>();
+      orders.forEach(order => {
+        fallbackTotals.set(order.id, order.total || 0);
+      });
+      setOrderTotals(fallbackTotals);
+    } finally {
+      setLoadingTotals(false);
     }
   };
 
@@ -1251,7 +1338,11 @@ function SupplierDetailsSheet({
                         <p className="text-xs text-muted-foreground">{formatDate(order.date)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium text-sm">{formatCurrency(order.total)}</p>
+                        {loadingTotals ? (
+                          <div className="text-xs text-muted-foreground">Loading...</div>
+                        ) : (
+                          <p className="font-medium text-sm">{formatCurrency(orderTotals.get(order.id) || order.total || 0)}</p>
+                        )}
                         <Badge variant={getStatusBadgeVariant(order.status)} className="text-xs">
                           {order.status.toLowerCase()}
                         </Badge>

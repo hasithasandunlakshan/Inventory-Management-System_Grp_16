@@ -57,6 +57,39 @@ export const purchaseOrderService = {
   },
 
   /**
+   * Get purchase order total by ID
+   */
+  async getPurchaseOrderTotal(id: number): Promise<{ total: number }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}/totals`, createAuthenticatedRequestOptions());
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Purchase order not found');
+        }
+        throw new Error(`Failed to fetch purchase order total: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Handle different response formats
+      if (typeof data === 'number') {
+        return { total: data };
+      } else if (data && typeof data.total === 'number') {
+        return { total: data.total };
+      } else if (data && typeof data.totalAmount === 'number') {
+        return { total: data.totalAmount };
+      } else {
+        console.warn('Unexpected response format for purchase order total:', data);
+        return { total: 0 };
+      }
+    } catch (error) {
+      console.error('Failed to fetch purchase order total:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Get purchase order by ID (with items)
    */
   async getPurchaseOrderById(id: number): Promise<PurchaseOrder> {
