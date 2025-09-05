@@ -11,6 +11,7 @@ import {
   PurchaseOrderItem,
   PurchaseOrderItemCreateRequest
 } from '../types/supplier';
+import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
 const API_BASE_URL = 'http://localhost:8090/api/purchase-orders'; // Through API Gateway
 
@@ -22,10 +23,7 @@ export const purchaseOrderService = {
     try {
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
+        ...createAuthenticatedRequestOptions(),
         body: JSON.stringify(order)
       });
 
@@ -45,12 +43,7 @@ export const purchaseOrderService = {
    */
   async getAllPurchaseOrders(): Promise<PurchaseOrderSummary[]> {
     try {
-      const response = await fetch(API_BASE_URL, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions());
       
       if (!response.ok) {
         throw new Error(`Failed to fetch purchase orders: ${response.status}`);
