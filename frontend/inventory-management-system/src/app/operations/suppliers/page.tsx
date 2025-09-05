@@ -13,10 +13,11 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { deliveryLogService } from "@/lib/services/deliveryLogService";
 import { supplierService } from "@/lib/services/supplierService";
+import { purchaseOrderService } from "@/lib/services/purchaseOrderService";
 
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
-import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest } from "@/lib/types/supplier";
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -227,6 +228,98 @@ export default function SuppliersPage() {
 
 // Purchase Orders Tab Component
 function PurchaseOrdersTab() {
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderSummary[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  
+  const { isAuthenticated } = useAuth();
+
+  // Load purchase orders when component mounts or authentication changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadPurchaseOrders();
+    } else {
+      setPurchaseOrders([]);
+      setError(null);
+    }
+  }, [isAuthenticated]);
+
+  const loadPurchaseOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const orders = await purchaseOrderService.getAllPurchaseOrders();
+      setPurchaseOrders(orders);
+    } catch (error) {
+      console.error('Failed to load purchase orders:', error);
+      setError('Failed to load purchase orders. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter purchase orders based on search and filters
+  const filteredOrders = purchaseOrders.filter(order => {
+    const matchesSearch = searchTerm === "" || 
+      order.id.toString().includes(searchTerm) ||
+      order.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "" || statusFilter === "all" || order.status === statusFilter;
+    
+    const matchesSupplier = supplierFilter === "" || 
+      order.supplierName.toLowerCase().includes(supplierFilter.toLowerCase());
+    
+    return matchesSearch && matchesStatus && matchesSupplier;
+  });
+
+  const getStatusBadgeVariant = (status: PurchaseOrderStatus) => {
+    switch (status) {
+      case PurchaseOrderStatus.DRAFT:
+        return "secondary";
+      case PurchaseOrderStatus.SENT:
+        return "default";
+      case PurchaseOrderStatus.PENDING:
+        return "outline";
+      case PurchaseOrderStatus.RECEIVED:
+        return "secondary";
+      case PurchaseOrderStatus.CANCELLED:
+        return "destructive";
+      default:
+        return "outline";
+    }
+  };
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (amount === undefined || amount === null) return "N/A";
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">
+            <p className="text-muted-foreground">Please log in to view purchase orders.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Search and Filters */}
@@ -241,44 +334,57 @@ function PurchaseOrdersTab() {
               <Label htmlFor="search">Search</Label>
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input id="search" placeholder="Search orders..." className="pl-8" />
+                <Input 
+                  id="search" 
+                  placeholder="Search orders..." 
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="shipped">Shipped</SelectItem>
-                  <SelectItem value="delivered">Delivered</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value={PurchaseOrderStatus.DRAFT}>Draft</SelectItem>
+                  <SelectItem value={PurchaseOrderStatus.SENT}>Sent</SelectItem>
+                  <SelectItem value={PurchaseOrderStatus.PENDING}>Pending</SelectItem>
+                  <SelectItem value={PurchaseOrderStatus.RECEIVED}>Received</SelectItem>
+                  <SelectItem value={PurchaseOrderStatus.CANCELLED}>Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="supplier">Supplier</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="supplier1">ABC Supplies</SelectItem>
-                  <SelectItem value="supplier2">XYZ Corp</SelectItem>
-                  <SelectItem value="supplier3">Global Imports</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input
+                id="supplier"
+                placeholder="Filter by supplier..."
+                value={supplierFilter}
+                onChange={(e) => setSupplierFilter(e.target.value)}
+              />
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Filter className="mr-2 h-4 w-4" />
-              Apply Filters
+            <Button 
+              variant="outline"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("");
+                setSupplierFilter("");
+              }}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Clear Filters
             </Button>
-            <Button variant="ghost">Clear</Button>
+            <Button variant="outline" onClick={loadPurchaseOrders} disabled={loading}>
+              <Filter className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -287,41 +393,63 @@ function PurchaseOrdersTab() {
       <Card>
         <CardHeader>
           <CardTitle>Purchase Orders</CardTitle>
-          <CardDescription>Manage and track all purchase orders</CardDescription>
+          <CardDescription>
+            {loading ? 'Loading purchase orders...' : `${filteredOrders.length} purchase order(s) found`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {samplePurchaseOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">#{order.id}</span>
-                    <Badge variant={getStatusVariant(order.status)}>
-                      {order.status}
-                    </Badge>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-muted-foreground">Loading purchase orders...</div>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                {purchaseOrders.length === 0 ? 'No purchase orders found.' : 'No purchase orders match your filters.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredOrders.map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">PO-{order.id.toString().padStart(3, '0')}</span>
+                      <Badge variant={getStatusBadgeVariant(order.status)}>
+                        {order.status.toLowerCase()}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {order.supplierName} • {order.itemCount || 0} items
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Date: {formatDate(order.date)}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {order.supplier} • {order.items} items
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Due: {order.dueDate}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{formatCurrency(order.total)}</span>
+                    <Button variant="ghost" size="sm" title="View Details">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" title="Edit Order">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" title="Delete Order">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">${order.total}</span>
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -984,6 +1112,64 @@ function SupplierDetailsSheet({
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [supplierOrders, setSupplierOrders] = useState<PurchaseOrderSummary[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  // Load supplier-specific purchase orders when sheet opens
+  useEffect(() => {
+    if (supplier && isOpen && isAuthenticated) {
+      loadSupplierOrders(supplier.id);
+    }
+  }, [supplier, isOpen, isAuthenticated]);
+
+  const loadSupplierOrders = async (supplierId: number) => {
+    try {
+      setLoadingOrders(true);
+      const allOrders = await purchaseOrderService.getAllPurchaseOrders();
+      // Filter orders for this supplier
+      const filteredOrders = allOrders.filter(order => order.supplierId === supplierId);
+      setSupplierOrders(filteredOrders);
+    } catch (error) {
+      console.error('Failed to load supplier orders:', error);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  const getStatusBadgeVariant = (status: PurchaseOrderStatus) => {
+    switch (status) {
+      case PurchaseOrderStatus.DRAFT:
+        return "secondary";
+      case PurchaseOrderStatus.SENT:
+        return "outline";
+      case PurchaseOrderStatus.PENDING:
+        return "default";
+      case PurchaseOrderStatus.RECEIVED:
+        return "secondary";
+      case PurchaseOrderStatus.CANCELLED:
+        return "destructive";
+      default:
+        return "outline";
+    }
+  };
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (amount === undefined || amount === null) return "N/A";
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   if (!supplier) return null;
 
   return (
@@ -1051,23 +1237,28 @@ function SupplierDetailsSheet({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Recent Orders</h3>
             <div className="space-y-2">
-              {samplePurchaseOrders
-                .filter(order => order.supplier === supplier.name)
-                .slice(0, 3)
-                .map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium text-sm">#{order.id}</p>
-                      <p className="text-xs text-muted-foreground">{order.dueDate}</p>
+              {loadingOrders ? (
+                <div className="text-sm text-muted-foreground">Loading orders...</div>
+              ) : supplierOrders.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No orders found for this supplier.</div>
+              ) : (
+                supplierOrders
+                  .slice(0, 3)
+                  .map((order) => (
+                    <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">PO-{order.id.toString().padStart(3, '0')}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(order.date)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-sm">{formatCurrency(order.total)}</p>
+                        <Badge variant={getStatusBadgeVariant(order.status)} className="text-xs">
+                          {order.status.toLowerCase()}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-sm">${order.total}</p>
-                      <Badge variant={getStatusVariant(order.status)} className="text-xs">
-                        {order.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+                  ))
+              )}
             </div>
           </div>
 
@@ -1598,17 +1789,6 @@ function AddCategorySheet({
 }
 
 // Helper functions
-function getStatusVariant(status: string) {
-  switch (status.toLowerCase()) {
-    case 'pending': return 'secondary';
-    case 'approved': return 'default';
-    case 'shipped': return 'default';
-    case 'delivered': return 'default';
-    case 'cancelled': return 'destructive';
-    default: return 'secondary';
-  }
-}
-
 function getDeliveryStatusVariant(status: string) {
   switch (status.toLowerCase()) {
     case 'in-transit': return 'default';
@@ -1635,14 +1815,7 @@ interface LocalSupplier {
 // Use LocalSupplier for UI components
 type Supplier = LocalSupplier;
 
-// Sample data
-const samplePurchaseOrders = [
-  { id: 'PO-001', supplier: 'ABC Supplies', status: 'Pending', items: 15, total: '2,450.00', dueDate: '2024-01-15' },
-  { id: 'PO-002', supplier: 'XYZ Corp', status: 'Approved', items: 8, total: '1,200.00', dueDate: '2024-01-20' },
-  { id: 'PO-003', supplier: 'Global Imports', status: 'Shipped', items: 22, total: '3,800.00', dueDate: '2024-01-18' },
-  { id: 'PO-004', supplier: 'ABC Supplies', status: 'Delivered', items: 12, total: '1,950.00', dueDate: '2024-01-10' },
-];
-
+// Sample data - keeping suppliers and deliveries for now
 const sampleSuppliers: Supplier[] = [
   { 
     id: 1, 
