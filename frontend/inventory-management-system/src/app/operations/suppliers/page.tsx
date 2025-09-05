@@ -17,7 +17,7 @@ import { purchaseOrderService } from "@/lib/services/purchaseOrderService";
 
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
-import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus, PurchaseOrderCreateRequest, PurchaseOrder } from "@/lib/types/supplier";
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus, PurchaseOrderCreateRequest, PurchaseOrder, PurchaseOrderNote, PurchaseOrderAttachment, PurchaseOrderAudit } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -252,21 +252,36 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
   const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null);
   const [isViewOrderOpen, setIsViewOrderOpen] = useState(false);
   const [deletingOrderId, setDeletingOrderId] = useState<number | null>(null);
+  const [orderNotes, setOrderNotes] = useState<PurchaseOrderNote[]>([]);
+  const [orderAttachments, setOrderAttachments] = useState<PurchaseOrderAttachment[]>([]);
+  const [orderAudit, setOrderAudit] = useState<PurchaseOrderAudit[]>([]);
+  const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
   
   const { isAuthenticated } = useAuth();
 
   // Handler to view purchase order details
   const handleViewOrder = async (orderId: number) => {
     try {
-      setLoading(true);
-      const orderDetails = await purchaseOrderService.getPurchaseOrderById(orderId);
+      setLoadingOrderDetails(true);
+      
+      // Fetch purchase order details and all additional information in parallel
+      const [orderDetails, notes, attachments, audit] = await Promise.all([
+        purchaseOrderService.getPurchaseOrderById(orderId),
+        purchaseOrderService.getPurchaseOrderNotes(orderId),
+        purchaseOrderService.getPurchaseOrderAttachments(orderId),
+        purchaseOrderService.getPurchaseOrderAudit(orderId)
+      ]);
+      
       setSelectedPurchaseOrder(orderDetails);
+      setOrderNotes(notes);
+      setOrderAttachments(attachments);
+      setOrderAudit(audit);
       setIsViewOrderOpen(true);
     } catch (error) {
       console.error('Failed to load purchase order details:', error);
       setError('Failed to load purchase order details');
     } finally {
-      setLoading(false);
+      setLoadingOrderDetails(false);
     }
   };
 
@@ -621,6 +636,101 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
                     <p className="text-sm text-muted-foreground">No items found for this order.</p>
                   )}
                 </div>
+              </div>
+
+              {/* Additional Information Tabs */}
+              <div className="mt-6">
+                <Tabs defaultValue="notes" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="notes">Notes ({orderNotes.length})</TabsTrigger>
+                    <TabsTrigger value="attachments">Attachments ({orderAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="audit">Audit Log ({orderAudit.length})</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="notes" className="space-y-2 mt-4">
+                    {loadingOrderDetails ? (
+                      <div className="text-sm text-muted-foreground">Loading notes...</div>
+                    ) : orderNotes.length > 0 ? (
+                      orderNotes.map((note) => (
+                        <div key={note.id} className="p-3 border rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm font-medium">{note.createdBy}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(note.createdDate).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-sm">{note.note}</p>
+                          {note.updatedDate && note.updatedDate !== note.createdDate && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Updated: {new Date(note.updatedDate).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No notes found for this order.</p>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="attachments" className="space-y-2 mt-4">
+                    {loadingOrderDetails ? (
+                      <div className="text-sm text-muted-foreground">Loading attachments...</div>
+                    ) : orderAttachments.length > 0 ? (
+                      orderAttachments.map((attachment) => (
+                        <div key={attachment.id} className="p-3 border rounded-lg flex justify-between items-center">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{attachment.fileName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(attachment.fileSize / 1024).toFixed(1)} KB • {attachment.contentType}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Uploaded by {attachment.uploadedBy} on {new Date(attachment.uploadedDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(attachment.fileUrl, '_blank')}
+                          >
+                            View
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No attachments found for this order.</p>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="audit" className="space-y-2 mt-4">
+                    {loadingOrderDetails ? (
+                      <div className="text-sm text-muted-foreground">Loading audit log...</div>
+                    ) : orderAudit.length > 0 ? (
+                      orderAudit.map((audit) => (
+                        <div key={audit.id} className="p-3 border rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm font-medium">{audit.action}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(audit.performedDate).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">By: {audit.performedBy}</p>
+                          {audit.description && (
+                            <p className="text-sm mt-1">{audit.description}</p>
+                          )}
+                          {audit.oldValue && audit.newValue && (
+                            <div className="mt-2 text-xs">
+                              <span className="text-red-600">Old: {audit.oldValue}</span>
+                              <span className="mx-2">→</span>
+                              <span className="text-green-600">New: {audit.newValue}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No audit log entries found for this order.</p>
+                    )}
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           )}
