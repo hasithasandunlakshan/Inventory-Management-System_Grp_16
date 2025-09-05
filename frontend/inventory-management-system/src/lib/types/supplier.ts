@@ -49,6 +49,7 @@ export interface PurchaseOrder {
 
 export interface PurchaseOrderSummary {
   id: number;
+  poNumber?: string | null;
   supplierId: number;
   supplierName: string;
   date: string;
@@ -96,8 +97,8 @@ export interface ReceiveRequest {
 
 export enum PurchaseOrderStatus {
   DRAFT = 'DRAFT',
-  SUBMITTED = 'SUBMITTED', 
-  CONFIRMED = 'CONFIRMED',
+  SENT = 'SENT',
+  PENDING = 'PENDING', 
   RECEIVED = 'RECEIVED',
   CANCELLED = 'CANCELLED'
 }
