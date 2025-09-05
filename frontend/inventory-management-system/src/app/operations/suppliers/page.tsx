@@ -17,7 +17,7 @@ import { purchaseOrderService } from "@/lib/services/purchaseOrderService";
 
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
-import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus, PurchaseOrderCreateRequest } from "@/lib/types/supplier";
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus, PurchaseOrderCreateRequest, PurchaseOrder } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -249,8 +249,49 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [supplierFilter, setSupplierFilter] = useState("");
+  const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [isViewOrderOpen, setIsViewOrderOpen] = useState(false);
+  const [deletingOrderId, setDeletingOrderId] = useState<number | null>(null);
   
   const { isAuthenticated } = useAuth();
+
+  // Handler to view purchase order details
+  const handleViewOrder = async (orderId: number) => {
+    try {
+      setLoading(true);
+      const orderDetails = await purchaseOrderService.getPurchaseOrderById(orderId);
+      setSelectedPurchaseOrder(orderDetails);
+      setIsViewOrderOpen(true);
+    } catch (error) {
+      console.error('Failed to load purchase order details:', error);
+      setError('Failed to load purchase order details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler to delete purchase order
+  const handleDeleteOrder = async (orderId: number) => {
+    if (!confirm('Are you sure you want to delete this purchase order? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      setDeletingOrderId(orderId);
+      await purchaseOrderService.deletePurchaseOrder(orderId);
+      
+      // Refresh the purchase orders list
+      await loadPurchaseOrders();
+      
+      // Show success message (you might want to add a toast notification here)
+      console.log('Purchase order deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete purchase order:', error);
+      setError('Failed to delete purchase order');
+    } finally {
+      setDeletingOrderId(null);
+    }
+  };
 
   // Load purchase orders when component mounts or authentication changes
   useEffect(() => {
@@ -497,13 +538,19 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
                         <span className="font-semibold">{formatCurrency(orderTotals.get(order.id) || order.total || 0)}</span>
                       )}
                     </div>
-                    <Button variant="ghost" size="sm" title="View Details">
+                    <Button variant="ghost" size="sm" title="View Details" onClick={() => handleViewOrder(order.id)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm" title="Edit Order">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" title="Delete Order">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      title="Delete Order" 
+                      onClick={() => handleDeleteOrder(order.id)}
+                      disabled={deletingOrderId === order.id}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -513,6 +560,72 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
           )}
         </CardContent>
       </Card>
+
+      {/* View Purchase Order Details Sheet */}
+      <Sheet open={isViewOrderOpen} onOpenChange={setIsViewOrderOpen}>
+        <SheetContent className="sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle>
+              Purchase Order Details - PO-{selectedPurchaseOrder?.id?.toString().padStart(3, '0')}
+            </SheetTitle>
+            <SheetDescription>
+              View purchase order information and items
+            </SheetDescription>
+          </SheetHeader>
+          
+          {selectedPurchaseOrder && (
+            <div className="space-y-6 mt-6">
+              {/* Order Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Supplier</Label>
+                  <p className="text-sm text-muted-foreground">{selectedPurchaseOrder.supplierName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <div className="mt-1">
+                    <Badge variant={getStatusBadgeVariant(selectedPurchaseOrder.status)}>
+                      {selectedPurchaseOrder.status.toLowerCase()}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Order Date</Label>
+                  <p className="text-sm text-muted-foreground">{formatDate(selectedPurchaseOrder.date)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Total Amount</Label>
+                  <p className="text-sm font-semibold">{formatCurrency(selectedPurchaseOrder.total || 0)}</p>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Items</Label>
+                <div className="space-y-2">
+                  {selectedPurchaseOrder.items && selectedPurchaseOrder.items.length > 0 ? (
+                    selectedPurchaseOrder.items.map((item, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">Item ID: {item.itemId}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Quantity: {item.quantity} | Unit Price: {formatCurrency(item.unitPrice)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">{formatCurrency(item.lineTotal || (item.quantity * item.unitPrice))}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No items found for this order.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
