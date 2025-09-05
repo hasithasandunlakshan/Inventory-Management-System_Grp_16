@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +19,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.InventoryMangementSystem.userservice.service.UserService;
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/secure")
@@ -260,6 +260,87 @@ public class SecureController {
 
         } catch (Exception e) {
             System.out.println("ERROR in getUserById: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/users/search")
+    public ResponseEntity<List<UserInfo>> searchUsers(@RequestParam String query, HttpServletRequest request) {
+        System.out.println("\n=== SECURE SEARCH USERS ENDPOINT CALLED ===");
+        System.out.println("Timestamp: " + java.time.LocalDateTime.now());
+        System.out.println("Search query: " + query);
+
+        try {
+            // Get current user role for access control
+            String currentUserRole = (String) request.getAttribute("role");
+            if (currentUserRole == null) {
+                currentUserRole = request.getHeader("X-User-Roles");
+            }
+
+            // Only allow ADMIN, MANAGER, or Store Keeper to search users
+            boolean hasAccess = currentUserRole != null &&
+                    (currentUserRole.contains("ADMIN") ||
+                            currentUserRole.contains("MANAGER") ||
+                            currentUserRole.contains("Store Keeper"));
+
+            if (!hasAccess) {
+                System.out.println("ACCESS DENIED: User with role " + currentUserRole +
+                        " cannot search users");
+                return ResponseEntity.status(403).build();
+            }
+
+            System.out.println("ACCESS GRANTED: User with role " + currentUserRole +
+                    " can search users");
+
+            List<UserInfo> users = userService.searchUsers(query);
+            System.out.println("Search returned " + users.size() + " users");
+            System.out.println("=== SECURE SEARCH USERS ENDPOINT COMPLETED ===\n");
+
+            return ResponseEntity.ok(users);
+
+        } catch (Exception e) {
+            System.err.println("ERROR in searchUsers: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserInfo>> getAllUsers(HttpServletRequest request) {
+        System.out.println("\n=== SECURE GET ALL USERS ENDPOINT CALLED ===");
+        System.out.println("Timestamp: " + java.time.LocalDateTime.now());
+
+        try {
+            // Get current user role for access control
+            String currentUserRole = (String) request.getAttribute("role");
+            if (currentUserRole == null) {
+                currentUserRole = request.getHeader("X-User-Roles");
+            }
+
+            // Only allow ADMIN, MANAGER, or Store Keeper to get all users
+            boolean hasAccess = currentUserRole != null &&
+                    (currentUserRole.contains("ADMIN") ||
+                            currentUserRole.contains("MANAGER") ||
+                            currentUserRole.contains("Store Keeper"));
+
+            if (!hasAccess) {
+                System.out.println("ACCESS DENIED: User with role " + currentUserRole +
+                        " cannot access all users");
+                return ResponseEntity.status(403).build();
+            }
+
+            System.out.println("ACCESS GRANTED: User with role " + currentUserRole +
+                    " can access all users");
+
+            List<UserInfo> users = userService.getAllUsers();
+            System.out.println("Retrieved " + users.size() + " total users");
+            System.out.println("=== SECURE GET ALL USERS ENDPOINT COMPLETED ===\n");
+
+            return ResponseEntity.ok(users);
+
+        } catch (Exception e) {
+            System.err.println("ERROR in getAllUsers: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }

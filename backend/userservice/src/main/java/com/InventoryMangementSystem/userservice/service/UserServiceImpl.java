@@ -16,6 +16,7 @@ import com.InventoryMangementSystem.userservice.repository.RoleRepository;
 import com.InventoryMangementSystem.userservice.repository.UserRoleRepository;
 import com.InventoryMangementSystem.userservice.security.JwtTokenUtil;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -164,5 +165,80 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to get user details: " + e.getMessage());
         }
+    }
+
+    @Override
+    public List<UserInfo> searchUsers(String searchTerm) {
+        try {
+            System.out.println("Searching users with term: " + searchTerm);
+
+            // Search by username, email, or full name (case-insensitive)
+            List<User> users = userRepository
+                    .findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase(
+                            searchTerm, searchTerm, searchTerm);
+
+            System.out.println("Found " + users.size() + " users matching search term");
+
+            return users.stream()
+                    .map(this::convertUserToUserInfo)
+                    .collect(java.util.stream.Collectors.toList());
+
+        } catch (Exception e) {
+            System.err.println("Error searching users: " + e.getMessage());
+            throw new RuntimeException("Failed to search users: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<UserInfo> getAllUsers() {
+        try {
+            System.out.println("Fetching all users");
+
+            List<User> users = userRepository.findAll();
+            System.out.println("Found " + users.size() + " total users");
+
+            return users.stream()
+                    .map(this::convertUserToUserInfo)
+                    .collect(java.util.stream.Collectors.toList());
+
+        } catch (Exception e) {
+            System.err.println("Error fetching all users: " + e.getMessage());
+            throw new RuntimeException("Failed to fetch all users: " + e.getMessage());
+        }
+    }
+
+    private UserInfo convertUserToUserInfo(User user) {
+        // Get user roles and determine the highest priority role
+        String role = "USER"; // Default role
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            // Priority order: ADMIN > MANAGER > Store Keeper > USER
+            String[] rolePriority = { "ADMIN", "MANAGER", "Store Keeper", "USER" };
+
+            for (String priorityRole : rolePriority) {
+                boolean hasRole = user.getRoles().stream()
+                        .anyMatch(ur -> priorityRole.equals(ur.getRole().getRoleName()));
+                if (hasRole) {
+                    role = priorityRole;
+                    break;
+                }
+            }
+        }
+
+        // Create and return UserInfo with all user attributes
+        return new UserInfo(
+                user.getUserId().toString(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFullName(),
+                role,
+                user.getPhoneNumber(),
+                user.getProfileImageUrl(),
+                user.getLatitude(),
+                user.getLongitude(),
+                user.getFormattedAddress(),
+                user.getAccountStatus() != null ? user.getAccountStatus().name() : null,
+                user.getEmailVerified(),
+                user.getCreatedAt(),
+                user.getDateOfBirth());
     }
 }
