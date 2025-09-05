@@ -12,7 +12,9 @@ import {
   PurchaseOrderItemCreateRequest,
   PurchaseOrderNote,
   PurchaseOrderAttachment,
-  PurchaseOrderAudit
+  PurchaseOrderAudit,
+  NoteCreateRequest,
+  AttachmentCreateRequest
 } from '../types/supplier';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
@@ -430,6 +432,103 @@ export const purchaseOrderService = {
     } catch (error) {
       console.error('Failed to fetch purchase order audit:', error);
       return []; // Return empty array on error
+    }
+  },
+
+  /**
+   * Update item quantity
+   */
+  async updateItemQuantity(orderId: number, itemId: number, quantity: number): Promise<void> {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/${orderId}/items/${itemId}/quantity`, 
+        createAuthenticatedRequestOptions('PATCH', { quantity })
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update item quantity');
+      }
+    } catch (error) {
+      console.error('Failed to update item quantity:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Receive purchase order
+   */
+  async receivePurchaseOrder(id: number, receiveData: any): Promise<PurchaseOrder> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}/receive`, createAuthenticatedRequestOptions('POST', receiveData));
+
+      if (!response.ok) {
+        throw new Error('Failed to receive purchase order');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Failed to receive purchase order:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update purchase order status
+   */
+  async updatePurchaseOrderStatus(id: number, statusData: StatusUpdateRequest): Promise<PurchaseOrder> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}/status`, createAuthenticatedRequestOptions('PATCH', statusData));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Status update failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Failed to update purchase order status: ${response.status} ${response.statusText}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Failed to update purchase order status:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Add note to purchase order
+   */
+  async addNote(poId: number, noteData: NoteCreateRequest): Promise<PurchaseOrderNote> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/notes`, createAuthenticatedRequestOptions('POST', noteData));
+
+      if (!response.ok) {
+        throw new Error('Failed to add note');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Failed to add note:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Add attachment to purchase order
+   */
+  async addAttachment(poId: number, attachmentData: AttachmentCreateRequest): Promise<PurchaseOrderAttachment> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/attachments`, createAuthenticatedRequestOptions('POST', attachmentData));
+
+      if (!response.ok) {
+        throw new Error('Failed to add attachment');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Failed to add attachment:', error);
+      throw error;
     }
   }
 };
