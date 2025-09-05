@@ -16,7 +16,7 @@ import { supplierService } from "@/lib/services/supplierService";
 
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
-import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory } from "@/lib/types/supplier";
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -38,6 +38,7 @@ function SuppliersPageContent() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const { isAuthenticated, isLoading } = useAuth();
@@ -166,7 +167,7 @@ function SuppliersPageContent() {
         </TabsContent>
 
         <TabsContent value="suppliers" className="space-y-4">
-          <SuppliersTab onViewSupplier={handleViewSupplier} onLoginClick={handleLoginClick} onAddSupplier={() => setIsAddSupplierOpen(true)} refreshTrigger={refreshTrigger} />
+          <SuppliersTab onViewSupplier={handleViewSupplier} onLoginClick={handleLoginClick} onAddSupplier={() => setIsAddSupplierOpen(true)} onAddCategory={() => setIsAddCategoryOpen(true)} refreshTrigger={refreshTrigger} />
         </TabsContent>
 
         <TabsContent value="delivery-logs" className="space-y-4">
@@ -193,6 +194,16 @@ function SuppliersPageContent() {
           // Trigger refresh of suppliers list
           setRefreshTrigger(prev => prev + 1);
           setIsAddSupplierOpen(false);
+        }}
+      />
+      {/* Add Category Sheet */}
+      <AddCategorySheet
+        isOpen={isAddCategoryOpen}
+        onOpenChange={setIsAddCategoryOpen}
+        onCategoryAdded={() => {
+          // Trigger refresh of categories in AddSupplier sheet
+          setRefreshTrigger(prev => prev + 1);
+          setIsAddCategoryOpen(false);
         }}
       />
       
@@ -318,10 +329,11 @@ function PurchaseOrdersTab() {
 }
 
 // Suppliers Tab Component
-function SuppliersTab({ onViewSupplier, onLoginClick, onAddSupplier, refreshTrigger }: { 
+function SuppliersTab({ onViewSupplier, onLoginClick, onAddSupplier, onAddCategory, refreshTrigger }: { 
   onViewSupplier: (supplier: Supplier) => void;
   onLoginClick: () => void;
   onAddSupplier: () => void;
+  onAddCategory: () => void;
   refreshTrigger: number;
 }) {
   const { isAuthenticated } = useAuth();
@@ -405,10 +417,16 @@ function SuppliersTab({ onViewSupplier, onLoginClick, onAddSupplier, refreshTrig
               }
             </CardDescription>
           </div>
-          <Button disabled={!isAuthenticated} onClick={onAddSupplier}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Supplier
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" disabled={!isAuthenticated} onClick={onAddCategory}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Category
+            </Button>
+            <Button disabled={!isAuthenticated} onClick={onAddSupplier}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Supplier
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -1384,6 +1402,185 @@ function AddSupplierSheet({
               className="flex-1"
             >
               {submitting ? 'Creating...' : !isAuthenticated ? 'Please Login' : 'Create Supplier'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleClose}
+              className="flex-1"
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+// Add Category Sheet Component
+function AddCategorySheet({ 
+  isOpen, 
+  onOpenChange, 
+  onCategoryAdded 
+}: { 
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCategoryAdded: () => void;
+}) {
+  const [categoryName, setCategoryName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Get authentication context
+  const { isAuthenticated } = useAuth();
+
+  // Reset form when sheet opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setCategoryName('');
+      setError(null);
+      setSuccess(null);
+      if (!isAuthenticated) {
+        setError('Please log in to create supplier categories');
+      }
+    }
+  }, [isOpen, isAuthenticated]);
+
+  const handleSubmit = async () => {
+    if (!isAuthenticated) {
+      setError('Please log in to create supplier categories');
+      return;
+    }
+
+    if (!categoryName.trim()) {
+      setError('Please enter a category name');
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const categoryRequest: SupplierCategoryCreateRequest = {
+        name: categoryName.trim()
+      };
+
+      await supplierCategoryService.createCategory(categoryRequest);
+      setSuccess('Category created successfully!');
+      
+      // Clear form
+      setCategoryName('');
+      
+      // Notify parent component
+      onCategoryAdded();
+      
+      // Close sheet after a short delay to show success message
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 1500);
+
+    } catch (error) {
+      console.error('Failed to create category:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create category';
+      setError(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    setCategoryName('');
+    setError(null);
+    setSuccess(null);
+    onOpenChange(false);
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetHeader>
+          <SheetTitle>Add New Supplier Category</SheetTitle>
+          <SheetDescription>
+            Create a new category to organize your suppliers.
+          </SheetDescription>
+        </SheetHeader>
+        
+        <div className="mt-6 space-y-6">
+          {/* Authentication Warning */}
+          {!isAuthenticated && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription>
+                Please log in to create supplier categories.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">Success</AlertTitle>
+              <AlertDescription className="text-green-700">
+                {success}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Category Name Input */}
+          <div className="space-y-2">
+            <Label htmlFor="categoryName">Category Name</Label>
+            <Input
+              id="categoryName"
+              placeholder="Enter category name (e.g., Electronics, Office Supplies)"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              disabled={!isAuthenticated}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !submitting && categoryName.trim() && isAuthenticated) {
+                  handleSubmit();
+                }
+              }}
+            />
+            <p className="text-sm text-muted-foreground">
+              Choose a descriptive name for the supplier category.
+            </p>
+          </div>
+
+          {/* Preview */}
+          {categoryName.trim() && (
+            <div className="p-3 bg-muted/30 rounded-lg space-y-2">
+              <h4 className="font-medium">Preview:</h4>
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <Badge variant="outline">{categoryName.trim()}</Badge>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-4">
+            <Button 
+              onClick={handleSubmit} 
+              disabled={submitting || !categoryName.trim() || !isAuthenticated}
+              className="flex-1"
+            >
+              {submitting ? 'Creating...' : !isAuthenticated ? 'Please Login' : 'Create Category'}
             </Button>
             <Button 
               variant="outline" 
