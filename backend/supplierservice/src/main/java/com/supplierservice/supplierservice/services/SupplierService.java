@@ -32,18 +32,26 @@ public class SupplierService {
     /** Create and return the saved supplier as a DTO (flattened). */
     @Transactional
     public SupplierDTO createSupplier(SupplierDTO dto) {
+        // Validate and fetch category
         SupplierCategory category = null;
         if (dto.getCategoryId() != null) {
             category = categoryRepository.findById(dto.getCategoryId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid category ID"));
         }
 
+        // Validate and fetch user - THIS WAS THE MISSING PART!
+        User user = null;
+        if (dto.getUserId() != null) {
+            user = userRepository.findById(dto.getUserId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID"));
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
+        }
 
-        // For now, create supplier without user relationship
-        // TODO: Implement proper user lookup when user management is integrated
+        // Create supplier with proper user relationship
         Supplier supplier = Supplier.builder()
                 .category(category)
-                .user(null) // Will be set when user integration is complete
+                .user(user) // Now properly set the user!
                 .build();
 
         Supplier saved = supplierRepository.save(supplier);
