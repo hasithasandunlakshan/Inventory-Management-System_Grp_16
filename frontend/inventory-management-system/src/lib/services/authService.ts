@@ -76,6 +76,9 @@ class AuthService {
           localStorage.setItem(this.userKey, JSON.stringify(data.user));
         }
         
+        // Set HTTP-only cookie for middleware
+        document.cookie = `inventory_auth_token=${data.token}; path=/; max-age=${24 * 60 * 60}; SameSite=Lax`;
+        
         // Verify storage
         const storedToken = localStorage.getItem(this.tokenKey);
         console.log('🔐 AuthService: Token storage verification:', {
@@ -158,6 +161,8 @@ class AuthService {
   logout(): void {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
+    // Clear cookie
+    document.cookie = 'inventory_auth_token=; path=/; max-age=0';
   }
 
   // Get user role for access control

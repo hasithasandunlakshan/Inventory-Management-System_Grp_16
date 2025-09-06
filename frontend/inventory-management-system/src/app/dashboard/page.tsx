@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 import FiltersControls from "../../components/dashboard/FiltersControls";
 import KpiCards from "../../components/dashboard/KpiCards";
 import SalesOverview from "../../components/dashboard/SalesOverview";
@@ -12,12 +13,14 @@ import SuppliersPanel from "../../components/dashboard/SuppliersPanel";
 import AlertsTasks from "../../components/dashboard/AlertsTasks";
 import QuickActions from "../../components/dashboard/QuickActions";
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const { user } = useAuth();
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Overview of your store performance.</p>
+        <p className="text-sm text-muted-foreground">Welcome back, {user?.fullName || user?.username}!</p>
       </div>
 
       <FiltersControls />
@@ -51,6 +54,10 @@ export default function DashboardPage() {
       </div>
     </div>
   );
+}
+
+export default function DashboardPage() {
+  return <DashboardContent />;
 }
 
 
