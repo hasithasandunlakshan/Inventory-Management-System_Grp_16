@@ -16,6 +16,7 @@ const publicRoutes = [
 // Role-based route permissions
 const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/dashboard': ['USER', 'Store Keeper', 'MANAGER', 'ADMIN'],
+  '/profile': ['USER', 'Store Keeper', 'MANAGER', 'ADMIN'],
   '/products': ['Store Keeper', 'MANAGER', 'ADMIN'],
   '/products/add': ['Store Keeper', 'MANAGER', 'ADMIN'],
   '/categories': ['Store Keeper', 'MANAGER', 'ADMIN'],
