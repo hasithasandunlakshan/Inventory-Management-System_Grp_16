@@ -4,9 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/components/auth/ProtectedRoute";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Phone, MapPin, Calendar, Shield, CheckCircle, XCircle } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Shield, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 function ProfileContent() {
@@ -80,7 +79,13 @@ function ProfileContent() {
                 <div>
                   <span className="text-sm font-medium">Role:</span>
                   <div className="mt-1">
-                    <Badge variant={user?.role === 'ADMIN' ? 'destructive' : user?.role === 'MANAGER' ? 'default' : 'secondary'}>
+                    <Badge variant={
+                      user?.role === 'ADMIN' 
+                        ? 'destructive' 
+                        : user?.role === 'MANAGER' 
+                          ? 'default' 
+                          : 'secondary'
+                    }>
                       {user?.role}
                     </Badge>
                   </div>
