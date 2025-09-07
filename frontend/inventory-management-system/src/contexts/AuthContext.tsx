@@ -1,22 +1,42 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { authService, UserInfo } from '../lib/services/authService';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { authService } from '../lib/services/authService';
+
+export interface AuthUser {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  role: string;
+  phoneNumber?: string;
+  profileImageUrl?: string;
+  latitude?: number;
+  longitude?: number;
+  formattedAddress?: string;
+  accountStatus?: string;
+  emailVerified?: boolean;
+  createdAt?: string;
+  dateOfBirth?: string;
+}
 
 interface AuthContextType {
-  user: UserInfo | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (userData: any) => Promise<{ success: boolean; error?: string; message?: string }>;
   logout: () => void;
   canAccessSupplierService: () => boolean;
+  hasRole: (role: string) => boolean;
+  hasAnyRole: (roles: string[]) => boolean;
+  refreshAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserInfo | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,7 +45,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkAuth = async () => {
       try {
         if (authService.isAuthenticated()) {
-          const userData = authService.getUser();
           const token = authService.getToken();
           
           if (!token) {
@@ -50,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (response.ok) {
               // Token is valid, update user data if response contains user info
               const currentUserData = await response.json();
-              setUser(currentUserData || userData);
+              setUser(currentUserData);
               setIsAuthenticated(true);
               console.log('✅ Authentication verified successfully');
             } else if (response.status === 401 || response.status === 403) {
@@ -100,16 +119,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string) => {
     try {
+      console.log('🔐 AuthContext: Starting login process...');
       const response = await authService.login({ username, password });
       
+      console.log('🔐 AuthContext: Login response received:', {
+        success: response.success,
+        hasUser: !!response.user,
+        hasToken: !!response.token,
+        userRole: response.user?.role
+      });
+      
       if (response.success && response.user && response.token) {
+        console.log('🔐 AuthContext: Setting user data:', response.user);
         setUser(response.user);
         setIsAuthenticated(true);
         return { success: true };
       } else {
+        console.log('🔐 AuthContext: Login failed:', response.error);
         return { success: false, error: response.error || 'Login failed' };
       }
     } catch (error) {
+      console.error('🔐 AuthContext: Login error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Login failed' 
@@ -139,7 +169,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return authService.canAccessSupplierService();
   };
 
-  const value = {
+  const hasRole = (role: string): boolean => {
+    return user?.role === role || user?.role.includes(role) || false;
+  };
+
+  const hasAnyRole = (roles: string[]): boolean => {
+    return roles.some(role => hasRole(role));
+  };
+
+  const refreshAuth = async () => {
+    setIsLoading(true);
+    try {
+      if (authService.isAuthenticated()) {
+        const userData = authService.getUser();
+        const token = authService.getToken();
+        
+        if (token) {
+          // Verify token with backend
+          const response = await fetch('http://localhost:8090/api/secure/user/current', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const currentUserData = await response.json();
+            setUser(currentUserData);
+            setIsAuthenticated(true);
+          } else {
+            authService.logout();
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        } else {
+          authService.logout();
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Auth refresh failed:', error);
+      authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const value = useMemo(() => ({
     user,
     isAuthenticated,
     isLoading,
@@ -147,7 +230,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signup,
     logout,
     canAccessSupplierService,
-  };
+    hasRole,
+    hasAnyRole,
+    refreshAuth,
+  }), [user, isAuthenticated, isLoading, login, signup, logout, canAccessSupplierService, hasRole, hasAnyRole, refreshAuth]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

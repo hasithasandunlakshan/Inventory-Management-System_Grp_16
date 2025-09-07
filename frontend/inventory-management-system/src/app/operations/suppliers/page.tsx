@@ -17,10 +17,11 @@ import { purchaseOrderService } from "@/lib/services/purchaseOrderService";
 
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
-import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus, PurchaseOrderCreateRequest, PurchaseOrder, PurchaseOrderNote, PurchaseOrderAttachment, PurchaseOrderAudit, PurchaseOrderItem } from "@/lib/types/supplier";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { AuthModal } from "@/components/AuthModal";
-import { UserHeader } from "@/components/UserHeader";
+
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus } from "@/lib/types/supplier";
+import { useAuth } from "@/contexts/AuthContext";
+
+
 import { authDebug } from "@/lib/utils/authDebug";
 import { userService, UserInfo } from "@/lib/services/userService";
 
@@ -37,22 +38,19 @@ function SuppliersPageContent() {
   const [activeTab, setActiveTab] = useState("purchase-orders");
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddPurchaseOrderOpen, setIsAddPurchaseOrderOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   const handleViewSupplier = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setIsSheetOpen(true);
   };
 
-  const handleLoginClick = () => {
-    setIsAuthModalOpen(true);
-  };
+  // Remove handleLoginClick as authentication is now handled by middleware
 
   if (isLoading) {
     return (
@@ -64,8 +62,6 @@ function SuppliersPageContent() {
 
   return (
     <div className="space-y-6">
-      <UserHeader onLoginClick={handleLoginClick} />
-      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Supplier Management</h1>
@@ -169,7 +165,7 @@ function SuppliersPageContent() {
         </TabsContent>
 
         <TabsContent value="suppliers" className="space-y-4">
-          <SuppliersTab onViewSupplier={handleViewSupplier} onLoginClick={handleLoginClick} onAddSupplier={() => setIsAddSupplierOpen(true)} onAddCategory={() => setIsAddCategoryOpen(true)} refreshTrigger={refreshTrigger} />
+          <SuppliersTab onViewSupplier={handleViewSupplier} onAddSupplier={() => setIsAddSupplierOpen(true)} onAddCategory={() => setIsAddCategoryOpen(true)} refreshTrigger={refreshTrigger} />
         </TabsContent>
 
         <TabsContent value="delivery-logs" className="space-y-4">
@@ -220,23 +216,13 @@ function SuppliersPageContent() {
           setIsAddCategoryOpen(false);
         }}
       />
-      
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        initialMode="login"
-      />
     </div>
   );
 }
 
-// Export the main component wrapped with AuthProvider
+// Export the main component - authentication is handled by Next.js middleware
 export default function SuppliersPage() {
-  return (
-    <AuthProvider>
-      <SuppliersPageContent />
-    </AuthProvider>
-  );
+  return <SuppliersPageContent />;
 }
 
 // Purchase Orders Tab Component
@@ -1161,9 +1147,8 @@ function EditPurchaseOrderForm({
 }
 
 // Suppliers Tab Component
-function SuppliersTab({ onViewSupplier, onLoginClick, onAddSupplier, onAddCategory, refreshTrigger }: { 
+function SuppliersTab({ onViewSupplier, onAddSupplier, onAddCategory, refreshTrigger }: { 
   onViewSupplier: (supplier: Supplier) => void;
-  onLoginClick: () => void;
   onAddSupplier: () => void;
   onAddCategory: () => void;
   refreshTrigger: number;
@@ -1173,15 +1158,10 @@ function SuppliersTab({ onViewSupplier, onLoginClick, onAddSupplier, onAddCatego
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // Load suppliers on component mount and when authentication changes or refresh is triggered
+  // Load suppliers on component mount and when refresh is triggered
   useEffect(() => {
-    if (isAuthenticated) {
-      loadSuppliers();
-    } else {
-      setSuppliers([]);
-      setApiError(null);
-    }
-  }, [isAuthenticated, refreshTrigger]);
+    loadSuppliers();
+  }, [refreshTrigger]);
 
   const loadSuppliers = async () => {
     setLoading(true);
@@ -1269,47 +1249,15 @@ function SuppliersTab({ onViewSupplier, onLoginClick, onAddSupplier, onAddCatego
             <div className="space-y-4">
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>
-                  {apiError.includes('login') || apiError.includes('Authentication') || apiError.includes('token')
-                    ? 'Authentication Required'
-                    : 'API Error'
-                  }
-                </AlertTitle>
+                <AlertTitle>API Error</AlertTitle>
                 <AlertDescription>
                   {apiError}
-                  {(apiError.includes('login') || apiError.includes('Authentication') || apiError.includes('token')) && (
-                    <div className="mt-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={onLoginClick}
-                        className="mr-2"
-                      >
-                        Login Now
-                      </Button>
-                      {process.env.NODE_ENV === 'development' && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            console.log('🔧 Running auth diagnostics...');
-                            authDebug.debugAll();
-                          }}
-                        >
-                          Debug Auth
-                        </Button>
-                      )}
-                    </div>
-                  )}
                 </AlertDescription>
               </Alert>
-              {!(apiError.includes('login') || apiError.includes('Authentication') || apiError.includes('token')) && (
-                <div className="text-sm text-muted-foreground">
-                  Showing sample data instead:
-                </div>
-              )}
-              {!(apiError.includes('login') || apiError.includes('Authentication') || apiError.includes('token')) && (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="text-sm text-muted-foreground">
+                Showing sample data instead:
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {sampleSuppliers.map((supplier) => (
                   <Card key={supplier.id} className="hover:shadow-md transition-shadow">
                     <CardHeader>
@@ -1366,10 +1314,9 @@ function SuppliersTab({ onViewSupplier, onLoginClick, onAddSupplier, onAddCatego
                   </Card>
                   ))}
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              </div>
+            ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {displaySuppliers.map((supplier) => (
                 <Card key={supplier.id} className="hover:shadow-md transition-shadow">
                   <CardHeader>
@@ -1427,8 +1374,8 @@ function SuppliersTab({ onViewSupplier, onLoginClick, onAddSupplier, onAddCatego
                   </CardContent>
                 </Card>
               ))}
-            </div>
-          )}
+                </div>
+              )}
         </CardContent>
       </Card>
     </div>
