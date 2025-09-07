@@ -9,10 +9,9 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface LoginFormProps {
   onLoginSuccess?: () => void;
-  onSwitchToSignup?: () => void;
 }
 
-export function LoginForm({ onLoginSuccess, onSwitchToSignup }: LoginFormProps) {
+export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [username, setUsername] = useState('storekeeper');
   const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
@@ -94,18 +93,7 @@ export function LoginForm({ onLoginSuccess, onSwitchToSignup }: LoginFormProps) 
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
 
-          {onSwitchToSignup && (
-            <div className="text-center text-sm">
-              Don&apos;t have an account?{' '}
-              <button
-                type="button"
-                onClick={onSwitchToSignup}
-                className="text-blue-600 hover:underline"
-              >
-                Sign up here
-              </button>
-            </div>
-          )}
+          {/* Signup prompt removed */}
         </form>
       </CardContent>
     </Card>
