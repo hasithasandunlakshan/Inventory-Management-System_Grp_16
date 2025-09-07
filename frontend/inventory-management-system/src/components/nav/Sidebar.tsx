@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { navItems } from './navItems';
+import { getNavItemsForRole } from '@/lib/rbac/navItems';
 import { Menu, ChevronDown, ChevronRight, LogOut, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -61,35 +61,10 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
     return false;
   };
 
-  // Filter navigation items based on user permissions
-  const filterNavItems = (items: any[]): any[] => {
-    return items.filter(item => {
-      if (item.href) {
-        // For now, show all routes - middleware handles access control
-        return true;
-      }
-      
-      if (item.children) {
-        // Filter children - show all for now since middleware handles access
-        const filteredChildren = item.children.filter((child: any) => {
-          return true;
-        });
-        
-        // Only show parent if it has accessible children
-        if (filteredChildren.length > 0) {
-          return {
-            ...item,
-            children: filteredChildren
-          };
-        }
-        return false;
-      }
-      
-      return true;
-    });
-  };
+  // Get navigation items based on user role
+  const navItems = user?.role ? getNavItemsForRole(user.role) : [];
 
-  const filteredNavItems = filterNavItems(navItems);
+  const filteredNavItems = navItems;
 
   return (
     <>

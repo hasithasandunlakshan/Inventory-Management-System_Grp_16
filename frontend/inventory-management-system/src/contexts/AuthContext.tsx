@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { authService } from '../lib/services/authService';
 
 export interface AuthUser {
@@ -36,6 +37,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -163,6 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
+    // Redirect to login page
+    window.location.href = '/login';
   };
 
   const canAccessSupplierService = () => {
