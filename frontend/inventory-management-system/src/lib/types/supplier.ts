@@ -225,3 +225,10 @@ export interface AttachmentCreateRequest {
   fileSize: number;
   fileUrl: string;
 }
+
+// Import Report DTO to match backend response
+export interface ImportReportDTO {
+  created: number;
+  failed: number;
+  errors: string[];
+}

@@ -14,7 +14,8 @@ import {
   PurchaseOrderAttachment,
   PurchaseOrderAudit,
   NoteCreateRequest,
-  AttachmentCreateRequest
+  AttachmentCreateRequest,
+  ImportReportDTO
 } from '../types/supplier';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
@@ -528,6 +529,72 @@ export const purchaseOrderService = {
       return response.json();
     } catch (error) {
       console.error('Failed to add attachment:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Import purchase orders from file
+   */
+  async importPurchaseOrders(file: File): Promise<ImportReportDTO> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = localStorage.getItem('inventory_auth_token');
+      
+      console.log('🔄 Starting import:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        hasToken: !!token
+      });
+
+      const response = await fetch(`${API_BASE_URL}/import`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` })
+        },
+        body: formData
+      });
+
+      console.log('📥 Import response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Import failed with response:', errorText);
+        throw new Error(`Import failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Import successful:', result);
+      
+      // Return the backend ImportReportDTO directly
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to import purchase orders:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Export purchase orders to file
+   */
+  async exportPurchaseOrders(format: 'csv' | 'excel' = 'csv'): Promise<Blob> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/export?format=${format}`, createAuthenticatedRequestOptions('GET'));
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      return response.blob();
+    } catch (error) {
+      console.error('Failed to export purchase orders:', error);
       throw error;
     }
   }

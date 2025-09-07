@@ -259,6 +259,10 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
   const [isEditOrderOpen, setIsEditOrderOpen] = useState(false);
   const [editingPurchaseOrder, setEditingPurchaseOrder] = useState<PurchaseOrder | null>(null);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
   
   const { isAuthenticated } = useAuth();
 
@@ -311,6 +315,99 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
     }
   };
 
+  // Handler for importing purchase orders
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Reset any previous success message
+    setImportSuccess(null);
+
+    try {
+      setImporting(true);
+      const result = await purchaseOrderService.importPurchaseOrders(file);
+      
+      console.log('📊 Import result details:', {
+        created: result.created,
+        failed: result.failed,
+        hasErrors: result.errors && result.errors.length > 0,
+        errors: result.errors
+      });
+      
+      // Show success if any orders were created
+      if (result.created > 0) {
+        setImportSuccess(`Successfully imported ${result.created} purchase orders${result.failed ? ` (${result.failed} failed)` : ''}`);
+        // Refresh the purchase orders list
+        await loadPurchaseOrders();
+      } else {
+        console.warn('⚠️ No orders were created during import');
+        setError(`Import failed: No orders were created. ${result.failed ? `${result.failed} rows failed validation.` : ''}`);
+      }
+      
+      // Show errors/warnings if any
+      if (result.errors && result.errors.length > 0) {
+        console.warn('Import errors/warnings:', result.errors);
+        const errorMessages = result.errors.slice(0, 3).join('; ');
+        if (result.created === 0) {
+          setError(`Import failed: ${errorMessages}`);
+        } else {
+          // Just show as info if some succeeded
+          console.info(`Import completed with warnings: ${errorMessages}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to import purchase orders:', error);
+      setError(error instanceof Error ? error.message : 'Failed to import purchase orders');
+    } finally {
+      setImporting(false);
+      // Clear the file input
+      event.target.value = '';
+    }
+  };
+
+  // Handler for exporting purchase orders
+  const handleExport = async (format: 'csv' | 'excel' = 'csv') => {
+    try {
+      setExporting(true);
+      const blob = await purchaseOrderService.exportPurchaseOrders(format);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `purchase-orders-${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('Purchase orders exported successfully');
+    } catch (error) {
+      console.error('Failed to export purchase orders:', error);
+      setError('Failed to export purchase orders');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Handler for downloading import template
+  const handleDownloadTemplate = () => {
+    const template = `tempKey,supplierId,date,status,itemId,quantity,unitPrice
+B,102,2025-08-19,SENT,7001,3,75.00
+B,102,2025-08-19,SENT,7002,5,120.00
+C,103,2025-08-20,DRAFT,7001,2,75.00`;
+    
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'purchase-orders-import-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
   // Handler to edit purchase order
   const handleEditOrder = async (orderId: number) => {
     try {
@@ -335,6 +432,16 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
       setError(null);
     }
   }, [isAuthenticated, refreshTrigger]);
+
+  // Auto-clear import success message after 5 seconds
+  useEffect(() => {
+    if (importSuccess) {
+      const timer = setTimeout(() => {
+        setImportSuccess(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [importSuccess]);
 
   const loadPurchaseOrders = async () => {
     try {
@@ -521,10 +628,73 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
       {/* Purchase Orders Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Purchase Orders</CardTitle>
-          <CardDescription>
-            {loading ? 'Loading purchase orders...' : `${filteredOrders.length} purchase order(s) found`}
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle>Purchase Orders</CardTitle>
+              <CardDescription>
+                {loading ? 'Loading purchase orders...' : `${filteredOrders.length} purchase order(s) found`}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {importSuccess && (
+                <div className="text-sm text-green-600 mr-2">
+                  {importSuccess}
+                </div>
+              )}
+              
+              {/* Import Button */}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleImport}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={importing}
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={importing}
+                  title="Import purchase orders from CSV/Excel file"
+                >
+                  <Upload className="h-4 w-4 mr-1" />
+                  {importing ? 'Importing...' : 'Import'}
+                </Button>
+              </div>
+              
+              {/* Download Template Button */}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleDownloadTemplate}
+                title="Download CSV template for importing purchase orders"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Template
+              </Button>
+              
+              {/* Export Button */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleExport('csv')}
+                disabled={exporting}
+                title="Export purchase orders to CSV file"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                {exporting ? 'Exporting...' : 'Export'}
+              </Button>
+              
+              {/* Add Purchase Order Button */}
+              <Button 
+                onClick={() => setIsAddOrderOpen(true)}
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Order
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {error && (
@@ -767,6 +937,16 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
           {editingPurchaseOrder && <EditPurchaseOrderForm purchaseOrder={editingPurchaseOrder} onSave={loadPurchaseOrders} onClose={() => setIsEditOrderOpen(false)} />}
         </SheetContent>
       </Sheet>
+
+      {/* Add Purchase Order Sheet */}
+      <AddPurchaseOrderSheet 
+        isOpen={isAddOrderOpen} 
+        onOpenChange={setIsAddOrderOpen} 
+        onPurchaseOrderAdded={() => {
+          loadPurchaseOrders();
+          setImportSuccess(null); // Clear any previous import success message
+        }} 
+      />
     </div>
   );
 }
