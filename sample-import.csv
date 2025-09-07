@@ -1,0 +1,4 @@
+tempKey,supplierId,date,status,itemId,quantity,unitPrice
+B,1,2025-09-07,DRAFT,1,5,25.00
+B,1,2025-09-07,DRAFT,2,3,15.00
+C,2,2025-09-08,SENT,3,10,30.00
