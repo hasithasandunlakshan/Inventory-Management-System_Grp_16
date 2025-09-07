@@ -9,7 +9,13 @@ import {
   StatsSummary,
   PageResponse,
   PurchaseOrderItem,
-  PurchaseOrderItemCreateRequest
+  PurchaseOrderItemCreateRequest,
+  PurchaseOrderNote,
+  PurchaseOrderAttachment,
+  PurchaseOrderAudit,
+  NoteCreateRequest,
+  AttachmentCreateRequest,
+  ImportReportDTO
 } from '../types/supplier';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
@@ -21,11 +27,7 @@ export const purchaseOrderService = {
    */
   async createPurchaseOrder(order: PurchaseOrderCreateRequest): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        ...createAuthenticatedRequestOptions(),
-        body: JSON.stringify(order)
-      });
+      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions('POST', order));
 
       if (!response.ok) {
         throw new Error('Failed to create purchase order');
@@ -57,16 +59,44 @@ export const purchaseOrderService = {
   },
 
   /**
+   * Get purchase order total by ID
+   */
+  async getPurchaseOrderTotal(id: number): Promise<{ total: number }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}/totals`, createAuthenticatedRequestOptions());
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Purchase order not found');
+        }
+        throw new Error(`Failed to fetch purchase order total: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Handle different response formats
+      if (typeof data === 'number') {
+        return { total: data };
+      } else if (data && typeof data.total === 'number') {
+        return { total: data.total };
+      } else if (data && typeof data.totalAmount === 'number') {
+        return { total: data.totalAmount };
+      } else {
+        console.warn('Unexpected response format for purchase order total:', data);
+        return { total: 0 };
+      }
+    } catch (error) {
+      console.error('Failed to fetch purchase order total:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Get purchase order by ID (with items)
    */
   async getPurchaseOrderById(id: number): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions());
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -87,14 +117,7 @@ export const purchaseOrderService = {
    */
   async updatePurchaseOrder(id: number, order: PurchaseOrderUpdateRequest): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(order)
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions('PUT', order));
 
       if (!response.ok) {
         throw new Error('Failed to update purchase order');
@@ -117,14 +140,7 @@ export const purchaseOrderService = {
 
       const body = reason ? { reason } : undefined;
 
-      const response = await fetch(url.toString(), {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: body ? JSON.stringify(body) : undefined
-      });
+      const response = await fetch(url.toString(), createAuthenticatedRequestOptions('DELETE', body));
 
       if (!response.ok) {
         throw new Error('Failed to delete purchase order');
@@ -140,14 +156,7 @@ export const purchaseOrderService = {
    */
   async updateStatus(id: number, statusUpdate: StatusUpdateRequest): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(statusUpdate)
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}/status`, createAuthenticatedRequestOptions('PUT', statusUpdate));
 
       if (!response.ok) {
         throw new Error('Failed to update purchase order status');
@@ -165,14 +174,7 @@ export const purchaseOrderService = {
    */
   async markReceived(id: number, receiveData?: ReceiveRequest): Promise<PurchaseOrder> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}/receive`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: receiveData ? JSON.stringify(receiveData) : undefined
-      });
+      const response = await fetch(`${API_BASE_URL}/${id}/receive`, createAuthenticatedRequestOptions('POST', receiveData));
 
       if (!response.ok) {
         throw new Error('Failed to mark purchase order as received');
@@ -320,18 +322,11 @@ export const purchaseOrderService = {
   },
 
   /**
-   * Add items to a purchase order
+   * Add purchase order items
    */
   async addPurchaseOrderItems(orderId: number, items: PurchaseOrderItemCreateRequest[]): Promise<PurchaseOrderItem[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${orderId}/items`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(items)
-      });
+      const response = await fetch(`${API_BASE_URL}/${orderId}/items`, createAuthenticatedRequestOptions('POST', items));
 
       if (!response.ok) {
         throw new Error('Failed to add purchase order items');
@@ -349,14 +344,7 @@ export const purchaseOrderService = {
    */
   async updatePurchaseOrderItem(orderId: number, itemId: number, item: PurchaseOrderItem): Promise<PurchaseOrderItem> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(item)
-      });
+      const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, createAuthenticatedRequestOptions('PUT', item));
 
       if (!response.ok) {
         throw new Error('Failed to update purchase order item');
@@ -374,13 +362,7 @@ export const purchaseOrderService = {
    */
   async deletePurchaseOrderItem(orderId: number, itemId: number): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('inventory_auth_token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(`${API_BASE_URL}/${orderId}/items/${itemId}`, createAuthenticatedRequestOptions('DELETE'));
 
       if (!response.ok) {
         throw new Error('Failed to delete purchase order item');
@@ -388,6 +370,232 @@ export const purchaseOrderService = {
     } catch (error) {
       console.error('Failed to delete purchase order item:', error);
       throw new Error('Failed to delete purchase order item - backend not available');
+    }
+  },
+
+  /**
+   * Get purchase order notes
+   */
+  async getPurchaseOrderNotes(poId: number): Promise<PurchaseOrderNote[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/notes`, createAuthenticatedRequestOptions());
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return []; // No notes found
+        }
+        throw new Error(`Failed to fetch purchase order notes: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch purchase order notes:', error);
+      return []; // Return empty array on error
+    }
+  },
+
+  /**
+   * Get purchase order attachments
+   */
+  async getPurchaseOrderAttachments(poId: number): Promise<PurchaseOrderAttachment[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/attachments`, createAuthenticatedRequestOptions());
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return []; // No attachments found
+        }
+        throw new Error(`Failed to fetch purchase order attachments: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch purchase order attachments:', error);
+      return []; // Return empty array on error
+    }
+  },
+
+  /**
+   * Get purchase order audit log
+   */
+  async getPurchaseOrderAudit(poId: number): Promise<PurchaseOrderAudit[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/audit`, createAuthenticatedRequestOptions());
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return []; // No audit logs found
+        }
+        throw new Error(`Failed to fetch purchase order audit: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch purchase order audit:', error);
+      return []; // Return empty array on error
+    }
+  },
+
+  /**
+   * Update item quantity
+   */
+  async updateItemQuantity(orderId: number, itemId: number, quantity: number): Promise<void> {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/${orderId}/items/${itemId}/quantity`, 
+        createAuthenticatedRequestOptions('PATCH', { quantity })
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update item quantity');
+      }
+    } catch (error) {
+      console.error('Failed to update item quantity:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Receive purchase order
+   */
+  async receivePurchaseOrder(id: number, receiveData: any): Promise<PurchaseOrder> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}/receive`, createAuthenticatedRequestOptions('POST', receiveData));
+
+      if (!response.ok) {
+        throw new Error('Failed to receive purchase order');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Failed to receive purchase order:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update purchase order status
+   */
+  async updatePurchaseOrderStatus(id: number, statusData: StatusUpdateRequest): Promise<PurchaseOrder> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}/status`, createAuthenticatedRequestOptions('PATCH', statusData));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Status update failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Failed to update purchase order status: ${response.status} ${response.statusText}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Failed to update purchase order status:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Add note to purchase order
+   */
+  async addNote(poId: number, noteData: NoteCreateRequest): Promise<PurchaseOrderNote> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/notes`, createAuthenticatedRequestOptions('POST', noteData));
+
+      if (!response.ok) {
+        throw new Error('Failed to add note');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Failed to add note:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Add attachment to purchase order
+   */
+  async addAttachment(poId: number, attachmentData: AttachmentCreateRequest): Promise<PurchaseOrderAttachment> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${poId}/attachments`, createAuthenticatedRequestOptions('POST', attachmentData));
+
+      if (!response.ok) {
+        throw new Error('Failed to add attachment');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Failed to add attachment:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Import purchase orders from file
+   */
+  async importPurchaseOrders(file: File): Promise<ImportReportDTO> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = localStorage.getItem('inventory_auth_token');
+      
+      console.log('🔄 Starting import:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        hasToken: !!token
+      });
+
+      const response = await fetch(`${API_BASE_URL}/import`, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` })
+        },
+        body: formData
+      });
+
+      console.log('📥 Import response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Import failed with response:', errorText);
+        throw new Error(`Import failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Import successful:', result);
+      
+      // Return the backend ImportReportDTO directly
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to import purchase orders:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Export purchase orders to file
+   */
+  async exportPurchaseOrders(format: 'csv' | 'excel' = 'csv'): Promise<Blob> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/export?format=${format}`, createAuthenticatedRequestOptions('GET'));
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      return response.blob();
+    } catch (error) {
+      console.error('Failed to export purchase orders:', error);
+      throw error;
     }
   }
 };
