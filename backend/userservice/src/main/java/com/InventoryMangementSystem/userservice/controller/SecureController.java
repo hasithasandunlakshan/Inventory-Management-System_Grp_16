@@ -83,11 +83,6 @@ public class SecureController {
 
     @GetMapping("/user/current")
     public ResponseEntity<UserInfo> getCurrentUser(HttpServletRequest request) {
-        System.out.println("\n=== SECURE USER CURRENT ENDPOINT CALLED ===");
-        System.out.println("Timestamp: " + java.time.LocalDateTime.now());
-        System.out.println("Request URI: " + request.getRequestURI());
-        System.out.println("Request Method: " + request.getMethod());
-
         try {
             // Handle potential Integer to Long conversion for userId
             // First try to get from request attributes (direct access), then from headers
@@ -111,12 +106,10 @@ public class SecureController {
             }
 
             if (userId == null) {
-                System.out.println("ERROR: No userId found in request attributes or headers");
                 return ResponseEntity.badRequest().build();
             }
 
             final Long finalUserId = userId; // Make final for lambda
-            System.out.println("Extracting user details for userId: " + finalUserId);
 
             // Fetch user from database
             User user = userRepository.findById(finalUserId)
@@ -128,8 +121,21 @@ public class SecureController {
                     .map(ur -> ur.getRole().getRoleName())
                     .collect(Collectors.toList());
 
-            // Get primary role (first role or empty string)
-            String primaryRole = roleNames.isEmpty() ? "" : roleNames.get(0);
+            // Get primary role using same logic as login
+            String primaryRole = "USER"; // Default role
+            if (!userRoles.isEmpty()) {
+                // Priority order: ADMIN > MANAGER > Store Keeper > USER
+                String[] rolePriority = { "ADMIN", "MANAGER", "Store Keeper", "USER" };
+
+                for (String priorityRole : rolePriority) {
+                    boolean hasRole = userRoles.stream()
+                            .anyMatch(ur -> priorityRole.equalsIgnoreCase(ur.getRole().getRoleName()));
+                    if (hasRole) {
+                        primaryRole = priorityRole;
+                        break;
+                    }
+                }
+            }
 
             // Create UserInfo DTO
             UserInfo userInfo = new UserInfo();
@@ -148,15 +154,9 @@ public class SecureController {
             userInfo.setCreatedAt(user.getCreatedAt());
             userInfo.setDateOfBirth(user.getDateOfBirth());
 
-            System.out.println("Successfully retrieved user info for: " + user.getUsername());
-            System.out.println("User roles: " + roleNames);
-            System.out.println("=== SECURE USER CURRENT ENDPOINT COMPLETED ===\n");
-
             return ResponseEntity.ok(userInfo);
 
         } catch (Exception e) {
-            System.out.println("ERROR in getCurrentUser: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }

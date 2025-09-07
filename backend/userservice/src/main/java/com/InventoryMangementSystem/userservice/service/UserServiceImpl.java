@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
 
                 for (String priorityRole : rolePriority) {
                     boolean hasRole = user.getRoles().stream()
-                            .anyMatch(ur -> priorityRole.equals(ur.getRole().getRoleName()));
+                            .anyMatch(ur -> priorityRole.equalsIgnoreCase(ur.getRole().getRoleName()));
                     if (hasRole) {
                         role = priorityRole;
                         break;
