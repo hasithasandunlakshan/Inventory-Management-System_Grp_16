@@ -1,289 +1,158 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { getNavItemsForRole } from '@/lib/rbac/navItems';
-import { Menu, ChevronDown, ChevronRight, LogOut, User } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
 
-type SidebarProps = Readonly<{
-  title?: string;
-}>;
+export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  
+  // Form data
+  const [loginData, setLoginData] = useState({
+    username: '',
+    password: ''
+  });
+  
+  const { login, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
 
-export default function Sidebar({ title = 'IMS' }: SidebarProps) {
-  const [open, setOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const pathname = usePathname();
-  const panelRef = useRef<HTMLDivElement | null>(null);
-  const { user, logout } = useAuth();
-
+  // Redirect if already authenticated
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    const onToggleSidebar = () => setOpen(true);
-    
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('toggleSidebar', onToggleSidebar);
-    
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('toggleSidebar', onToggleSidebar);
-    };
-  }, []);
+    if (isAuthenticated) {
+      router.push(redirectTo);
+    }
+  }, [isAuthenticated, router, redirectTo]);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
 
-  const toggleExpanded = (label: string) => {
-    setExpandedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(label)) {
-        newSet.delete(label);
+    try {
+      const result = await login(loginData.username, loginData.password);
+      
+      if (result.success) {
+        setSuccess('Login successful! Redirecting...');
+        setTimeout(() => {
+          router.push(redirectTo);
+        }, 1000);
       } else {
-        newSet.add(label);
+        setError(result.error || 'Login failed');
       }
-      return newSet;
-    });
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const isActive = (item: any) => {
-    if (item.href) {
-      return pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
-    }
-    if (item.children) {
-      return item.children.some((child: any) => isActive(child));
-    }
-    return false;
+  const handleInputChange = (field: string, value: string) => {
+    setLoginData(prev => ({ ...prev, [field]: value }));
   };
-
-  // Get navigation items based on user role
-  const navItems = user?.role ? getNavItemsForRole(user.role) : [];
-
-  const filteredNavItems = navItems;
 
   return (
-    <>
-      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-60 md:flex-col md:border-r md:bg-background">
-        <div className="h-14 border-b px-4 flex items-center justify-between">
-          <div className="text-lg font-semibold tracking-tight">{title}</div>
-          <Button variant="ghost" size="icon" onClick={() => setOpen(true)} className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">Inventory Management</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Sign in to your account or create a new one
+          </p>
         </div>
-        <nav className="flex-1 overflow-y-auto p-2">
-          {filteredNavItems.map((item) => {
-            const { href, label, icon: Icon, children } = item;
-            const itemIsActive = isActive(item);
-            const isExpanded = expandedItems.has(label);
 
-            if (children) {
-              return (
-                <div key={label} className="space-y-1">
-                  <button
-                    onClick={() => toggleExpanded(label)}
-                    className={cn(
-                      'w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                      itemIsActive && 'bg-accent text-accent-foreground'
-                    )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center">Sign In</CardTitle>
+            <CardDescription className="text-center">
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={loginData.username}
+                  onChange={(e) => handleInputChange('username', e.target.value)}
+                  required
+                  placeholder="Enter your username"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={loginData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    required
+                    placeholder="Enter your password"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon className="h-4 w-4" />
-                      <span>{label}</span>
-                    </div>
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4" />
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <ChevronRight className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     )}
-                  </button>
-                  {isExpanded && (
-                    <div className="ml-4 space-y-1">
-                      {children.map((child: any) => {
-                        const childIsActive = isActive(child);
-                        return (
-                          <Link key={child.href} href={child.href!} className="block">
-                            <div
-                              className={cn(
-                                'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                                childIsActive && 'bg-accent text-accent-foreground'
-                              )}
-                            >
-                              <child.icon className="h-4 w-4" />
-                              <span>{child.label}</span>
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
+                  </Button>
                 </div>
-              );
-            }
-
-            return (
-              <Link key={href} href={href!} className="block">
-                <div
-                  className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                    itemIsActive && 'bg-accent text-accent-foreground'
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{label}</span>
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
-        
-        {/* User Info and Logout */}
-        {user && (
-          <div className="border-t p-4">
-            <Link href="/profile" className="block mb-3">
-              <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                  {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {user.fullName || user.username}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {user.role}
-                  </p>
-                </div>
-                <User className="h-4 w-4 text-muted-foreground" />
               </div>
-            </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={logout}
-              className="w-full justify-start text-muted-foreground hover:text-foreground"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        )}
-      </aside>
 
-      {open && (
-        <dialog open className="fixed inset-0 z-50 md:hidden bg-transparent">
-          <button className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} aria-label="Close menu overlay" />
-          <div
-            ref={panelRef}
-            className="absolute inset-y-0 left-0 w-72 translate-x-0 transform bg-background p-2 shadow-xl transition-transform"
-          >
-            <div className="h-14 border-b px-3 flex items-center text-base font-semibold tracking-tight">
-              {title}
-            </div>
-            <nav className="mt-2 space-y-1">
-              {filteredNavItems.map((item) => {
-                const { href, label, icon: Icon, children } = item;
-                const itemIsActive = isActive(item);
-                const isExpanded = expandedItems.has(label);
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sign In
+              </Button>
+            </form>
 
-                if (children) {
-                  return (
-                    <div key={label} className="space-y-1">
-                      <button
-                        onClick={() => toggleExpanded(label)}
-                        className={cn(
-                          'w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                          itemIsActive && 'bg-accent text-accent-foreground'
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className="h-4 w-4" />
-                          <span>{label}</span>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </button>
-                      {isExpanded && (
-                        <div className="ml-4 space-y-1">
-                          {children.map((child: any) => {
-                            const childIsActive = isActive(child);
-                            return (
-                              <Link key={child.href} href={child.href!} className="block" onClick={() => setOpen(false)}>
-                                <div
-                                  className={cn(
-                                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                                    childIsActive && 'bg-accent text-accent-foreground'
-                                  )}
-                                >
-                                  <child.icon className="h-4 w-4" />
-                                  <span>{child.label}</span>
-                                </div>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-
-                return (
-                  <Link key={href} href={href!} className="block" onClick={() => setOpen(false)}>
-                    <div
-                      className={cn(
-                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                        itemIsActive && 'bg-accent text-accent-foreground'
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{label}</span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </nav>
-            
-            {/* Mobile User Info and Logout */}
-            {user && (
-              <div className="border-t p-4 mt-4">
-                <Link href="/profile" className="block mb-3" onClick={() => setOpen(false)}>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                      {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {user.fullName || user.username}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {user.role}
-                      </p>
-                    </div>
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={logout}
-                  className="w-full justify-start text-muted-foreground hover:text-foreground"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
-              </div>
+            {error && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
-          </div>
-        </dialog>
-      )}
-    </>
+
+            {success && (
+              <Alert className="border-green-200 bg-green-50 text-green-800 mt-4">
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="text-center text-sm text-gray-600">
+          <p>
+            Having trouble?{' '}
+            <Link href="/contact" className="text-blue-600 hover:text-blue-500">
+              Contact support
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
-
-

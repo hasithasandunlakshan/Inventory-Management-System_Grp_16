@@ -15,12 +15,14 @@ const publicRoutes = [
 
 // Role-based route permissions
 const ROUTE_PERMISSIONS: Record<string, string[]> = {
+
   '/dashboard': ['USER', 'Store Keeper', 'MANAGER', 'ADMIN', 'SUPPLIER'],
   '/dashboard/manager': ['MANAGER', 'ADMIN'],
   '/dashboard/supplier': ['SUPPLIER'],
   '/dashboard/storekeeper': ['Store Keeper', 'MANAGER', 'ADMIN'],
   '/profile': ['USER', 'Store Keeper', 'MANAGER', 'ADMIN', 'SUPPLIER'],
   '/access-denied': ['USER', 'Store Keeper', 'MANAGER', 'ADMIN', 'SUPPLIER'],
+
   '/products': ['Store Keeper', 'MANAGER', 'ADMIN'],
   '/products/add': ['Store Keeper', 'MANAGER', 'ADMIN'],
   '/categories': ['Store Keeper', 'MANAGER', 'ADMIN'],
