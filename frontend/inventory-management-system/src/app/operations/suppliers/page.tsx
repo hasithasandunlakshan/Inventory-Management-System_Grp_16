@@ -17,7 +17,7 @@ import { purchaseOrderService } from "@/lib/services/purchaseOrderService";
 
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
-import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus } from "@/lib/types/supplier";
+import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus, PurchaseOrderCreateRequest, PurchaseOrder, PurchaseOrderNote, PurchaseOrderAttachment, PurchaseOrderAudit, PurchaseOrderItem } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -40,6 +40,7 @@ function SuppliersPageContent() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [isAddPurchaseOrderOpen, setIsAddPurchaseOrderOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const { isAuthenticated, isLoading } = useAuth();
@@ -95,7 +96,7 @@ function SuppliersPageContent() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button disabled={!isAuthenticated}>
+          <Button disabled={!isAuthenticated} onClick={() => setIsAddPurchaseOrderOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Purchase Order
           </Button>
@@ -164,7 +165,7 @@ function SuppliersPageContent() {
         </TabsList>
 
         <TabsContent value="purchase-orders" className="space-y-4">
-          <PurchaseOrdersTab />
+          <PurchaseOrdersTab refreshTrigger={refreshTrigger} />
         </TabsContent>
 
         <TabsContent value="suppliers" className="space-y-4">
@@ -197,6 +198,18 @@ function SuppliersPageContent() {
           setIsAddSupplierOpen(false);
         }}
       />
+      
+      {/* Add Purchase Order Sheet */}
+      <AddPurchaseOrderSheet
+        isOpen={isAddPurchaseOrderOpen}
+        onOpenChange={setIsAddPurchaseOrderOpen}
+        onPurchaseOrderAdded={() => {
+          // Trigger refresh of purchase orders
+          setRefreshTrigger(prev => prev + 1);
+          setIsAddPurchaseOrderOpen(false);
+        }}
+      />
+      
       {/* Add Category Sheet */}
       <AddCategorySheet
         isOpen={isAddCategoryOpen}
@@ -227,15 +240,188 @@ export default function SuppliersPage() {
 }
 
 // Purchase Orders Tab Component
-function PurchaseOrdersTab() {
+function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderSummary[]>([]);
+  const [orderTotals, setOrderTotals] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(false);
+  const [loadingTotals, setLoadingTotals] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [supplierFilter, setSupplierFilter] = useState("");
+  const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [isViewOrderOpen, setIsViewOrderOpen] = useState(false);
+  const [deletingOrderId, setDeletingOrderId] = useState<number | null>(null);
+  const [orderNotes, setOrderNotes] = useState<PurchaseOrderNote[]>([]);
+  const [orderAttachments, setOrderAttachments] = useState<PurchaseOrderAttachment[]>([]);
+  const [orderAudit, setOrderAudit] = useState<PurchaseOrderAudit[]>([]);
+  const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
+  const [isEditOrderOpen, setIsEditOrderOpen] = useState(false);
+  const [editingPurchaseOrder, setEditingPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
   
   const { isAuthenticated } = useAuth();
+
+  // Handler to view purchase order details
+  const handleViewOrder = async (orderId: number) => {
+    try {
+      setLoadingOrderDetails(true);
+      
+      // Fetch purchase order details and all additional information in parallel
+      const [orderDetails, notes, attachments, audit] = await Promise.all([
+        purchaseOrderService.getPurchaseOrderById(orderId),
+        purchaseOrderService.getPurchaseOrderNotes(orderId),
+        purchaseOrderService.getPurchaseOrderAttachments(orderId),
+        purchaseOrderService.getPurchaseOrderAudit(orderId)
+      ]);
+      
+      setSelectedPurchaseOrder(orderDetails);
+      setOrderNotes(notes);
+      setOrderAttachments(attachments);
+      setOrderAudit(audit);
+      setIsViewOrderOpen(true);
+    } catch (error) {
+      console.error('Failed to load purchase order details:', error);
+      setError('Failed to load purchase order details');
+    } finally {
+      setLoadingOrderDetails(false);
+    }
+  };
+
+  // Handler to delete purchase order
+  const handleDeleteOrder = async (orderId: number) => {
+    if (!confirm('Are you sure you want to delete this purchase order? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      setDeletingOrderId(orderId);
+      await purchaseOrderService.deletePurchaseOrder(orderId);
+      
+      // Refresh the purchase orders list
+      await loadPurchaseOrders();
+      
+      // Show success message (you might want to add a toast notification here)
+      console.log('Purchase order deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete purchase order:', error);
+      setError('Failed to delete purchase order');
+    } finally {
+      setDeletingOrderId(null);
+    }
+  };
+
+  // Handler for importing purchase orders
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Reset any previous success message
+    setImportSuccess(null);
+
+    try {
+      setImporting(true);
+      const result = await purchaseOrderService.importPurchaseOrders(file);
+      
+      console.log('📊 Import result details:', {
+        created: result.created,
+        failed: result.failed,
+        hasErrors: result.errors && result.errors.length > 0,
+        errors: result.errors
+      });
+      
+      // Show success if any orders were created
+      if (result.created > 0) {
+        setImportSuccess(`Successfully imported ${result.created} purchase orders${result.failed ? ` (${result.failed} failed)` : ''}`);
+        // Refresh the purchase orders list
+        await loadPurchaseOrders();
+      } else {
+        console.warn('⚠️ No orders were created during import');
+        setError(`Import failed: No orders were created. ${result.failed ? `${result.failed} rows failed validation.` : ''}`);
+      }
+      
+      // Show errors/warnings if any
+      if (result.errors && result.errors.length > 0) {
+        console.warn('Import errors/warnings:', result.errors);
+        const errorMessages = result.errors.slice(0, 3).join('; ');
+        if (result.created === 0) {
+          setError(`Import failed: ${errorMessages}`);
+        } else {
+          // Just show as info if some succeeded
+          console.info(`Import completed with warnings: ${errorMessages}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to import purchase orders:', error);
+      setError(error instanceof Error ? error.message : 'Failed to import purchase orders');
+    } finally {
+      setImporting(false);
+      // Clear the file input
+      event.target.value = '';
+    }
+  };
+
+  // Handler for exporting purchase orders
+  const handleExport = async (format: 'csv' | 'excel' = 'csv') => {
+    try {
+      setExporting(true);
+      const blob = await purchaseOrderService.exportPurchaseOrders(format);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `purchase-orders-${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('Purchase orders exported successfully');
+    } catch (error) {
+      console.error('Failed to export purchase orders:', error);
+      setError('Failed to export purchase orders');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Handler for downloading import template
+  const handleDownloadTemplate = () => {
+    const template = `tempKey,supplierId,date,status,itemId,quantity,unitPrice
+B,102,2025-08-19,SENT,7001,3,75.00
+B,102,2025-08-19,SENT,7002,5,120.00
+C,103,2025-08-20,DRAFT,7001,2,75.00`;
+    
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'purchase-orders-import-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Handler to edit purchase order
+  const handleEditOrder = async (orderId: number) => {
+    try {
+      setLoadingOrderDetails(true);
+      const orderDetails = await purchaseOrderService.getPurchaseOrderById(orderId);
+      setEditingPurchaseOrder(orderDetails);
+      setIsEditOrderOpen(true);
+    } catch (error) {
+      console.error('Failed to load purchase order for editing:', error);
+      setError('Failed to load purchase order for editing');
+    } finally {
+      setLoadingOrderDetails(false);
+    }
+  };
 
   // Load purchase orders when component mounts or authentication changes
   useEffect(() => {
@@ -245,7 +431,17 @@ function PurchaseOrdersTab() {
       setPurchaseOrders([]);
       setError(null);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshTrigger]);
+
+  // Auto-clear import success message after 5 seconds
+  useEffect(() => {
+    if (importSuccess) {
+      const timer = setTimeout(() => {
+        setImportSuccess(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [importSuccess]);
 
   const loadPurchaseOrders = async () => {
     try {
@@ -253,11 +449,51 @@ function PurchaseOrdersTab() {
       setError(null);
       const orders = await purchaseOrderService.getAllPurchaseOrders();
       setPurchaseOrders(orders);
+      
+      // Load totals for each order
+      await loadOrderTotals(orders);
     } catch (error) {
       console.error('Failed to load purchase orders:', error);
       setError('Failed to load purchase orders. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadOrderTotals = async (orders: PurchaseOrderSummary[]) => {
+    try {
+      setLoadingTotals(true);
+      const totalsMap = new Map<number, number>();
+      
+      // Fetch totals for all orders in parallel
+      const totalPromises = orders.map(async (order) => {
+        try {
+          const totalResponse = await purchaseOrderService.getPurchaseOrderTotal(order.id);
+          return { id: order.id, total: totalResponse.total };
+        } catch (error) {
+          console.error(`Failed to fetch total for order ${order.id}:`, error);
+          // Return the existing total from the order if API call fails
+          return { id: order.id, total: order.total || 0 };
+        }
+      });
+      
+      const results = await Promise.all(totalPromises);
+      
+      results.forEach(({ id, total }) => {
+        totalsMap.set(id, total);
+      });
+      
+      setOrderTotals(totalsMap);
+    } catch (error) {
+      console.error('Failed to load order totals:', error);
+      // If loading totals fails, use the totals from the original orders
+      const fallbackTotals = new Map<number, number>();
+      orders.forEach(order => {
+        fallbackTotals.set(order.id, order.total || 0);
+      });
+      setOrderTotals(fallbackTotals);
+    } finally {
+      setLoadingTotals(false);
     }
   };
 
@@ -392,10 +628,73 @@ function PurchaseOrdersTab() {
       {/* Purchase Orders Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Purchase Orders</CardTitle>
-          <CardDescription>
-            {loading ? 'Loading purchase orders...' : `${filteredOrders.length} purchase order(s) found`}
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle>Purchase Orders</CardTitle>
+              <CardDescription>
+                {loading ? 'Loading purchase orders...' : `${filteredOrders.length} purchase order(s) found`}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {importSuccess && (
+                <div className="text-sm text-green-600 mr-2">
+                  {importSuccess}
+                </div>
+              )}
+              
+              {/* Import Button */}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleImport}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={importing}
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={importing}
+                  title="Import purchase orders from CSV/Excel file"
+                >
+                  <Upload className="h-4 w-4 mr-1" />
+                  {importing ? 'Importing...' : 'Import'}
+                </Button>
+              </div>
+              
+              {/* Download Template Button */}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleDownloadTemplate}
+                title="Download CSV template for importing purchase orders"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Template
+              </Button>
+              
+              {/* Export Button */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleExport('csv')}
+                disabled={exporting}
+                title="Export purchase orders to CSV file"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                {exporting ? 'Exporting...' : 'Export'}
+              </Button>
+              
+              {/* Add Purchase Order Button */}
+              <Button 
+                onClick={() => setIsAddOrderOpen(true)}
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Order
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {error && (
@@ -435,14 +734,26 @@ function PurchaseOrdersTab() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{formatCurrency(order.total)}</span>
-                    <Button variant="ghost" size="sm" title="View Details">
+                    <div className="text-right">
+                      {loadingTotals ? (
+                        <div className="text-sm text-muted-foreground">Loading...</div>
+                      ) : (
+                        <span className="font-semibold">{formatCurrency(orderTotals.get(order.id) || order.total || 0)}</span>
+                      )}
+                    </div>
+                    <Button variant="ghost" size="sm" title="View Details" onClick={() => handleViewOrder(order.id)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" title="Edit Order">
+                    <Button variant="ghost" size="sm" title="Edit Order" onClick={() => handleEditOrder(order.id)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" title="Delete Order">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      title="Delete Order" 
+                      onClick={() => handleDeleteOrder(order.id)}
+                      disabled={deletingOrderId === order.id}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -452,6 +763,399 @@ function PurchaseOrdersTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* View Purchase Order Details Sheet */}
+      <Sheet open={isViewOrderOpen} onOpenChange={setIsViewOrderOpen}>
+        <SheetContent className="sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle>
+              Purchase Order Details - PO-{selectedPurchaseOrder?.id?.toString().padStart(3, '0')}
+            </SheetTitle>
+            <SheetDescription>
+              View purchase order information and items
+            </SheetDescription>
+          </SheetHeader>
+          
+          {selectedPurchaseOrder && (
+            <div className="space-y-6 mt-6">
+              {/* Order Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Supplier</Label>
+                  <p className="text-sm text-muted-foreground">{selectedPurchaseOrder.supplierName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <div className="mt-1">
+                    <Badge variant={getStatusBadgeVariant(selectedPurchaseOrder.status)}>
+                      {selectedPurchaseOrder.status.toLowerCase()}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Order Date</Label>
+                  <p className="text-sm text-muted-foreground">{formatDate(selectedPurchaseOrder.date)}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Total Amount</Label>
+                  <p className="text-sm font-semibold">{formatCurrency(selectedPurchaseOrder.total || 0)}</p>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Items</Label>
+                <div className="space-y-2">
+                  {selectedPurchaseOrder.items && selectedPurchaseOrder.items.length > 0 ? (
+                    selectedPurchaseOrder.items.map((item, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">Item ID: {item.itemId}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Quantity: {item.quantity} | Unit Price: {formatCurrency(item.unitPrice)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">{formatCurrency(item.lineTotal || (item.quantity * item.unitPrice))}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No items found for this order.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Information Tabs */}
+              <div className="mt-6">
+                <Tabs defaultValue="notes" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="notes">Notes ({orderNotes.length})</TabsTrigger>
+                    <TabsTrigger value="attachments">Attachments ({orderAttachments.length})</TabsTrigger>
+                    <TabsTrigger value="audit">Audit Log ({orderAudit.length})</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="notes" className="space-y-2 mt-4">
+                    {loadingOrderDetails ? (
+                      <div className="text-sm text-muted-foreground">Loading notes...</div>
+                    ) : orderNotes.length > 0 ? (
+                      orderNotes.map((note) => (
+                        <div key={note.id} className="p-3 border rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm font-medium">{note.createdBy}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(note.createdDate).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-sm">{note.note}</p>
+                          {note.updatedDate && note.updatedDate !== note.createdDate && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Updated: {new Date(note.updatedDate).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No notes found for this order.</p>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="attachments" className="space-y-2 mt-4">
+                    {loadingOrderDetails ? (
+                      <div className="text-sm text-muted-foreground">Loading attachments...</div>
+                    ) : orderAttachments.length > 0 ? (
+                      orderAttachments.map((attachment) => (
+                        <div key={attachment.id} className="p-3 border rounded-lg flex justify-between items-center">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{attachment.fileName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(attachment.fileSize / 1024).toFixed(1)} KB • {attachment.contentType}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Uploaded by {attachment.uploadedBy} on {new Date(attachment.uploadedDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(attachment.fileUrl, '_blank')}
+                          >
+                            View
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No attachments found for this order.</p>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="audit" className="space-y-2 mt-4">
+                    {loadingOrderDetails ? (
+                      <div className="text-sm text-muted-foreground">Loading audit log...</div>
+                    ) : orderAudit.length > 0 ? (
+                      orderAudit.map((audit) => (
+                        <div key={audit.id} className="p-3 border rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm font-medium">{audit.action}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(audit.performedDate).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">By: {audit.performedBy}</p>
+                          {audit.description && (
+                            <p className="text-sm mt-1">{audit.description}</p>
+                          )}
+                          {audit.oldValue && audit.newValue && (
+                            <div className="mt-2 text-xs">
+                              <span className="text-red-600">Old: {audit.oldValue}</span>
+                              <span className="mx-2">→</span>
+                              <span className="text-green-600">New: {audit.newValue}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No audit log entries found for this order.</p>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Edit Purchase Order Sheet */}
+      <Sheet open={isEditOrderOpen} onOpenChange={setIsEditOrderOpen}>
+        <SheetContent className="w-[800px] sm:w-[800px]">
+          <SheetHeader>
+            <SheetTitle>Edit Purchase Order</SheetTitle>
+            <SheetDescription>
+              {editingPurchaseOrder && `Modify details for PO-${editingPurchaseOrder.id.toString().padStart(3, '0')}`}
+            </SheetDescription>
+          </SheetHeader>
+          {editingPurchaseOrder && <EditPurchaseOrderForm purchaseOrder={editingPurchaseOrder} onSave={loadPurchaseOrders} onClose={() => setIsEditOrderOpen(false)} />}
+        </SheetContent>
+      </Sheet>
+
+      {/* Add Purchase Order Sheet */}
+      <AddPurchaseOrderSheet 
+        isOpen={isAddOrderOpen} 
+        onOpenChange={setIsAddOrderOpen} 
+        onPurchaseOrderAdded={() => {
+          loadPurchaseOrders();
+          setImportSuccess(null); // Clear any previous import success message
+        }} 
+      />
+    </div>
+  );
+}
+
+// Edit Purchase Order Form Component
+function EditPurchaseOrderForm({ 
+  purchaseOrder, 
+  onSave, 
+  onClose 
+}: { 
+  purchaseOrder: PurchaseOrder; 
+  onSave: () => void; 
+  onClose: () => void; 
+}) {
+  const [formData, setFormData] = useState({
+    supplierName: purchaseOrder.supplierName || '',
+    date: purchaseOrder.date || '',
+    status: purchaseOrder.status || PurchaseOrderStatus.DRAFT
+  });
+  const [items, setItems] = useState<PurchaseOrderItem[]>(purchaseOrder.items || []);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      // Update purchase order details
+      await purchaseOrderService.updatePurchaseOrder(purchaseOrder.id, {
+        date: formData.date,
+        status: formData.status.toString()
+      });
+
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error('Failed to save purchase order:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleItemUpdate = async (itemId: number, updates: Partial<PurchaseOrderItem>) => {
+    try {
+      await purchaseOrderService.updatePurchaseOrderItem(purchaseOrder.id, itemId, updates as PurchaseOrderItem);
+      
+      // Update local state
+      setItems(items.map(item => 
+        item.itemId === itemId ? { ...item, ...updates } : item
+      ));
+    } catch (error) {
+      console.error('Failed to update item:', error);
+    }
+  };
+
+  const handleItemDelete = async (itemId: number) => {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    
+    try {
+      await purchaseOrderService.deletePurchaseOrderItem(purchaseOrder.id, itemId);
+      setItems(items.filter(item => item.itemId !== itemId));
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+    }
+  };
+
+  const handleQuantityUpdate = async (itemId: number, quantity: number) => {
+    try {
+      await purchaseOrderService.updateItemQuantity(purchaseOrder.id, itemId, quantity);
+      setItems(items.map(item => 
+        item.itemId === itemId ? { ...item, quantity } : item
+      ));
+    } catch (error) {
+      console.error('Failed to update quantity:', error);
+    }
+  };
+
+  const handleStatusUpdate = async (status: string) => {
+    try {
+      console.log('Updating status to:', status, 'for order:', purchaseOrder.id);
+      const updatedOrder = await purchaseOrderService.updatePurchaseOrderStatus(purchaseOrder.id, { status });
+      setFormData({ ...formData, status: status as PurchaseOrderStatus });
+      console.log('Status updated successfully:', updatedOrder);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      // Show user-friendly error
+      alert('Failed to update status. Please check the console for details.');
+    }
+  };
+
+  return (
+    <div className="space-y-6 mt-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="details">Order Details</TabsTrigger>
+          <TabsTrigger value="items">Items ({items.length})</TabsTrigger>
+          <TabsTrigger value="actions">Actions</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="details" className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label>Supplier Name</Label>
+              <Input
+                value={formData.supplierName}
+                disabled
+                placeholder="Supplier name (readonly)"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="date">Order Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(value) => handleStatusUpdate(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DRAFT">Draft</SelectItem>
+                  <SelectItem value="SENT">Sent</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="RECEIVED">Received</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="items" className="space-y-4">
+          <div className="space-y-2">
+            {items.map((item) => (
+              <div key={item.itemId} className="p-3 border rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="font-medium">Item ID: {item.itemId}</p>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <Label htmlFor={`quantity-${item.itemId}`}>Quantity</Label>
+                        <Input
+                          id={`quantity-${item.itemId}`}
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => handleQuantityUpdate(item.itemId, parseInt(e.target.value))}
+                          min="1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`unitPrice-${item.itemId}`}>Unit Price</Label>
+                        <Input
+                          id={`unitPrice-${item.itemId}`}
+                          type="number"
+                          value={item.unitPrice}
+                          onChange={(e) => handleItemUpdate(item.itemId, { unitPrice: parseFloat(e.target.value) })}
+                          step="0.01"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Total: ${(item.quantity * item.unitPrice).toFixed(2)}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleItemDelete(item.itemId)}
+                    title="Delete Item"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {items.length === 0 && (
+              <p className="text-center text-muted-foreground py-4">No items in this order</p>
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="actions" className="space-y-4">
+          <div className="space-y-2">
+            <Button 
+              onClick={() => purchaseOrderService.receivePurchaseOrder(purchaseOrder.id, {})}
+              className="w-full"
+            >
+              Mark as Received
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="flex gap-2 pt-4 border-t">
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+      </div>
     </div>
   );
 }
@@ -1113,7 +1817,9 @@ function SupplierDetailsSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const [supplierOrders, setSupplierOrders] = useState<PurchaseOrderSummary[]>([]);
+  const [orderTotals, setOrderTotals] = useState<Map<number, number>>(new Map());
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [loadingTotals, setLoadingTotals] = useState(false);
   const { isAuthenticated } = useAuth();
 
   // Load supplier-specific purchase orders when sheet opens
@@ -1130,10 +1836,47 @@ function SupplierDetailsSheet({
       // Filter orders for this supplier
       const filteredOrders = allOrders.filter(order => order.supplierId === supplierId);
       setSupplierOrders(filteredOrders);
+      
+      // Load totals for filtered orders
+      await loadOrderTotals(filteredOrders);
     } catch (error) {
       console.error('Failed to load supplier orders:', error);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const loadOrderTotals = async (orders: PurchaseOrderSummary[]) => {
+    try {
+      setLoadingTotals(true);
+      const totalsMap = new Map<number, number>();
+      
+      const totalPromises = orders.map(async (order) => {
+        try {
+          const totalResponse = await purchaseOrderService.getPurchaseOrderTotal(order.id);
+          return { id: order.id, total: totalResponse.total };
+        } catch (error) {
+          console.error(`Failed to fetch total for order ${order.id}:`, error);
+          return { id: order.id, total: order.total || 0 };
+        }
+      });
+      
+      const results = await Promise.all(totalPromises);
+      
+      results.forEach(({ id, total }) => {
+        totalsMap.set(id, total);
+      });
+      
+      setOrderTotals(totalsMap);
+    } catch (error) {
+      console.error('Failed to load order totals:', error);
+      const fallbackTotals = new Map<number, number>();
+      orders.forEach(order => {
+        fallbackTotals.set(order.id, order.total || 0);
+      });
+      setOrderTotals(fallbackTotals);
+    } finally {
+      setLoadingTotals(false);
     }
   };
 
@@ -1251,7 +1994,11 @@ function SupplierDetailsSheet({
                         <p className="text-xs text-muted-foreground">{formatDate(order.date)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium text-sm">{formatCurrency(order.total)}</p>
+                        {loadingTotals ? (
+                          <div className="text-xs text-muted-foreground">Loading...</div>
+                        ) : (
+                          <p className="font-medium text-sm">{formatCurrency(orderTotals.get(order.id) || order.total || 0)}</p>
+                        )}
                         <Badge variant={getStatusBadgeVariant(order.status)} className="text-xs">
                           {order.status.toLowerCase()}
                         </Badge>
@@ -1781,6 +2528,232 @@ function AddCategorySheet({
             >
               Cancel
             </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+// Add Purchase Order Sheet Component
+function AddPurchaseOrderSheet({ 
+  isOpen, 
+  onOpenChange, 
+  onPurchaseOrderAdded 
+}: { 
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onPurchaseOrderAdded: () => void;
+}) {
+  const [suppliers, setSuppliers] = useState<EnhancedSupplier[]>([]);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  // Load suppliers when sheet opens
+  useEffect(() => {
+    if (isOpen && isAuthenticated) {
+      loadSuppliers();
+    }
+  }, [isOpen, isAuthenticated]);
+
+  // Clear form when sheet closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedSupplierId('');
+      setSelectedDate(new Date().toISOString().split('T')[0]);
+      setError(null);
+      setSuccess(null);
+    }
+  }, [isOpen]);
+
+  const loadSuppliers = async () => {
+    try {
+      setLoadingSuppliers(true);
+      const suppliersData = await enhancedSupplierService.getAllSuppliersWithUserDetails();
+      setSuppliers(suppliersData);
+    } catch (error) {
+      console.error('Failed to load suppliers:', error);
+      setError('Failed to load suppliers. Please try again.');
+    } finally {
+      setLoadingSuppliers(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedSupplierId || !selectedDate) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError(null);
+      setSuccess(null);
+
+      const purchaseOrderRequest: PurchaseOrderCreateRequest = {
+        supplierId: parseInt(selectedSupplierId),
+        date: selectedDate,
+        status: 'DRAFT',
+        items: [] // Start with empty items, can be added later
+      };
+
+      await purchaseOrderService.createPurchaseOrder(purchaseOrderRequest);
+      
+      setSuccess('Purchase order created successfully!');
+      
+      // Call the callback after a short delay to show success message
+      setTimeout(() => {
+        onPurchaseOrderAdded();
+      }, 1500);
+
+    } catch (error) {
+      console.error('Failed to create purchase order:', error);
+      setError('Failed to create purchase order. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!submitting) {
+      onOpenChange(false);
+    }
+  };
+
+  const selectedSupplier = suppliers.find(s => s.supplierId === parseInt(selectedSupplierId));
+
+  return (
+    <Sheet open={isOpen} onOpenChange={handleClose}>
+      <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetHeader>
+          <SheetTitle>Create New Purchase Order</SheetTitle>
+          <SheetDescription>
+            Create a new purchase order for a supplier.
+          </SheetDescription>
+        </SheetHeader>
+        
+        <div className="mt-6 space-y-6">
+          {/* Authentication Warning */}
+          {!isAuthenticated && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription>
+                Please log in to create purchase orders.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">Success</AlertTitle>
+              <AlertDescription className="text-green-700">
+                {success}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Supplier Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="supplier">Supplier *</Label>
+            {loadingSuppliers ? (
+              <div className="text-sm text-muted-foreground">Loading suppliers...</div>
+            ) : (
+              <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId} disabled={!isAuthenticated}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((supplier) => (
+                    <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
+                      {supplier.userDetails?.fullName || supplier.userName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <p className="text-sm text-muted-foreground">
+              Choose the supplier for this purchase order.
+            </p>
+          </div>
+
+          {/* Date Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="date">Order Date *</Label>
+            <Input
+              id="date"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              disabled={!isAuthenticated}
+            />
+            <p className="text-sm text-muted-foreground">
+              Date when the purchase order is created.
+            </p>
+          </div>
+
+          {/* Preview */}
+          {selectedSupplier && selectedDate && (
+            <div className="p-4 bg-muted/30 rounded-lg space-y-3">
+              <h4 className="font-medium">Preview:</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{selectedSupplier.userDetails?.fullName || selectedSupplier.userName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{new Date(selectedDate).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  <Badge variant="secondary">Draft</Badge>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-4">
+            <Button 
+              onClick={handleSubmit} 
+              disabled={submitting || !selectedSupplierId || !selectedDate || !isAuthenticated}
+              className="flex-1"
+            >
+              {submitting ? 'Creating...' : !isAuthenticated ? 'Please Login' : 'Create Purchase Order'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleClose}
+              className="flex-1"
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+          </div>
+
+          {/* Note */}
+          <div className="text-sm text-muted-foreground p-3 bg-blue-50 rounded-lg">
+            <p><strong>Note:</strong> The purchase order will be created in draft status. You can add items and modify details after creation.</p>
           </div>
         </div>
       </SheetContent>

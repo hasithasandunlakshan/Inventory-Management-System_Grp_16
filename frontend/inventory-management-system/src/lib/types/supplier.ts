@@ -158,3 +158,77 @@ export interface PageResponse<T> {
   first: boolean;
   last: boolean;
 }
+
+// Purchase Order Notes
+export interface PurchaseOrderNote {
+  id: number;
+  poId: number;
+  note: string;
+  createdBy: string;
+  createdDate: string;
+  updatedDate?: string;
+}
+
+// Purchase Order Attachments
+export interface PurchaseOrderAttachment {
+  id: number;
+  poId: number;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  contentType: string;
+  uploadedBy: string;
+  uploadedDate: string;
+}
+
+// Purchase Order Audit Log
+export interface PurchaseOrderAudit {
+  id: number;
+  poId: number;
+  action: string;
+  oldValue?: string;
+  newValue?: string;
+  performedBy: string;
+  performedDate: string;
+  description?: string;
+}
+
+// Purchase Order Update Request
+export interface PurchaseOrderEditRequest {
+  supplierName?: string;
+  expectedDeliveryDate?: string;
+  notes?: string;
+  status?: PurchaseOrderStatus;
+}
+
+// Purchase Order Item Update Request
+export interface PurchaseOrderItemUpdateRequest {
+  productName?: string;
+  quantity?: number;
+  unitPrice?: number;
+}
+
+// Quantity Update Request
+export interface QuantityUpdateRequest {
+  quantity: number;
+}
+
+// Note Create Request
+export interface NoteCreateRequest {
+  content: string;
+}
+
+// Attachment Create Request
+export interface AttachmentCreateRequest {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  fileUrl: string;
+}
+
+// Import Report DTO to match backend response
+export interface ImportReportDTO {
+  created: number;
+  failed: number;
+  errors: string[];
+}
