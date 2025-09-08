@@ -1,12 +1,11 @@
-import { Product } from '../types/product';
+import { Product, ProductWithCategory, CreateProductRequest } from '../types/product';
 
-const API_BASE_URL = 'http://localhost:8083/api/products'; // Adjust this to your actual backend URL
+const API_BASE_URL = 'http://localhost:8083/api/products';
 
 export const productService = {
   async getAllProducts(): Promise<Product[]> {
     try {
       const response = await fetch(API_BASE_URL);
-       console.log(response);
       if (!response.ok) {
         throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
       }
@@ -17,7 +16,20 @@ export const productService = {
     }
   },
 
-  async getProductById(id: string): Promise<Product> {
+  async getAllProductsWithCategories(): Promise<ProductWithCategory[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/with-categories`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products with categories: ${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch products with categories from backend:', error);
+      throw new Error('Failed to fetch products with categories - backend not available');
+    }
+  },
+
+  async getProductById(id: number): Promise<Product> {
     try {
       const response = await fetch(`${API_BASE_URL}/${id}`);
       
@@ -30,11 +42,42 @@ export const productService = {
       return response.json();
     } catch (error) {
       console.error('Failed to fetch product from backend:', error);
-      throw error; // Re-throw the original error
+      throw error;
     }
   },
 
-  async addProduct(product: Omit<Product, 'id'>): Promise<Product> {
+  async getProductWithCategoryById(id: number): Promise<ProductWithCategory> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}/with-category`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Product not found');
+        }
+        throw new Error(`Failed to fetch product with category: ${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch product with category from backend:', error);
+      throw error;
+    }
+  },
+
+  async getProductsByCategory(categoryId: number): Promise<ProductWithCategory[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/category/${categoryId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products by category: ${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch products by category from backend:', error);
+      throw error;
+    }
+  },
+
+  async addProduct(product: CreateProductRequest): Promise<Product> {
     try {
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
@@ -69,9 +112,9 @@ export const productService = {
     }
   },
 
-  async updateProduct(product: Product): Promise<Product> {
+  async updateProduct(id: number, product: CreateProductRequest): Promise<Product> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${product.id}`, {
+      const response = await fetch(`${API_BASE_URL}/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

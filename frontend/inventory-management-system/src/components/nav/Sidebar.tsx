@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { getNavItemsForRole } from '@/lib/rbac/navItems';
 import { Menu, ChevronDown, ChevronRight, LogOut, User } from 'lucide-react';
@@ -20,45 +20,40 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const { user, logout } = useAuth();
 
+  // Redirect if already authenticated
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    const onToggleSidebar = () => setOpen(true);
-    
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('toggleSidebar', onToggleSidebar);
-    
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('toggleSidebar', onToggleSidebar);
-    };
-  }, []);
+    if (isAuthenticated) {
+      router.push(redirectTo);
+    }
+  }, [isAuthenticated, router, redirectTo]);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
 
-  const toggleExpanded = (label: string) => {
-    setExpandedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(label)) {
-        newSet.delete(label);
+    try {
+      const result = await login(loginData.username, loginData.password);
+      
+      if (result.success) {
+        setSuccess('Login successful! Redirecting...');
+        setTimeout(() => {
+          router.push(redirectTo);
+        }, 1000);
       } else {
-        newSet.add(label);
+        setError(result.error || 'Login failed');
       }
-      return newSet;
-    });
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const isActive = (item: any) => {
-    if (item.href) {
-      return pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
-    }
-    if (item.children) {
-      return item.children.some((child: any) => isActive(child));
-    }
-    return false;
+  const handleInputChange = (field: string, value: string) => {
+    setLoginData(prev => ({ ...prev, [field]: value }));
   };
 
   // Get navigation items based on user role
@@ -67,13 +62,13 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
   const filteredNavItems = navItems;
 
   return (
-    <>
-      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-60 md:flex-col md:border-r md:bg-background">
-        <div className="h-14 border-b px-4 flex items-center justify-between">
-          <div className="text-lg font-semibold tracking-tight">{title}</div>
-          <Button variant="ghost" size="icon" onClick={() => setOpen(true)} className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">Inventory Management</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Sign in to your account or create a new one
+          </p>
         </div>
         <nav className="flex-1 overflow-y-auto p-2">
           {filteredNavItems.map((item) => {
@@ -81,24 +76,49 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
             const itemIsActive = isActive(item);
             const isExpanded = expandedItems.has(label);
 
-            if (children) {
-              return (
-                <div key={label} className="space-y-1">
-                  <button
-                    onClick={() => toggleExpanded(label)}
-                    className={cn(
-                      'w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                      itemIsActive && 'bg-accent text-accent-foreground'
-                    )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center">Sign In</CardTitle>
+            <CardDescription className="text-center">
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={loginData.username}
+                  onChange={(e) => handleInputChange('username', e.target.value)}
+                  required
+                  placeholder="Enter your username"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={loginData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    required
+                    placeholder="Enter your password"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon className="h-4 w-4" />
-                      <span>{label}</span>
-                    </div>
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4" />
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <ChevronRight className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </button>
                   {isExpanded && (
@@ -122,8 +142,7 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                     </div>
                   )}
                 </div>
-              );
-            }
+              </div>
 
             return (
               <Link key={href} href={href!} className="block">
@@ -285,5 +304,3 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
     </>
   );
 }
-
-
