@@ -127,7 +127,7 @@ public class PaymentService {
                     order.getCustomerId(),
                     "ORDER_CONFIRMED",
                     order.getTotalAmount().doubleValue(),
-                    "Your order #" + order.getOrderId() + " has been confirmed and payment received successfully!"
+                    "🎉 Order #" + order.getOrderId() + " confirmed! Payment successful. Total: $" + order.getTotalAmount()
                 );
                 System.out.println("✅ Order notification sent to Kafka successfully!");
             } catch (Exception e) {
@@ -240,23 +240,6 @@ public class PaymentService {
         Order savedOrder = orderRepository.save(order);
         System.out.println("Order created successfully with " + savedOrder.getOrderItems().size() + " items");
         System.out.println("Order Status: " + savedOrder.getStatus());
-        
-        // Publish order creation notification
-        try {
-            eventPublisherService.publishOrderNotification(
-                savedOrder.getOrderId(),
-                savedOrder.getCustomerId(),
-                "ORDER_CREATED",
-                savedOrder.getTotalAmount().doubleValue(),
-                "Your order #" + savedOrder.getOrderId() + " has been created successfully! Total: $" + savedOrder.getTotalAmount()
-            );
-            System.out.println("✅ Order creation notification sent to Kafka successfully!");
-        } catch (Exception e) {
-            // Log the error but don't fail the order creation
-            System.err.println("❌ Failed to publish order creation notification: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
         System.out.println("------------------------------------");
         
         return savedOrder;

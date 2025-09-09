@@ -91,16 +91,74 @@ public class OrderService {
         if (orderOpt.isPresent()) {
             Order order = orderOpt.get();
             try {
-                com.Orderservice.Orderservice.enums.OrderStatus status = com.Orderservice.Orderservice.enums.OrderStatus.valueOf(statusStr.toUpperCase());
-                order.setStatus(status);
-                orderRepository.save(order);
+                com.Orderservice.Orderservice.enums.OrderStatus oldStatus = order.getStatus();
+                com.Orderservice.Orderservice.enums.OrderStatus newStatus = com.Orderservice.Orderservice.enums.OrderStatus.valueOf(statusStr.toUpperCase());
+                
+                // Update order status
+                order.setStatus(newStatus);
+                Order updatedOrder = orderRepository.save(order);
+                
+                System.out.println("=== ORDER STATUS UPDATE ===");
+                System.out.println("Order ID: " + orderId);
+                System.out.println("Customer ID: " + order.getCustomerId());
+                System.out.println("Status changed from " + oldStatus + " to " + newStatus);
+                
+                // Publish order status update notification
+                try {
+                    String notificationMessage = createStatusUpdateMessage(updatedOrder, oldStatus, newStatus);
+                    
+                    eventPublisherService.publishOrderNotification(
+                        "ORDER_STATUS_UPDATED",
+                        updatedOrder.getOrderId(),
+                        updatedOrder.getCustomerId(),
+                        newStatus.toString(),
+                        updatedOrder.getTotalAmount().doubleValue(),
+                        notificationMessage
+                    );
+                    
+                    System.out.println("✅ Order status update notification sent to Kafka successfully!");
+                    System.out.println("Message: " + notificationMessage);
+                    
+                } catch (Exception e) {
+                    // Log the error but don't fail the status update
+                    System.err.println("❌ Failed to publish order status update notification: " + e.getMessage());
+                    e.printStackTrace();
+                }
+                
+                System.out.println("===============================");
                 return true;
+                
             } catch (IllegalArgumentException e) {
-                // Invalid status string
+                System.err.println("Invalid status string: " + statusStr);
                 return false;
             }
         }
+        System.err.println("Order not found with ID: " + orderId);
         return false;
+    }
+    
+    /**
+     * Create a user-friendly message for status updates
+     */
+    private String createStatusUpdateMessage(Order order, com.Orderservice.Orderservice.enums.OrderStatus oldStatus, com.Orderservice.Orderservice.enums.OrderStatus newStatus) {
+        String orderNumber = "#" + order.getOrderId();
+        
+        switch (newStatus) {
+            case PENDING:
+                return "📋 Your order " + orderNumber + " is pending.";
+            case CONFIRMED:
+                return "✅ Your order " + orderNumber + " is confirmed!";
+            case PROCESSED:
+                return "🔄 Your order " + orderNumber + " is processed.";
+            case SHIPPED:
+                return "🚚 Your order " + orderNumber + " is shipped!";
+            case DELIVERED:
+                return "🎉 Your order " + orderNumber + " is delivered!";
+            case CANCELLED:
+                return "❌ Your order " + orderNumber + " is cancelled.";
+            default:
+                return "📦 Your order " + orderNumber + " is " + newStatus.toString().toLowerCase() + ".";
+        }
     }
     
     @Autowired
@@ -108,6 +166,9 @@ public class OrderService {
     
     @Autowired
     private ProductRepository productRepository;
+    
+    @Autowired
+    private EventPublisherService eventPublisherService;
     
     public AllOrdersResponse getAllOrders() {
         try {
