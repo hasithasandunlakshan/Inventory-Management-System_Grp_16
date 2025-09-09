@@ -18,10 +18,8 @@ import { purchaseOrderService } from "@/lib/services/purchaseOrderService";
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
 
-
 import { PurchaseOrderStatus } from "@/lib/types/supplier";
 import type { DeliveryLog, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderNote, PurchaseOrderAttachment, PurchaseOrderAudit, PurchaseOrderItem, PurchaseOrderCreateRequest, PurchaseOrder } from "@/lib/types/supplier";
-
 import { useAuth } from "@/contexts/AuthContext";
 
 
@@ -619,7 +617,7 @@ C,103,2025-08-20,DRAFT,7001,2,75.00`;
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <CardTitle>Purchase Orders</CardTitle>
+          <CardTitle>Purchase Orders</CardTitle>
               <CardDescription>
                 {loading ? 'Loading purchase orders...' : `${filteredOrders.length} purchase order(s) found`}
               </CardDescription>
@@ -705,24 +703,24 @@ C,103,2025-08-20,DRAFT,7001,2,75.00`;
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+          <div className="space-y-4">
               {filteredOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+              <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
                       <span className="font-medium">PO-{order.id.toString().padStart(3, '0')}</span>
                       <Badge variant={getStatusBadgeVariant(order.status)}>
                         {order.status.toLowerCase()}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {order.supplierName} • {order.itemCount || 0} items
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Date: {formatDate(order.date)}
-                    </p>
+                    </Badge>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">
+                      {order.supplierName} • {order.itemCount || 0} items
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                      Date: {formatDate(order.date)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
                     <div className="text-right">
                       {loadingTotals ? (
                         <div className="text-sm text-muted-foreground">Loading...</div>
@@ -731,11 +729,11 @@ C,103,2025-08-20,DRAFT,7001,2,75.00`;
                       )}
                     </div>
                     <Button variant="ghost" size="sm" title="View Details" onClick={() => handleViewOrder(order.id)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <Eye className="h-4 w-4" />
+                  </Button>
                     <Button variant="ghost" size="sm" title="Edit Order" onClick={() => handleEditOrder(order.id)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                    <Edit className="h-4 w-4" />
+                  </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -743,12 +741,12 @@ C,103,2025-08-20,DRAFT,7001,2,75.00`;
                       onClick={() => handleDeleteOrder(order.id)}
                       disabled={deletingOrderId === order.id}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
           )}
         </CardContent>
       </Card>
@@ -1224,7 +1222,7 @@ function SuppliersTab({ onViewSupplier, onAddSupplier, onAddCategory, refreshTri
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Suppliers Directory</CardTitle>
+          <CardTitle>Suppliers Directory</CardTitle>
             <CardDescription>
               {isAuthenticated 
                 ? "Manage supplier information and contacts" 
@@ -1260,26 +1258,26 @@ function SuppliersTab({ onViewSupplier, onAddSupplier, onAddCategory, refreshTri
               <div className="text-sm text-muted-foreground">
                 Showing sample data instead:
               </div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {sampleSuppliers.map((supplier) => (
-                  <Card key={supplier.id} className="hover:shadow-md transition-shadow">
-                    <CardHeader>
-                      <CardTitle className="text-lg">{supplier.name}</CardTitle>
-                      <CardDescription>{supplier.category}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {sampleSuppliers.map((supplier) => (
+              <Card key={supplier.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-lg">{supplier.name}</CardTitle>
+                  <CardDescription>{supplier.category}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
-                        <p className="text-sm">{supplier.email}</p>
+                  <p className="text-sm">{supplier.email}</p>
                       </div>
                       {supplier.phone && (
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-muted-foreground" />
-                          <p className="text-sm">{supplier.phone}</p>
+                  <p className="text-sm">{supplier.phone}</p>
                         </div>
                       )}
                       {supplier.address && (
-                        <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
                           <p className="text-sm text-muted-foreground">{supplier.address}</p>
                         </div>
@@ -1292,30 +1290,30 @@ function SuppliersTab({ onViewSupplier, onAddSupplier, onAddCategory, refreshTri
                       </div>
                       <div className="flex items-center gap-2 pt-2">
                         <Badge variant="default">
-                          {supplier.status}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {supplier.orders} orders
-                        </span>
-                      </div>
-                      <div className="flex gap-2 pt-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex-1"
-                          onClick={() => onViewSupplier(supplier)}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
-                        </Button>
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  ))}
+                      {supplier.status}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {supplier.orders} orders
+                    </span>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => onViewSupplier(supplier)}
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      View
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
                 </div>
               </div>
             ) : (
@@ -1373,7 +1371,7 @@ function SuppliersTab({ onViewSupplier, onAddSupplier, onAddCategory, refreshTri
                         <Edit className="mr-2 h-4 w-4" />
                         Edit
                       </Button>
-                    </div>
+          </div>
                   </CardContent>
                 </Card>
               ))}
@@ -1510,7 +1508,7 @@ function DeliveryLogsTab() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Delivery Tracking</CardTitle>
+          <CardTitle>Delivery Tracking</CardTitle>
               <CardDescription>Monitor recent shipment status and delivery progress</CardDescription>
             </div>
             <Sheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
@@ -1689,34 +1687,34 @@ function DeliveryLogsTab() {
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
+          <div className="space-y-4">
               {filteredLogs.map((log, index) => (
                 <div key={`${log.purchaseOrderId}-${log.receivedDate}-${index}`} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-sm transition-shadow">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
                       <span className="font-medium">PO #{log.purchaseOrderId}</span>
                       <Badge variant={getDeliveryStatusVariant(log.status || 'delivered')}>
                         {log.status || 'delivered'}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
                       Delivery Date: {new Date(log.receivedDate).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
+                  </p>
+                  <p className="text-sm text-muted-foreground">
                       Item ID: {log.itemId} • Quantity: {log.receivedQuantity}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" title="View Details">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" title="Track Delivery">
-                      <Truck className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  </p>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" title="View Details">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                    <Button variant="ghost" size="sm" title="Track Delivery">
+                    <Truck className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
           )}
         </CardContent>
       </Card>
@@ -1936,14 +1934,14 @@ function SupplierDetailsSheet({
                 <div className="text-sm text-muted-foreground">No orders found for this supplier.</div>
               ) : (
                 supplierOrders
-                  .slice(0, 3)
-                  .map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
+                .slice(0, 3)
+                .map((order) => (
+                  <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
                         <p className="font-medium text-sm">PO-{order.id.toString().padStart(3, '0')}</p>
                         <p className="text-xs text-muted-foreground">{formatDate(order.date)}</p>
-                      </div>
-                      <div className="text-right">
+                    </div>
+                    <div className="text-right">
                         {loadingTotals ? (
                           <div className="text-xs text-muted-foreground">Loading...</div>
                         ) : (
@@ -1951,9 +1949,9 @@ function SupplierDetailsSheet({
                         )}
                         <Badge variant={getStatusBadgeVariant(order.status)} className="text-xs">
                           {order.status.toLowerCase()}
-                        </Badge>
-                      </div>
+                      </Badge>
                     </div>
+                  </div>
                   ))
               )}
             </div>

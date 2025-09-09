@@ -3,15 +3,20 @@ package com.example.productservice.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.example.productservice.models.Product;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    List<Product> findByCategoryId(Long categoryId);
     
     // Find products with available stock greater than specified amount
     List<Product> findByAvailableStockGreaterThan(int minStock);
-    
-    // Find products by category with available stock greater than specified amount
-    List<Product> findByCategoryIdAndAvailableStockGreaterThan(Long categoryId, int minStock);
+
+    // Custom query to get products with their category information
+    @Query("SELECT p FROM Product p " +
+           "LEFT JOIN ProductCategory pc ON p.id = pc.productId " +
+           "LEFT JOIN Category c ON pc.categoryId = c.id " +
+           "WHERE (:categoryId IS NULL OR c.id = :categoryId)")
+    List<Product> findProductsWithCategories(@Param("categoryId") Long categoryId);
 }

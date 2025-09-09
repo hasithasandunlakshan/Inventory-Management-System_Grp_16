@@ -8,12 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
 import { Loader2, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
-
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,9 +23,7 @@ export default function LoginPage() {
     password: ''
   });
   
-
   const { login, isAuthenticated } = useAuth();
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/dashboard';
@@ -50,9 +46,8 @@ export default function LoginPage() {
       
       if (result.success) {
         setSuccess('Login successful! Redirecting...');
-        setTimeout(() => {
-          router.push(redirectTo);
-        }, 1000);
+        // Remove artificial delay and redirect immediately
+        router.push(redirectTo);
       } else {
         setError(result.error || 'Login failed');
       }
@@ -64,10 +59,8 @@ export default function LoginPage() {
     }
   };
 
-
   const handleInputChange = (field: string, value: string) => {
     setLoginData(prev => ({ ...prev, [field]: value }));
-
   };
 
   return (
@@ -82,7 +75,6 @@ export default function LoginPage() {
 
         <Card>
           <CardHeader>
-
             <CardTitle className="text-center">Sign In</CardTitle>
             <CardDescription className="text-center">
               Enter your credentials to access your account
@@ -137,16 +129,13 @@ export default function LoginPage() {
 
             {error && (
               <Alert variant="destructive" className="mt-4">
-
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             {success && (
-
               <Alert className="border-green-200 bg-green-50 text-green-800 mt-4">
-
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>{success}</AlertDescription>
               </Alert>
