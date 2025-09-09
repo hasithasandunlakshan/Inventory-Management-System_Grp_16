@@ -117,8 +117,25 @@ public class PaymentService {
             
             order.setStatus(OrderStatus.CONFIRMED);
             orderRepository.save(order);
-            
+
             System.out.println("Order confirmed successfully!");
+            
+            // Publish order notification event
+            try {
+                eventPublisherService.publishOrderNotification(
+                    order.getOrderId(),
+                    order.getCustomerId(),
+                    "ORDER_CONFIRMED",
+                    order.getTotalAmount().doubleValue(),
+                    "Your order #" + order.getOrderId() + " has been confirmed and payment received successfully!"
+                );
+                System.out.println("✅ Order notification sent to Kafka successfully!");
+            } catch (Exception e) {
+                // Log the error but don't fail the payment confirmation
+                System.err.println("❌ Failed to publish order notification event: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
             System.out.println("Publishing inventory reservation request to Kafka...");
             System.out.println("Items to reserve:");
             for (var item : order.getOrderItems()) {
@@ -126,7 +143,7 @@ public class PaymentService {
                                  ", Barcode: " + item.getBarcode() + 
                                  ", Quantity: " + item.getQuantity());
             }
-            
+
             // Publish inventory reservation event
             try {
                 eventPublisherService.publishInventoryReservationRequest(
@@ -139,9 +156,7 @@ public class PaymentService {
                 // Log the error but don't fail the payment confirmation
                 System.err.println("❌ Failed to publish inventory reservation event: " + e.getMessage());
                 e.printStackTrace();
-            }
-            
-            // Update invoice status
+            }            // Update invoice status
             Invoice invoice = invoiceRepository.findByOrder(order)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
             invoice.setPaymentStatus(PaymentStatus.PAID);
@@ -225,6 +240,23 @@ public class PaymentService {
         Order savedOrder = orderRepository.save(order);
         System.out.println("Order created successfully with " + savedOrder.getOrderItems().size() + " items");
         System.out.println("Order Status: " + savedOrder.getStatus());
+        
+        // Publish order creation notification
+        try {
+            eventPublisherService.publishOrderNotification(
+                savedOrder.getOrderId(),
+                savedOrder.getCustomerId(),
+                "ORDER_CREATED",
+                savedOrder.getTotalAmount().doubleValue(),
+                "Your order #" + savedOrder.getOrderId() + " has been created successfully! Total: $" + savedOrder.getTotalAmount()
+            );
+            System.out.println("✅ Order creation notification sent to Kafka successfully!");
+        } catch (Exception e) {
+            // Log the error but don't fail the order creation
+            System.err.println("❌ Failed to publish order creation notification: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
         System.out.println("------------------------------------");
         
         return savedOrder;
