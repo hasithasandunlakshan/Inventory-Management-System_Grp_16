@@ -46,9 +46,8 @@ export default function LoginPage() {
       
       if (result.success) {
         setSuccess('Login successful! Redirecting...');
-        setTimeout(() => {
-          router.push(redirectTo);
-        }, 1000);
+        // Remove artificial delay and redirect immediately
+        router.push(redirectTo);
       } else {
         setError(result.error || 'Login failed');
       }

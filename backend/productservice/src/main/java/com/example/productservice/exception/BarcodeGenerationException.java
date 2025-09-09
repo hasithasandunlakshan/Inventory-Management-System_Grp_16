@@ -10,3 +10,4 @@ public class BarcodeGenerationException extends RuntimeException {
     }
 }
 
+

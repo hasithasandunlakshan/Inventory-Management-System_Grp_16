@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { authService } from '../lib/services/authService';
 
 export interface AuthUser {
@@ -36,8 +35,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+export function AuthProvider({ children }: { readonly children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,19 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const currentUserData = await response.json();
               setUser(currentUserData);
               setIsAuthenticated(true);
-              console.log('✅ Authentication verified successfully');
             } else if (response.status === 401 || response.status === 403) {
               // Token is invalid or expired, clear it
-              console.log('❌ Token validation failed (401/403), clearing authentication');
               authService.logout();
               setUser(null);
               setIsAuthenticated(false);
-              
-              // Show a user-friendly message
-              console.log('🔐 Please log in to continue');
             } else {
               // Other error, assume token might still be valid but backend issue
-              console.warn('⚠️ Token validation request failed with status:', response.status);
+              console.warn('Token validation request failed with status:', response.status);
               // For safety, clear authentication on persistent failures
               authService.logout();
               setUser(null);
@@ -93,20 +86,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } catch (error) {
             // Network error - could be temporary, but clear auth for safety
-            console.error('❌ Token validation failed due to network error:', error);
-            console.log('🧹 Clearing authentication due to validation failure');
+            console.error('Token validation failed due to network error:', error);
             authService.logout();
             setUser(null);
             setIsAuthenticated(false);
           }
         } else {
           // No auth data found, ensure clean state
-          console.log('ℹ️ No authentication found, starting with clean state');
           setUser(null);
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('❌ Auth check failed:', error);
+        console.error('Auth check failed:', error);
         // Clear everything on unexpected errors
         authService.logout();
         setUser(null);
@@ -121,27 +112,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string) => {
     try {
-      console.log('🔐 AuthContext: Starting login process...');
       const response = await authService.login({ username, password });
       
-      console.log('🔐 AuthContext: Login response received:', {
-        success: response.success,
-        hasUser: !!response.user,
-        hasToken: !!response.token,
-        userRole: response.user?.role
-      });
-      
       if (response.success && response.user && response.token) {
-        console.log('🔐 AuthContext: Setting user data:', response.user);
         setUser(response.user);
         setIsAuthenticated(true);
         return { success: true };
       } else {
-        console.log('🔐 AuthContext: Login failed:', response.error);
         return { success: false, error: response.error || 'Login failed' };
       }
     } catch (error) {
-      console.error('🔐 AuthContext: Login error:', error);
+      console.error('Login error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Login failed' 
@@ -185,7 +166,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       if (authService.isAuthenticated()) {
-        const userData = authService.getUser();
         const token = authService.getToken();
         
         if (token) {

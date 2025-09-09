@@ -21,3 +21,4 @@ public interface ProductCategoryRepository extends JpaRepository<ProductCategory
     void deleteByCategoryId(Long categoryId);
 }
 
+

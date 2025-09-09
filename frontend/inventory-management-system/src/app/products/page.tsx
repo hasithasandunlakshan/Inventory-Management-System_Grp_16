@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { productService } from '@/lib/services/productService';
 import { categoryService } from '@/lib/services/categoryService';
-import { ProductWithCategory, Category } from '@/lib/types/product';
+import { Product, Category } from '@/lib/types/product';
 import ProductCard from '@/components/product/ProductCard';
 import LoadingScreen from '@/components/ui/loading';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<ProductWithCategory[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
