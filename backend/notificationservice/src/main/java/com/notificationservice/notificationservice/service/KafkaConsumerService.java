@@ -135,6 +135,13 @@ public class KafkaConsumerService {
                     );
                     break;
                     
+                case "ORDER_STATUS_UPDATED":
+                    // Use the message from the event (which contains the detailed status message)
+                    notificationMessage = orderEvent.getMessage() != null && !orderEvent.getMessage().isEmpty() 
+                        ? orderEvent.getMessage()
+                        : String.format("Your order #%d status has been updated.", orderEvent.getOrderId());
+                    break;
+                    
                 default:
                     notificationMessage = String.format(
                         "Update on your order #%d: %s", 

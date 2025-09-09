@@ -5,8 +5,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
 import com.Orderservice.Orderservice.dto.OrderDetailResponse;
@@ -107,6 +111,57 @@ public class OrderController {
             System.err.println("Error in getOrderById: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Update order status
+     * @param orderId The order ID
+     * @param requestBody Map containing the new status
+     * @return ResponseEntity with success/failure message
+     */
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<Map<String, Object>> updateOrderStatus(
+            @PathVariable Long orderId, 
+            @RequestBody Map<String, String> requestBody) {
+        try {
+            String newStatus = requestBody.get("status");
+            
+            if (newStatus == null || newStatus.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Status is required"
+                ));
+            }
+            
+            System.out.println("=== UPDATING ORDER STATUS ===");
+            System.out.println("Order ID: " + orderId);
+            System.out.println("New Status: " + newStatus);
+            
+            boolean updated = orderService.updateOrderStatus(orderId, newStatus);
+            
+            if (updated) {
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Order status updated successfully",
+                    "orderId", orderId,
+                    "newStatus", newStatus
+                ));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Failed to update order status. Please check order ID and status value."
+                ));
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error updating order status: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "Internal server error: " + e.getMessage()
+            ));
         }
     }
 }
