@@ -4,13 +4,14 @@ import { useRouter } from 'next/navigation'
 import { productUtils } from '@/lib/utils/productUtils'
 
 interface ProductCardProps {
-    id: string;
+    id: number;
     name: string;   
     description: string;
     price: number;
     stock: number;
     imageUrl: string;
     barcode: string;
+    categoryName?: string;
 }
 
 export default function ProductCard({ 
@@ -20,7 +21,8 @@ export default function ProductCard({
     price, 
     stock, 
     imageUrl,
-    barcode
+    barcode,
+    categoryName
 }: ProductCardProps) {
   const router = useRouter();
 
@@ -50,13 +52,18 @@ export default function ProductCard({
           </div>
         )}
         <h3 className="font-bold text-lg mb-2">{name}</h3>
+        {categoryName && (
+          <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full inline-block mb-2">
+            {categoryName}
+          </div>
+        )}
         <p className="text-gray-600 mb-2 line-clamp-2">{description}</p>
         <div className="text-sm text-gray-500 mb-2">
           <span className="font-semibold">Barcode:</span> {barcode} 
         </div>
         <div className="flex justify-between text-sm text-gray-500">
           <span>Price: ${price.toFixed(2)}</span>
-          <span>Qty: {stock}</span>
+          <span>Available: {stock}</span>
         </div>
       </div>
     </div>
