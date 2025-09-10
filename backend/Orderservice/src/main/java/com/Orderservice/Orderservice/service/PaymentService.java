@@ -27,7 +27,6 @@ import com.Orderservice.Orderservice.repository.ProductRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
-import com.Orderservice.Orderservice.service.EventPublisherService;
 
 
 @Service
