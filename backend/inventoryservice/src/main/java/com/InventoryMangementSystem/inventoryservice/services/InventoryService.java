@@ -74,10 +74,16 @@ public class InventoryService {
         }
 
         if (alertType != null) {
-            if (stockAlertRepository.existsByProductIdAndAlertTypeAndIsResolvedFalse(inventory.getProductId(),
-                    alertType)) {
-                return;
+            // Cooldown: skip creating identical alert if one exists recently or unresolved
+            StockAlert latest = stockAlertRepository
+                    .findTopByProductIdAndAlertTypeOrderByCreatedAtDesc(inventory.getProductId(), alertType);
+            if (latest != null) {
+                java.time.LocalDateTime cutoff = java.time.LocalDateTime.now().minusHours(1);
+                if (!latest.isResolved() || (latest.getCreatedAt() != null && latest.getCreatedAt().isAfter(cutoff))) {
+                    return;
+                }
             }
+
             StockAlert alert = StockAlert.builder()
                     .productId(inventory.getProductId())
                     .alertType(alertType)

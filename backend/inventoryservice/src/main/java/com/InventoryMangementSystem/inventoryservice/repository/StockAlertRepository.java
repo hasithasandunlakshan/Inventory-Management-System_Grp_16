@@ -11,4 +11,8 @@ public interface StockAlertRepository extends JpaRepository<StockAlert, Long> {
     List<StockAlert> findByIsResolvedFalse();
 
     boolean existsByProductIdAndAlertTypeAndIsResolvedFalse(Long productId, String alertType);
+
+    List<StockAlert> findAllByOrderByCreatedAtDesc();
+
+    StockAlert findTopByProductIdAndAlertTypeOrderByCreatedAtDesc(Long productId, String alertType);
 }

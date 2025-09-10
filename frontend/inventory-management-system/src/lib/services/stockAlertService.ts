@@ -20,6 +20,14 @@ export const stockAlertService = {
 		return res.json();
 	},
 
+	async listHistory(): Promise<StockAlert[]> {
+		const res = await fetch(`${API_BASE_URL}/history`, createAuthenticatedRequestOptions('GET'));
+		if (!res.ok) {
+			throw new Error('Failed to fetch stock alerts history');
+		}
+		return res.json();
+	},
+
 	async listByProduct(productId: number): Promise<StockAlert[]> {
 		const res = await fetch(`${API_BASE_URL}/product/${productId}`, createAuthenticatedRequestOptions('GET'));
 		if (!res.ok) {

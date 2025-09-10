@@ -11,6 +11,7 @@ import LogisticsPanel from "../../../components/dashboard/LogisticsPanel";
 import FinancePanel from "../../../components/dashboard/FinancePanel";
 import SuppliersPanel from "../../../components/dashboard/SuppliersPanel";
 import AlertsTasks from "../../../components/dashboard/AlertsTasks";
+import NotificationBell from "@/components/NotificationBell";
 import QuickActions from "../../../components/dashboard/QuickActions";
 
 export default function ManagerDashboard() {
@@ -19,8 +20,13 @@ export default function ManagerDashboard() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Manager Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Welcome back, {user?.fullName || user?.username}!</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Manager Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Welcome back, {user?.fullName || user?.username}!</p>
+          </div>
+          <NotificationBell />
+        </div>
       </div>
 
       <FiltersControls />

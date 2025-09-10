@@ -25,6 +25,11 @@ public class StockAlertController {
         return ResponseEntity.ok(stockAlertRepository.findByIsResolvedFalse());
     }
 
+    @GetMapping("/history")
+    public ResponseEntity<List<StockAlert>> listAllHistory() {
+        return ResponseEntity.ok(stockAlertRepository.findAllByOrderByCreatedAtDesc());
+    }
+
     @GetMapping("/product/{productId}")
     public ResponseEntity<List<StockAlert>> listByProduct(@PathVariable Long productId) {
         return ResponseEntity.ok(stockAlertRepository.findByProductId(productId));
