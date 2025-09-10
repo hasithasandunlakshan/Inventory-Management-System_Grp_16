@@ -69,6 +69,16 @@ public class JwtAuthenticationFilter implements GatewayFilter {
     }
 
     private boolean hasAccess(String path, String role) {
+        // Normalize role for case/spacing differences
+        final String roleUpper = role == null ? "" : role.toUpperCase();
+        final String roleCompact = roleUpper.replace(" ", "");
+
+        // Helper: flexible contains check
+        java.util.function.Predicate<String> has = r -> {
+            String rUpper = r.toUpperCase();
+            return roleUpper.contains(rUpper) || roleCompact.contains(rUpper.replace(" ", ""));
+        };
+
         // User service - allow all authenticated
         if (path.startsWith("/api/secure") || path.startsWith("/api/auth")) {
             return true;
@@ -76,28 +86,33 @@ public class JwtAuthenticationFilter implements GatewayFilter {
 
         // Admin endpoints - ADMIN or MANAGER only
         if (path.startsWith("/api/admin")) {
-            return role.contains("ADMIN") || role.contains("MANAGER");
+            return has.test("ADMIN") || has.test("MANAGER");
         }
 
         // Product service - MANAGER only
         if (path.startsWith("/api/products")) {
-            return role.contains("MANAGER");
+            return has.test("MANAGER");
         }
 
         // Order service - STOREKEEPER, MANAGER
         if (path.startsWith("/api/orders") || path.startsWith("/api/payments")) {
-            return role.contains("Store Keeper") || role.contains("MANAGER");
+            return has.test("STORE KEEPER") || has.test("STOREKEEPER") || has.test("MANAGER");
         }
 
         // Inventory service - STOREKEEPER, MANAGER
         if (path.startsWith("/api/inventory")) {
-            return role.contains("Store Keeper") || role.contains("MANAGER");
+            return has.test("STORE KEEPER") || has.test("STOREKEEPER") || has.test("MANAGER") || has.test("ADMIN");
+        }
+
+        // Stock alerts - STOREKEEPER, MANAGER, ADMIN
+        if (path.startsWith("/api/stock-alerts")) {
+            return has.test("STORE KEEPER") || has.test("STOREKEEPER") || has.test("MANAGER") || has.test("ADMIN");
         }
 
         // Supplier service - STOREKEEPER, MANAGER, ADMIN
         if (path.startsWith("/api/suppliers") || path.startsWith("/api/delivery-logs")
                 || path.startsWith("/api/purchase-orders") || path.startsWith("/api/supplier-categories")) {
-            return role.contains("Store Keeper") || role.contains("MANAGER") || role.contains("ADMIN");
+            return has.test("STORE KEEPER") || has.test("STOREKEEPER") || has.test("MANAGER") || has.test("ADMIN");
         }
 
         return false;
