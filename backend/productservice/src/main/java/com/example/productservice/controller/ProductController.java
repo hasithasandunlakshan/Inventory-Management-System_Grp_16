@@ -164,4 +164,161 @@ public class ProductController {
             ));
         }
     }
+
+    /**
+     * Get product by barcode (for barcode scanning)
+     * GET /api/products/barcode/{barcode}
+     */
+    @GetMapping("/barcode/{barcode}")
+    public ResponseEntity<Map<String, Object>> getProductByBarcode(@PathVariable String barcode) {
+        try {
+            System.out.println("=== BARCODE SCANNED ===");
+            System.out.println("Barcode: " + barcode);
+            
+            ProductWithCategoryDTO product = service.getProductByBarcode(barcode);
+            
+            if (product != null) {
+                System.out.println("Product found: " + product.getName());
+                System.out.println("Current Stock: " + product.getStock());
+                System.out.println("Available Stock: " + product.getAvailableStock());
+                
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "message", "Product found successfully",
+                        "product", Map.of(
+                            "productId", product.getProductId(),
+                            "name", product.getName(),
+                            "description", product.getDescription(),
+                            "imageUrl", product.getImageUrl(),
+                            "price", product.getPrice(),
+                            "currentStock", product.getStock(),
+                            "reservedStock", product.getReserved(),
+                            "availableStock", product.getAvailableStock(),
+                            "barcode", product.getBarcode(),
+                            "categoryName", product.getCategoryName()
+                        )
+                ));
+            } else {
+                System.out.println("Product not found for barcode: " + barcode);
+                return ResponseEntity.status(404).body(Map.of(
+                        "success", false,
+                        "message", "Product not found for barcode: " + barcode
+                ));
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error scanning barcode: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Error scanning barcode: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Restock product by adding quantity to both physical_stock and available_stock
+     * PUT /api/products/{productId}/restock/{quantity}
+     */
+    @PutMapping("/{productId}/restock/{quantity}")
+    public ResponseEntity<Map<String, Object>> restockProduct(
+            @PathVariable Long productId,
+            @PathVariable int quantity) {
+        try {
+            System.out.println("=== RESTOCKING PRODUCT ===");
+            System.out.println("Product ID: " + productId);
+            System.out.println("Quantity to add: " + quantity);
+            
+            Product restockedProduct = service.restockProduct(productId, quantity);
+            
+            System.out.println("Restock successful!");
+            System.out.println("New Physical Stock: " + restockedProduct.getStock());
+            System.out.println("New Available Stock: " + restockedProduct.getAvailableStock());
+            
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Product restocked successfully",
+                    "productId", productId,
+                    "quantityAdded", quantity,
+                    "newPhysicalStock", restockedProduct.getStock(),
+                    "newReservedStock", restockedProduct.getReserved(),
+                    "newAvailableStock", restockedProduct.getAvailableStock(),
+                    "productName", restockedProduct.getName(),
+                    "restockedAt", java.time.LocalDateTime.now().toString()
+            ));
+            
+        } catch (ProductNotFoundException e) {
+            System.err.println("Product not found: " + e.getMessage());
+            return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", "Product not found with ID: " + productId
+            ));
+        } catch (IllegalArgumentException e) {
+            System.err.println("Invalid quantity: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            System.err.println("Error restocking product: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Internal server error: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Restock product by barcode (convenience method)
+     * PUT /api/products/barcode/{barcode}/restock/{quantity}
+     */
+    @PutMapping("/barcode/{barcode}/restock/{quantity}")
+    public ResponseEntity<Map<String, Object>> restockProductByBarcode(
+            @PathVariable String barcode,
+            @PathVariable int quantity) {
+        try {
+            System.out.println("=== RESTOCKING BY BARCODE ===");
+            System.out.println("Barcode: " + barcode);
+            System.out.println("Quantity to add: " + quantity);
+            
+            Product restockedProduct = service.restockProductByBarcode(barcode, quantity);
+            
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Product restocked successfully using barcode",
+                    "barcode", barcode,
+                    "productId", restockedProduct.getId(),
+                    "productName", restockedProduct.getName(),
+                    "quantityAdded", quantity,
+                    "newPhysicalStock", restockedProduct.getStock(),
+                    "newReservedStock", restockedProduct.getReserved(),
+                    "newAvailableStock", restockedProduct.getAvailableStock(),
+                    "restockedAt", java.time.LocalDateTime.now().toString()
+            ));
+            
+        } catch (ProductNotFoundException e) {
+            System.err.println("Product not found: " + e.getMessage());
+            return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", "Product not found for barcode: " + barcode
+            ));
+        } catch (IllegalArgumentException e) {
+            System.err.println("Invalid quantity: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            System.err.println("Error restocking product: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Internal server error: " + e.getMessage()
+            ));
+        }
+    }
 }
