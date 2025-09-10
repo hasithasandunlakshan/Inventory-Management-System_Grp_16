@@ -406,4 +406,37 @@ public class OrderService {
                 .build();
         }
     }
+
+    /**
+     * Get count of orders by status
+     * @param statusStr The status string (e.g., "CONFIRMED", "PROCESSED")
+     * @return Count of orders with the specified status
+     */
+    public long getOrderCountByStatus(String statusStr) {
+        try {
+            System.out.println("=== COUNTING ORDERS BY STATUS ===");
+            System.out.println("Status: " + statusStr);
+            
+            // Convert string to OrderStatus enum
+            com.Orderservice.Orderservice.enums.OrderStatus status = 
+                com.Orderservice.Orderservice.enums.OrderStatus.valueOf(statusStr.toUpperCase());
+            
+            // Get orders by status
+            List<Order> orders = orderRepository.findByStatus(status);
+            
+            System.out.println("Found " + orders.size() + " orders with status: " + statusStr);
+            
+            return orders.size();
+            
+        } catch (IllegalArgumentException e) {
+            System.err.println("Invalid order status: " + statusStr);
+            System.err.println("Valid statuses: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED");
+            throw new IllegalArgumentException("Invalid order status: " + statusStr + 
+                ". Valid statuses are: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED");
+        } catch (Exception e) {
+            System.err.println("Error counting orders by status: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to count orders by status", e);
+        }
+    }
 }
