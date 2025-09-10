@@ -27,6 +27,7 @@ import com.Orderservice.Orderservice.repository.ProductRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.Orderservice.Orderservice.service.EventPublisherService;
 
 
 @Service
@@ -122,6 +123,7 @@ public class PaymentService {
             
             // Publish order notification event
             try {
+                // Send notification to the customer
                 eventPublisherService.publishOrderNotification(
                     order.getOrderId(),
                     order.getCustomerId(),
@@ -129,7 +131,23 @@ public class PaymentService {
                     order.getTotalAmount().doubleValue(),
                     "🎉 Order #" + order.getOrderId() + " confirmed! Payment successful. Total: $" + order.getTotalAmount()
                 );
-                System.out.println("✅ Order notification sent to Kafka successfully!");
+                
+                // Send notification to user ID 17 (admin/manager) about order confirmation
+                String adminConfirmationMessage = String.format(
+                    "Order #%d has been confirmed and paid! Customer ID: %d, Total: $%.2f", 
+                    order.getOrderId(),
+                    order.getCustomerId(),
+                    order.getTotalAmount()
+                );
+                eventPublisherService.publishOrderNotification(
+                    order.getOrderId(),
+                    17L, // Fixed user ID 17 for admin notifications
+                    "ORDER_CONFIRMED",
+                    order.getTotalAmount().doubleValue(),
+                    adminConfirmationMessage
+                );
+                
+                System.out.println("✅ Order confirmation notifications sent to Kafka successfully!");
             } catch (Exception e) {
                 // Log the error but don't fail the payment confirmation
                 System.err.println("❌ Failed to publish order notification event: " + e.getMessage());
@@ -240,6 +258,48 @@ public class PaymentService {
         Order savedOrder = orderRepository.save(order);
         System.out.println("Order created successfully with " + savedOrder.getOrderItems().size() + " items");
         System.out.println("Order Status: " + savedOrder.getStatus());
+        
+        // 🔔 PUBLISH ORDER NOTIFICATION EVENT
+        try {
+            System.out.println("📤 Publishing order notification event...");
+            
+            // Send notification to the customer who placed the order
+            String customerMessage = String.format(
+                "Your order #%d has been placed successfully! Total amount: $%.2f", 
+                savedOrder.getOrderId(), 
+                savedOrder.getTotalAmount()
+            );
+            eventPublisherService.publishOrderNotification(
+                savedOrder.getOrderId(),
+                savedOrder.getCustomerId(),
+                savedOrder.getStatus().toString(),
+                savedOrder.getTotalAmount().doubleValue(),
+                customerMessage
+            );
+            
+            // Send notification to user ID 17 (admin/manager) about new order arrival
+            String adminMessage = String.format(
+                "New order has arrived! Order ID: #%d from Customer ID: %d, Total: $%.2f", 
+                savedOrder.getOrderId(),
+                savedOrder.getCustomerId(),
+                savedOrder.getTotalAmount()
+            );
+            eventPublisherService.publishOrderNotification(
+                savedOrder.getOrderId(),
+                17L, // Fixed user ID 17 for admin notifications
+                savedOrder.getStatus().toString(),
+                savedOrder.getTotalAmount().doubleValue(),
+                adminMessage
+            );
+            
+            System.out.println("✅ Order notifications published successfully!");
+            
+        } catch (Exception e) {
+            System.err.println("❌ Failed to publish order notifications: " + e.getMessage());
+            // Don't fail the order creation if notification fails
+            e.printStackTrace();
+        }
+        
         System.out.println("------------------------------------");
         
         return savedOrder;
