@@ -31,6 +31,10 @@ supplier:
   service:
     url: http://localhost:8082
 
+inventory:
+  service:
+    url: http://localhost:8085
+
 # Logging
 logging:
   level:
