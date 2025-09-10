@@ -20,6 +20,11 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.getOrCreateByProductId(productId));
     }
 
+    @GetMapping
+    public ResponseEntity<java.util.List<Inventory>> listAll() {
+        return ResponseEntity.ok(inventoryService.listAll());
+    }
+
     @PostMapping("/{productId}/adjust")
     public ResponseEntity<Inventory> adjust(@PathVariable Long productId, @RequestParam int delta) {
         return ResponseEntity.ok(inventoryService.adjustStock(productId, delta));
@@ -28,5 +33,10 @@ public class InventoryController {
     @PostMapping("/{productId}/reserve")
     public ResponseEntity<Inventory> reserve(@PathVariable Long productId, @RequestParam int quantity) {
         return ResponseEntity.ok(inventoryService.reserveStock(productId, quantity));
+    }
+
+    @PostMapping("/{productId}/threshold")
+    public ResponseEntity<Inventory> updateThreshold(@PathVariable Long productId, @RequestParam int value) {
+        return ResponseEntity.ok(inventoryService.updateThreshold(productId, value));
     }
 }

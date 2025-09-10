@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class InventoryService {
@@ -98,5 +99,18 @@ public class InventoryService {
     @Transactional
     public void scanAndCreateAlerts() {
         inventoryRepository.findAll().forEach(this::maybeCreateAlert);
+    }
+
+    public List<Inventory> listAll() {
+        return inventoryRepository.findAll();
+    }
+
+    @Transactional
+    public Inventory updateThreshold(Long productId, int newThreshold) {
+        Inventory inventory = getOrCreateByProductId(productId);
+        inventory.setMinThreshold(Math.max(newThreshold, 0));
+        Inventory saved = inventoryRepository.save(inventory);
+        maybeCreateAlert(saved);
+        return saved;
     }
 }
