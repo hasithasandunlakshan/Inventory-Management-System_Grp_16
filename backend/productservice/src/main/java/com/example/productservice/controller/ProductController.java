@@ -1,6 +1,7 @@
 package com.example.productservice.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.productservice.dto.ProductDTO;
 import com.example.productservice.dto.ProductWithCategoryDTO;
-import com.example.productservice.dto.StockUpdateRequest;
+import com.example.productservice.exception.ProductNotFoundException;
 import com.example.productservice.models.Product;
 import com.example.productservice.service.ProductService;
 
@@ -55,7 +56,6 @@ public class ProductController {
     }
 
     // Pruned endpoints: available listings and stock reduction to keep API surface minimal
-
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductDTO dto) {
         try {
@@ -75,5 +75,58 @@ public class ProductController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * Reduce inventory by updating both physical_stock and reserved columns PUT
+     * /api/products/{productId}/reduce/{quantity}
+     */
+    @PutMapping("/{productId}/reduce/{quantity}")
+    public ResponseEntity<Map<String, Object>> reduceInventory(
+            @PathVariable Long productId,
+            @PathVariable int quantity) {
+        try {
+            System.out.println("=== REDUCING INVENTORY ENDPOINT HIT ===");
+            System.out.println("Product ID: " + productId);
+            System.out.println("Quantity to reduce: " + quantity);
+
+            Product updatedProduct = service.reduceInventory(productId, quantity);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Inventory reduced successfully",
+                    "productId", productId,
+                    "quantityReduced", quantity,
+                    "newPhysicalStock", updatedProduct.getStock(),
+                    "newReservedStock", updatedProduct.getReserved(),
+                    "newAvailableStock", updatedProduct.getAvailableStock()
+            ));
+
+        } catch (ProductNotFoundException e) {
+            System.err.println("Product not found: " + e.getMessage());
+            return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", "Product not found with ID: " + productId
+            ));
+        } catch (IllegalArgumentException e) {
+            System.err.println("Invalid argument: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            System.err.println("Unexpected error reducing inventory: " + e.getMessage());
+            e.printStackTrace();
+
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Internal server error: " + e.getMessage()
+            ));
+        }
+    }
+
+    @GetMapping("/test/{id}")
+    public ResponseEntity<Map<String, Object>> test(@PathVariable Long id) {
+        return ResponseEntity.ok(Map.of("success", true, "id", id, "message", "Test endpoint works"));
     }
 }

@@ -264,4 +264,68 @@ public class ProductService {
         
         return builder.build();
     }
+
+    /**
+     * Reduce inventory by updating both physical_stock and reserved columns
+     * @param productId The ID of the product
+     * @param quantity The quantity to reduce
+     * @return Updated product
+     * @throws ProductNotFoundException if product not found
+     * @throws IllegalArgumentException if quantity is invalid
+     */
+    @Transactional
+    public Product reduceInventory(Long productId, int quantity) {
+        System.out.println("=== REDUCING INVENTORY SERVICE ===");
+        System.out.println("Product ID: " + productId + ", Quantity: " + quantity);
+        
+        // Validate inputs
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than 0");
+        }
+        
+        // Find the product
+        Product product = repository.findById(productId)
+            .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
+        
+        System.out.println("Current stock - Physical: " + product.getStock() + 
+                          ", Reserved: " + product.getReserved() + 
+                          ", Available: " + product.getAvailableStock());
+        
+        // Check if we have enough physical stock
+        if (product.getStock() < quantity) {
+            throw new IllegalArgumentException(
+                "Insufficient physical stock. Available: " + product.getStock() + 
+                ", Requested: " + quantity
+            );
+        }
+        
+        // Check if we have enough reserved stock
+        if (product.getReserved() < quantity) {
+            throw new IllegalArgumentException(
+                "Insufficient reserved stock. Available: " + product.getReserved() + 
+                ", Requested: " + quantity
+            );
+        }
+
+        // Reduce physical stock (items leaving warehouse)
+        product.setStock(product.getStock() - quantity);
+        
+        // Reduce reserved stock by the same quantity
+        product.setReserved(product.getReserved() - quantity);
+
+        // Update available stock (physical_stock - reserved)
+        product.setAvailableStock(product.getStock() - product.getReserved());
+        
+        System.out.println("After reduction - Physical: " + product.getStock() + 
+                          ", Reserved: " + product.getReserved() + 
+                          ", Available: " + product.getAvailableStock());
+        
+        // Save the updated product
+        Product updatedProduct = repository.save(product);
+        
+        System.out.println("✅ Inventory reduced successfully for product: " + product.getName());
+        System.out.println("===============================");
+        
+        return updatedProduct;
+    }
 }
