@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -128,5 +127,41 @@ public class ProductController {
     @GetMapping("/test/{id}")
     public ResponseEntity<Map<String, Object>> test(@PathVariable Long id) {
         return ResponseEntity.ok(Map.of("success", true, "id", id, "message", "Test endpoint works"));
+    }
+
+    /**
+     * Get total available inventory cost
+     * Calculates the sum of (price * available_stock) for all products
+     * GET /api/products/inventory/cost
+     */
+    @GetMapping("/inventory/cost")
+    public ResponseEntity<Map<String, Object>> getAvailableInventoryCost() {
+        try {
+            System.out.println("=== CALCULATING AVAILABLE INVENTORY COST ===");
+            
+            double totalInventoryCost = service.calculateTotalAvailableInventoryCost();
+            int totalProductsWithStock = service.getProductsWithAvailableStock();
+            
+            System.out.println("Total Available Inventory Cost: $" + totalInventoryCost);
+            System.out.println("Products with available stock: " + totalProductsWithStock);
+            
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Available inventory cost calculated successfully",
+                    "totalAvailableInventoryCost", totalInventoryCost,
+                    "totalProductsWithStock", totalProductsWithStock,
+                    "currency", "USD",
+                    "calculatedAt", java.time.LocalDateTime.now().toString()
+            ));
+            
+        } catch (Exception e) {
+            System.err.println("Error calculating inventory cost: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Failed to calculate inventory cost: " + e.getMessage()
+            ));
+        }
     }
 }

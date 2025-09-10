@@ -328,4 +328,42 @@ public class ProductService {
         
         return updatedProduct;
     }
+
+    /**
+     * Calculate total available inventory cost
+     * Sum of (price * available_stock) for all products
+     * @return Total cost of available inventory
+     */
+    public double calculateTotalAvailableInventoryCost() {
+        System.out.println("=== CALCULATING TOTAL AVAILABLE INVENTORY COST ===");
+        
+        List<Product> allProducts = repository.findAll();
+        double totalCost = 0.0;
+        
+        for (Product product : allProducts) {
+            double productInventoryCost = product.getPrice() * product.getAvailableStock();
+            totalCost += productInventoryCost;
+            
+            System.out.println("Product: " + product.getName() + 
+                             " | Price: $" + product.getPrice() + 
+                             " | Available Stock: " + product.getAvailableStock() + 
+                             " | Inventory Cost: $" + productInventoryCost);
+        }
+        
+        System.out.println("Total Available Inventory Cost: $" + totalCost);
+        System.out.println("=======================================");
+        
+        return totalCost;
+    }
+
+    /**
+     * Get count of products that have available stock > 0
+     * @return Number of products with available stock
+     */
+    public int getProductsWithAvailableStock() {
+        List<Product> allProducts = repository.findAll();
+        return (int) allProducts.stream()
+                .filter(product -> product.getAvailableStock() > 0)
+                .count();
+    }
 }
