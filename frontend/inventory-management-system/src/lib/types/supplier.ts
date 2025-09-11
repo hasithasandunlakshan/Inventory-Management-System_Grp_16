@@ -117,8 +117,20 @@ export interface PurchaseOrderSearchParams {
   sort?: string;
 }
 
-// Stats/KPI summary
+// Stats/KPI summary - Updated to match actual backend response
 export interface StatsSummary {
+  count: number; // Total number of orders
+  total: number; // Total value of all orders
+  byStatusCounts: {
+    [key: string]: number; // Count of orders by status (RECEIVED, CANCELLED, DRAFT, SENT, etc.)
+  };
+  byStatusTotals: {
+    [key: string]: number; // Total value by status
+  };
+}
+
+// Legacy interface for backward compatibility - can be removed later
+export interface LegacyStatsSummary {
   totalOrders: number;
   totalValue: number;
   pendingOrders: number;
