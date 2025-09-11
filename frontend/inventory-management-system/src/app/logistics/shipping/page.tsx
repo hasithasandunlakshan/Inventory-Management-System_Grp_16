@@ -58,7 +58,7 @@ function kMeansCluster(points: number[][], k: number): number[] {
     }
   }
   
-  let assignments = new Array(points.length).fill(0);
+  const assignments: number[] = [];
   let changed = true;
   
   // Iterate until convergence

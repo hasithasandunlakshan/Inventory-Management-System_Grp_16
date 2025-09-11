@@ -140,6 +140,14 @@ public class PurchaseOrderExtrasService {
     }
 
     @Transactional(readOnly = true)
+    public PurchaseOrderAttachment getAttachmentForDownload(Long poId, Long attachmentId) {
+        ensurePOExists(poId);
+        return attachmentRepo.findByIdAndPurchaseOrder_PoId(attachmentId, poId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Attachment not found: " + attachmentId + " for purchase order: " + poId));
+    }
+
+    @Transactional(readOnly = true)
     public List<AttachmentDTO> listAttachments(Long poId) {
         ensurePOExists(poId);
         return attachmentRepo.findByPurchaseOrder_PoIdOrderByUploadedAtDesc(poId).stream()

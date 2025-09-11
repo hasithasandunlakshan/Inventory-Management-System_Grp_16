@@ -14,7 +14,6 @@ import {
   PurchaseOrderAttachment,
   PurchaseOrderAudit,
   NoteCreateRequest,
-  AttachmentCreateRequest,
   ImportReportDTO
 } from '../types/supplier';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
@@ -516,11 +515,25 @@ export const purchaseOrderService = {
   },
 
   /**
-   * Add attachment to purchase order
+   * Add attachment to purchase order - Updated for multipart file upload
    */
-  async addAttachment(poId: number, attachmentData: AttachmentCreateRequest): Promise<PurchaseOrderAttachment> {
+  async addAttachment(poId: number, file: File, uploadedBy?: string): Promise<PurchaseOrderAttachment> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${poId}/attachments`, createAuthenticatedRequestOptions('POST', attachmentData));
+      const formData = new FormData();
+      formData.append('file', file);
+      if (uploadedBy) {
+        formData.append('uploadedBy', uploadedBy);
+      }
+
+      const token = localStorage.getItem('inventory_auth_token');
+      const response = await fetch(`${API_BASE_URL}/${poId}/attachments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type header - let browser set it for FormData
+        },
+        body: formData
+      });
 
       if (!response.ok) {
         throw new Error('Failed to add attachment');
@@ -529,6 +542,45 @@ export const purchaseOrderService = {
       return response.json();
     } catch (error) {
       console.error('Failed to add attachment:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Download attachment from purchase order
+   */
+  async downloadAttachment(poId: number, attachmentId: number, filename: string): Promise<void> {
+    try {
+      const token = localStorage.getItem('inventory_auth_token');
+      const response = await fetch(`${API_BASE_URL}/${poId}/attachments/${attachmentId}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download attachment');
+      }
+
+      // Get the blob from response
+      const blob = await response.blob();
+      
+      // Create a temporary download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download attachment:', error);
       throw error;
     }
   },
