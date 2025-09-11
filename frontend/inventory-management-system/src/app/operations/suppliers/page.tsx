@@ -21,6 +21,7 @@ import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCre
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
+import { PurchaseOrderStats } from "@/components/PurchaseOrderStats";
 import { authDebug } from "@/lib/utils/authDebug";
 import { userService, UserInfo } from "@/lib/services/userService";
 
@@ -578,6 +579,9 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
 
   return (
     <div className="space-y-4">
+      {/* Purchase Order Statistics */}
+      <PurchaseOrderStats refreshTrigger={refreshTrigger} />
+      
       {/* Search and Filters */}
       <Card>
         <CardHeader>
