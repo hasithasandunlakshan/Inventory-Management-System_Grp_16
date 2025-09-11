@@ -996,6 +996,7 @@ function EditPurchaseOrderForm({
   onSave: () => void; 
   onClose: () => void; 
 }) {
+  const { user } = useAuth(); // Get current user information
   const [formData, setFormData] = useState({
     supplierName: purchaseOrder.supplierName || '',
     date: purchaseOrder.date || '',
@@ -1006,7 +1007,7 @@ function EditPurchaseOrderForm({
   const [attachments, setAttachments] = useState<PurchaseOrderAttachment[]>([]);
   const [newNote, setNewNote] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadedBy, setUploadedBy] = useState('Current User');
+  const [uploadedBy, setUploadedBy] = useState(user?.fullName || user?.username || 'Unknown User');
   const [saving, setSaving] = useState(false);
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
@@ -1036,7 +1037,20 @@ function EditPurchaseOrderForm({
       setLoadingNotes(false);
       setLoadingAttachments(false);
     }
-  }, [purchaseOrder.id]);
+  }, [purchaseOrder.id]); // Only depend on the ID, not the entire object
+
+  // Update uploadedBy when user information changes
+  useEffect(() => {
+    const newUploadedBy = user?.fullName || user?.username || 'Unknown User';
+    console.log('👤 User info changed:', {
+      user,
+      newUploadedBy,
+      fullName: user?.fullName,
+      username: user?.username,
+      id: user?.id
+    });
+    setUploadedBy(newUploadedBy);
+  }, [user]);
 
   // Load notes and attachments on component mount
   useEffect(() => {
@@ -1047,16 +1061,25 @@ function EditPurchaseOrderForm({
     try {
       setSaving(true);
       
-      // Update purchase order details
-      await purchaseOrderService.updatePurchaseOrder(purchaseOrder.id, {
+      const updateData = {
         date: formData.date,
         status: formData.status.toString()
+      };
+      
+      console.log('💾 Saving purchase order with data:', {
+        purchaseOrderId: purchaseOrder.id,
+        updateData,
+        originalFormData: formData
       });
+      
+      // Update purchase order details
+      await purchaseOrderService.updatePurchaseOrder(purchaseOrder.id, updateData);
 
       onSave();
       onClose();
     } catch (error) {
       console.error('Failed to save purchase order:', error);
+      alert('Failed to save purchase order. Please check the console for details.');
     } finally {
       setSaving(false);
     }
@@ -1114,12 +1137,23 @@ function EditPurchaseOrderForm({
     if (!newNote.trim()) return;
     
     try {
+      const userInfo = user?.fullName || user?.username || 'Unknown User';
+      console.log('🔍 Creating note with user info:', {
+        user,
+        userInfo,
+        fullName: user?.fullName,
+        username: user?.username
+      });
+      
       const noteRequest: NoteCreateRequest = {
         text: newNote.trim(),  // Backend expects 'text' property
-        createdBy: 'Current User' // TODO: Get from auth context
+        createdBy: userInfo
       };
       
+      console.log('📝 Sending note request:', noteRequest);
+      
       const createdNote = await purchaseOrderService.addNote(purchaseOrder.id, noteRequest);
+      console.log('✅ Note created successfully:', createdNote);
       setNotes([...notes, createdNote]);
       setNewNote('');
     } catch (error) {
@@ -1136,11 +1170,19 @@ function EditPurchaseOrderForm({
     
     try {
       setUploadingFile(true);
+      console.log('📎 Uploading attachment with user info:', {
+        user,
+        uploadedBy,
+        fullName: user?.fullName,
+        username: user?.username
+      });
+      
       const createdAttachment = await purchaseOrderService.addAttachment(
         purchaseOrder.id, 
         selectedFile, 
         uploadedBy
       );
+      console.log('✅ Attachment uploaded successfully:', createdAttachment);
       setAttachments([...attachments, createdAttachment]);
       setSelectedFile(null);
       // Reset file input
@@ -1387,10 +1429,14 @@ function EditPurchaseOrderForm({
                   <Label htmlFor="uploaded-by">Uploaded By</Label>
                   <Input
                     id="uploaded-by"
-                    placeholder="Enter your name (optional)"
+                    placeholder="Current user"
                     value={uploadedBy}
-                    onChange={(e) => setUploadedBy(e.target.value)}
+                    readOnly
+                    className="bg-muted"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Automatically filled with your user information
+                  </p>
                 </div>
               </div>
               <Button 
