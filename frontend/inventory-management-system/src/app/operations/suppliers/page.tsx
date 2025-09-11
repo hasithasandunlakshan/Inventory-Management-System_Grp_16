@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, DollarSign, Calendar, Phone, Mail, MapPin, User, Building2, Tag, X, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, DollarSign, Calendar, Phone, Mail, MapPin, User, Building2, Tag, X, CheckCircle, AlertCircle, FileText, Paperclip, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -17,7 +18,7 @@ import { purchaseOrderService } from "@/lib/services/purchaseOrderService";
 
 import { supplierCategoryService } from "@/lib/services/supplierCategoryService";
 import { enhancedSupplierService } from "@/lib/services/enhancedSupplierService";
-import { DeliveryLog, Supplier as BackendSupplier, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus, PurchaseOrderCreateRequest, PurchaseOrder, PurchaseOrderNote, PurchaseOrderAttachment, PurchaseOrderAudit, PurchaseOrderItem } from "@/lib/types/supplier";
+import { DeliveryLog, EnhancedSupplier, SupplierCreateRequest, SupplierCategory, SupplierCategoryCreateRequest, PurchaseOrderSummary, PurchaseOrderStatus, PurchaseOrderCreateRequest, PurchaseOrder, PurchaseOrderNote, PurchaseOrderAttachment, PurchaseOrderAudit, PurchaseOrderItem, NoteCreateRequest } from "@/lib/types/supplier";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
@@ -259,7 +260,6 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
   const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
   const [isEditOrderOpen, setIsEditOrderOpen] = useState(false);
   const [editingPurchaseOrder, setEditingPurchaseOrder] = useState<PurchaseOrder | null>(null);
-  const [savingOrder, setSavingOrder] = useState(false);
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
@@ -290,6 +290,18 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
       setError('Failed to load purchase order details');
     } finally {
       setLoadingOrderDetails(false);
+    }
+  };
+
+  // Handler to download attachment
+  const handleDownloadAttachment = async (attachmentId: number, filename: string) => {
+    if (!selectedPurchaseOrder) return;
+    
+    try {
+      await purchaseOrderService.downloadAttachment(selectedPurchaseOrder.id, attachmentId, filename);
+    } catch (error) {
+      console.error('Failed to download attachment:', error);
+      setError('Failed to download attachment');
     }
   };
 
@@ -444,27 +456,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
     }
   };
 
-  // Load purchase orders when component mounts or authentication changes
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadPurchaseOrders();
-    } else {
-      setPurchaseOrders([]);
-      setError(null);
-    }
-  }, [isAuthenticated, refreshTrigger]);
-
-  // Auto-clear import success message after 5 seconds
-  useEffect(() => {
-    if (importSuccess) {
-      const timer = setTimeout(() => {
-        setImportSuccess(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [importSuccess]);
-
-  const loadPurchaseOrders = async () => {
+  const loadPurchaseOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -479,7 +471,28 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Load purchase orders when component mounts or authentication changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadPurchaseOrders();
+    } else {
+      setPurchaseOrders([]);
+      setError(null);
+    }
+  }, [isAuthenticated, refreshTrigger, loadPurchaseOrders]);
+
+  // Auto-clear import success message after 5 seconds
+  useEffect(() => {
+    if (importSuccess) {
+      const timer = setTimeout(() => {
+        setImportSuccess(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [importSuccess]);
+
 
   const loadOrderTotals = async (orders: PurchaseOrderSummary[]) => {
     try {
@@ -790,7 +803,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
 
       {/* View Purchase Order Details Sheet */}
       <Sheet open={isViewOrderOpen} onOpenChange={setIsViewOrderOpen}>
-        <SheetContent className="sm:max-w-2xl">
+        <SheetContent className="sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
             <SheetTitle>
               Purchase Order Details - PO-{selectedPurchaseOrder?.id?.toString().padStart(3, '0')}
@@ -801,7 +814,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
           </SheetHeader>
           
           {selectedPurchaseOrder && (
-            <div className="space-y-6 mt-6">
+            <div className="space-y-6 mt-6 pb-6">
               {/* Order Information */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -859,85 +872,79 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                     <TabsTrigger value="audit">Audit Log ({orderAudit.length})</TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="notes" className="space-y-2 mt-4">
+                  <TabsContent value="notes" className="space-y-2 mt-4 max-h-80 overflow-y-auto">
                     {loadingOrderDetails ? (
                       <div className="text-sm text-muted-foreground">Loading notes...</div>
                     ) : orderNotes.length > 0 ? (
-                      orderNotes.map((note) => (
-                        <div key={note.id} className="p-3 border rounded-lg">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-sm font-medium">{note.createdBy}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(note.createdDate).toLocaleString()}
-                            </span>
+                      <div className="space-y-3">
+                        {orderNotes.map((note) => (
+                          <div key={note.id} className="p-3 border rounded-lg">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-sm font-medium">{note.createdBy}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(note.createdAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="text-sm">{note.text}</p>
                           </div>
-                          <p className="text-sm">{note.note}</p>
-                          {note.updatedDate && note.updatedDate !== note.createdDate && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Updated: {new Date(note.updatedDate).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">No notes found for this order.</p>
                     )}
                   </TabsContent>
                   
-                  <TabsContent value="attachments" className="space-y-2 mt-4">
+                  <TabsContent value="attachments" className="space-y-2 mt-4 max-h-80 overflow-y-auto">
                     {loadingOrderDetails ? (
                       <div className="text-sm text-muted-foreground">Loading attachments...</div>
                     ) : orderAttachments.length > 0 ? (
-                      orderAttachments.map((attachment) => (
-                        <div key={attachment.id} className="p-3 border rounded-lg flex justify-between items-center">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{attachment.fileName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {(attachment.fileSize / 1024).toFixed(1)} KB • {attachment.contentType}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Uploaded by {attachment.uploadedBy} on {new Date(attachment.uploadedDate).toLocaleDateString()}
-                            </p>
+                      <div className="space-y-3">
+                        {orderAttachments.map((attachment) => (
+                          <div key={attachment.id} className="p-3 border rounded-lg flex justify-between items-center">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{attachment.filename}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {(attachment.sizeBytes / 1024).toFixed(1)} KB • {attachment.contentType}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Uploaded by {attachment.uploadedBy} on {new Date(attachment.uploadedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadAttachment(attachment.id, attachment.filename)}
+                            >
+                              View
+                            </Button>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(attachment.fileUrl, '_blank')}
-                          >
-                            View
-                          </Button>
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">No attachments found for this order.</p>
                     )}
                   </TabsContent>
                   
-                  <TabsContent value="audit" className="space-y-2 mt-4">
+                  <TabsContent value="audit" className="space-y-2 mt-4 max-h-80 overflow-y-auto">
                     {loadingOrderDetails ? (
                       <div className="text-sm text-muted-foreground">Loading audit log...</div>
                     ) : orderAudit.length > 0 ? (
-                      orderAudit.map((audit) => (
-                        <div key={audit.id} className="p-3 border rounded-lg">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-sm font-medium">{audit.action}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(audit.performedDate).toLocaleString()}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">By: {audit.performedBy}</p>
-                          {audit.description && (
-                            <p className="text-sm mt-1">{audit.description}</p>
-                          )}
-                          {audit.oldValue && audit.newValue && (
-                            <div className="mt-2 text-xs">
-                              <span className="text-red-600">Old: {audit.oldValue}</span>
-                              <span className="mx-2">→</span>
-                              <span className="text-green-600">New: {audit.newValue}</span>
+                      <div className="space-y-3">
+                        {orderAudit.map((audit, i) => (
+                          <div key={i} className="p-3 border rounded-lg">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-sm font-medium">{audit.action}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(audit.createdAt).toLocaleString()}
+                              </span>
                             </div>
-                          )}
-                        </div>
-                      ))
+                            <p className="text-sm text-muted-foreground">By: {audit.createdBy}</p>
+                            {audit.details && (
+                              <p className="text-sm mt-1">{audit.details}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">No audit log entries found for this order.</p>
                     )}
@@ -951,14 +958,18 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
 
       {/* Edit Purchase Order Sheet */}
       <Sheet open={isEditOrderOpen} onOpenChange={setIsEditOrderOpen}>
-        <SheetContent className="w-[800px] sm:w-[800px]">
+        <SheetContent className="w-[800px] sm:w-[800px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Edit Purchase Order</SheetTitle>
             <SheetDescription>
               {editingPurchaseOrder && `Modify details for PO-${editingPurchaseOrder.id.toString().padStart(3, '0')}`}
             </SheetDescription>
           </SheetHeader>
-          {editingPurchaseOrder && <EditPurchaseOrderForm purchaseOrder={editingPurchaseOrder} onSave={loadPurchaseOrders} onClose={() => setIsEditOrderOpen(false)} />}
+          {editingPurchaseOrder && (
+            <div className="pb-6">
+              <EditPurchaseOrderForm purchaseOrder={editingPurchaseOrder} onSave={loadPurchaseOrders} onClose={() => setIsEditOrderOpen(false)} />
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
@@ -991,8 +1002,46 @@ function EditPurchaseOrderForm({
     status: purchaseOrder.status || PurchaseOrderStatus.DRAFT
   });
   const [items, setItems] = useState<PurchaseOrderItem[]>(purchaseOrder.items || []);
+  const [notes, setNotes] = useState<PurchaseOrderNote[]>([]);
+  const [attachments, setAttachments] = useState<PurchaseOrderAttachment[]>([]);
+  const [newNote, setNewNote] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedBy, setUploadedBy] = useState('Current User');
   const [saving, setSaving] = useState(false);
+  const [loadingNotes, setLoadingNotes] = useState(false);
+  const [loadingAttachments, setLoadingAttachments] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
+
+  const loadNotesAndAttachments = useCallback(async () => {
+    try {
+      setLoadingNotes(true);
+      setLoadingAttachments(true);
+      
+      console.log(`🔄 Loading notes and attachments for Purchase Order #${purchaseOrder.id}`);
+      
+      const [notesData, attachmentsData] = await Promise.all([
+        purchaseOrderService.getPurchaseOrderNotes(purchaseOrder.id),
+        purchaseOrderService.getPurchaseOrderAttachments(purchaseOrder.id)
+      ]);
+      
+      console.log(`📝 Loaded ${notesData.length} notes for PO #${purchaseOrder.id}:`, notesData);
+      console.log(`📎 Loaded ${attachmentsData.length} attachments for PO #${purchaseOrder.id}:`, attachmentsData);
+      
+      setNotes(notesData);
+      setAttachments(attachmentsData);
+    } catch (error) {
+      console.error('Failed to load notes and attachments:', error);
+    } finally {
+      setLoadingNotes(false);
+      setLoadingAttachments(false);
+    }
+  }, [purchaseOrder.id]);
+
+  // Load notes and attachments on component mount
+  useEffect(() => {
+    loadNotesAndAttachments();
+  }, [loadNotesAndAttachments]);
 
   const handleSave = async () => {
     try {
@@ -1061,12 +1110,86 @@ function EditPurchaseOrderForm({
     }
   };
 
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    
+    try {
+      const noteRequest: NoteCreateRequest = {
+        text: newNote.trim(),  // Backend expects 'text' property
+        createdBy: 'Current User' // TODO: Get from auth context
+      };
+      
+      const createdNote = await purchaseOrderService.addNote(purchaseOrder.id, noteRequest);
+      setNotes([...notes, createdNote]);
+      setNewNote('');
+    } catch (error) {
+      console.error('Failed to add note:', error);
+      alert('Failed to add note. Please try again.');
+    }
+  };
+
+  const handleAddAttachment = async () => {
+    if (!selectedFile) {
+      alert('Please select a file to upload');
+      return;
+    }
+    
+    try {
+      setUploadingFile(true);
+      const createdAttachment = await purchaseOrderService.addAttachment(
+        purchaseOrder.id, 
+        selectedFile, 
+        uploadedBy
+      );
+      setAttachments([...attachments, createdAttachment]);
+      setSelectedFile(null);
+      // Reset file input
+      const fileInput = document.getElementById('attachment-file') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+    } catch (error) {
+      console.error('Failed to upload attachment:', error);
+      alert('Failed to upload attachment. Please try again.');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleDownloadAttachment = async (attachmentId: number, filename: string) => {
+    try {
+      await purchaseOrderService.downloadAttachment(purchaseOrder.id, attachmentId, filename);
+    } catch (error) {
+      console.error('Failed to download attachment:', error);
+      alert('Failed to download attachment. Please try again.');
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setSelectedFile(file || null);
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   return (
     <div className="space-y-6 mt-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="details">Order Details</TabsTrigger>
           <TabsTrigger value="items">Items ({items.length})</TabsTrigger>
+          <TabsTrigger value="notes">
+            <FileText className="h-4 w-4 mr-1" />
+            Notes ({notes.length})
+          </TabsTrigger>
+          <TabsTrigger value="attachments">
+            <Paperclip className="h-4 w-4 mr-1" />
+            Attachments ({attachments.length})
+          </TabsTrigger>
           <TabsTrigger value="actions">Actions</TabsTrigger>
         </TabsList>
         
@@ -1158,6 +1281,204 @@ function EditPurchaseOrderForm({
               <p className="text-center text-muted-foreground py-4">No items in this order</p>
             )}
           </div>
+        </TabsContent>
+        
+        <TabsContent value="notes" className="space-y-4">
+          {/* Add New Note */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Add New Note
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="new-note">Note Content</Label>
+                <Textarea
+                  id="new-note"
+                  placeholder="Enter your note here..."
+                  value={newNote}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewNote(e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+              <Button onClick={handleAddNote} disabled={!newNote.trim()}>
+                <Send className="h-4 w-4 mr-2" />
+                Add Note
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Existing Notes */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Notes History</CardTitle>
+              <CardDescription>
+                {loadingNotes ? 'Loading notes...' : `${notes.length} note(s) found`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingNotes ? (
+                <div className="text-center py-4">
+                  <div className="animate-pulse">Loading notes...</div>
+                </div>
+              ) : notes.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                  <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No notes added yet</p>
+                  <p className="text-xs">Add your first note above</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                  {notes.map((note) => (
+                    <div key={note.id} className="p-4 border rounded-lg bg-gray-50">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm font-medium">Note #{note.id}</span>
+                          {note.createdBy && (
+                            <Badge variant="outline" className="text-xs">
+                              by {note.createdBy}
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(note.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap bg-white p-3 rounded border">
+                        {note.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="attachments" className="space-y-4">
+          {/* Add New Attachment */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                Add New Attachment
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="attachment-file">Select File</Label>
+                  <Input
+                    id="attachment-file"
+                    type="file"
+                    onChange={handleFileSelect}
+                    className="cursor-pointer"
+                  />
+                  {selectedFile && (
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="uploaded-by">Uploaded By</Label>
+                  <Input
+                    id="uploaded-by"
+                    placeholder="Enter your name (optional)"
+                    value={uploadedBy}
+                    onChange={(e) => setUploadedBy(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button 
+                onClick={handleAddAttachment} 
+                disabled={!selectedFile || uploadingFile}
+              >
+                <Paperclip className="h-4 w-4 mr-2" />
+                {uploadingFile ? 'Uploading...' : 'Upload Attachment'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Existing Attachments */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Attachments</CardTitle>
+              <CardDescription>
+                {loadingAttachments ? 'Loading attachments...' : `${attachments.length} attachment(s) found`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingAttachments ? (
+                <div className="text-center py-4">
+                  <div className="animate-pulse">Loading attachments...</div>
+                </div>
+              ) : attachments.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                  <Paperclip className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No attachments uploaded yet</p>
+                  <p className="text-xs">Upload your first file above</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                  {attachments.map((attachment) => (
+                    <div key={attachment.id} className="p-4 border rounded-lg bg-gray-50">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <Paperclip className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-sm">{attachment.filename}</h4>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span>#{attachment.id}</span>
+                                {attachment.uploadedBy && (
+                                  <>
+                                    <span>•</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      by {attachment.uploadedBy}
+                                    </Badge>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground bg-white p-3 rounded border">
+                            <div>
+                              <strong>Type:</strong> {attachment.contentType || 'Unknown'}
+                            </div>
+                            <div>
+                              <strong>Size:</strong> {formatFileSize(attachment.sizeBytes || 0)}
+                            </div>
+                            <div>
+                              <strong>Uploaded:</strong> {new Date(attachment.uploadedAt).toLocaleDateString()}
+                            </div>
+                            <div>
+                              <strong>Time:</strong> {new Date(attachment.uploadedAt).toLocaleTimeString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadAttachment(attachment.id, attachment.filename)}
+                            title="View/Download file"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
         
         <TabsContent value="actions" className="space-y-4">
@@ -1479,12 +1800,7 @@ function DeliveryLogsTab() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 
-  // Load delivery logs on component mount and when authentication changes
-  useEffect(() => {
-    loadDeliveryLogs();
-  }, [isAuthenticated]);
-
-  const loadDeliveryLogs = async () => {
+  const loadDeliveryLogs = useCallback(async () => {
     console.log('Loading delivery logs... isAuthenticated:', isAuthenticated);
     
     if (!isAuthenticated) {
@@ -1516,7 +1832,12 @@ function DeliveryLogsTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated]);
+
+  // Load delivery logs on component mount and when authentication changes
+  useEffect(() => {
+    loadDeliveryLogs();
+  }, [loadDeliveryLogs]);
 
   // Filter delivery logs by PO ID
   useEffect(() => {
@@ -1846,14 +2167,7 @@ function SupplierDetailsSheet({
   const [loadingTotals, setLoadingTotals] = useState(false);
   const { isAuthenticated } = useAuth();
 
-  // Load supplier-specific purchase orders when sheet opens
-  useEffect(() => {
-    if (supplier && isOpen && isAuthenticated) {
-      loadSupplierOrders(supplier.id);
-    }
-  }, [supplier, isOpen, isAuthenticated]);
-
-  const loadSupplierOrders = async (supplierId: number) => {
+  const loadSupplierOrders = useCallback(async (supplierId: number) => {
     try {
       setLoadingOrders(true);
       const allOrders = await purchaseOrderService.getAllPurchaseOrders();
@@ -1868,7 +2182,14 @@ function SupplierDetailsSheet({
     } finally {
       setLoadingOrders(false);
     }
-  };
+  }, []);
+
+  // Load supplier-specific purchase orders when sheet opens
+  useEffect(() => {
+    if (supplier && isOpen && isAuthenticated) {
+      loadSupplierOrders(supplier.id);
+    }
+  }, [supplier, isOpen, isAuthenticated, loadSupplierOrders]);
 
   const loadOrderTotals = async (orders: PurchaseOrderSummary[]) => {
     try {
@@ -2065,7 +2386,6 @@ function AddSupplierSheet({
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [userSearchTerm, setUserSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -2074,6 +2394,24 @@ function AddSupplierSheet({
 
   // Get authentication context
   const { isAuthenticated } = useAuth();
+
+  const loadCategories = useCallback(async () => {
+    if (!isAuthenticated) {
+      setError('Please log in to access supplier categories');
+      return;
+    }
+    
+    setLoadingCategories(true);
+    try {
+      const categoriesData = await supplierCategoryService.getAllCategories();
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      setError('Failed to load supplier categories. Please check if you are logged in and try again.');
+    } finally {
+      setLoadingCategories(false);
+    }
+  }, [isAuthenticated]);
 
   // Load categories when sheet opens
   useEffect(() => {
@@ -2092,25 +2430,7 @@ function AddSupplierSheet({
       }
       setSuccess(null);
     }
-  }, [isOpen, isAuthenticated]);
-
-  const loadCategories = async () => {
-    if (!isAuthenticated) {
-      setError('Please log in to access supplier categories');
-      return;
-    }
-    
-    setLoadingCategories(true);
-    try {
-      const categoriesData = await supplierCategoryService.getAllCategories();
-      setCategories(categoriesData);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-      setError('Failed to load supplier categories. Please check if you are logged in and try again.');
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
+  }, [isOpen, isAuthenticated, loadCategories]);
 
   // Search for users (now using real API)
   const searchUsers = async (searchTerm: string) => {
@@ -2171,7 +2491,7 @@ function AddSupplierSheet({
       console.log('👥 Loaded all users:', allUsers.length);
       setUsers(allUsers);
     } catch (error) {
-      console.log('👥 Cannot load all users (insufficient permissions), keeping empty');
+      console.log('👥 Cannot load all users (insufficient permissions), keeping empty', error);
       setUsers([]);
     }
   };
@@ -2572,7 +2892,6 @@ function AddPurchaseOrderSheet({
   const [suppliers, setSuppliers] = useState<EnhancedSupplier[]>([]);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -2847,12 +3166,6 @@ const sampleSuppliers: Supplier[] = [
     address: '789 Import Blvd, Los Angeles, CA 90210',
     contactPerson: 'Mike Chen'
   },
-];
-
-const sampleDeliveries = [
-  { id: 'DL-001', carrier: 'FedEx', trackingNumber: 'FX123456789', status: 'In-Transit', expectedDate: '2024-01-15' },
-  { id: 'DL-002', carrier: 'UPS', trackingNumber: 'UP987654321', status: 'Delivered', expectedDate: '2024-01-12' },
-  { id: 'DL-003', carrier: 'DHL', trackingNumber: 'DH456789123', status: 'Delayed', expectedDate: '2024-01-10' },
 ];
 
 

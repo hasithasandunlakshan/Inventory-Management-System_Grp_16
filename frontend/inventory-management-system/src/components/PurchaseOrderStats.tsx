@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShoppingCart, DollarSign, Clock, CheckCircle, AlertCircle, Calendar, Filter, X } from "lucide-react";
+import { ShoppingCart, DollarSign, Clock, CheckCircle, AlertCircle, Filter, X } from "lucide-react";
 import { purchaseOrderService } from "@/lib/services/purchaseOrderService";
 import { StatsSummary } from "@/lib/types/supplier";
 import { useAuth } from "@/contexts/AuthContext";
