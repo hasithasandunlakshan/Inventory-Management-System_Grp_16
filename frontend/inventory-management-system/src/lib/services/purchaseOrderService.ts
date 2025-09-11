@@ -571,7 +571,13 @@ export const purchaseOrderService = {
       }
 
       const result = await response.json();
-      console.log('✅ Import successful:', result);
+      console.log('✅ Import successful - Raw response:', JSON.stringify(result, null, 2));
+      console.log('✅ Import successful - Response structure:', {
+        created: result.created,
+        failed: result.failed,
+        errorsLength: result.errors?.length || 0,
+        errorsContent: result.errors
+      });
       
       // Return the backend ImportReportDTO directly
       return result;
