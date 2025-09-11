@@ -117,8 +117,40 @@ export interface PurchaseOrderSearchParams {
   sort?: string;
 }
 
-// Stats/KPI summary
+// Stats/KPI summary - Updated to match actual backend response
 export interface StatsSummary {
+  count: number; // Total number of orders
+  total: number; // Total value of all orders
+  byStatusCounts: {
+    [key: string]: number; // Count of orders by status (RECEIVED, CANCELLED, DRAFT, SENT, etc.)
+  };
+  byStatusTotals: {
+    [key: string]: number; // Total value by status
+  };
+}
+
+// Monthly statistics with percentage change
+export interface MonthlyStats {
+  currentMonth: {
+    count: number;
+    total: number;
+    year: number;
+    month: number;
+  };
+  previousMonth: {
+    count: number;
+    total: number;
+    year: number;
+    month: number;
+  };
+  percentageChange: {
+    count: number; // Percentage change in order count
+    total: number; // Percentage change in total value
+  };
+}
+
+// Legacy interface for backward compatibility - can be removed later
+export interface LegacyStatsSummary {
   totalOrders: number;
   totalValue: number;
   pendingOrders: number;
@@ -160,37 +192,30 @@ export interface PageResponse<T> {
 }
 
 // Purchase Order Notes
+// Purchase Order Notes - Updated to match backend NoteDTO
 export interface PurchaseOrderNote {
   id: number;
-  poId: number;
-  note: string;
+  text: string;  // Backend uses 'text', not 'note'
+  createdAt: string; // Backend uses 'createdAt', not 'createdDate'
   createdBy: string;
-  createdDate: string;
-  updatedDate?: string;
 }
 
-// Purchase Order Attachments
+// Purchase Order Attachments - Updated to match backend AttachmentDTO
 export interface PurchaseOrderAttachment {
   id: number;
-  poId: number;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  contentType: string;
-  uploadedBy: string;
-  uploadedDate: string;
+  filename: string; // Backend uses 'filename', not 'fileName'
+  contentType: string; // This matches
+  sizeBytes: number; // Backend uses 'sizeBytes', not 'fileSize'
+  uploadedAt: string; // Backend uses 'uploadedAt', not 'uploadedDate'
+  uploadedBy: string; // This matches
 }
 
 // Purchase Order Audit Log
 export interface PurchaseOrderAudit {
-  id: number;
-  poId: number;
   action: string;
-  oldValue?: string;
-  newValue?: string;
-  performedBy: string;
-  performedDate: string;
-  description?: string;
+  details: string;
+  createdAt: string; // ISO string from Instant
+  createdBy: string;
 }
 
 // Purchase Order Update Request
@@ -213,9 +238,10 @@ export interface QuantityUpdateRequest {
   quantity: number;
 }
 
-// Note Create Request
+// Note Create Request - Updated to match backend NoteCreateDTO
 export interface NoteCreateRequest {
-  content: string;
+  text: string;
+  createdBy?: string;
 }
 
 // Attachment Create Request
