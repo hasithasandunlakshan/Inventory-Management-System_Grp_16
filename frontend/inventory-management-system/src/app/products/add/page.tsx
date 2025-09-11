@@ -1,35 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { productService } from "@/lib/services/productService";
+import { categoryService } from "@/lib/services/categoryService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import axios from "axios";
-import { Product } from "@/lib/types/product";
+import { CreateProductRequest, Category } from "@/lib/types/product";
 
 export default function AddProductPage() {
   const router = useRouter();
-  const [newProduct, setNewProduct] = useState<Product>({
-    id: "",
+  const [newProduct, setNewProduct] = useState<CreateProductRequest>({
     name: "",
     description: "",
     price: 0,
     stock: 0,
     imageUrl: "",
-    barcode: "",
-    barcodeImageUrl: "",
+    categoryId: 0, // Will be set when user selects a category
   });
+  const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const fetchedCategories = await categoryService.getAllCategories();
+      setCategories(fetchedCategories);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      setError('Failed to load categories. Please refresh the page.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewProduct((prev) => ({
       ...prev,
       [name]: name === "price" || name === "stock" ? Number(value) : value,
+    }));
+  };
+
+  const handleCategoryChange = (categoryId: string) => {
+    setNewProduct((prev) => ({
+      ...prev,
+      categoryId: parseInt(categoryId),
     }));
   };
 
@@ -75,6 +100,11 @@ export default function AddProductPage() {
       setIsSubmitting(false);
       return;
     }
+    if (!newProduct.categoryId || newProduct.categoryId === 0) {
+      setError("Please select a category for the product");
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       await productService.addProduct(newProduct);
@@ -86,6 +116,23 @@ export default function AddProductPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-10 px-4">
+        <div className="max-w-2xl mx-auto">
+          <Card className="shadow-lg">
+            <CardContent className="flex items-center justify-center py-10">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-2 text-sm text-muted-foreground">Loading categories...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -126,6 +173,25 @@ export default function AddProductPage() {
                   onChange={handleInputChange}
                   placeholder="Enter product description"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Category *</Label>
+                <Select onValueChange={handleCategoryChange} value={newProduct.categoryId.toString()}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.categoryName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!newProduct.categoryId && (
+                  <p className="text-sm text-red-600">Please select a category</p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -56,7 +56,13 @@ public class ApiGatewayApplication {
                                 .route("inventory-service", r -> r
                                                 .path("/api/inventory/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("http://localhost:8083"))
+                                                .uri("http://localhost:8085"))
+
+                                // Stock Alerts (STOREKEEPER, MANAGER)
+                                .route("stock-alerts", r -> r
+                                                .path("/api/stock-alerts/**")
+                                                .filters(f -> f.filter(jwtAuthenticationFilter))
+                                                .uri("http://localhost:8085"))
 
                                 // Supplier Service (MANAGER, STOREKEEPER)
                                 .route("supplier-service", r -> r

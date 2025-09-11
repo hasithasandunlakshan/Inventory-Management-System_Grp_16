@@ -1,10 +1,14 @@
 package com.Orderservice.Orderservice.controller;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -107,6 +111,159 @@ public class OrderController {
             System.err.println("Error in getOrderById: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Update order status
+     * @param orderId The order ID
+     * @param requestBody Map containing the new status
+     * @return ResponseEntity with success/failure message
+     */
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<Map<String, Object>> updateOrderStatus(
+            @PathVariable Long orderId, 
+            @RequestBody Map<String, String> requestBody) {
+        try {
+            String newStatus = requestBody.get("status");
+            
+            if (newStatus == null || newStatus.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Status is required"
+                ));
+            }
+            
+            System.out.println("=== UPDATING ORDER STATUS ===");
+            System.out.println("Order ID: " + orderId);
+            System.out.println("New Status: " + newStatus);
+            
+            boolean updated = orderService.updateOrderStatus(orderId, newStatus);
+            
+            if (updated) {
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Order status updated successfully",
+                    "orderId", orderId,
+                    "newStatus", newStatus
+                ));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Failed to update order status. Please check order ID and status value."
+                ));
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error updating order status: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "Internal server error: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Get count of orders with CONFIRMED status
+     * @return ResponseEntity with confirmed orders count
+     */
+    @GetMapping("/count/confirmed")
+    public ResponseEntity<Map<String, Object>> getConfirmedOrdersCount() {
+        try {
+            System.out.println("=== GETTING CONFIRMED ORDERS COUNT ===");
+            
+            long confirmedCount = orderService.getOrderCountByStatus("CONFIRMED");
+            
+            System.out.println("Confirmed orders count: " + confirmedCount);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Confirmed orders count retrieved successfully",
+                "status", "CONFIRMED",
+                "count", confirmedCount,
+                "retrievedAt", java.time.LocalDateTime.now().toString()
+            ));
+            
+        } catch (Exception e) {
+            System.err.println("Error getting confirmed orders count: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "Internal server error: " + e.getMessage(),
+                "count", 0
+            ));
+        }
+    }
+
+    /**
+     * Get count of orders with PROCESSED status
+     * @return ResponseEntity with processed orders count
+     */
+    @GetMapping("/count/processed")
+    public ResponseEntity<Map<String, Object>> getProcessedOrdersCount() {
+        try {
+            System.out.println("=== GETTING PROCESSED ORDERS COUNT ===");
+            
+            long processedCount = orderService.getOrderCountByStatus("PROCESSED");
+            
+            System.out.println("Processed orders count: " + processedCount);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Processed orders count retrieved successfully",
+                "status", "PROCESSED",
+                "count", processedCount,
+                "retrievedAt", java.time.LocalDateTime.now().toString()
+            ));
+            
+        } catch (Exception e) {
+            System.err.println("Error getting processed orders count: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "Internal server error: " + e.getMessage(),
+                "count", 0
+            ));
+        }
+    }
+
+    /**
+     * Get count of orders by any status
+     * @param status The order status to count
+     * @return ResponseEntity with orders count for the specified status
+     */
+    @GetMapping("/count/status/{status}")
+    public ResponseEntity<Map<String, Object>> getOrdersCountByStatus(@PathVariable String status) {
+        try {
+            System.out.println("=== GETTING ORDERS COUNT BY STATUS ===");
+            System.out.println("Status: " + status.toUpperCase());
+            
+            long count = orderService.getOrderCountByStatus(status.toUpperCase());
+            
+            System.out.println("Orders count for status " + status.toUpperCase() + ": " + count);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Orders count retrieved successfully for status: " + status.toUpperCase(),
+                "status", status.toUpperCase(),
+                "count", count,
+                "retrievedAt", java.time.LocalDateTime.now().toString()
+            ));
+            
+        } catch (Exception e) {
+            System.err.println("Error getting orders count by status: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "Internal server error: " + e.getMessage(),
+                "status", status.toUpperCase(),
+                "count", 0
+            ));
         }
     }
 }

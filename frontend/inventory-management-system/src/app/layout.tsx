@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
-import Sidebar from "@/components/nav/Sidebar";
-import MobileMenuButton from "@/components/nav/MobileMenuButton";
+import { AuthProvider } from "@/contexts/AuthContext";
+import AppShell from "@/components/layout/AppShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,13 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="min-h-dvh overflow-hidden">
-          <Sidebar title="Inventory" />
-          <main className="md:ml-60 p-2 md:p-4 overflow-hidden">
-            <MobileMenuButton />
-            {children}
-          </main>
-        </div>
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>
