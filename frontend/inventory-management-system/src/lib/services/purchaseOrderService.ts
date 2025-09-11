@@ -116,16 +116,32 @@ export const purchaseOrderService = {
    */
   async updatePurchaseOrder(id: number, order: PurchaseOrderUpdateRequest): Promise<PurchaseOrder> {
     try {
+      console.log('🔄 Updating purchase order:', id, order);
       const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions('PUT', order));
 
       if (!response.ok) {
-        throw new Error('Failed to update purchase order');
+        const errorText = await response.text();
+        console.error('❌ Purchase order update failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText,
+          url: `${API_BASE_URL}/${id}`,
+          requestData: order
+        });
+        
+        if (response.status === 409) {
+          throw new Error(`Conflict: ${errorText || 'The purchase order was modified by another user. Please refresh and try again.'}`);
+        }
+        
+        throw new Error(`Failed to update purchase order: ${response.status} - ${errorText}`);
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log('✅ Purchase order updated successfully:', result);
+      return result;
     } catch (error) {
       console.error('Failed to update purchase order:', error);
-      throw new Error('Failed to update purchase order - backend not available');
+      throw error; // Re-throw the original error instead of wrapping it
     }
   },
 
