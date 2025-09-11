@@ -320,6 +320,12 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Debug: Read the file content to see what we're actually sending
+    const text = await file.text();
+    console.log('🔍 File content preview (first 200 chars):', JSON.stringify(text.substring(0, 200)));
+    console.log('🔍 File first line bytes:', Array.from(text.split('\n')[0]).map(c => c.charCodeAt(0)));
+    console.log('🔍 Expected header bytes:', Array.from('tempKey,supplierId,date,status,itemId,quantity,unitPrice').map(c => c.charCodeAt(0)));
+
     // Reset any previous success message
     setImportSuccess(null);
 
@@ -331,7 +337,8 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
         created: result.created,
         failed: result.failed,
         hasErrors: result.errors && result.errors.length > 0,
-        errors: result.errors
+        errors: result.errors,
+        errorCount: result.errors?.length || 0
       });
       
       // Show success if any orders were created
@@ -347,9 +354,20 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
       // Show errors/warnings if any
       if (result.errors && result.errors.length > 0) {
         console.warn('Import errors/warnings:', result.errors);
+        console.warn('🔍 Detailed error analysis:');
+        result.errors.forEach((error, index) => {
+          console.warn(`   Error ${index + 1}: "${error}"`);
+        });
+        
         const errorMessages = result.errors.slice(0, 3).join('; ');
         if (result.created === 0) {
-          setError(`Import failed: ${errorMessages}`);
+          // Check if it's a header format error and provide helpful message
+          const isHeaderError = result.errors.some(error => error.includes('Invalid header'));
+          if (isHeaderError) {
+            setError(`Import failed: CSV format error. The file has quotes around fields or extra columns. Please download the template file and save it as plain CSV without quotes. Expected format: tempKey,supplierId,date,status,itemId,quantity,unitPrice`);
+          } else {
+            setError(`Import failed: ${errorMessages}`);
+          }
         } else {
           // Just show as info if some succeeded
           console.info(`Import completed with warnings: ${errorMessages}`);
@@ -392,12 +410,14 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
 
   // Handler for downloading import template
   const handleDownloadTemplate = () => {
+    // Create template with exact format the backend expects (no quotes, no extra columns)
     const template = `tempKey,supplierId,date,status,itemId,quantity,unitPrice
-B,102,2025-08-19,SENT,7001,3,75.00
-B,102,2025-08-19,SENT,7002,5,120.00
-C,103,2025-08-20,DRAFT,7001,2,75.00`;
+B,1,2025-09-11,DRAFT,1001,5,25.00
+B,1,2025-09-11,DRAFT,1002,3,15.00
+C,2,2025-09-12,SENT,2001,10,30.00`;
     
-    const blob = new Blob([template], { type: 'text/csv' });
+    // Create blob with explicit UTF-8 encoding without BOM
+    const blob = new Blob([template], { type: 'text/plain;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -655,7 +675,7 @@ C,103,2025-08-20,DRAFT,7001,2,75.00`;
                   variant="outline" 
                   size="sm"
                   disabled={importing}
-                  title="Import purchase orders from CSV/Excel file"
+                  title="Import purchase orders from CSV file. Required format: tempKey,supplierId,date,status,itemId,quantity,unitPrice"
                 >
                   <Upload className="h-4 w-4 mr-1" />
                   {importing ? 'Importing...' : 'Import'}
