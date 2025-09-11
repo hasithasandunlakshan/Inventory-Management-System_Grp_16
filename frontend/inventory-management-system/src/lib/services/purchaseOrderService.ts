@@ -7,6 +7,7 @@ import {
   ReceiveRequest,
   PurchaseOrderSearchParams,
   StatsSummary,
+  MonthlyStats,
   PageResponse,
   PurchaseOrderItem,
   PurchaseOrderItemCreateRequest,
@@ -14,7 +15,6 @@ import {
   PurchaseOrderAttachment,
   PurchaseOrderAudit,
   NoteCreateRequest,
-  AttachmentCreateRequest,
   ImportReportDTO
 } from '../types/supplier';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
@@ -117,16 +117,32 @@ export const purchaseOrderService = {
    */
   async updatePurchaseOrder(id: number, order: PurchaseOrderUpdateRequest): Promise<PurchaseOrder> {
     try {
+      console.log('🔄 Updating purchase order:', id, order);
       const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions('PUT', order));
 
       if (!response.ok) {
-        throw new Error('Failed to update purchase order');
+        const errorText = await response.text();
+        console.error('❌ Purchase order update failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText,
+          url: `${API_BASE_URL}/${id}`,
+          requestData: order
+        });
+        
+        if (response.status === 409) {
+          throw new Error(`Conflict: ${errorText || 'The purchase order was modified by another user. Please refresh and try again.'}`);
+        }
+        
+        throw new Error(`Failed to update purchase order: ${response.status} - ${errorText}`);
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log('✅ Purchase order updated successfully:', result);
+      return result;
     } catch (error) {
       console.error('Failed to update purchase order:', error);
-      throw new Error('Failed to update purchase order - backend not available');
+      throw error; // Re-throw the original error instead of wrapping it
     }
   },
 
@@ -255,6 +271,111 @@ export const purchaseOrderService = {
     } catch (error) {
       console.error('Failed to fetch purchase order statistics:', error);
       throw new Error('Failed to fetch purchase order statistics - backend not available');
+    }
+  },
+
+  /**
+   * Get monthly purchase order statistics with percentage change
+   */
+  async getMonthlyStats(): Promise<MonthlyStats> {
+    try {
+      // Get current date
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1; // JavaScript months are 0-indexed
+      
+      // Calculate previous month
+      const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+      
+      // Get current month data (from 1st to today)
+      const currentMonthStart = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+      const currentMonthEnd = now.toISOString().split('T')[0]; // Today's date
+      
+      // Get previous month data (full month)
+      const prevMonthStart = `${prevYear}-${String(prevMonth).padStart(2, '0')}-01`;
+      // Calculate last day of previous month more accurately
+      const lastDayOfPrevMonth = new Date(prevYear, prevMonth, 0).getDate();
+      const prevMonthEnd = `${prevYear}-${String(prevMonth).padStart(2, '0')}-${String(lastDayOfPrevMonth).padStart(2, '0')}`;
+      
+      console.log('📊 Monthly stats date ranges:', {
+        currentMonth: { start: currentMonthStart, end: currentMonthEnd },
+        previousMonth: { start: prevMonthStart, end: prevMonthEnd }
+      });
+      
+      // Fetch both months' data in parallel
+      const [currentMonthStats, prevMonthStats] = await Promise.all([
+        this.getStatsSummary({
+          dateFrom: currentMonthStart,
+          dateTo: currentMonthEnd
+        }),
+        this.getStatsSummary({
+          dateFrom: prevMonthStart,
+          dateTo: prevMonthEnd
+        })
+      ]);
+      
+      console.log('📊 Monthly stats data:', {
+        current: currentMonthStats,
+        previous: prevMonthStats
+      });
+      
+      // Calculate percentage changes
+      const countChange = prevMonthStats.count > 0 
+        ? ((currentMonthStats.count - prevMonthStats.count) / prevMonthStats.count) * 100
+        : currentMonthStats.count > 0 ? 100 : 0;
+        
+      const totalChange = prevMonthStats.total > 0 
+        ? ((currentMonthStats.total - prevMonthStats.total) / prevMonthStats.total) * 100
+        : currentMonthStats.total > 0 ? 100 : 0;
+      
+      const result = {
+        currentMonth: {
+          count: currentMonthStats.count,
+          total: currentMonthStats.total,
+          year: currentYear,
+          month: currentMonth
+        },
+        previousMonth: {
+          count: prevMonthStats.count,
+          total: prevMonthStats.total,
+          year: prevYear,
+          month: prevMonth
+        },
+        percentageChange: {
+          count: Math.round(countChange * 10) / 10, // Round to 1 decimal place
+          total: Math.round(totalChange * 10) / 10
+        }
+      };
+      
+      console.log('📊 Final monthly stats result:', result);
+      return result;
+    } catch (error) {
+      console.error('Failed to fetch monthly statistics:', error);
+      // Return default values if API fails
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const prevYear = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
+      
+      return {
+        currentMonth: {
+          count: 0,
+          total: 0,
+          year: now.getFullYear(),
+          month: currentMonth
+        },
+        previousMonth: {
+          count: 0,
+          total: 0,
+          year: prevYear,
+          month: prevMonth
+        },
+        percentageChange: {
+          count: 0,
+          total: 0
+        }
+      };
     }
   },
 
@@ -516,11 +637,25 @@ export const purchaseOrderService = {
   },
 
   /**
-   * Add attachment to purchase order
+   * Add attachment to purchase order - Updated for multipart file upload
    */
-  async addAttachment(poId: number, attachmentData: AttachmentCreateRequest): Promise<PurchaseOrderAttachment> {
+  async addAttachment(poId: number, file: File, uploadedBy?: string): Promise<PurchaseOrderAttachment> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${poId}/attachments`, createAuthenticatedRequestOptions('POST', attachmentData));
+      const formData = new FormData();
+      formData.append('file', file);
+      if (uploadedBy) {
+        formData.append('uploadedBy', uploadedBy);
+      }
+
+      const token = localStorage.getItem('inventory_auth_token');
+      const response = await fetch(`${API_BASE_URL}/${poId}/attachments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type header - let browser set it for FormData
+        },
+        body: formData
+      });
 
       if (!response.ok) {
         throw new Error('Failed to add attachment');
@@ -529,6 +664,45 @@ export const purchaseOrderService = {
       return response.json();
     } catch (error) {
       console.error('Failed to add attachment:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Download attachment from purchase order
+   */
+  async downloadAttachment(poId: number, attachmentId: number, filename: string): Promise<void> {
+    try {
+      const token = localStorage.getItem('inventory_auth_token');
+      const response = await fetch(`${API_BASE_URL}/${poId}/attachments/${attachmentId}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download attachment');
+      }
+
+      // Get the blob from response
+      const blob = await response.blob();
+      
+      // Create a temporary download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download attachment:', error);
       throw error;
     }
   },
@@ -571,7 +745,13 @@ export const purchaseOrderService = {
       }
 
       const result = await response.json();
-      console.log('✅ Import successful:', result);
+      console.log('✅ Import successful - Raw response:', JSON.stringify(result, null, 2));
+      console.log('✅ Import successful - Response structure:', {
+        created: result.created,
+        failed: result.failed,
+        errorsLength: result.errors?.length || 0,
+        errorsContent: result.errors
+      });
       
       // Return the backend ImportReportDTO directly
       return result;
