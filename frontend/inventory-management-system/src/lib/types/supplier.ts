@@ -129,6 +129,26 @@ export interface StatsSummary {
   };
 }
 
+// Monthly statistics with percentage change
+export interface MonthlyStats {
+  currentMonth: {
+    count: number;
+    total: number;
+    year: number;
+    month: number;
+  };
+  previousMonth: {
+    count: number;
+    total: number;
+    year: number;
+    month: number;
+  };
+  percentageChange: {
+    count: number; // Percentage change in order count
+    total: number; // Percentage change in total value
+  };
+}
+
 // Legacy interface for backward compatibility - can be removed later
 export interface LegacyStatsSummary {
   totalOrders: number;

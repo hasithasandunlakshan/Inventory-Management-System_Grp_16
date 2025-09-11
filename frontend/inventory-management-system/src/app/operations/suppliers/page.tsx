@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, DollarSign, Calendar, Phone, Mail, MapPin, User, Building2, Tag, X, CheckCircle, AlertCircle, FileText, Paperclip, Send } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, Calendar, Phone, Mail, MapPin, User, Building2, Tag, X, CheckCircle, AlertCircle, FileText, Paperclip, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
 import { UserHeader } from "@/components/UserHeader";
 import { PurchaseOrderStats } from "@/components/PurchaseOrderStats";
+import { SupplierPageStats } from "@/components/SupplierPageStats";
 import { authDebug } from "@/lib/utils/authDebug";
 import { userService, UserInfo } from "@/lib/services/userService";
 
@@ -76,28 +77,6 @@ function SuppliersPageContent() {
           </p>
         </div>
         <div className="flex gap-2">
-          {/* Debug button for development */}
-          {process.env.NODE_ENV === 'development' && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => {
-                console.log('🔧 Authentication Debug Report:');
-                authDebug.debugAll();
-              }}
-              title="Debug Authentication (Dev Only)"
-            >
-              🔧 Debug Auth
-            </Button>
-          )}
-          <Button variant="outline" disabled={!isAuthenticated}>
-            <Upload className="mr-2 h-4 w-4" />
-            Import
-          </Button>
-          <Button variant="outline" disabled={!isAuthenticated}>
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
           <Button disabled={!isAuthenticated} onClick={() => setIsAddPurchaseOrderOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             New Purchase Order
@@ -106,56 +85,7 @@ function SuppliersPageContent() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">89</div>
-            <p className="text-xs text-muted-foreground">
-              12 due this week
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$45,231</div>
-            <p className="text-xs text-muted-foreground">
-              +15.3% from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Suppliers</CardTitle>
-            <Truck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">67</div>
-            <p className="text-xs text-muted-foreground">
-              3 new this month
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <SupplierPageStats refreshTrigger={refreshTrigger} />
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

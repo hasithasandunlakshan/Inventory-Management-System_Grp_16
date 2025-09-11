@@ -7,6 +7,7 @@ import {
   ReceiveRequest,
   PurchaseOrderSearchParams,
   StatsSummary,
+  MonthlyStats,
   PageResponse,
   PurchaseOrderItem,
   PurchaseOrderItemCreateRequest,
@@ -270,6 +271,111 @@ export const purchaseOrderService = {
     } catch (error) {
       console.error('Failed to fetch purchase order statistics:', error);
       throw new Error('Failed to fetch purchase order statistics - backend not available');
+    }
+  },
+
+  /**
+   * Get monthly purchase order statistics with percentage change
+   */
+  async getMonthlyStats(): Promise<MonthlyStats> {
+    try {
+      // Get current date
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1; // JavaScript months are 0-indexed
+      
+      // Calculate previous month
+      const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+      
+      // Get current month data (from 1st to today)
+      const currentMonthStart = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+      const currentMonthEnd = now.toISOString().split('T')[0]; // Today's date
+      
+      // Get previous month data (full month)
+      const prevMonthStart = `${prevYear}-${String(prevMonth).padStart(2, '0')}-01`;
+      // Calculate last day of previous month more accurately
+      const lastDayOfPrevMonth = new Date(prevYear, prevMonth, 0).getDate();
+      const prevMonthEnd = `${prevYear}-${String(prevMonth).padStart(2, '0')}-${String(lastDayOfPrevMonth).padStart(2, '0')}`;
+      
+      console.log('📊 Monthly stats date ranges:', {
+        currentMonth: { start: currentMonthStart, end: currentMonthEnd },
+        previousMonth: { start: prevMonthStart, end: prevMonthEnd }
+      });
+      
+      // Fetch both months' data in parallel
+      const [currentMonthStats, prevMonthStats] = await Promise.all([
+        this.getStatsSummary({
+          dateFrom: currentMonthStart,
+          dateTo: currentMonthEnd
+        }),
+        this.getStatsSummary({
+          dateFrom: prevMonthStart,
+          dateTo: prevMonthEnd
+        })
+      ]);
+      
+      console.log('📊 Monthly stats data:', {
+        current: currentMonthStats,
+        previous: prevMonthStats
+      });
+      
+      // Calculate percentage changes
+      const countChange = prevMonthStats.count > 0 
+        ? ((currentMonthStats.count - prevMonthStats.count) / prevMonthStats.count) * 100
+        : currentMonthStats.count > 0 ? 100 : 0;
+        
+      const totalChange = prevMonthStats.total > 0 
+        ? ((currentMonthStats.total - prevMonthStats.total) / prevMonthStats.total) * 100
+        : currentMonthStats.total > 0 ? 100 : 0;
+      
+      const result = {
+        currentMonth: {
+          count: currentMonthStats.count,
+          total: currentMonthStats.total,
+          year: currentYear,
+          month: currentMonth
+        },
+        previousMonth: {
+          count: prevMonthStats.count,
+          total: prevMonthStats.total,
+          year: prevYear,
+          month: prevMonth
+        },
+        percentageChange: {
+          count: Math.round(countChange * 10) / 10, // Round to 1 decimal place
+          total: Math.round(totalChange * 10) / 10
+        }
+      };
+      
+      console.log('📊 Final monthly stats result:', result);
+      return result;
+    } catch (error) {
+      console.error('Failed to fetch monthly statistics:', error);
+      // Return default values if API fails
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const prevYear = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
+      
+      return {
+        currentMonth: {
+          count: 0,
+          total: 0,
+          year: now.getFullYear(),
+          month: currentMonth
+        },
+        previousMonth: {
+          count: 0,
+          total: 0,
+          year: prevYear,
+          month: prevMonth
+        },
+        percentageChange: {
+          count: 0,
+          total: 0
+        }
+      };
     }
   },
 
