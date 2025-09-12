@@ -92,6 +92,37 @@ public class OrderController {
     }
     
     /**
+     * Get all orders with a specific status
+     * @param status The order status to filter by
+     * @return AllOrdersResponse containing orders with the specified status
+     */
+    @GetMapping("/all/{status}")
+    public ResponseEntity<AllOrdersResponse> getAllOrdersByStatus(@PathVariable String status) {
+        try {
+            AllOrdersResponse response = orderService.getAllOrdersByStatus(status);
+            
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error in getAllOrdersByStatus: " + e.getMessage());
+            e.printStackTrace();
+            
+            AllOrdersResponse errorResponse = AllOrdersResponse.builder()
+                .success(false)
+                .message("Internal server error: " + e.getMessage())
+                .orders(null)
+                .totalOrders(0)
+                .build();
+                
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+    
+    /**
      * Get a specific order by ID
      * @param orderId The order ID
      * @return OrderDetailResponse containing the order details
