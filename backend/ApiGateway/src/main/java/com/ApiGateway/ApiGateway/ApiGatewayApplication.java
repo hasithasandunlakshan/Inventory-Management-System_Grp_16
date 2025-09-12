@@ -51,6 +51,12 @@ public class ApiGatewayApplication {
                                                 .path("/api/orders/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("http://localhost:8084"))
+                                
+                                // Revenue Service (MANAGER) - New route for revenue endpoints
+                                .route("revenue-service", r -> r
+                                                .path("/api/revenue/**")
+                                                .filters(f -> f.filter(jwtAuthenticationFilter))
+                                                .uri("http://localhost:8084"))
 
                                 // Inventory Service (STOREKEEPER, MANAGER)
                                 .route("inventory-service", r -> r

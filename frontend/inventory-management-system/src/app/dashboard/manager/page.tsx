@@ -13,6 +13,8 @@ import SuppliersPanel from "../../../components/dashboard/SuppliersPanel";
 import AlertsTasks from "../../../components/dashboard/AlertsTasks";
 import NotificationBell from "@/components/NotificationBell";
 import QuickActions from "../../../components/dashboard/QuickActions";
+import MonthlyRevenueChart from "../../../components/dashboard/MonthlyRevenueChart";
+import RevenueDashboard from "../../../components/dashboard/RevenueDashboard";
 
 export default function ManagerDashboard() {
   const { user } = useAuth();
@@ -32,6 +34,9 @@ export default function ManagerDashboard() {
       <FiltersControls />
       <KpiCards />
 
+      {/* Revenue Dashboard - Full Width */}
+      <RevenueDashboard />
+
       <div className="grid gap-4 lg:grid-cols-3">
         <SalesOverview />
         <InventoryHealth />
@@ -47,15 +52,7 @@ export default function ManagerDashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         <AlertsTasks />
         <QuickActions />
-        <Card>
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-            <CardDescription>Keep short notes for the team</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">No notes yet.</div>
-          </CardContent>
-        </Card>
+        <MonthlyRevenueChart />
       </div>
     </div>
   );
