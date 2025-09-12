@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, Calendar, Phone, Mail, MapPin, User, Building2, Tag, X, CheckCircle, AlertCircle, FileText, Paperclip, Send } from "lucide-react";
-import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, Area, AreaChart } from 'recharts';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -2048,9 +2048,11 @@ function AnalyticsTab() {
   const [supplierCategoryData, setSupplierCategoryData] = useState<Array<{name: string, value: number, color: string}>>([]);
   const [supplierSpendData, setSupplierSpendData] = useState<Array<{supplierName: string, spend: number, orders: number}>>([]);
   const [poStatusData, setPoStatusData] = useState<Array<{name: string, value: number, color: string, percentage: number}>>([]);
+  const [monthlyTrendsData, setMonthlyTrendsData] = useState<Array<{month: string, orders: number, spend: number}>>([]);
   const [loadingCategory, setLoadingCategory] = useState(true);
   const [loadingSpend, setLoadingSpend] = useState(true);
   const [loadingPoStatus, setLoadingPoStatus] = useState(true);
+  const [loadingTrends, setLoadingTrends] = useState(true);
   const [timeRange, setTimeRange] = useState<string>('all');
   const [totalSuppliers, setTotalSuppliers] = useState(0);
   const [totalSpend, setTotalSpend] = useState(0);
@@ -2250,6 +2252,95 @@ function AnalyticsTab() {
     };
 
     loadPoStatusData();
+  }, [isAuthenticated, timeRange]);
+
+  // Load monthly trends data
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const loadMonthlyTrendsData = async () => {
+      try {
+        setLoadingTrends(true);
+        const allPurchaseOrders = await purchaseOrderService.getAllPurchaseOrders();
+        
+        // Filter purchase orders by time range (default to last 12 months for trends)
+        const trendsTimeRange = timeRange === 'all' ? '365' : timeRange;
+        let purchaseOrders = allPurchaseOrders;
+        if (trendsTimeRange !== 'all') {
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - parseInt(trendsTimeRange));
+          purchaseOrders = allPurchaseOrders.filter((order: PurchaseOrderSummary) => 
+            new Date(order.date) >= cutoffDate
+          );
+        }
+
+        // Group orders by month
+        const monthlyData = new Map<string, {orders: number, totalSpend: number}>();
+        
+        // Generate last 12 months for consistent chart
+        const months = [];
+        for (let i = 11; i >= 0; i--) {
+          const date = new Date();
+          date.setMonth(date.getMonth() - i);
+          const monthKey = date.toISOString().slice(0, 7); // YYYY-MM format
+          const monthName = date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short' 
+          });
+          months.push({ key: monthKey, name: monthName });
+          monthlyData.set(monthKey, { orders: 0, totalSpend: 0 });
+        }
+
+        // Process purchase orders and get their totals
+        const orderPromises = purchaseOrders.map(async (order: PurchaseOrderSummary) => {
+          const orderDate = new Date(order.date);
+          const monthKey = orderDate.toISOString().slice(0, 7);
+          
+          try {
+            const totalResponse = await purchaseOrderService.getPurchaseOrderTotal(order.id);
+            return {
+              monthKey,
+              total: totalResponse.total
+            };
+          } catch (error) {
+            console.error(`Failed to fetch total for order ${order.id}:`, error);
+            return {
+              monthKey,
+              total: order.total || 0
+            };
+          }
+        });
+
+        const orderResults = await Promise.all(orderPromises);
+
+        // Aggregate data by month
+        orderResults.forEach(({ monthKey, total }) => {
+          const existing = monthlyData.get(monthKey);
+          if (existing) {
+            existing.orders += 1;
+            existing.totalSpend += total;
+          }
+        });
+
+        // Convert to chart data
+        const chartData = months.map(({ key, name }) => {
+          const data = monthlyData.get(key) || { orders: 0, totalSpend: 0 };
+          return {
+            month: name,
+            orders: data.orders,
+            spend: Math.round(data.totalSpend)
+          };
+        });
+
+        setMonthlyTrendsData(chartData);
+      } catch (error) {
+        console.error('Failed to load monthly trends data:', error);
+      } finally {
+        setLoadingTrends(false);
+      }
+    };
+
+    loadMonthlyTrendsData();
   }, [isAuthenticated, timeRange]);
 
   return (
@@ -2481,6 +2572,151 @@ function AnalyticsTab() {
         </CardContent>
       </Card>
 
+      {/* Monthly Purchase Trends */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Purchase Trends</CardTitle>
+          <CardDescription>Purchase order volume and spending patterns over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingTrends ? (
+            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+              Loading trends data...
+            </div>
+          ) : monthlyTrendsData.length > 0 ? (
+            <div className="space-y-4">
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={monthlyTrendsData}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e4e7" />
+                    <XAxis 
+                      dataKey="month" 
+                      tick={{ fontSize: 12 }}
+                      axisLine={{ stroke: '#e0e4e7' }}
+                      tickLine={{ stroke: '#e0e4e7' }}
+                    />
+                    <YAxis 
+                      yAxisId="orders"
+                      orientation="left"
+                      tick={{ fontSize: 12 }}
+                      axisLine={{ stroke: '#e0e4e7' }}
+                      tickLine={{ stroke: '#e0e4e7' }}
+                      label={{ value: 'Number of Orders', angle: -90, position: 'insideLeft' }}
+                    />
+                    <YAxis 
+                      yAxisId="spend"
+                      orientation="right"
+                      tick={{ fontSize: 12 }}
+                      axisLine={{ stroke: '#e0e4e7' }}
+                      tickLine={{ stroke: '#e0e4e7' }}
+                      label={{ value: 'Total Spend ($)', angle: 90, position: 'insideRight' }}
+                    />
+                    <Tooltip 
+                      formatter={(value: any, name: any) => {
+                        if (name === 'orders') return [`${value} orders`, 'Orders Created'];
+                        if (name === 'spend') return [`$${value.toLocaleString()}`, 'Total Spend'];
+                        return [value, name];
+                      }}
+                      labelFormatter={(label) => `Month: ${label}`}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e0e4e7',
+                        borderRadius: '6px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Legend />
+                    <Line 
+                      yAxisId="orders"
+                      type="monotone" 
+                      dataKey="orders" 
+                      stroke="#3b82f6" 
+                      strokeWidth={3}
+                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                      name="Orders Created"
+                    />
+                    <Line 
+                      yAxisId="spend"
+                      type="monotone" 
+                      dataKey="spend" 
+                      stroke="#10b981" 
+                      strokeWidth={3}
+                      dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
+                      name="Total Spend ($)"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* Trend insights */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {monthlyTrendsData.reduce((sum, month) => sum + month.orders, 0)}
+                  </div>
+                  <div className="text-sm text-blue-700">Total Orders (12 months)</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    ${monthlyTrendsData.reduce((sum, month) => sum + month.spend, 0).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-green-700">Total Spend (12 months)</div>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {monthlyTrendsData.length > 0 
+                      ? Math.round(monthlyTrendsData.reduce((sum, month) => sum + month.orders, 0) / monthlyTrendsData.length)
+                      : 0
+                    }
+                  </div>
+                  <div className="text-sm text-purple-700">Avg Orders/Month</div>
+                </div>
+              </div>
+
+              {/* Seasonality insights */}
+              <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Trend Analysis:</span>
+                  <span>
+                    {(() => {
+                      if (monthlyTrendsData.length < 2) return <span className="text-gray-600">Insufficient data</span>;
+                      
+                      const recentMonths = monthlyTrendsData.slice(-3);
+                      const earlierMonths = monthlyTrendsData.slice(-6, -3);
+                      
+                      const recentAvg = recentMonths.reduce((sum, month) => sum + month.orders, 0) / recentMonths.length;
+                      const earlierAvg = earlierMonths.reduce((sum, month) => sum + month.orders, 0) / earlierMonths.length;
+                      
+                      const trend = recentAvg - earlierAvg;
+                      
+                      if (trend > 2) return <span className="text-green-600 font-medium">📈 Strong Growth</span>;
+                      if (trend > 0.5) return <span className="text-blue-600 font-medium">📊 Growing</span>;
+                      if (trend > -0.5) return <span className="text-gray-600 font-medium">➡️ Stable</span>;
+                      if (trend > -2) return <span className="text-orange-600 font-medium">📉 Declining</span>;
+                      return <span className="text-red-600 font-medium">⚠️ Significant Decline</span>;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+              No monthly trends data available
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Spend by Supplier */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -2557,27 +2793,27 @@ function AnalyticsTab() {
         </CardContent>
       </Card>
 
-      {/* Original Charts for reference */}
+      {/* Additional Analytics */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Order Trends</CardTitle>
-            <CardDescription>Monthly purchase order volume</CardDescription>
+            <CardTitle>Supplier Performance</CardTitle>
+            <CardDescription>On-time delivery rates and reliability metrics</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-              Chart placeholder - Order trends over time
+              Chart placeholder - Coming soon: Supplier performance metrics
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Supplier Performance</CardTitle>
-            <CardDescription>On-time delivery rates by supplier</CardDescription>
+            <CardTitle>Cost Analysis</CardTitle>
+            <CardDescription>Price trends and cost optimization opportunities</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-              Chart placeholder - Supplier performance metrics
+              Chart placeholder - Coming soon: Cost analysis and trends
             </div>
           </CardContent>
         </Card>
