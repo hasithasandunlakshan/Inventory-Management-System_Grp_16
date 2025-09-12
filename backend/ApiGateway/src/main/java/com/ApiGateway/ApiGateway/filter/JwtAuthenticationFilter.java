@@ -55,12 +55,13 @@ public class JwtAuthenticationFilter implements GatewayFilter {
             String role = jwtUtil.extractRole(token);
             String email = jwtUtil.extractEmail(token);
 
-            System.out.println("🔍 JWT Filter - Token valid, userId: " + userId + ", username: " + username + ", role: " + role);
+            System.out.println(
+                    "🔍 JWT Filter - Token valid, userId: " + userId + ", username: " + username + ", role: " + role);
 
             System.out.println("🔍 JWT Filter - About to check access for path: " + path + " with role: " + role);
             boolean hasAccessResult = hasAccess(path, role);
             System.out.println("🔍 JWT Filter - hasAccess result: " + hasAccessResult);
-            
+
             if (!hasAccessResult) {
                 System.out.println("🔍 JWT Filter - Access denied for path: " + path + " with role: " + role);
                 return handleError(response, "Access denied", HttpStatus.FORBIDDEN);
