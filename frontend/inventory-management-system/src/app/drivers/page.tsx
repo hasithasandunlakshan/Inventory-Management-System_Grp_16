@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, UserCheck, Plus, Eye, Search, AlertCircle } from 'lucide-react';
-import { driverService, DriverProfile } from '@/lib/services/driverService';
+import { driverService, DriverProfile, UserDropdownInfo } from '@/lib/services/driverService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -20,7 +20,7 @@ export default function DriversPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
-  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<UserDropdownInfo[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [driverProfileForm, setDriverProfileForm] = useState({
     licenseNumber: '',
@@ -28,9 +28,74 @@ export default function DriversPage() {
     licenseExpiry: '',
     emergencyContact: ''
   });
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { user, hasAnyRole, isAuthenticated } = useAuth();
   const canManageDrivers = hasAnyRole(['MANAGER', 'ADMIN']);
+
+  // Validation functions
+  const validateForm = () => {
+    const errors: {[key: string]: string} = {};
+
+    // User selection validation
+    if (!selectedUserId) {
+      errors.userId = 'Please select a user';
+    }
+
+    // License number validation
+    if (!driverProfileForm.licenseNumber.trim()) {
+      errors.licenseNumber = 'License number is required';
+    } else if (driverProfileForm.licenseNumber.trim().length < 3) {
+      errors.licenseNumber = 'License number must be at least 3 characters';
+    }
+
+    // License class validation (must be single uppercase letter or two uppercase letters)
+    if (!driverProfileForm.licenseClass.trim()) {
+      errors.licenseClass = 'License class is required';
+    } else {
+      const licenseClassRegex = /^[A-Z]$|^[A-Z]{2}$/;
+      if (!licenseClassRegex.test(driverProfileForm.licenseClass.trim())) {
+        errors.licenseClass = 'License class must be a single letter (A, B, C) or two letters (AB, CD)';
+      }
+    }
+
+    // License expiry validation
+    if (!driverProfileForm.licenseExpiry) {
+      errors.licenseExpiry = 'License expiry date is required';
+    } else {
+      const expiryDate = new Date(driverProfileForm.licenseExpiry);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (expiryDate <= today) {
+        errors.licenseExpiry = 'License expiry date must be in the future';
+      }
+    }
+
+    // Emergency contact validation (optional but if provided, must be valid phone number)
+    if (driverProfileForm.emergencyContact && driverProfileForm.emergencyContact.trim()) {
+      const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+      if (!phoneRegex.test(driverProfileForm.emergencyContact.trim())) {
+        errors.emergencyContact = 'Please enter a valid phone number (e.g., +1234567890)';
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const resetForm = () => {
+    setSelectedUserId('');
+    setDriverProfileForm({
+      licenseNumber: '',
+      licenseClass: '',
+      licenseExpiry: '',
+      emergencyContact: ''
+    });
+    setFormErrors({});
+    setIsSubmitting(false);
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -46,7 +111,7 @@ export default function DriversPage() {
       if (!token) return; // wait until token exists
 
       const users = await driverService.getUsersByRole('USER');
-      setAvailableUsers(users);
+      setAvailableUsers(users.map(user => ({ userId: parseInt(user.id), username: user.username })));
     } catch (error) {
       // Likely 403 for non-manager/admin users; log only
       console.error('Failed to load available users:', error);
@@ -79,42 +144,46 @@ export default function DriversPage() {
   const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedUserId) {
-      toast.error('Please select a user');
+    // Validate form
+    if (!validateForm()) {
+      toast.error('Please fix the validation errors');
       return;
     }
+    
+    setIsSubmitting(true);
     
     try {
       // Create driver profile for selected user
       const response = await driverService.registerDriver({
         userId: parseInt(selectedUserId),
-        licenseNumber: driverProfileForm.licenseNumber,
-        licenseClass: driverProfileForm.licenseClass,
+        licenseNumber: driverProfileForm.licenseNumber.trim(),
+        licenseClass: driverProfileForm.licenseClass.trim().toUpperCase(),
         licenseExpiry: driverProfileForm.licenseExpiry,
-        emergencyContact: driverProfileForm.emergencyContact
+        emergencyContact: driverProfileForm.emergencyContact.trim() || undefined
       });
 
       if (response.success) {
         toast.success('Driver profile created successfully!');
         setShowRegistrationModal(false);
-        
-        // Reset form
-        setSelectedUserId('');
-        setDriverProfileForm({
-          licenseNumber: '',
-          licenseClass: '',
-          licenseExpiry: '',
-          emergencyContact: ''
-        });
-
+        resetForm();
         loadDrivers();
         loadAvailableUsers(); // Refresh available users
       } else {
         toast.error(response.message || 'Failed to create driver profile');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration failed:', error);
-      toast.error('Failed to register driver');
+      
+      // Handle specific error messages
+      if (error.message?.includes('already exists')) {
+        toast.error('This user already has a driver profile or license number is already in use');
+      } else if (error.message?.includes('Validation failed')) {
+        toast.error('Please check your input data and try again');
+      } else {
+        toast.error('Failed to register driver. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -164,72 +233,131 @@ export default function DriversPage() {
               </DialogHeader>
               <form onSubmit={handleRegistration} className="space-y-4">
                 <div>
-                  <Label htmlFor="userId">Select User</Label>
+                  <Label htmlFor="userId">Select User *</Label>
                   <Select
                     value={selectedUserId}
-                    onValueChange={setSelectedUserId}
+                    onValueChange={(value) => {
+                      setSelectedUserId(value);
+                      if (formErrors.userId) {
+                        setFormErrors(prev => ({...prev, userId: ''}));
+                      }
+                    }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={formErrors.userId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Choose a user to make driver" />
                     </SelectTrigger>
                     <SelectContent>
                       {availableUsers.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.fullName} ({user.username} - {user.email})
+                        <SelectItem key={user.userId} value={user.userId.toString()}>
+                          {user.username} (ID: {user.userId})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  {availableUsers.length === 0 && (
+                  {formErrors.userId && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.userId}</p>
+                  )}
+                  {availableUsers.length === 0 && !formErrors.userId && (
                     <p className="text-sm text-gray-500 mt-1">No available users found</p>
                   )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="licenseNumber">License Number</Label>
+                    <Label htmlFor="licenseNumber">License Number *</Label>
                     <Input
                       id="licenseNumber"
                       value={driverProfileForm.licenseNumber}
-                      onChange={(e) => setDriverProfileForm({...driverProfileForm, licenseNumber: e.target.value})}
-                      required
+                      onChange={(e) => {
+                        setDriverProfileForm({...driverProfileForm, licenseNumber: e.target.value});
+                        if (formErrors.licenseNumber) {
+                          setFormErrors(prev => ({...prev, licenseNumber: ''}));
+                        }
+                      }}
+                      className={formErrors.licenseNumber ? 'border-red-500' : ''}
+                      placeholder="e.g., ABC123456"
                     />
+                    {formErrors.licenseNumber && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.licenseNumber}</p>
+                    )}
                   </div>
                   <div>
-                    <Label htmlFor="licenseClass">License Class</Label>
+                    <Label htmlFor="licenseClass">License Class *</Label>
                     <Input
                       id="licenseClass"
                       value={driverProfileForm.licenseClass}
-                      onChange={(e) => setDriverProfileForm({...driverProfileForm, licenseClass: e.target.value})}
-                      placeholder="e.g., B, C"
-                      required
+                      onChange={(e) => {
+                        setDriverProfileForm({...driverProfileForm, licenseClass: e.target.value});
+                        if (formErrors.licenseClass) {
+                          setFormErrors(prev => ({...prev, licenseClass: ''}));
+                        }
+                      }}
+                      className={formErrors.licenseClass ? 'border-red-500' : ''}
+                      placeholder="e.g., B, C, AB"
+                      maxLength={2}
                     />
+                    {formErrors.licenseClass && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.licenseClass}</p>
+                    )}
                   </div>
                   <div>
-                    <Label htmlFor="licenseExpiry">License Expiry</Label>
+                    <Label htmlFor="licenseExpiry">License Expiry *</Label>
                     <Input
                       id="licenseExpiry"
                       type="date"
                       value={driverProfileForm.licenseExpiry}
-                      onChange={(e) => setDriverProfileForm({...driverProfileForm, licenseExpiry: e.target.value})}
-                      required
+                      onChange={(e) => {
+                        setDriverProfileForm({...driverProfileForm, licenseExpiry: e.target.value});
+                        if (formErrors.licenseExpiry) {
+                          setFormErrors(prev => ({...prev, licenseExpiry: ''}));
+                        }
+                      }}
+                      className={formErrors.licenseExpiry ? 'border-red-500' : ''}
+                      min={new Date().toISOString().split('T')[0]}
                     />
+                    {formErrors.licenseExpiry && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.licenseExpiry}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="emergencyContact">Emergency Contact</Label>
                     <Input
                       id="emergencyContact"
                       value={driverProfileForm.emergencyContact}
-                      onChange={(e) => setDriverProfileForm({...driverProfileForm, emergencyContact: e.target.value})}
+                      onChange={(e) => {
+                        setDriverProfileForm({...driverProfileForm, emergencyContact: e.target.value});
+                        if (formErrors.emergencyContact) {
+                          setFormErrors(prev => ({...prev, emergencyContact: ''}));
+                        }
+                      }}
+                      className={formErrors.emergencyContact ? 'border-red-500' : ''}
                       placeholder="+1234567890"
                     />
+                    {formErrors.emergencyContact && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.emergencyContact}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">Optional - include country code</p>
                   </div>
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setShowRegistrationModal(false)}>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowRegistrationModal(false);
+                      resetForm();
+                    }}
+                    disabled={isSubmitting}
+                  >
                     Cancel
                   </Button>
-                  <Button type="submit">Register Driver</Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="min-w-[120px]"
+                  >
+                    {isSubmitting ? 'Registering...' : 'Register Driver'}
+                  </Button>
                 </div>
               </form>
             </DialogContent>

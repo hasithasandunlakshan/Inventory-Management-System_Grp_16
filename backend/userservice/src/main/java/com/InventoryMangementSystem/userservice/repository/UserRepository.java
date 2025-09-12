@@ -26,8 +26,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByEmailContainingIgnoreCase(String email);
 
     List<User> findByFullNameContainingIgnoreCase(String fullName);
-    
-    // Find users by role name (case-insensitive)
+
+    // Find users by role name (case-insensitive) - returns full User objects
     @Query("SELECT u FROM User u JOIN u.roles ur JOIN ur.role r WHERE LOWER(r.roleName) = LOWER(:roleName)")
     List<User> findByRoleName(@Param("roleName") String roleName);
+
+    // Find users by role name for dropdown - returns only userId and username
+    @Query(value = "SELECT u.user_id, u.username FROM users u JOIN user_roles ur ON u.user_id = ur.user_id JOIN roles r ON ur.role_id = r.role_id WHERE r.role_name = :roleName", nativeQuery = true)
+    List<Object[]> findUsersForDropdownByRole(@Param("roleName") String roleName);
 }

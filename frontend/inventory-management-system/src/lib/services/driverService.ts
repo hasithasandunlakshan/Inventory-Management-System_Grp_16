@@ -92,6 +92,11 @@ export interface UserInfo {
   dateOfBirth?: string;
 }
 
+export interface UserDropdownInfo {
+  userId: number;
+  username: string;
+}
+
 class DriverService {
   private getAuthHeaders() {
     const token = localStorage.getItem('inventory_auth_token');
@@ -235,16 +240,27 @@ class DriverService {
 
   // Get users by role for driver selection dropdown
   async getUsersByRole(role: string = 'USER'): Promise<UserInfo[]> {
+    const headers = this.getAuthHeaders();
+    console.log('🔍 getUsersByRole - Headers:', headers);
+    console.log('🔍 getUsersByRole - URL:', `${API_BASE_URL}/api/auth/users?role=${role}`);
+    
     const response = await fetch(`${API_BASE_URL}/api/auth/users?role=${role}`, {
       method: 'GET',
-      headers: this.getAuthHeaders(),
+      headers: headers,
     });
 
+    console.log('🔍 getUsersByRole - Response status:', response.status);
+    console.log('🔍 getUsersByRole - Response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('🔍 getUsersByRole - Error response:', errorText);
       throw new Error('Failed to fetch users');
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('🔍 getUsersByRole - Success data:', data);
+    return data;
   }
 }
 

@@ -1,15 +1,21 @@
 package com.InventoryMangementSystem.userservice.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.InventoryMangementSystem.userservice.dto.LoginRequest;
 import com.InventoryMangementSystem.userservice.dto.LoginResponse;
 import com.InventoryMangementSystem.userservice.dto.SignupRequest;
+import com.InventoryMangementSystem.userservice.dto.UserInfo;
+import com.InventoryMangementSystem.userservice.dto.UserDropdownDto;
 import com.InventoryMangementSystem.userservice.service.UserService;
+
+import java.util.List;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -88,6 +94,20 @@ public class AuthController {
             return ResponseEntity.ok(users);
         } catch (Exception e) {
             System.err.println("ERROR getting users by role: " + e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @GetMapping("/users/dropdown")
+    public ResponseEntity<List<UserDropdownDto>> getUsersForDropdown(@RequestParam(defaultValue = "USER") String role) {
+        try {
+            System.out.println("🔍 Getting users for dropdown with role: " + role);
+            List<UserDropdownDto> users = userService.getUsersForDropdown(role);
+            System.out.println("🔍 Found " + users.size() + " users for dropdown");
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            System.err.println("ERROR getting users for dropdown: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
     }
