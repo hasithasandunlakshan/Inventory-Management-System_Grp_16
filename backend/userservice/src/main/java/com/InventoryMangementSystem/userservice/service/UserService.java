@@ -17,4 +17,6 @@ public interface UserService {
     List<UserInfo> searchUsers(String searchTerm);
 
     List<UserInfo> getAllUsers();
+    
+    List<UserInfo> getUsersByRole(String role);
 }

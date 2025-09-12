@@ -1,5 +1,6 @@
 package com.resourseservice.resourseservice.service;
 
+import com.resourseservice.resourseservice.dto.DriverRegistrationRequest;
 import com.resourseservice.resourseservice.entity.DriverProfile;
 import com.resourseservice.resourseservice.repository.DriverProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,35 @@ import java.util.Optional;
 public class DriverProfileService {
 
     private final DriverProfileRepository driverProfileRepository;
+
+    public DriverProfile registerDriver(DriverRegistrationRequest request) {
+        log.info("Registering driver profile for user ID: {}", request.getUserId());
+        
+        // Check if license number already exists
+        if (driverProfileRepository.existsByLicenseNumber(request.getLicenseNumber())) {
+            throw new RuntimeException("Driver with license number " + request.getLicenseNumber() + " already exists");
+        }
+        
+        // Check if user already has a driver profile
+        if (driverProfileRepository.findByUserId(request.getUserId()).isPresent()) {
+            throw new RuntimeException("Driver profile for user ID " + request.getUserId() + " already exists");
+        }
+        
+        // Create new driver profile
+        DriverProfile driverProfile = new DriverProfile();
+        driverProfile.setUserId(request.getUserId());
+        driverProfile.setLicenseNumber(request.getLicenseNumber());
+        driverProfile.setLicenseClass(request.getLicenseClass());
+        driverProfile.setLicenseExpiry(request.getLicenseExpiry());
+        driverProfile.setEmergencyContact(request.getEmergencyContact());
+        driverProfile.setAvailabilityStatus(DriverProfile.AvailabilityStatus.AVAILABLE);
+        
+        DriverProfile savedProfile = driverProfileRepository.save(driverProfile);
+        log.info("Successfully registered driver profile with ID: {} for user ID: {}", 
+                savedProfile.getDriverId(), savedProfile.getUserId());
+        
+        return savedProfile;
+    }
 
     public DriverProfile createDriverProfile(DriverProfile driverProfile) {
         log.info("Creating driver profile for user ID: {}", driverProfile.getUserId());
@@ -79,9 +109,6 @@ public class DriverProfileService {
         }
         if (updatedProfile.getEmergencyContact() != null) {
             existingProfile.setEmergencyContact(updatedProfile.getEmergencyContact());
-        }
-        if (updatedProfile.getAddress() != null) {
-            existingProfile.setAddress(updatedProfile.getAddress());
         }
         
         return driverProfileRepository.save(existingProfile);

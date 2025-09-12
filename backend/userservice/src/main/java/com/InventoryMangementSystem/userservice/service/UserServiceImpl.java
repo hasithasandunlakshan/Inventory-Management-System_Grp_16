@@ -17,6 +17,7 @@ import com.InventoryMangementSystem.userservice.repository.UserRoleRepository;
 import com.InventoryMangementSystem.userservice.security.JwtTokenUtil;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -240,5 +241,15 @@ public class UserServiceImpl implements UserService {
                 user.getEmailVerified(),
                 user.getCreatedAt(),
                 user.getDateOfBirth());
+    }
+
+    @Override
+    public List<UserInfo> getUsersByRole(String role) {
+        try {
+            List<User> users = userRepository.findByRoleName(role.toUpperCase());
+            return users.stream().map(this::convertUserToUserInfo).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get users by role: " + e.getMessage());
+        }
     }
 }

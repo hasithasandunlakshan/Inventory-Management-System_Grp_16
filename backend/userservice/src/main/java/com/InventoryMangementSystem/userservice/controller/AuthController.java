@@ -81,4 +81,15 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/users")
+    public ResponseEntity<List<UserInfo>> getUsersByRole(@RequestParam(defaultValue = "USER") String role) {
+        try {
+            List<UserInfo> users = userService.getUsersByRole(role);
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            System.err.println("ERROR getting users by role: " + e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
+
 }

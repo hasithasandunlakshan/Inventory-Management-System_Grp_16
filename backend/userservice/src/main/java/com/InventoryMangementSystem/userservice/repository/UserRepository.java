@@ -1,6 +1,8 @@
 package com.InventoryMangementSystem.userservice.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.InventoryMangementSystem.userservice.entity.User;
 
@@ -24,4 +26,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByEmailContainingIgnoreCase(String email);
 
     List<User> findByFullNameContainingIgnoreCase(String fullName);
+    
+    // Find users by role name (case-insensitive)
+    @Query("SELECT u FROM User u JOIN u.roles ur JOIN ur.role r WHERE LOWER(r.roleName) = LOWER(:roleName)")
+    List<User> findByRoleName(@Param("roleName") String roleName);
 }
