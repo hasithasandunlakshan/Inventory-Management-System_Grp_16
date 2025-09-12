@@ -32,7 +32,7 @@ public class Product {
     @Column(name = "price", precision = 10, scale = 2)
     private BigDecimal price;
     
-    @Column(name = "stock")
+    @Column(name = "stock_quantity")
     private Integer stockQuantity;
     
     @Column(name = "category_id")

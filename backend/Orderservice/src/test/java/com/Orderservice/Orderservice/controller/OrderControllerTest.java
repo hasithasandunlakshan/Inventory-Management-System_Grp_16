@@ -15,15 +15,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.Orderservice.Orderservice.config.IntegrationTestConfig;
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
 import com.Orderservice.Orderservice.dto.OrderDetailResponse;
 import com.Orderservice.Orderservice.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(OrderController.class)
+@ActiveProfiles("integration")
+@Import(IntegrationTestConfig.class)
 public class OrderControllerTest {
 
     @Autowired
