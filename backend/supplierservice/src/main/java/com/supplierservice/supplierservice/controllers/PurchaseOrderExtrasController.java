@@ -1,7 +1,9 @@
 package com.supplierservice.supplierservice.controllers;
 
 import com.supplierservice.supplierservice.dto.*;
+import com.supplierservice.supplierservice.models.PurchaseOrderAttachment;
 import com.supplierservice.supplierservice.services.PurchaseOrderExtrasService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,5 +52,18 @@ public class PurchaseOrderExtrasController {
     @GetMapping("/attachments")
     public ResponseEntity<List<AttachmentDTO>> listAttachments(@PathVariable("poId") Long poId) {
         return ResponseEntity.ok(extrasService.listAttachments(poId));
+    }
+
+    // GET /api/purchase-orders/{id}/attachments/{attachmentId}/download
+    @GetMapping("/attachments/{attachmentId}/download")
+    public ResponseEntity<byte[]> downloadAttachment(@PathVariable("poId") Long poId,
+            @PathVariable("attachmentId") Long attachmentId) {
+        PurchaseOrderAttachment attachment = extrasService.getAttachmentForDownload(poId, attachmentId);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getFilename() + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, attachment.getContentType())
+                .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(attachment.getSizeBytes()))
+                .body(attachment.getData());
     }
 }

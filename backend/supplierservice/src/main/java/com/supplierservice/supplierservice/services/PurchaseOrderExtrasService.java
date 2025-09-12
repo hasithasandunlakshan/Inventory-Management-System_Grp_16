@@ -65,6 +65,11 @@ public class PurchaseOrderExtrasService {
         if (body == null || body.getText() == null || body.getText().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Note text is required");
         }
+
+        System.out.println("🔍 Adding note with data: " + body);
+        System.out.println("📝 Note text: " + body.getText());
+        System.out.println("👤 CreatedBy received: " + body.getCreatedBy());
+
         PurchaseOrder po = ensurePOExists(poId);
         var note = PurchaseOrderNote.builder()
                 .purchaseOrder(po)
@@ -73,6 +78,8 @@ public class PurchaseOrderExtrasService {
                 .createdBy(body.getCreatedBy())
                 .build();
         var saved = noteRepo.save(note);
+
+        System.out.println("✅ Note saved with createdBy: " + saved.getCreatedBy());
 
         // audit
         recordAudit(poId, AuditAction.NOTE_ADDED, truncate("note: " + body.getText(), 500), body.getCreatedBy());
@@ -104,6 +111,9 @@ public class PurchaseOrderExtrasService {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
         }
+
+        System.out.println("📎 Uploading attachment with uploadedBy: " + uploadedBy);
+
         PurchaseOrder po = ensurePOExists(poId);
 
         byte[] bytes;
@@ -125,6 +135,8 @@ public class PurchaseOrderExtrasService {
 
         var saved = attachmentRepo.save(att);
 
+        System.out.println("✅ Attachment saved with uploadedBy: " + saved.getUploadedBy());
+
         // audit
         recordAudit(poId, AuditAction.ATTACHMENT_ADDED,
                 "filename=" + saved.getFilename() + ", size=" + saved.getSizeBytes(), uploadedBy);
@@ -137,6 +149,14 @@ public class PurchaseOrderExtrasService {
                 .uploadedAt(saved.getUploadedAt())
                 .uploadedBy(saved.getUploadedBy())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PurchaseOrderAttachment getAttachmentForDownload(Long poId, Long attachmentId) {
+        ensurePOExists(poId);
+        return attachmentRepo.findByIdAndPurchaseOrder_PoId(attachmentId, poId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Attachment not found: " + attachmentId + " for purchase order: " + poId));
     }
 
     @Transactional(readOnly = true)
