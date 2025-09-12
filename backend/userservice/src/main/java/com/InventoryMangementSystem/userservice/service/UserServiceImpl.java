@@ -8,6 +8,7 @@ import com.InventoryMangementSystem.userservice.dto.LoginRequest;
 import com.InventoryMangementSystem.userservice.dto.LoginResponse;
 import com.InventoryMangementSystem.userservice.dto.SignupRequest;
 import com.InventoryMangementSystem.userservice.dto.UserInfo;
+import com.InventoryMangementSystem.userservice.dto.UserDropdownDto;
 import com.InventoryMangementSystem.userservice.entity.User;
 import com.InventoryMangementSystem.userservice.entity.Role;
 import com.InventoryMangementSystem.userservice.entity.UserRole;
@@ -17,6 +18,7 @@ import com.InventoryMangementSystem.userservice.repository.UserRoleRepository;
 import com.InventoryMangementSystem.userservice.security.JwtTokenUtil;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -240,5 +242,32 @@ public class UserServiceImpl implements UserService {
                 user.getEmailVerified(),
                 user.getCreatedAt(),
                 user.getDateOfBirth());
+    }
+
+    @Override
+    public List<UserInfo> getUsersByRole(String role) {
+        try {
+            List<User> users = userRepository.findByRoleName(role.toUpperCase());
+            return users.stream().map(this::convertUserToUserInfo).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get users by role: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<UserDropdownDto> getUsersForDropdown(String role) {
+        try {
+            System.out.println("🔍 UserService.getUsersForDropdown - Role: " + role);
+            List<Object[]> results = userRepository.findUsersForDropdownByRole(role.toUpperCase());
+            System.out.println("🔍 UserService.getUsersForDropdown - Found " + results.size() + " users");
+
+            return results.stream()
+                    .map(row -> new UserDropdownDto(((Number) row[0]).longValue(), (String) row[1]))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("ERROR getting users for dropdown: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get users for dropdown: " + e.getMessage());
+        }
     }
 }

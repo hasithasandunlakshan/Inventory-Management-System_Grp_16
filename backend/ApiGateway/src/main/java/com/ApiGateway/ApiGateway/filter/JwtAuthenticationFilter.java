@@ -26,9 +26,13 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         ServerHttpResponse response = exchange.getResponse();
 
         String path = request.getPath().value();
+        System.out.println("🔍 JWT Filter - Processing request to path: " + path);
+        System.out.println("🔍 JWT Filter - Full URL: " + request.getURI());
+        System.out.println("🔍 JWT Filter - Method: " + request.getMethod());
 
-        // Skip JWT validation for auth endpoints (login/signup)
-        if (path.startsWith("/api/auth")) {
+        // Skip JWT validation only for public auth endpoints (login/signup)
+        if (path.equals("/api/auth/login") || path.equals("/api/auth/signup")) {
+            System.out.println("🔍 JWT Filter - Public endpoint, skipping JWT validation");
             return chain.filter(exchange);
         }
 
@@ -42,6 +46,7 @@ public class JwtAuthenticationFilter implements GatewayFilter {
 
         try {
             if (!jwtUtil.validateToken(token)) {
+                System.out.println("🔍 JWT Filter - Invalid token");
                 return handleError(response, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
             }
 
@@ -50,9 +55,19 @@ public class JwtAuthenticationFilter implements GatewayFilter {
             String role = jwtUtil.extractRole(token);
             String email = jwtUtil.extractEmail(token);
 
-            if (!hasAccess(path, role)) {
+            System.out.println(
+                    "🔍 JWT Filter - Token valid, userId: " + userId + ", username: " + username + ", role: " + role);
+
+            System.out.println("🔍 JWT Filter - About to check access for path: " + path + " with role: " + role);
+            boolean hasAccessResult = hasAccess(path, role);
+            System.out.println("🔍 JWT Filter - hasAccess result: " + hasAccessResult);
+
+            if (!hasAccessResult) {
+                System.out.println("🔍 JWT Filter - Access denied for path: " + path + " with role: " + role);
                 return handleError(response, "Access denied", HttpStatus.FORBIDDEN);
             }
+
+            System.out.println("🔍 JWT Filter - Access granted, proceeding with request");
 
             ServerHttpRequest modifiedRequest = request.mutate()
                     .header("X-User-Id", userId.toString())
@@ -69,18 +84,53 @@ public class JwtAuthenticationFilter implements GatewayFilter {
     }
 
     private boolean hasAccess(String path, String role) {
+        // Debug logging
+        System.out.println("🔍 JWT Filter Debug - Path: " + path + ", Role: " + role);
+
         // Normalize role for case/spacing differences
         final String roleUpper = role == null ? "" : role.toUpperCase();
         final String roleCompact = roleUpper.replace(" ", "");
 
-        // Helper: flexible contains check
+        // Helper: exact role match check
         java.util.function.Predicate<String> has = r -> {
             String rUpper = r.toUpperCase();
-            return roleUpper.contains(rUpper) || roleCompact.contains(rUpper.replace(" ", ""));
+            String rCompact = rUpper.replace(" ", "");
+            boolean result1 = roleUpper.equals(rUpper);
+            boolean result2 = roleCompact.equals(rCompact);
+            boolean result = result1 || result2;
+            System.out.println("🔍 Role check - Testing: '" + r + "'");
+            System.out.println("🔍 Role check - rUpper: '" + rUpper + "', rCompact: '" + rCompact + "'");
+            System.out.println("🔍 Role check - roleUpper: '" + roleUpper + "', roleCompact: '" + roleCompact + "'");
+            System.out.println("🔍 Role check - result1 (equals): " + result1 + ", result2 (compact equals): " + result2
+                    + ", final result: " + result);
+            return result;
         };
 
-        // User service - allow all authenticated
-        if (path.startsWith("/api/secure") || path.startsWith("/api/auth")) {
+        // User service - specific endpoints
+        if (path.startsWith("/api/secure")) {
+            System.out.println("🔍 Matched /api/secure - allowing access");
+            return true;
+        }
+
+        // User service - /api/auth/users requires MANAGER or ADMIN
+        if (path.startsWith("/api/auth/users")) {
+            System.out.println("🔍 /api/auth/users - Starting role check");
+            System.out.println("🔍 /api/auth/users - Original role: '" + role + "'");
+            System.out.println("🔍 /api/auth/users - roleUpper: '" + roleUpper + "'");
+            System.out.println("🔍 /api/auth/users - roleCompact: '" + roleCompact + "'");
+
+            boolean hasManager = has.test("MANAGER");
+            boolean hasAdmin = has.test("ADMIN");
+            boolean result = hasManager || hasAdmin;
+
+            System.out.println("🔍 /api/auth/users check - hasManager: " + hasManager + ", hasAdmin: " + hasAdmin
+                    + ", result: " + result);
+            return result;
+        }
+
+        // User service - other auth endpoints allow all authenticated
+        if (path.startsWith("/api/auth")) {
+            System.out.println("🔍 Matched /api/auth - allowing access");
             return true;
         }
 
@@ -118,6 +168,17 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         if (path.startsWith("/api/suppliers") || path.startsWith("/api/delivery-logs")
                 || path.startsWith("/api/purchase-orders") || path.startsWith("/api/supplier-categories")) {
             return has.test("STORE KEEPER") || has.test("STOREKEEPER") || has.test("MANAGER") || has.test("ADMIN");
+        }
+
+        // Resource service - Driver/Vehicle management - MANAGER, ADMIN only
+        if (path.startsWith("/api/resources")) {
+            System.out.println("🔍 /api/resources - Checking authorization for MANAGER/ADMIN");
+            boolean hasManager = has.test("MANAGER");
+            boolean hasAdmin = has.test("ADMIN");
+            boolean result = hasManager || hasAdmin;
+            System.out.println("🔍 /api/resources check - hasManager: " + hasManager + ", hasAdmin: " + hasAdmin
+                    + ", result: " + result);
+            return result;
         }
 
         return false;
