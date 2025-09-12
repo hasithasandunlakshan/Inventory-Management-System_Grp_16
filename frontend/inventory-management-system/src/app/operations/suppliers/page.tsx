@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, Download, Upload, Eye, Edit, Trash2, Truck, Package, Calendar, Phone, Mail, MapPin, User, Building2, Tag, X, CheckCircle, AlertCircle, FileText, Paperclip, Send } from "lucide-react";
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,7 @@ import { PurchaseOrderStats } from "@/components/PurchaseOrderStats";
 import { SupplierPageStats } from "@/components/SupplierPageStats";
 import { authDebug } from "@/lib/utils/authDebug";
 import { userService, UserInfo } from "@/lib/services/userService";
+import { getDistinctColor } from "@/lib/utils/colorUtils";
 
 // Define DeliveryLogCreateRequest to match the imported type
 interface DeliveryLogCreateRequest {
@@ -2043,8 +2045,348 @@ function DeliveryLogsTab() {
 
 // Analytics Tab Component
 function AnalyticsTab() {
+  const [supplierCategoryData, setSupplierCategoryData] = useState<Array<{name: string, value: number, color: string}>>([]);
+  const [supplierSpendData, setSupplierSpendData] = useState<Array<{supplierName: string, spend: number, orders: number}>>([]);
+  const [loadingCategory, setLoadingCategory] = useState(true);
+  const [loadingSpend, setLoadingSpend] = useState(true);
+  const [timeRange, setTimeRange] = useState<string>('all');
+  const [totalSuppliers, setTotalSuppliers] = useState(0);
+  const [totalSpend, setTotalSpend] = useState(0);
+  const { isAuthenticated } = useAuth();
+
+  // Load supplier category breakdown
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const loadSupplierCategoryData = async () => {
+      try {
+        setLoadingCategory(true);
+        const [suppliers, categories] = await Promise.all([
+          enhancedSupplierService.getAllSuppliersWithUserDetails(),
+          supplierCategoryService.getAllCategories()
+        ]);
+
+        // Count suppliers by category with distinct colors using utility function
+        // The getDistinctColor function automatically handles any number of categories:
+        // - Uses predefined palette for first 40 colors
+        // - Generates mathematically distinct colors using golden angle for additional categories
+        // - Ensures good contrast and visual distinction even with 100+ categories
+        const categoryCounts = categories.map((category: SupplierCategory, index: number) => {
+          const count = suppliers.filter((supplier: EnhancedSupplier) => supplier.categoryId === category.categoryId).length;
+          return {
+            name: category.name,
+            value: count,
+            color: getDistinctColor(index)
+          };
+        }).filter((item: {name: string, value: number, color: string}) => item.value > 0);
+
+        // Add uncategorized suppliers
+        const uncategorizedCount = suppliers.filter((supplier: EnhancedSupplier) => !supplier.categoryId).length;
+        if (uncategorizedCount > 0) {
+          categoryCounts.push({
+            name: 'Uncategorized',
+            value: uncategorizedCount,
+            color: getDistinctColor(categoryCounts.length)
+          });
+        }
+
+        setSupplierCategoryData(categoryCounts);
+        setTotalSuppliers(suppliers.length);
+      } catch (error) {
+        console.error('Failed to load supplier category data:', error);
+      } finally {
+        setLoadingCategory(false);
+      }
+    };
+
+    loadSupplierCategoryData();
+  }, [isAuthenticated]);
+
+  // Load supplier spend data
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const loadSupplierSpendData = async () => {
+      try {
+        setLoadingSpend(true);
+        const [suppliers, allPurchaseOrders] = await Promise.all([
+          enhancedSupplierService.getAllSuppliersWithUserDetails(),
+          purchaseOrderService.getAllPurchaseOrders()
+        ]);
+
+        // Filter purchase orders by time range
+        let purchaseOrders = allPurchaseOrders;
+        if (timeRange !== 'all') {
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - parseInt(timeRange));
+          purchaseOrders = allPurchaseOrders.filter((order: PurchaseOrderSummary) => 
+            new Date(order.date) >= cutoffDate
+          );
+        }
+
+        // Calculate spend by supplier
+        const spendBySupplier = new Map<number, {supplierName: string, totalSpend: number, orderCount: number}>();
+
+        // Initialize all suppliers with zero spend
+        suppliers.forEach((supplier: EnhancedSupplier) => {
+          spendBySupplier.set(supplier.supplierId, {
+            supplierName: supplier.userDetails?.fullName || supplier.userName || `Supplier ${supplier.supplierId}`,
+            totalSpend: 0,
+            orderCount: 0
+          });
+        });
+
+        // Calculate totals for each purchase order and aggregate by supplier
+        const spendPromises = purchaseOrders.map(async (order: PurchaseOrderSummary) => {
+          try {
+            const totalResponse = await purchaseOrderService.getPurchaseOrderTotal(order.id);
+            return {
+              supplierId: order.supplierId,
+              total: totalResponse.total
+            };
+          } catch (error) {
+            console.error(`Failed to fetch total for order ${order.id}:`, error);
+            return {
+              supplierId: order.supplierId,
+              total: order.total || 0
+            };
+          }
+        });
+
+        const spendResults = await Promise.all(spendPromises);
+
+        spendResults.forEach(({ supplierId, total }: {supplierId: number, total: number}) => {
+          const supplierData = spendBySupplier.get(supplierId);
+          if (supplierData) {
+            supplierData.totalSpend += total;
+            supplierData.orderCount += 1;
+          }
+        });
+
+        // Convert to array and sort by spend (top 10)
+        const sortedSpendData = Array.from(spendBySupplier.values())
+          .filter(data => data.totalSpend > 0)
+          .sort((a, b) => b.totalSpend - a.totalSpend)
+          .slice(0, 10)
+          .map(data => ({
+            supplierName: data.supplierName,
+            spend: data.totalSpend,
+            orders: data.orderCount
+          }));
+
+        setSupplierSpendData(sortedSpendData);
+        setTotalSpend(sortedSpendData.reduce((sum, supplier) => sum + supplier.spend, 0));
+      } catch (error) {
+        console.error('Failed to load supplier spend data:', error);
+      } finally {
+        setLoadingSpend(false);
+      }
+    };
+
+    loadSupplierSpendData();
+  }, [isAuthenticated, timeRange]);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Summary Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <div className="ml-2">
+                <p className="text-sm font-medium text-muted-foreground">Total Suppliers</p>
+                <p className="text-2xl font-bold">{totalSuppliers}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <Tag className="h-4 w-4 text-muted-foreground" />
+              <div className="ml-2">
+                <p className="text-sm font-medium text-muted-foreground">Categories</p>
+                <p className="text-2xl font-bold">{supplierCategoryData.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <div className="ml-2">
+                <p className="text-sm font-medium text-muted-foreground">Active Suppliers</p>
+                <p className="text-2xl font-bold">{supplierSpendData.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <div className="h-4 w-4 text-muted-foreground">$</div>
+              <div className="ml-2">
+                <p className="text-sm font-medium text-muted-foreground">Total Spend</p>
+                <p className="text-2xl font-bold">${totalSpend.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Supplier Category Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Supplier Category Breakdown</CardTitle>
+          <CardDescription>Distribution of suppliers across different categories</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingCategory ? (
+            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+              Loading category data...
+            </div>
+          ) : supplierCategoryData.length > 0 ? (
+            <div className="space-y-4">
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={supplierCategoryData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={120}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {supplierCategoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: any) => [`${value} suppliers`, 'Count']} 
+                      labelFormatter={(label) => `Category: ${label}`}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      formatter={(value, entry) => (
+                        <span style={{ color: entry.color || '#000' }}>
+                          {value} ({entry.payload?.value || 0})
+                        </span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* Category breakdown table for many categories */}
+              {supplierCategoryData.length > 10 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                    Category Breakdown ({supplierCategoryData.length} categories)
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-xs">
+                    {supplierCategoryData.map((item, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <div 
+                          className="w-3 h-3 rounded-full flex-shrink-0" 
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="truncate">{item.name}: {item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+              No supplier category data available
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Spend by Supplier */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Top Suppliers by Spend</CardTitle>
+            <CardDescription>Total spending and order count for top suppliers</CardDescription>
+          </div>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="30">Last 30 Days</SelectItem>
+              <SelectItem value="90">Last 90 Days</SelectItem>
+              <SelectItem value="365">Last Year</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          {loadingSpend ? (
+            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+              Loading spend data...
+            </div>
+          ) : supplierSpendData.length > 0 ? (
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={supplierSpendData}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 60,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="supplierName" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                    interval={0}
+                  />
+                  <YAxis yAxisId="spend" orientation="left" />
+                  <YAxis yAxisId="orders" orientation="right" />
+                  <Tooltip 
+                    formatter={(value, name) => [
+                      name === 'spend' ? `$${value.toLocaleString()}` : `${value} orders`,
+                      name === 'spend' ? 'Total Spend' : 'Order Count'
+                    ]}
+                  />
+                  <Legend />
+                  <Bar 
+                    yAxisId="spend" 
+                    dataKey="spend" 
+                    fill="#8884d8" 
+                    name="Total Spend ($)"
+                  />
+                  <Bar 
+                    yAxisId="orders" 
+                    dataKey="orders" 
+                    fill="#82ca9d" 
+                    name="Order Count"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+              No supplier spend data available
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Original Charts for reference */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
