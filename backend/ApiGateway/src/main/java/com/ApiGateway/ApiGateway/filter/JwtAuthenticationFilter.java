@@ -149,6 +149,11 @@ public class JwtAuthenticationFilter implements GatewayFilter {
             return has.test("STORE KEEPER") || has.test("STOREKEEPER") || has.test("MANAGER");
         }
 
+        // Revenue service - MANAGER only
+        if (path.startsWith("/api/revenue")) {
+            return has.test("MANAGER");
+        }
+
         // Inventory service - STOREKEEPER, MANAGER
         if (path.startsWith("/api/inventory")) {
             return has.test("STORE KEEPER") || has.test("STOREKEEPER") || has.test("MANAGER") || has.test("ADMIN");
