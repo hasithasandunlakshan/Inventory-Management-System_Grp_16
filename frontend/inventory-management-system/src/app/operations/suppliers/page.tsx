@@ -2047,11 +2047,14 @@ function DeliveryLogsTab() {
 function AnalyticsTab() {
   const [supplierCategoryData, setSupplierCategoryData] = useState<Array<{name: string, value: number, color: string}>>([]);
   const [supplierSpendData, setSupplierSpendData] = useState<Array<{supplierName: string, spend: number, orders: number}>>([]);
+  const [poStatusData, setPoStatusData] = useState<Array<{name: string, value: number, color: string, percentage: number}>>([]);
   const [loadingCategory, setLoadingCategory] = useState(true);
   const [loadingSpend, setLoadingSpend] = useState(true);
+  const [loadingPoStatus, setLoadingPoStatus] = useState(true);
   const [timeRange, setTimeRange] = useState<string>('all');
   const [totalSuppliers, setTotalSuppliers] = useState(0);
   const [totalSpend, setTotalSpend] = useState(0);
+  const [totalPurchaseOrders, setTotalPurchaseOrders] = useState(0);
   const { isAuthenticated } = useAuth();
 
   // Load supplier category breakdown
@@ -2186,10 +2189,73 @@ function AnalyticsTab() {
     loadSupplierSpendData();
   }, [isAuthenticated, timeRange]);
 
+  // Load PO status data
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const loadPoStatusData = async () => {
+      try {
+        setLoadingPoStatus(true);
+        const allPurchaseOrders = await purchaseOrderService.getAllPurchaseOrders();
+        
+        // Filter purchase orders by time range
+        let purchaseOrders = allPurchaseOrders;
+        if (timeRange !== 'all') {
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - parseInt(timeRange));
+          purchaseOrders = allPurchaseOrders.filter((order: PurchaseOrderSummary) => 
+            new Date(order.date) >= cutoffDate
+          );
+        }
+
+        // Count orders by status
+        const statusCounts = new Map<string, number>();
+        purchaseOrders.forEach((order: PurchaseOrderSummary) => {
+          const status = order.status || 'DRAFT';
+          statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
+        });
+
+        const totalOrders = purchaseOrders.length;
+        setTotalPurchaseOrders(totalOrders);
+
+        // Define status colors and display names
+        const statusConfig = [
+          { key: 'DRAFT', name: 'Draft', color: '#94a3b8' },
+          { key: 'SENT', name: 'Sent', color: '#3b82f6' },
+          { key: 'PENDING', name: 'Pending', color: '#f59e0b' },
+          { key: 'RECEIVED', name: 'Received', color: '#10b981' },
+          { key: 'CANCELLED', name: 'Cancelled', color: '#ef4444' }
+        ];
+
+        // Convert to chart data with percentages
+        const chartData = statusConfig
+          .map((config, index) => {
+            const count = statusCounts.get(config.key) || 0;
+            const percentage = totalOrders > 0 ? (count / totalOrders) * 100 : 0;
+            return {
+              name: config.name,
+              value: count,
+              color: config.color,
+              percentage: Math.round(percentage * 10) / 10 // Round to 1 decimal place
+            };
+          })
+          .filter(item => item.value > 0); // Only show statuses that have orders
+
+        setPoStatusData(chartData);
+      } catch (error) {
+        console.error('Failed to load PO status data:', error);
+      } finally {
+        setLoadingPoStatus(false);
+      }
+    };
+
+    loadPoStatusData();
+  }, [isAuthenticated, timeRange]);
+
   return (
     <div className="space-y-6">
       {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center">
@@ -2208,6 +2274,17 @@ function AnalyticsTab() {
               <div className="ml-2">
                 <p className="text-sm font-medium text-muted-foreground">Categories</p>
                 <p className="text-2xl font-bold">{supplierCategoryData.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <div className="ml-2">
+                <p className="text-sm font-medium text-muted-foreground">Purchase Orders</p>
+                <p className="text-2xl font-bold">{totalPurchaseOrders}</p>
               </div>
             </div>
           </CardContent>
@@ -2305,6 +2382,100 @@ function AnalyticsTab() {
           ) : (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
               No supplier category data available
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* PO Status Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Purchase Order Status Distribution</CardTitle>
+          <CardDescription>Pipeline health check - breakdown of orders by status</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingPoStatus ? (
+            <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+              Loading PO status data...
+            </div>
+          ) : poStatusData.length > 0 ? (
+            <div className="space-y-4">
+              <div className="h-[350px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={poStatusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={80}
+                      outerRadius={140}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {poStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: any, name: any, props: any) => [
+                        `${value} orders (${props.payload.percentage}%)`,
+                        'Count'
+                      ]} 
+                      labelFormatter={(label) => `Status: ${label}`}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      formatter={(value, entry: any) => (
+                        <span style={{ color: entry.color || '#000' }}>
+                          {value} ({entry.payload?.value || 0} - {entry.payload?.percentage || 0}%)
+                        </span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* Status breakdown summary */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 pt-4 border-t">
+                {poStatusData.map((item, index) => (
+                  <div key={index} className="text-center">
+                    <div className="flex items-center justify-center space-x-2 mb-1">
+                      <div 
+                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-sm font-medium">{item.name}</span>
+                    </div>
+                    <div className="text-2xl font-bold text-muted-foreground">{item.value}</div>
+                    <div className="text-xs text-muted-foreground">{item.percentage}%</div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Pipeline health indicator */}
+              <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Pipeline Health:</span>
+                  <span>
+                    {(() => {
+                      const draftPercent = poStatusData.find(item => item.name === 'Draft')?.percentage || 0;
+                      const cancelledPercent = poStatusData.find(item => item.name === 'Cancelled')?.percentage || 0;
+                      const completedPercent = poStatusData.find(item => item.name === 'Received')?.percentage || 0;
+                      
+                      if (completedPercent >= 60) return <span className="text-green-600 font-medium">Excellent</span>;
+                      if (completedPercent >= 40) return <span className="text-blue-600 font-medium">Good</span>;
+                      if (draftPercent >= 50) return <span className="text-yellow-600 font-medium">Needs Attention</span>;
+                      if (cancelledPercent >= 20) return <span className="text-red-600 font-medium">Poor</span>;
+                      return <span className="text-gray-600 font-medium">Fair</span>;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+              No purchase order data available
             </div>
           )}
         </CardContent>
