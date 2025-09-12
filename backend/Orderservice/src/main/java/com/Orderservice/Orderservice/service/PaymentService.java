@@ -97,11 +97,20 @@ public class PaymentService {
     
     public PaymentConfirmationResponse confirmPayment(PaymentConfirmationRequest request) {
         try {
+            // Validate payment intent ID
+            if (request.getPaymentIntentId() == null || request.getPaymentIntentId().trim().isEmpty()) {
+                return PaymentConfirmationResponse.builder()
+                    .success(false)
+                    .message("Payment intent ID mismatch")
+                    .error("Payment intent ID mismatch")
+                    .build();
+            }
+            
             Order order = orderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));
             
             Payment payment = paymentRepository.findByStripePaymentIntentId(request.getPaymentIntentId())
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElseThrow(() -> new RuntimeException("Payment intent ID mismatch"));
             
             // Update payment status
             payment.setStripePaymentMethodId(request.getPaymentMethodId());
@@ -187,6 +196,7 @@ public class PaymentService {
         } catch (Exception e) {
             return PaymentConfirmationResponse.builder()
                 .success(false)
+                .message("Payment confirmation failed: " + e.getMessage())
                 .error("Payment confirmation failed: " + e.getMessage())
                 .build();
         }
