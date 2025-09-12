@@ -12,11 +12,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestEntityManager;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.DirtiesContext;
+
+import org.springframework.context.annotation.Import;
+
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.Orderservice.Orderservice.config.IntegrationTestConfig;
 import com.Orderservice.Orderservice.dto.PaymentConfirmationRequest;
 import com.Orderservice.Orderservice.dto.PaymentConfirmationResponse;
 import com.Orderservice.Orderservice.entity.Order;
@@ -28,13 +30,12 @@ import com.Orderservice.Orderservice.enums.PaymentStatus;
 import com.Orderservice.Orderservice.repository.OrderRepository;
 import com.Orderservice.Orderservice.repository.PaymentRepository;
 import com.Orderservice.Orderservice.repository.ProductRepository;
-import com.Orderservice.Orderservice.service.EventPublisherService;
 import com.Orderservice.Orderservice.service.PaymentService;
 
 @SpringBootTest
 @AutoConfigureTestEntityManager
-@ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@ActiveProfiles("integration")
+@Import(IntegrationTestConfig.class)
 @Transactional
 public class PaymentServiceIntegrationTest {
 
@@ -49,9 +50,6 @@ public class PaymentServiceIntegrationTest {
 
     @Autowired
     private ProductRepository productRepository;
-
-    @MockBean
-    private EventPublisherService eventPublisherService;
 
     private Product testProduct;
     private Order testOrder;
