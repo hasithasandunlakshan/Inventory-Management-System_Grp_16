@@ -103,6 +103,12 @@ public class ApiGatewayApplication {
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("http://localhost:8086"))
 
+                                // Resource Service - Assignment Management (Secured operations)
+                                .route("resource-service-assignments", r -> r
+                                                .path("/api/resources/assignments/**")
+                                                .filters(f -> f.filter(jwtAuthenticationFilter))
+                                                .uri("http://localhost:8086"))
+
                                 // Health Check
                                 .route("health-check", r -> r
                                                 .path("/health")

@@ -64,6 +64,7 @@ export interface VehicleRegistrationRequest {
 export interface AssignmentRequest {
   driverId: number;
   vehicleId: number;
+  assignedBy: number;
   notes?: string;
 }
 
