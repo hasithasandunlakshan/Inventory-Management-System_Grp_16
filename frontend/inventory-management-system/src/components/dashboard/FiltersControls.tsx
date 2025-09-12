@@ -4,8 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useFilters } from "@/contexts/FilterContext";
 
 export default function FiltersControls() {
+  const { filters, updateFilter } = useFilters();
+
   return (
     <Card>
       <CardHeader>
@@ -16,7 +19,10 @@ export default function FiltersControls() {
         <div className="grid gap-4 md:grid-cols-4">
           <div className="space-y-2">
             <Label>Time Range</Label>
-            <Select defaultValue="last30">
+            <Select 
+              value={filters.timeRange} 
+              onValueChange={(value) => updateFilter('timeRange', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select range" />
               </SelectTrigger>
@@ -31,15 +37,26 @@ export default function FiltersControls() {
           </div>
           <div className="space-y-2">
             <Label>From</Label>
-            <Input type="date" />
+            <Input 
+              type="date" 
+              value={filters.fromDate}
+              onChange={(e) => updateFilter('fromDate', e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label>To</Label>
-            <Input type="date" />
+            <Input 
+              type="date" 
+              value={filters.toDate}
+              onChange={(e) => updateFilter('toDate', e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label>Warehouse</Label>
-            <Select defaultValue="all">
+            <Select 
+              value={filters.warehouse} 
+              onValueChange={(value) => updateFilter('warehouse', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All" />
               </SelectTrigger>
