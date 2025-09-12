@@ -35,6 +35,10 @@ inventory:
   service:
     url: http://localhost:8085
 
+resource:
+  service:
+    url: http://localhost:8086
+
 # Logging
 logging:
   level:
