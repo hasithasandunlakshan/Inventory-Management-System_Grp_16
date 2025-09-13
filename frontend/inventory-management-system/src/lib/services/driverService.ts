@@ -261,7 +261,14 @@ class DriverService {
 
     const data = await response.json();
     console.log('🔍 getUsersByRole - Success data:', data);
-    return data;
+    
+    // Extract users array from the response
+    if (data.success && Array.isArray(data.users)) {
+      return data.users;
+    } else {
+      console.error('🔍 getUsersByRole - Invalid response structure:', data);
+      return [];
+    }
   }
 }
 
