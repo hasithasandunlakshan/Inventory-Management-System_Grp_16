@@ -20,6 +20,7 @@ import {
   formatMonth,
   getCurrentMonth,
 } from '@/utils/revenueUtils';
+import { SimpleBarChart } from '@/components/charts';
 
 export default function RevenueDashboard() {
   const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(
@@ -184,37 +185,38 @@ export default function RevenueDashboard() {
           </div>
         </div>
 
-        {/* Monthly Trend */}
-        <div className='mt-6'>
-          <h4 className='font-medium text-sm mb-3'>Monthly Revenue Trend</h4>
-          <div className='space-y-2'>
-            {monthlyRevenue.slice(-6).map(monthData => {
-              const maxRevenue = Math.max(
-                ...monthlyRevenue.map(m => m.revenue)
-              );
-              const percentage =
-                maxRevenue > 0 ? (monthData.revenue / maxRevenue) * 100 : 0;
+        {/* Monthly Charts - Two Column Layout */}
+        <div className='mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6'>
+          {/* Monthly Revenue Chart */}
+          <div>
+            <h4 className='font-medium text-sm mb-3'>Monthly Revenue</h4>
+            <SimpleBarChart
+              data={monthlyRevenue.map(month => ({
+                name: formatMonth(month.month),
+                revenue: month.revenue,
+              }))}
+              dataKey='revenue'
+              xAxisKey='name'
+              height={400}
+              color='#3b82f6'
+              label='Revenue ($)'
+            />
+          </div>
 
-              return (
-                <div key={monthData.month} className='space-y-1'>
-                  <div className='flex justify-between text-sm'>
-                    <span className='text-muted-foreground'>
-                      {formatMonth(monthData.month)}
-                    </span>
-                    <span className='font-medium'>
-                      {formatCurrency(monthData.revenue, monthData.currency)} (
-                      {monthData.count} orders)
-                    </span>
-                  </div>
-                  <div className='w-full bg-gray-200 rounded-full h-1.5'>
-                    <div
-                      className='bg-blue-600 h-1.5 rounded-full transition-all duration-300'
-                      style={{ width: `${percentage}%` }}
-                    ></div>
-                  </div>
-                </div>
-              );
-            })}
+          {/* Monthly Orders Chart */}
+          <div>
+            <h4 className='font-medium text-sm mb-3'>Monthly Orders</h4>
+            <SimpleBarChart
+              data={monthlyRevenue.map(month => ({
+                name: formatMonth(month.month),
+                orders: month.count,
+              }))}
+              dataKey='orders'
+              xAxisKey='name'
+              height={400}
+              color='#10b981'
+              label='Orders'
+            />
           </div>
         </div>
       </CardContent>
