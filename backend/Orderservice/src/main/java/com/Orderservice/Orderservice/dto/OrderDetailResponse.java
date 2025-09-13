@@ -11,20 +11,25 @@ import java.util.List;
 public class OrderDetailResponse {
     private Long orderId;
     private Long customerId;
+    private String customerName;
+    private String customerEmail;
+    private String customerAddress;
+    private Double customerLatitude;
+    private Double customerLongitude;
     private LocalDateTime orderDate;
     private String status;
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<OrderItemDetail> orderItems;
-    
+
     @Data
     @Builder
     public static class OrderItemDetail {
         private Long orderItemId;
         private Long productId;
         private String productName;
-        private String productImageUrl; 
+        private String productImageUrl;
         private Integer quantity;
         private String barcode;
         private BigDecimal price;
