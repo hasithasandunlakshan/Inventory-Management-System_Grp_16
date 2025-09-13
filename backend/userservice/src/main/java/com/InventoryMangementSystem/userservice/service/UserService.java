@@ -6,6 +6,7 @@ import com.InventoryMangementSystem.userservice.dto.LoginRequest;
 import com.InventoryMangementSystem.userservice.dto.LoginResponse;
 import com.InventoryMangementSystem.userservice.dto.SignupRequest;
 import com.InventoryMangementSystem.userservice.dto.UserInfo;
+import com.InventoryMangementSystem.userservice.dto.UserDropdownDto;
 
 public interface UserService {
     void registerUser(SignupRequest request);
@@ -18,5 +19,9 @@ public interface UserService {
 
     List<UserInfo> getAllUsers();
     
-    List<UserInfo> getUsersByRole(String roleName);
+
+    List<UserInfo> getUsersByRole(String role);
+    
+    List<UserDropdownDto> getUsersForDropdown(String role);
+
 }
