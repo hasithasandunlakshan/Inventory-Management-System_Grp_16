@@ -8,7 +8,9 @@ import {
   ShoppingCart,
   FileText,
   Shield,
-  UserCheck
+  UserCheck,
+  Car,
+  Route
 } from "lucide-react";
 
 export interface NavItem {
@@ -141,6 +143,32 @@ export const NAV_ITEMS: NavItem[] = [
         href: "/logistics/payments",
         icon: FileText,
         roles: ["MANAGER", "ADMIN"],
+      },
+    ],
+  },
+  {
+    label: "Driver Management",
+    href: "/drivers",
+    icon: UserCheck,
+    roles: ["MANAGER", "ADMIN", "DRIVER"],
+    children: [
+      {
+        label: "Drivers",
+        href: "/drivers",
+        icon: UserCheck,
+        roles: ["MANAGER", "ADMIN", "DRIVER"],
+      },
+      {
+        label: "Vehicles",
+        href: "/vehicles",
+        icon: Car,
+        roles: ["MANAGER", "ADMIN", "DRIVER"],
+      },
+      {
+        label: "Assignments",
+        href: "/assignments",
+        icon: Route,
+        roles: ["MANAGER", "ADMIN", "DRIVER"],
       },
     ],
   },
