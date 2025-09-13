@@ -283,6 +283,9 @@ export default function OrdersPage() {
           setIsModalOpen(false);
           setSelectedOrder(null);
         }}
+        onRefundSuccess={() => {
+          fetchOrders(); // Refresh orders data after successful refund
+        }}
       />
     </div>
   );
