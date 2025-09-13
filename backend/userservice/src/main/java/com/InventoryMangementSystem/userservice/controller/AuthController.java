@@ -19,8 +19,6 @@ import com.InventoryMangementSystem.userservice.dto.UserInfo;
 import com.InventoryMangementSystem.userservice.dto.UserDropdownDto;
 import com.InventoryMangementSystem.userservice.service.UserService;
 
-import java.util.List;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -54,7 +52,6 @@ public class AuthController {
         return ResponseEntity.ok("User registered successfully");
     } catch (Exception e) {
         System.err.println("ERROR during signup: " + e.getMessage());
-        e.printStackTrace();
         System.out.println("=== SIGNUP REQUEST FAILED ===\n");
         throw e;
     }
@@ -84,7 +81,6 @@ public class AuthController {
             }
         } catch (Exception e) {
             System.err.println("ERROR during login: " + e.getMessage());
-            e.printStackTrace();
             System.out.println("=== LOGIN REQUEST FAILED ===\n");
             LoginResponse errorResponse = new LoginResponse(false, "Internal server error: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
@@ -92,7 +88,6 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-
     public ResponseEntity<Map<String, Object>> getAllUsersWithUserRole() {
         System.out.println("\n=== GET ALL USERS WITH USER ROLE REQUEST RECEIVED ===");
         System.out.println("Timestamp: " + java.time.LocalDateTime.now());
@@ -115,7 +110,6 @@ public class AuthController {
             
         } catch (Exception e) {
             System.err.println("ERROR during get users request: " + e.getMessage());
-            e.printStackTrace();
             System.out.println("=== GET ALL USERS WITH USER ROLE REQUEST FAILED ===\n");
             
             Map<String, Object> errorResponse = new HashMap<>();
@@ -125,7 +119,10 @@ public class AuthController {
             errorResponse.put("totalUsers", 0);
             
             return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
 
+    @GetMapping("/users/by-role")
     public ResponseEntity<List<UserInfo>> getUsersByRole(@RequestParam(defaultValue = "USER") String role) {
         try {
             List<UserInfo> users = userService.getUsersByRole(role);
@@ -145,9 +142,7 @@ public class AuthController {
             return ResponseEntity.ok(users);
         } catch (Exception e) {
             System.err.println("ERROR getting users for dropdown: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(500).build();
-
         }
     }
 
