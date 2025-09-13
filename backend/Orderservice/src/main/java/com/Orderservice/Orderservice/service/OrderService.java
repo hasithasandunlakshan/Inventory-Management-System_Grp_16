@@ -2,6 +2,7 @@ package com.Orderservice.Orderservice.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -484,6 +485,168 @@ public class OrderService {
             System.err.println("Error counting orders by status: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("Failed to count orders by status", e);
+        }
+    }
+
+    /**
+     * Debug method to get all orders regardless of status
+     * 
+     * @return AllOrdersResponse containing all orders
+     */
+    public AllOrdersResponse getAllOrdersDebug() {
+        try {
+            // Get ALL orders regardless of status
+            List<Order> orders = orderRepository.findAllWithOrderItems();
+            List<OrderDetailResponse> orderDetails = new ArrayList<>();
+
+            System.out.println("DEBUG: Found " + orders.size() + " total orders in database");
+
+            for (Order order : orders) {
+                System.out.println("Order ID: " + order.getOrderId() + ", Status: " + order.getStatus() +
+                        ", Customer ID: " + order.getCustomerId() + ", Total: " + order.getTotalAmount());
+
+                List<OrderDetailResponse.OrderItemDetail> itemDetails = new ArrayList<>();
+
+                // Get order items with product details
+                for (OrderItem orderItem : order.getOrderItems()) {
+                    String productName = "Unknown Product";
+                    String productImageUrl = null;
+                    String barcode = null;
+
+                    if (orderItem.getProductId() != null) {
+                        try {
+                            Optional<Product> productOpt = productRepository.findById(orderItem.getProductId());
+                            if (productOpt.isPresent()) {
+                                Product product = productOpt.get();
+                                productName = product.getName();
+                                productImageUrl = product.getImageUrl();
+                                barcode = product.getBarcode();
+                            } else {
+                                productName = "Product Not Found";
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Error fetching product with ID: " + orderItem.getProductId() + " - "
+                                    + e.getMessage());
+                            productName = "Error Loading Product";
+                        }
+                    } else {
+                        productName = "No Product ID";
+                    }
+
+                    OrderDetailResponse.OrderItemDetail itemDetail = OrderDetailResponse.OrderItemDetail.builder()
+                            .orderItemId(orderItem.getOrderItemId())
+                            .productId(orderItem.getProductId())
+                            .productName(productName)
+                            .productImageUrl(productImageUrl)
+                            .quantity(orderItem.getQuantity())
+                            .barcode(barcode)
+                            .price(orderItem.getPrice())
+                            .createdAt(orderItem.getCreatedAt())
+                            .build();
+
+                    itemDetails.add(itemDetail);
+                }
+
+                // Try to get customer details from user service
+                String customerName = null;
+                String customerEmail = null;
+                String customerAddress = null;
+                Double customerLatitude = null;
+                Double customerLongitude = null;
+
+                try {
+                    UserDetailsResponse.UserInfo userResponse = userServiceClient.getUserById(order.getCustomerId());
+                    if (userResponse != null) {
+                        customerName = userResponse.getFullName();
+                        customerEmail = userResponse.getEmail();
+                        customerAddress = userResponse.getFormattedAddress();
+                        customerLatitude = userResponse.getLatitude();
+                        customerLongitude = userResponse.getLongitude();
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error fetching customer details for customer ID: "
+                            + order.getCustomerId() + " - " + e.getMessage());
+                }
+
+                OrderDetailResponse orderDetail = OrderDetailResponse.builder()
+                        .orderId(order.getOrderId())
+                        .customerId(order.getCustomerId())
+                        .orderDate(order.getOrderDate())
+                        .status(order.getStatus().toString())
+                        .totalAmount(order.getTotalAmount())
+                        .createdAt(order.getCreatedAt())
+                        .updatedAt(order.getUpdatedAt())
+                        .orderItems(itemDetails)
+                        .customerName(customerName)
+                        .customerEmail(customerEmail)
+                        .customerAddress(customerAddress)
+                        .customerLatitude(customerLatitude)
+                        .customerLongitude(customerLongitude)
+                        .build();
+
+                orderDetails.add(orderDetail);
+            }
+
+            return AllOrdersResponse.builder()
+                    .success(true)
+                    .message("DEBUG: Retrieved all orders successfully (all statuses)")
+                    .orders(orderDetails)
+                    .totalOrders(orders.size())
+                    .build();
+
+        } catch (Exception e) {
+            System.err.println("Error in getAllOrdersDebug: " + e.getMessage());
+            e.printStackTrace();
+
+            return AllOrdersResponse.builder()
+                    .success(false)
+                    .message("Failed to retrieve debug orders: " + e.getMessage())
+                    .orders(new ArrayList<>())
+                    .totalOrders(0)
+                    .build();
+        }
+    }
+
+    /**
+     * Debug method to get counts of orders by status
+     */
+    public Map<String, Object> getOrderStatusCounts() {
+        try {
+            List<Order> allOrders = orderRepository.findAllWithOrderItems();
+
+            Map<String, Long> statusCounts = allOrders.stream()
+                    .collect(java.util.stream.Collectors.groupingBy(
+                            order -> order.getStatus().toString(),
+                            java.util.stream.Collectors.counting()));
+
+            long totalOrders = allOrders.size();
+            long confirmedOrders = statusCounts.getOrDefault("CONFIRMED", 0L);
+
+            System.out.println("=== ORDER STATUS BREAKDOWN ===");
+            System.out.println("Total orders in database: " + totalOrders);
+            statusCounts.forEach((status, count) -> System.out.println(status + ": " + count + " orders"));
+            System.out.println("CONFIRMED orders (what shipping page should show): " + confirmedOrders);
+
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("success", true);
+            response.put("totalOrders", totalOrders);
+            response.put("confirmedOrders", confirmedOrders);
+            response.put("statusBreakdown", statusCounts);
+            response.put("message", "Order status counts retrieved successfully");
+
+            return response;
+
+        } catch (Exception e) {
+            System.err.println("Error getting order status counts: " + e.getMessage());
+            e.printStackTrace();
+
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("success", false);
+            response.put("message", "Failed to get order status counts: " + e.getMessage());
+            response.put("totalOrders", 0);
+            response.put("confirmedOrders", 0);
+
+            return response;
         }
     }
 }
