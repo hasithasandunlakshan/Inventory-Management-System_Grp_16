@@ -185,9 +185,7 @@ export default function SalesTrendsChart() {
 
           {/* Filter Info */}
           <div className='text-xs text-gray-500 flex justify-between'>
-            <span>
-              All Warehouses
-            </span>
+            <span>All Warehouses</span>
             <span>Range: {filters.timeRange}</span>
           </div>
         </div>

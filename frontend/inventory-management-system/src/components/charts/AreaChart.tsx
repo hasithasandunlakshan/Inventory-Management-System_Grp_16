@@ -45,19 +45,15 @@ export function AreaChart({
           bottom: 5,
         }}
       >
-        {showGrid && <CartesianGrid strokeDasharray="3 3" />}
+        {showGrid && <CartesianGrid strokeDasharray='3 3' />}
         <XAxis dataKey={xAxisKey} />
         <YAxis />
-        {showTooltip && (
-          <ChartTooltip
-            content={<ChartTooltipContent />}
-          />
-        )}
+        {showTooltip && <ChartTooltip content={<ChartTooltipContent />} />}
         <Area
-          type="monotone"
+          type='monotone'
           dataKey={dataKey}
-          stroke="var(--color-area)"
-          fill="var(--color-area)"
+          stroke='var(--color-area)'
+          fill='var(--color-area)'
           fillOpacity={0.6}
         />
       </RechartsAreaChart>

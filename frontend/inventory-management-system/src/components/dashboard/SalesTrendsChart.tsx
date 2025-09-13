@@ -18,12 +18,14 @@ interface SalesData {
   orders: number;
   customers: number;
   avgOrderValue: number;
+  [key: string]: unknown;
 }
 
 interface TopProducts {
   product: string;
   sales: number;
   revenue: number;
+  [key: string]: unknown;
 }
 
 export default function SalesTrendsChart() {
@@ -35,12 +37,11 @@ export default function SalesTrendsChart() {
     const fetchSalesData = async () => {
       try {
         setLoading(true);
-        
+
         const analytics = await analyticsService.getSalesAnalytics();
-        
+
         setSalesData(analytics.dailyData);
         setTopProducts(analytics.topProducts);
-
       } catch (error) {
         console.error('Error fetching sales data:', error);
       } finally {
@@ -56,7 +57,9 @@ export default function SalesTrendsChart() {
       <Card>
         <CardHeader>
           <CardTitle>Sales Trends</CardTitle>
-          <CardDescription>Revenue and sales performance analysis</CardDescription>
+          <CardDescription>
+            Revenue and sales performance analysis
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className='text-sm text-muted-foreground'>Loading...</div>
@@ -77,14 +80,18 @@ export default function SalesTrendsChart() {
           <TrendingUp className='h-5 w-5' />
           Sales Trends
         </CardTitle>
-        <CardDescription>Revenue and sales performance analysis</CardDescription>
+        <CardDescription>
+          Revenue and sales performance analysis
+        </CardDescription>
       </CardHeader>
       <CardContent className='space-y-6'>
         {/* Key Metrics */}
         <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
           <div className='text-center p-3 bg-green-50 rounded-lg border border-green-200'>
             <DollarSign className='h-4 w-4 mx-auto mb-1 text-green-600' />
-            <div className='text-lg font-bold text-green-700'>${totalRevenue.toLocaleString()}</div>
+            <div className='text-lg font-bold text-green-700'>
+              ${totalRevenue.toLocaleString()}
+            </div>
             <div className='text-xs text-green-600'>Total Revenue</div>
           </div>
           <div className='text-center p-3 bg-blue-50 rounded-lg border border-blue-200'>
@@ -94,12 +101,16 @@ export default function SalesTrendsChart() {
           </div>
           <div className='text-center p-3 bg-purple-50 rounded-lg border border-purple-200'>
             <Users className='h-4 w-4 mx-auto mb-1 text-purple-600' />
-            <div className='text-lg font-bold text-purple-700'>{totalCustomers}</div>
+            <div className='text-lg font-bold text-purple-700'>
+              {totalCustomers}
+            </div>
             <div className='text-xs text-purple-600'>Customers</div>
           </div>
           <div className='text-center p-3 bg-orange-50 rounded-lg border border-orange-200'>
             <TrendingUp className='h-4 w-4 mx-auto mb-1 text-orange-600' />
-            <div className='text-lg font-bold text-orange-700'>${avgOrderValue.toFixed(0)}</div>
+            <div className='text-lg font-bold text-orange-700'>
+              ${avgOrderValue.toFixed(0)}
+            </div>
             <div className='text-xs text-orange-600'>Avg Order Value</div>
           </div>
         </div>
@@ -118,16 +129,18 @@ export default function SalesTrendsChart() {
                     color: 'hsl(var(--chart-1))',
                   },
                 }}
-                dataKey="revenue"
-                xAxisKey="date"
-                className="h-full"
+                dataKey='revenue'
+                xAxisKey='date'
+                className='h-full'
               />
             </div>
           </div>
 
           {/* Customer Acquisition & Orders */}
           <div>
-            <h4 className='font-medium text-sm mb-3'>Customer Acquisition & Orders</h4>
+            <h4 className='font-medium text-sm mb-3'>
+              Customer Acquisition & Orders
+            </h4>
             <div className='h-[300px]'>
               <LineChart
                 data={salesData}
@@ -145,16 +158,28 @@ export default function SalesTrendsChart() {
                     color: 'hsl(var(--chart-3))',
                   },
                 }}
-                dataKey="orders"
-                xAxisKey="date"
+                dataKey='orders'
+                xAxisKey='date'
                 showLegend={true}
-                className="h-full"
+                className='h-full'
               />
             </div>
             <div className='mt-2 text-xs text-muted-foreground'>
               <div className='flex justify-between'>
-                <span>Orders per Customer: {(totalOrders / totalCustomers).toFixed(1)}</span>
-                <span>Growth Rate: {totalCustomers > 0 ? ((totalCustomers / Math.max(1, totalCustomers - 1)) - 1 * 100).toFixed(1) : 0}%</span>
+                <span>
+                  Orders per Customer:{' '}
+                  {(totalOrders / totalCustomers).toFixed(1)}
+                </span>
+                <span>
+                  Growth Rate:{' '}
+                  {totalCustomers > 0
+                    ? (
+                        totalCustomers / Math.max(1, totalCustomers - 1) -
+                        1 * 100
+                      ).toFixed(1)
+                    : 0}
+                  %
+                </span>
               </div>
             </div>
           </div>
@@ -172,11 +197,11 @@ export default function SalesTrendsChart() {
                   color: 'hsl(var(--chart-1))',
                 },
               }}
-              dataKey="sales"
-              xAxisKey="product"
-              orientation="horizontal"
+              dataKey='sales'
+              xAxisKey='product'
+              orientation='horizontal'
               showLegend={false}
-              className="h-full"
+              className='h-full'
             />
           </div>
         </div>

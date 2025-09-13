@@ -53,21 +53,15 @@ export function LineChart({
           bottom: 5,
         }}
       >
-        {showGrid && <CartesianGrid strokeDasharray="3 3" />}
+        {showGrid && <CartesianGrid strokeDasharray='3 3' />}
         <XAxis dataKey={xAxisKey} />
         <YAxis />
-        {showTooltip && (
-          <ChartTooltip
-            content={<ChartTooltipContent />}
-          />
-        )}
-        {showLegend && (
-          <ChartLegend content={<ChartLegendContent />} />
-        )}
+        {showTooltip && <ChartTooltip content={<ChartTooltipContent />} />}
+        {showLegend && <ChartLegend content={<ChartLegendContent />} />}
         <Line
-          type="monotone"
+          type='monotone'
           dataKey={dataKey}
-          stroke="var(--color-line)"
+          stroke='var(--color-line)'
           strokeWidth={strokeWidth}
           dot={showDots}
           activeDot={{ r: 6 }}

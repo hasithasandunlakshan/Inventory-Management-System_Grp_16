@@ -181,13 +181,11 @@ export default function InventoryPerformanceChart() {
                 <div className='flex justify-between text-xs text-gray-500'>
                   <span>Stock Level: {item.stockLevel}%</span>
                   <span
-                    className={`font-medium ${
-                      (() => {
-                        if (item.status === 'high') return 'text-green-600';
-                        if (item.status === 'medium') return 'text-yellow-600';
-                        return 'text-red-600';
-                      })()
-                    }`}
+                    className={`font-medium ${(() => {
+                      if (item.status === 'high') return 'text-green-600';
+                      if (item.status === 'medium') return 'text-yellow-600';
+                      return 'text-red-600';
+                    })()}`}
                   >
                     {item.status.toUpperCase()}
                   </span>
@@ -198,9 +196,7 @@ export default function InventoryPerformanceChart() {
 
           {/* Filter Info */}
           <div className='text-xs text-gray-500 flex justify-between pt-2 border-t'>
-            <span>
-              All Warehouses
-            </span>
+            <span>All Warehouses</span>
             <span>Updated: {new Date().toLocaleTimeString()}</span>
           </div>
         </div>

@@ -195,11 +195,11 @@ export default function RevenueDashboard() {
                 name: formatMonth(month.month),
                 revenue: month.revenue,
               }))}
-              dataKey="revenue"
-              xAxisKey="name"
+              dataKey='revenue'
+              xAxisKey='name'
               height={400}
-              color="#3b82f6"
-              label="Revenue ($)"
+              color='#3b82f6'
+              label='Revenue ($)'
             />
           </div>
 
@@ -211,11 +211,11 @@ export default function RevenueDashboard() {
                 name: formatMonth(month.month),
                 orders: month.count,
               }))}
-              dataKey="orders"
-              xAxisKey="name"
+              dataKey='orders'
+              xAxisKey='name'
               height={400}
-              color="#10b981"
-              label="Orders"
+              color='#10b981'
+              label='Orders'
             />
           </div>
         </div>

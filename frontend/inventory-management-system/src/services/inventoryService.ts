@@ -1,4 +1,3 @@
-
 export interface InventoryCostResponse {
   message: string;
   success: boolean;
@@ -63,22 +62,24 @@ export const inventoryService = {
   listAll: async (): Promise<InventoryItem[]> => {
     try {
       console.log('Fetching all inventory items from:', INVENTORY_SERVICE_URL);
-      
+
       const response = await fetch(INVENTORY_SERVICE_URL, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      
+
       console.log('Inventory list response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Inventory list API Error:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
       }
-      
+
       const data = await response.json();
       console.log('Inventory list data:', data);
       return data;

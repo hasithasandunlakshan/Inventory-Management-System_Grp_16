@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  Pie,
-  PieChart as RechartsPieChart,
-  Cell,
-} from 'recharts';
+import { Pie, PieChart as RechartsPieChart, Cell } from 'recharts';
 import {
   ChartContainer,
   ChartTooltip,
@@ -38,15 +34,17 @@ export function PieChart({
   innerRadius = 0,
   outerRadius = 80,
 }: PieChartProps) {
-  const colors = Object.keys(config).map(key => config[key].color || `hsl(var(--${key}))`);
+  const colors = Object.keys(config).map(
+    key => config[key].color || `hsl(var(--${key}))`
+  );
 
   return (
     <ChartContainer config={config} className={className}>
       <RechartsPieChart>
         <Pie
           data={data}
-          cx="50%"
-          cy="50%"
+          cx='50%'
+          cy='50%'
           innerRadius={innerRadius}
           outerRadius={outerRadius}
           paddingAngle={2}
@@ -54,17 +52,14 @@ export function PieChart({
           nameKey={nameKey}
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${entry.name || index}`} fill={colors[index % colors.length]} />
+            <Cell
+              key={`cell-${entry.name || index}`}
+              fill={colors[index % colors.length]}
+            />
           ))}
         </Pie>
-        {showTooltip && (
-          <ChartTooltip
-            content={<ChartTooltipContent />}
-          />
-        )}
-        {showLegend && (
-          <ChartLegend content={<ChartLegendContent />} />
-        )}
+        {showTooltip && <ChartTooltip content={<ChartTooltipContent />} />}
+        {showLegend && <ChartLegend content={<ChartLegendContent />} />}
       </RechartsPieChart>
     </ChartContainer>
   );

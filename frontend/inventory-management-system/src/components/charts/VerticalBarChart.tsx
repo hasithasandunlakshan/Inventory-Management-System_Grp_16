@@ -39,7 +39,7 @@ export function VerticalBarChart({
 }: VerticalBarChartProps) {
   return (
     <ChartContainer config={config} className={className}>
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width='100%' height={height}>
         <RechartsBarChart
           data={data}
           margin={{
@@ -48,31 +48,25 @@ export function VerticalBarChart({
             left: 20,
             bottom: 80,
           }}
-          barCategoryGap="10%"
+          barCategoryGap='10%'
           maxBarSize={40}
           barGap={2}
         >
-          {showGrid && <CartesianGrid strokeDasharray="3 3" />}
-          <XAxis 
-            dataKey={xAxisKey} 
+          {showGrid && <CartesianGrid strokeDasharray='3 3' />}
+          <XAxis
+            dataKey={xAxisKey}
             tick={{ fontSize: 11 }}
             angle={-45}
-            textAnchor="end"
+            textAnchor='end'
             height={80}
             interval={0}
             tickMargin={10}
           />
-          <YAxis 
-            tick={{ fontSize: 12 }}
-          />
-          {showTooltip && (
-            <ChartTooltip
-              content={<ChartTooltipContent />}
-            />
-          )}
-          <Bar 
-            dataKey={dataKey} 
-            fill="var(--color-bar)"
+          <YAxis tick={{ fontSize: 12 }} />
+          {showTooltip && <ChartTooltip content={<ChartTooltipContent />} />}
+          <Bar
+            dataKey={dataKey}
+            fill='var(--color-bar)'
             radius={[4, 4, 0, 0]}
             name={String(config[dataKey]?.label || dataKey)}
           />

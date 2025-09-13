@@ -37,12 +37,11 @@ export default function SupplierPerformanceChart() {
     const fetchSupplierData = async () => {
       try {
         setLoading(true);
-        
+
         const analytics = await analyticsService.getSupplierAnalytics();
-        
+
         setSupplierData(analytics.supplierPerformance);
         setDeliveryTrend(analytics.deliveryTrend);
-
       } catch (error) {
         console.error('Error fetching supplier data:', error);
       } finally {
@@ -58,7 +57,9 @@ export default function SupplierPerformanceChart() {
       <Card>
         <CardHeader>
           <CardTitle>Supplier Performance</CardTitle>
-          <CardDescription>Supplier analytics and performance metrics</CardDescription>
+          <CardDescription>
+            Supplier analytics and performance metrics
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className='text-sm text-muted-foreground'>Loading...</div>
@@ -67,10 +68,18 @@ export default function SupplierPerformanceChart() {
     );
   }
 
-  const totalOrders = supplierData.reduce((sum, supplier) => sum + supplier.orders, 0);
-  const totalOnTime = supplierData.reduce((sum, supplier) => sum + supplier.onTimeDelivery, 0);
+  const totalOrders = supplierData.reduce(
+    (sum, supplier) => sum + supplier.orders,
+    0
+  );
+  const totalOnTime = supplierData.reduce(
+    (sum, supplier) => sum + supplier.onTimeDelivery,
+    0
+  );
   const onTimeRate = (totalOnTime / totalOrders) * 100;
-  const avgQualityScore = supplierData.reduce((sum, supplier) => sum + supplier.qualityScore, 0) / supplierData.length;
+  const avgQualityScore =
+    supplierData.reduce((sum, supplier) => sum + supplier.qualityScore, 0) /
+    supplierData.length;
 
   const performanceData = supplierData.map(supplier => ({
     name: supplier.name,
@@ -85,7 +94,6 @@ export default function SupplierPerformanceChart() {
     late: month.late,
   }));
 
-
   return (
     <Card>
       <CardHeader>
@@ -93,7 +101,9 @@ export default function SupplierPerformanceChart() {
           <Truck className='h-5 w-5' />
           Supplier Performance
         </CardTitle>
-        <CardDescription>Supplier analytics and performance metrics</CardDescription>
+        <CardDescription>
+          Supplier analytics and performance metrics
+        </CardDescription>
       </CardHeader>
       <CardContent className='space-y-6'>
         {/* Key Metrics */}
@@ -110,13 +120,19 @@ export default function SupplierPerformanceChart() {
           </div>
           <div className='text-center p-3 bg-muted/50 rounded-lg'>
             <AlertCircle className='h-4 w-4 mx-auto mb-1 text-purple-600' />
-            <div className='text-lg font-bold'>{avgQualityScore.toFixed(1)}</div>
-            <div className='text-xs text-muted-foreground'>Avg Quality Score</div>
+            <div className='text-lg font-bold'>
+              {avgQualityScore.toFixed(1)}
+            </div>
+            <div className='text-xs text-muted-foreground'>
+              Avg Quality Score
+            </div>
           </div>
           <div className='text-center p-3 bg-muted/50 rounded-lg'>
             <Truck className='h-4 w-4 mx-auto mb-1 text-orange-600' />
             <div className='text-lg font-bold'>{supplierData.length}</div>
-            <div className='text-xs text-muted-foreground'>Active Suppliers</div>
+            <div className='text-xs text-muted-foreground'>
+              Active Suppliers
+            </div>
           </div>
         </div>
 
@@ -124,7 +140,9 @@ export default function SupplierPerformanceChart() {
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
           {/* On-Time Delivery Rate by Supplier */}
           <div>
-            <h4 className='font-medium text-sm mb-3'>On-Time Delivery Rate by Supplier</h4>
+            <h4 className='font-medium text-sm mb-3'>
+              On-Time Delivery Rate by Supplier
+            </h4>
             <div className='h-[300px]'>
               <BarChart
                 data={performanceData}
@@ -134,18 +152,20 @@ export default function SupplierPerformanceChart() {
                     color: 'hsl(var(--chart-1))',
                   },
                 }}
-                dataKey="onTimeRate"
-                xAxisKey="name"
-                orientation="vertical"
+                dataKey='onTimeRate'
+                xAxisKey='name'
+                orientation='vertical'
                 showLegend={false}
-                className="h-full"
+                className='h-full'
               />
             </div>
           </div>
 
           {/* Delivery Performance Trend */}
           <div>
-            <h4 className='font-medium text-sm mb-3'>Delivery Performance Trend</h4>
+            <h4 className='font-medium text-sm mb-3'>
+              Delivery Performance Trend
+            </h4>
             <div className='h-[300px]'>
               <LineChart
                 data={deliveryTrendData}
@@ -159,15 +179,14 @@ export default function SupplierPerformanceChart() {
                     color: 'hsl(var(--chart-2))',
                   },
                 }}
-                dataKey="onTime"
-                xAxisKey="month"
+                dataKey='onTime'
+                xAxisKey='month'
                 showLegend={true}
-                className="h-full"
+                className='h-full'
               />
             </div>
           </div>
         </div>
-
       </CardContent>
     </Card>
   );

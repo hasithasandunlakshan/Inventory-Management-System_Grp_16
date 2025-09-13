@@ -42,7 +42,7 @@ export function BarChart({
   multipleBars = false,
 }: BarChartProps) {
   const configKeys = Object.keys(config);
-  
+
   return (
     <ChartContainer config={config} className={className}>
       <RechartsBarChart
@@ -54,32 +54,26 @@ export function BarChart({
           bottom: 80,
         }}
       >
-        {showGrid && <CartesianGrid strokeDasharray="3 3" />}
-        <XAxis 
-          dataKey={xAxisKey} 
+        {showGrid && <CartesianGrid strokeDasharray='3 3' />}
+        <XAxis
+          dataKey={xAxisKey}
           tick={{ fontSize: 12 }}
           angle={-45}
-          textAnchor="end"
+          textAnchor='end'
           height={60}
         />
-        <YAxis 
+        <YAxis
           tick={{ fontSize: 12 }}
-          label={{ 
-            value: 'Value', 
-            angle: -90, 
-            position: 'insideLeft' 
+          label={{
+            value: 'Value',
+            angle: -90,
+            position: 'insideLeft',
           }}
         />
-        {showTooltip && (
-          <ChartTooltip
-            content={<ChartTooltipContent />}
-          />
-        )}
-        {showLegend && (
-          <ChartLegend content={<ChartLegendContent />} />
-        )}
+        {showTooltip && <ChartTooltip content={<ChartTooltipContent />} />}
+        {showLegend && <ChartLegend content={<ChartLegendContent />} />}
         {multipleBars ? (
-          configKeys.map((key) => (
+          configKeys.map(key => (
             <Bar
               key={key}
               dataKey={key}
@@ -88,7 +82,7 @@ export function BarChart({
             />
           ))
         ) : (
-          <Bar dataKey={dataKey} fill="var(--color-bar)" />
+          <Bar dataKey={dataKey} fill='var(--color-bar)' />
         )}
       </RechartsBarChart>
     </ChartContainer>
