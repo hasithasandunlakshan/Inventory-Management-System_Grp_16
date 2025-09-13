@@ -52,7 +52,14 @@ describe('productService', () => {
   });
 
   it('addProduct posts body and returns created', async () => {
-    const body = { name: 'A', description: 'B', price: 1, stock: 1, imageUrl: '', categoryId: 1 } as any;
+    const body = {
+      name: 'A',
+      description: 'B',
+      price: 1,
+      stock: 1,
+      imageUrl: '',
+      categoryId: 1,
+    } as any;
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ productId: 1, ...body }),
@@ -89,7 +96,10 @@ describe('productService', () => {
       categoryId: 1,
     } as any;
     const updatedProduct = { productId: 1, ...product };
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => updatedProduct });
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedProduct,
+    });
     const res = await productService.updateProduct(1, product);
     expect(res).toEqual(updatedProduct);
     expect(mockFetch).toHaveBeenCalledWith(

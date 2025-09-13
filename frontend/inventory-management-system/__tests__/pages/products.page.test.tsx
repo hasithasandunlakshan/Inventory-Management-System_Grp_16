@@ -26,7 +26,9 @@ const { categoryService } = jest.requireMock('@/lib/services/categoryService');
 
 describe('ProductsPage', () => {
   it('shows loader then renders products', async () => {
-    (productService.getAllProductsWithCategories as jest.Mock).mockResolvedValueOnce([
+    (
+      productService.getAllProductsWithCategories as jest.Mock
+    ).mockResolvedValueOnce([
       { productId: 1, name: 'Item A', description: 'A', price: 100, stock: 5 },
     ]);
     (categoryService.getAllCategories as jest.Mock).mockResolvedValueOnce([
@@ -34,17 +36,19 @@ describe('ProductsPage', () => {
     ]);
 
     render(<ProductsPage />);
-    
+
     // Wait for the products to load and check that loading is gone
     await waitFor(() => {
       expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
     });
-    
+
     expect(await screen.findAllByTestId('product-card')).toHaveLength(1);
   });
 
   it('renders empty state on no data', async () => {
-    (productService.getAllProductsWithCategories as jest.Mock).mockResolvedValueOnce([]);
+    (
+      productService.getAllProductsWithCategories as jest.Mock
+    ).mockResolvedValueOnce([]);
     (categoryService.getAllCategories as jest.Mock).mockResolvedValueOnce([]);
     render(<ProductsPage />);
     expect(
@@ -53,9 +57,9 @@ describe('ProductsPage', () => {
   });
 
   it('handles fetch failure gracefully', async () => {
-    (productService.getAllProductsWithCategories as jest.Mock).mockRejectedValueOnce(
-      new Error('fail')
-    );
+    (
+      productService.getAllProductsWithCategories as jest.Mock
+    ).mockRejectedValueOnce(new Error('fail'));
     (categoryService.getAllCategories as jest.Mock).mockResolvedValueOnce([]);
     render(<ProductsPage />);
     await waitFor(() =>

@@ -99,7 +99,6 @@ import { AuthModal } from '@/components/AuthModal';
 import { UserHeader } from '@/components/UserHeader';
 import { PurchaseOrderStats } from '@/components/PurchaseOrderStats';
 import { SupplierPageStats } from '@/components/SupplierPageStats';
-import { authDebug } from '@/lib/utils/authDebug';
 import { userService, UserInfo } from '@/lib/services/userService';
 import { getDistinctColor } from '@/lib/utils/colorUtils';
 

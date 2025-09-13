@@ -9,7 +9,9 @@ Prettier is configured to ensure consistent code formatting across the entire fr
 ## 🛠️ Configuration Files
 
 ### `.prettierrc`
+
 Main Prettier configuration file with the following settings:
+
 - **Semicolons**: Always use semicolons
 - **Trailing Commas**: ES5 compatible trailing commas
 - **Single Quotes**: Use single quotes for strings
@@ -21,7 +23,9 @@ Main Prettier configuration file with the following settings:
 - **End of Line**: LF (Unix style)
 
 ### `.prettierignore`
+
 Excludes the following from formatting:
+
 - `node_modules/`
 - Build outputs (`.next/`, `out/`, `build/`, `dist/`)
 - Environment files (`.env*`)
@@ -31,7 +35,9 @@ Excludes the following from formatting:
 - Generated files
 
 ### `.vscode/settings.json`
+
 VS Code settings for automatic formatting:
+
 - Format on save
 - Format on paste
 - Use Prettier as default formatter
@@ -89,16 +95,19 @@ The frontend CI workflow includes Prettier checks:
 ## 📝 Usage Examples
 
 ### Format a specific file
+
 ```bash
 npx prettier --write src/components/MyComponent.tsx
 ```
 
 ### Check formatting without fixing
+
 ```bash
 npx prettier --check src/components/MyComponent.tsx
 ```
 
 ### Format only TypeScript files
+
 ```bash
 npx prettier --write "src/**/*.{ts,tsx}"
 ```
@@ -114,16 +123,19 @@ npx prettier --write "src/**/*.{ts,tsx}"
 ## 🔧 Troubleshooting
 
 ### VS Code Not Formatting on Save
+
 1. Install the Prettier VS Code extension
 2. Ensure `.vscode/settings.json` is in the project root
 3. Check that Prettier is set as the default formatter
 
 ### Pre-commit Hook Not Working
+
 1. Ensure Husky is installed: `npm install husky --save-dev`
 2. Initialize Husky: `npx husky init`
 3. Make the pre-commit hook executable: `chmod +x .husky/pre-commit`
 
 ### CI Failing Due to Formatting
+
 1. Run `npm run format` locally
 2. Commit the formatted files
 3. Push the changes

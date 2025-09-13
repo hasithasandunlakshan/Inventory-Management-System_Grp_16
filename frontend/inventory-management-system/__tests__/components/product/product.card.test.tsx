@@ -43,7 +43,7 @@ describe('ProductCard', () => {
     render(<ProductCard {...baseProps} />);
     fireEvent.click(screen.getByText('Sample Product'));
     expect(productUtils.viewProductDetails).toHaveBeenCalledWith(
-      "1",
+      '1',
       expect.any(Object)
     );
   });

@@ -26,7 +26,9 @@ export default function ProductDetailPage() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const fetchedProduct = await productService.getProductById(parseInt(productId));
+      const fetchedProduct = await productService.getProductById(
+        parseInt(productId)
+      );
       setProduct(fetchedProduct);
       setError(null);
     } catch (err) {

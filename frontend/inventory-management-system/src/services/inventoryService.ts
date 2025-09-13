@@ -1,4 +1,3 @@
-import { authService } from '@/lib/services/authService';
 
 export interface InventoryCostResponse {
   message: string;

@@ -70,7 +70,7 @@ export const hasAnyRole = (roles: string[]): boolean => {
 
 export function createAuthenticatedRequestOptions(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' = 'GET',
-  body?: any
+  body?: unknown
 ): RequestInit {
   const token = localStorage.getItem('inventory_auth_token');
 
