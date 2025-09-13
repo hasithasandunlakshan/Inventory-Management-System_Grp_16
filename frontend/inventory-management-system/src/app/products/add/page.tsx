@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { productService } from '@/lib/services/productService';
 import { categoryService } from '@/lib/services/categoryService';
 import { Button } from '@/components/ui/button';
@@ -257,9 +258,11 @@ export default function AddProductPage() {
                   onChange={handleImageChange}
                 />
                 {newProduct.imageUrl && (
-                  <img
+                  <Image
                     src={newProduct.imageUrl}
                     alt='Preview'
+                    width={128}
+                    height={128}
                     className='h-32 mt-2 rounded border'
                   />
                 )}

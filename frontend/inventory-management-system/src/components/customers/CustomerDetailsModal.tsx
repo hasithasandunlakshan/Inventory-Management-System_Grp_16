@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -84,9 +85,11 @@ export default function CustomerDetailsModal({
           <div className='flex items-start space-x-4 p-4 bg-gray-50 rounded-lg'>
             <div className='w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden'>
               {customer.profileImageUrl ? (
-                <img
+                <Image
                   src={customer.profileImageUrl}
                   alt={customer.fullName}
+                  width={64}
+                  height={64}
                   className='w-full h-full object-cover'
                 />
               ) : (

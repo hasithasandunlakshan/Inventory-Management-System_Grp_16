@@ -3467,8 +3467,12 @@ function AnalyticsTab() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number, name: string, props: any) => [
-                        `${value} orders (${(props.payload as any)?.percentage || 0}%)`,
+                      formatter={(
+                        value: number,
+                        name: string,
+                        props: { payload?: { percentage?: number } }
+                      ) => [
+                        `${value} orders (${props.payload?.percentage || 0}%)`,
                         'Count',
                       ]}
                       labelFormatter={label => `Status: ${label}`}
@@ -3476,12 +3480,16 @@ function AnalyticsTab() {
                     <Legend
                       verticalAlign='bottom'
                       height={36}
-                      formatter={(value: number, entry: any) => (
-                        <span
-                          style={{ color: (entry.color as string) || '#000' }}
-                        >
-                          {value} ({(entry.payload as any)?.value || 0} -{' '}
-                          {(entry.payload as any)?.percentage || 0}%)
+                      formatter={(
+                        value: number,
+                        entry: {
+                          color?: string;
+                          payload?: { value?: number; percentage?: number };
+                        }
+                      ) => (
+                        <span style={{ color: entry.color || '#000' }}>
+                          {value} ({entry.payload?.value || 0} -{' '}
+                          {entry.payload?.percentage || 0}%)
                         </span>
                       )}
                     />

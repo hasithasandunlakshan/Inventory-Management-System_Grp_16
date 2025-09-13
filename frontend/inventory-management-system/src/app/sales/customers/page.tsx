@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -274,9 +275,11 @@ export default function CustomersPage() {
                         <div className='flex items-center space-x-3'>
                           <div className='w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden'>
                             {customer.profileImageUrl ? (
-                              <img
+                              <Image
                                 src={customer.profileImageUrl}
                                 alt={customer.fullName}
+                                width={32}
+                                height={32}
                                 className='w-full h-full object-cover'
                               />
                             ) : (

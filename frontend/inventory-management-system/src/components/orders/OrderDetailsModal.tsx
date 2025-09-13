@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -291,9 +292,11 @@ export default function OrderDetailsModal({
                       {/* Product Image */}
                       <div className='w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden'>
                         {item.productImageUrl ? (
-                          <img
+                          <Image
                             src={item.productImageUrl}
                             alt={item.productName}
+                            width={64}
+                            height={64}
                             className='w-full h-full object-cover'
                           />
                         ) : (

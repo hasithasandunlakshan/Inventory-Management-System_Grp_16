@@ -1,17 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 
-interface EditPurchaseOrderPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
+export default function EditPurchaseOrderPage() {
+  const params = useParams();
+  const [id, setId] = useState<string>('');
 
-export default async function EditPurchaseOrderPage({
-  params,
-}: EditPurchaseOrderPageProps) {
-  const { id } = await params;
+  useEffect(() => {
+    if (params.id) {
+      setId(params.id as string);
+    }
+  }, [params.id]);
 
   return (
     <div className='space-y-6'>

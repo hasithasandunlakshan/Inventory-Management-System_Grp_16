@@ -1,17 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 
-interface SupplierDetailsPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
+export default function SupplierDetailsPage() {
+  const params = useParams();
+  const [id, setId] = useState<string>('');
 
-export default async function SupplierDetailsPage({
-  params,
-}: SupplierDetailsPageProps) {
-  const { id } = await params;
+  useEffect(() => {
+    if (params.id) {
+      setId(params.id as string);
+    }
+  }, [params.id]);
 
   return (
     <div className='space-y-6'>
