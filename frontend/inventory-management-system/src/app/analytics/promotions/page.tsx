@@ -397,7 +397,6 @@ export default function PromotionsPage() {
     'All'
   );
   const [searchTerm, setSearchTerm] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Get status color and icon
   const getStatusStyle = (status: PromotionStatus) => {
@@ -534,7 +533,11 @@ export default function PromotionsPage() {
                   Customer Savings
                 </div>
               </div>
-              <Button onClick={() => setShowCreateModal(true)}>
+              <Button
+                onClick={() =>
+                  alert('Create promotion functionality coming soon!')
+                }
+              >
                 <Icons.Plus />
                 <span className='ml-2'>Create Promotion</span>
               </Button>
