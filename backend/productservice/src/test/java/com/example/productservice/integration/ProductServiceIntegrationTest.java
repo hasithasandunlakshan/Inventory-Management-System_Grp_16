@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import com.example.productservice.dto.ProductDTO;
 import com.example.productservice.models.Category;
 import com.example.productservice.models.Product;
 import com.example.productservice.models.ProductCategory;
+import com.example.productservice.config.TestConfig;
 import com.example.productservice.repository.CategoryRepository;
 import com.example.productservice.repository.ProductCategoryRepository;
 import com.example.productservice.repository.ProductRepository;
@@ -25,6 +27,7 @@ import com.example.productservice.service.ProductService;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Import(TestConfig.class)
 @DisplayName("Product Service Integration Tests")
 class ProductServiceIntegrationTest {
 

@@ -70,9 +70,9 @@ jobs:
       - name: Run Unit Tests
         run: |
           cd backend/productservice
-          # Run all tests except problematic ones (exclusion approach)
-          # This automatically includes any new test classes you add
-          mvn test -Dtest="!ProductRepositoryTest,!ProductServiceIntegrationTest"
+          # Run all tests except repository tests (database constraint issues)
+          # Integration tests now work with test keys and mocks
+          mvn test -Dtest="!ProductRepositoryTest"
 
       - name: Upload Unit Test Results
         uses: actions/upload-artifact@v3
