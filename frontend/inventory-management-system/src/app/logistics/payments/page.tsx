@@ -453,4 +453,3 @@ export default function PaymentsPage() {
     </div>
   );
 }
-transactionId: 'TXN987654321';

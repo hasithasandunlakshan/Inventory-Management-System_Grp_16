@@ -42,7 +42,7 @@ export default function CustomerFilters({
     setFilters(newFilters);
 
     // Convert filters to the format expected by userService
-    const processedFilters: any = {
+    const processedFilters: Record<string, unknown> = {
       searchTerm: newFilters.searchTerm || undefined,
     };
 

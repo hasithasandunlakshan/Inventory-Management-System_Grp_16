@@ -5,10 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Calendar,
   DollarSign,
   Package,
-  User,
   Eye,
   TrendingUp,
   ShoppingCart,
@@ -54,15 +52,15 @@ export default function OrdersPage() {
       } else {
         setError(response.message || 'Failed to fetch orders');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch orders');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch orders');
       console.error('Error fetching orders:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFiltersChange = (filters: any) => {
+  const handleFiltersChange = (filters: Record<string, unknown>) => {
     const filtered = orderService.filterOrders(orders, filters);
     setFilteredOrders(filtered);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,6 @@ import {
   AlertCircle,
   Eye,
   Clock,
-  MapPin,
 } from 'lucide-react';
 import {
   driverService,
@@ -33,13 +32,7 @@ export default function DriverDashboard() {
 
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user?.id) {
-      loadDriverData();
-    }
-  }, [user]);
-
-  const loadDriverData = async () => {
+  const loadDriverData = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -86,7 +79,13 @@ export default function DriverDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadDriverData();
+    }
+  }, [user, loadDriverData]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -146,8 +145,8 @@ export default function DriverDashboard() {
           No Driver Profile Found
         </h2>
         <p className='text-gray-500 mb-4'>
-          It looks like you don't have a driver profile yet. Please contact your
-          manager to set up your driver profile.
+          It looks like you don&apos;t have a driver profile yet. Please contact
+          your manager to set up your driver profile.
         </p>
         <Button onClick={loadDriverData}>Refresh</Button>
       </div>

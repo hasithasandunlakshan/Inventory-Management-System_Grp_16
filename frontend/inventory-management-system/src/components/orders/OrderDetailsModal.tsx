@@ -16,7 +16,6 @@ import {
   Calendar,
   User,
   DollarSign,
-  Eye,
   X,
   RefreshCw,
 } from 'lucide-react';
@@ -286,7 +285,7 @@ export default function OrderDetailsModal({
                 Order Items ({order.orderItems.length})
               </h3>
               <div className='space-y-4'>
-                {order.orderItems.map((item: OrderItem, index: number) => (
+                {order.orderItems.map((item: OrderItem) => (
                   <div key={item.orderItemId} className='border rounded-lg p-4'>
                     <div className='flex items-start space-x-4'>
                       {/* Product Image */}

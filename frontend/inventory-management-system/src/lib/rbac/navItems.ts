@@ -7,7 +7,6 @@ import {
   Truck,
   ShoppingCart,
   FileText,
-  Shield,
   UserCheck,
   Car,
   Route,
@@ -16,7 +15,7 @@ import {
 export interface NavItem {
   label: string;
   href: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   roles: string[];
   children?: NavItem[];
 }

@@ -25,8 +25,8 @@ export default function AlertsTasks() {
       setError(null);
       const data = await stockAlertService.listUnresolved();
       setAlerts(data);
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to load alerts');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load alerts');
     } finally {
       setLoading(false);
     }
@@ -36,7 +36,7 @@ export default function AlertsTasks() {
     try {
       await stockAlertService.resolve(alertId);
       setAlerts(prev => prev.filter(a => a.alertId !== alertId));
-    } catch (e) {
+    } catch {
       // no-op for now; could show toast
     }
   }

@@ -96,15 +96,17 @@ export default function DriverRegistrationModal({
       } else {
         toast.error(response.message || 'Failed to create driver profile');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration failed:', error);
 
       // Handle specific error messages
-      if (error.message?.includes('already exists')) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      if (errorMessage.includes('already exists')) {
         toast.error(
           'This user already has a driver profile or license number is already in use'
         );
-      } else if (error.message?.includes('Validation failed')) {
+      } else if (errorMessage.includes('Validation failed')) {
         toast.error('Please check your input data and try again');
       } else {
         toast.error('Failed to register driver. Please try again.');

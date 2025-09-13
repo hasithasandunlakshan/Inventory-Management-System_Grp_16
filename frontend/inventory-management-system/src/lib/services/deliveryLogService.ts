@@ -87,7 +87,7 @@ export const deliveryLogService = {
       );
     }
 
-    const rawLogs: any[] = await response.json();
+    const rawLogs: Record<string, unknown>[] = await response.json();
     console.log('Raw API response:', rawLogs);
 
     // Transform backend response to match frontend expectations
@@ -105,6 +105,6 @@ export const deliveryLogService = {
     }));
 
     console.log('Transformed logs:', transformedLogs);
-    return transformedLogs;
+    return transformedLogs as unknown as DeliveryLog[];
   },
 };

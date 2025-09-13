@@ -17,8 +17,8 @@ export default function NotificationsPage() {
       setError(null);
       const data = await stockAlertService.listHistory();
       setAlerts(data);
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to load notifications');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load notifications');
     } finally {
       setLoading(false);
     }

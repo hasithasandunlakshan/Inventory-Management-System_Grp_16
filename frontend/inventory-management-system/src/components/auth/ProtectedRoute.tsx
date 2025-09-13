@@ -66,8 +66,8 @@ export default function ProtectedRoute({
               <div>
                 <h3 className='font-semibold'>Access Denied</h3>
                 <p className='text-sm'>
-                  You don't have permission to access this page. Required role:{' '}
-                  {requiredRoles.join(' or ')}
+                  You don&apos;t have permission to access this page. Required
+                  role: {requiredRoles.join(' or ')}
                 </p>
                 <p className='text-sm text-muted-foreground'>
                   Your current role: {user.role}

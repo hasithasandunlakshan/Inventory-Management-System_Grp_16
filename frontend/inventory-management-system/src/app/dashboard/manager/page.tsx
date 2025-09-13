@@ -1,12 +1,5 @@
 'use client';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { FilterProvider } from '@/contexts/FilterContext';
 import FiltersControls from '../../../components/dashboard/FiltersControls';

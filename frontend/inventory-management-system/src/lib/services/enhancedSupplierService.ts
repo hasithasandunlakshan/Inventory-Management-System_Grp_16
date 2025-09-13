@@ -1,6 +1,6 @@
 import { supplierService } from './supplierService';
 import { userService } from './userService';
-import { Supplier, EnhancedSupplier } from '../types/supplier';
+import { EnhancedSupplier } from '../types/supplier';
 
 export const enhancedSupplierService = {
   /**

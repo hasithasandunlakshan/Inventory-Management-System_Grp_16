@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useState,
   useMemo,
+  useCallback,
 } from 'react';
 import { authService } from '../lib/services/authService';
 
@@ -35,7 +36,7 @@ interface AuthContextType {
     password: string
   ) => Promise<{ success: boolean; error?: string }>;
   signup: (
-    userData: any
+    userData: Record<string, unknown>
   ) => Promise<{ success: boolean; error?: string; message?: string }>;
   logout: () => void;
   canAccessSupplierService: () => boolean;
@@ -134,7 +135,7 @@ export function AuthProvider({
     checkAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     try {
       const response = await authService.login({ username, password });
 
@@ -152,11 +153,13 @@ export function AuthProvider({
         error: error instanceof Error ? error.message : 'Login failed',
       };
     }
-  };
+  }, []);
 
-  const signup = async (userData: any) => {
+  const signup = useCallback(async (userData: Record<string, unknown>) => {
     try {
-      const response = await authService.signup(userData);
+      const response = await authService.signup(
+        userData as unknown as Parameters<typeof authService.signup>[0]
+      );
       return response;
     } catch (error) {
       return {
@@ -164,29 +167,35 @@ export function AuthProvider({
         error: error instanceof Error ? error.message : 'Signup failed',
       };
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
     // Redirect to login page
     window.location.href = '/login';
-  };
+  }, []);
 
-  const canAccessSupplierService = () => {
+  const canAccessSupplierService = useCallback(() => {
     return authService.canAccessSupplierService();
-  };
+  }, []);
 
-  const hasRole = (role: string): boolean => {
-    return user?.role === role || user?.role.includes(role) || false;
-  };
+  const hasRole = useCallback(
+    (role: string): boolean => {
+      return user?.role === role || user?.role.includes(role) || false;
+    },
+    [user]
+  );
 
-  const hasAnyRole = (roles: string[]): boolean => {
-    return roles.some(role => hasRole(role));
-  };
+  const hasAnyRole = useCallback(
+    (roles: string[]): boolean => {
+      return roles.some(role => hasRole(role));
+    },
+    [hasRole]
+  );
 
-  const refreshAuth = async () => {
+  const refreshAuth = useCallback(async () => {
     setIsLoading(true);
     try {
       if (authService.isAuthenticated()) {
@@ -231,7 +240,7 @@ export function AuthProvider({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const value = useMemo(
     () => ({

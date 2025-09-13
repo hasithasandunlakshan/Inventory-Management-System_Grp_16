@@ -126,7 +126,7 @@ export default function RevenueDashboard() {
         <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
           {/* Today's Performance */}
           <div className='space-y-2'>
-            <h4 className='font-medium text-sm'>Today's Performance</h4>
+            <h4 className='font-medium text-sm'>Today&apos;s Performance</h4>
             <div className='space-y-1'>
               <div className='text-2xl font-bold'>
                 {formatCurrency(

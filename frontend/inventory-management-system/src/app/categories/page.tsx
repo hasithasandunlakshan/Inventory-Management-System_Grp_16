@@ -194,8 +194,8 @@ export default function CategoriesPage() {
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                           This action cannot be undone. This will permanently
-                          delete the category "{category.categoryName}" and
-                          remove it from all associated products.
+                          delete the category &quot;{category.categoryName}
+                          &quot; and remove it from all associated products.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

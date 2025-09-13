@@ -39,8 +39,8 @@ export default function InventoryListPage() {
       setError(null);
       const data = await inventoryService.listAll();
       setRows(data);
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to load inventory');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load inventory');
     } finally {
       setLoading(false);
     }
@@ -94,7 +94,15 @@ export default function InventoryListPage() {
                     <td className='px-4 py-2'>{r.availableStock}</td>
                     <td className='px-4 py-2'>{r.minThreshold}</td>
                     <td className='px-4 py-2'>
-                      <Badge variant={r.status.variant as any}>
+                      <Badge
+                        variant={
+                          r.status.variant as
+                            | 'default'
+                            | 'destructive'
+                            | 'outline'
+                            | 'secondary'
+                        }
+                      >
                         {r.status.label}
                       </Badge>
                     </td>
@@ -227,8 +235,12 @@ export default function InventoryListPage() {
                                     }
                                     setDialogOpen(false);
                                     setEditing(null);
-                                  } catch (e: any) {
-                                    setError(e?.message ?? 'Failed to update');
+                                  } catch (e: unknown) {
+                                    setError(
+                                      e instanceof Error
+                                        ? e.message
+                                        : 'Failed to update'
+                                    );
                                   }
                                 }}
                               >

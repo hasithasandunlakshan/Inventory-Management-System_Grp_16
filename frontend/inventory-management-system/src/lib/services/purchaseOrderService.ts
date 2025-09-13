@@ -706,7 +706,7 @@ export const purchaseOrderService = {
    */
   async receivePurchaseOrder(
     id: number,
-    receiveData: any
+    receiveData: Record<string, unknown>
   ): Promise<PurchaseOrder> {
     try {
       const response = await fetch(

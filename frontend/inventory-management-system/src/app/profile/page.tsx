@@ -206,7 +206,7 @@ function ProfileContent() {
         </CardHeader>
         <CardContent>
           <div className='grid gap-3 md:grid-cols-2 lg:grid-cols-3'>
-            {permissionItems.map(({ key, label, icon: Icon }) => {
+            {permissionItems.map(({ key, label, icon }) => {
               const hasPermission =
                 permissions[key as keyof typeof permissions];
               return (
@@ -219,6 +219,7 @@ function ProfileContent() {
                   ) : (
                     <XCircle className='h-4 w-4 text-red-600' />
                   )}
+                  {icon({ className: 'h-4 w-4 text-gray-500' })}
                   <span
                     className={`text-sm ${hasPermission ? 'text-green-700' : 'text-red-700'}`}
                   >

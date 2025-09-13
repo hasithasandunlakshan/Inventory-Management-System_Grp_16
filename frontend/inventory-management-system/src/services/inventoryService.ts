@@ -1,4 +1,3 @@
-
 export interface InventoryCostResponse {
   message: string;
   success: boolean;

@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { productService } from '@/lib/services/productService';
 import { Product } from '@/lib/types/product';
 import { Button } from '@/components/ui/button';
 import ProductDetails from '@/components/product/ProductDetails';
-import { productUtils } from '@/lib/utils/productUtils';
 import LoadingScreen from '@/components/ui/loading';
 
 export default function ProductDetailPage() {
@@ -17,13 +16,7 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const productId = params.id as string;
 
-  useEffect(() => {
-    if (productId) {
-      fetchProduct();
-    }
-  }, [productId]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
       const fetchedProduct = await productService.getProductById(
@@ -37,7 +30,13 @@ export default function ProductDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId, fetchProduct]);
 
   const handleBack = () => {
     router.push('/products');

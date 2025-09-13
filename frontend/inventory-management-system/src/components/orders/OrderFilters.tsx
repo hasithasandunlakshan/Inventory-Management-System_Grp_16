@@ -45,7 +45,7 @@ export default function OrderFilters({
     setFilters(newFilters);
 
     // Convert filters to the format expected by orderService
-    const processedFilters: any = {
+    const processedFilters: Record<string, unknown> = {
       searchTerm: newFilters.searchTerm || undefined,
     };
 

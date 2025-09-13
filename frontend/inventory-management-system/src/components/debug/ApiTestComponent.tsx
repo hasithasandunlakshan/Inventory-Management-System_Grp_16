@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { revenueService } from '@/services/revenueService';
 
 export default function ApiTestComponent() {
-  const [testData, setTestData] = useState<any>(null);
+  const [testData, setTestData] = useState<Record<string, unknown> | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,7 +18,7 @@ export default function ApiTestComponent() {
         const todayData = await revenueService.getTodayRevenue();
         console.log('Today data received:', todayData);
 
-        setTestData(todayData);
+        setTestData(todayData as unknown as Record<string, unknown>);
         setError(null);
       } catch (err) {
         console.error('API Test Error:', err);

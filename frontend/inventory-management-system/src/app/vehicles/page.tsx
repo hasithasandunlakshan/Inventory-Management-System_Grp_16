@@ -56,7 +56,7 @@ export default function VehiclesPage() {
       nextMaintenance: '',
     });
 
-  const { user, hasAnyRole } = useAuth();
+  const { hasAnyRole } = useAuth();
   const canManageVehicles = hasAnyRole(['MANAGER', 'ADMIN']);
 
   useEffect(() => {
@@ -206,10 +206,14 @@ export default function VehiclesPage() {
                     <Label htmlFor='vehicleType'>Vehicle Type</Label>
                     <Select
                       value={registrationForm.vehicleType}
-                      onValueChange={(value: any) =>
+                      onValueChange={(value: string) =>
                         setRegistrationForm({
                           ...registrationForm,
-                          vehicleType: value,
+                          vehicleType: value as
+                            | 'TRUCK'
+                            | 'VAN'
+                            | 'MOTORCYCLE'
+                            | 'CAR',
                         })
                       }
                     >
@@ -423,7 +427,7 @@ export default function VehiclesPage() {
                   <p className='text-gray-500'>No vehicles found</p>
                   {canManageVehicles && (
                     <p className='text-sm text-gray-400'>
-                      Click "Add Vehicle" to add your first vehicle
+                      Click &quot;Add Vehicle&quot; to add your first vehicle
                     </p>
                   )}
                 </div>

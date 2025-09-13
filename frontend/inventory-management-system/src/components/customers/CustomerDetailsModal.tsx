@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,6 @@ import {
   MapPin,
   CheckCircle,
   X,
-  Eye,
 } from 'lucide-react';
 import { UserInfo } from '@/services/userService';
 

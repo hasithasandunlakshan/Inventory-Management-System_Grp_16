@@ -7,10 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
   User,
   Calendar,
-  DollarSign,
-  Package,
   Eye,
-  Mail,
   Users,
   CheckCircle,
   UserCheck,
@@ -57,15 +54,17 @@ export default function CustomersPage() {
       } else {
         setError(response.message || 'Failed to fetch customers');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch customers');
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to fetch customers'
+      );
       console.error('Error fetching customers:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFiltersChange = (filters: any) => {
+  const handleFiltersChange = (filters: Record<string, unknown>) => {
     const filtered = userService.filterUsers(customers, filters);
     setFilteredCustomers(filtered);
 

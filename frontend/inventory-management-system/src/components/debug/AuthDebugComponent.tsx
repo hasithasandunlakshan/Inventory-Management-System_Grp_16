@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { authService } from '@/lib/services/authService';
 
 export default function AuthDebugComponent() {
-  const [authInfo, setAuthInfo] = useState<any>(null);
+  const [authInfo, setAuthInfo] = useState<Record<string, unknown> | null>(
+    null
+  );
 
   useEffect(() => {
     const token = authService.getToken();

@@ -51,7 +51,10 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
     });
   };
 
-  const isActive = (item: any) => {
+  const isActive = (item: {
+    href?: string;
+    children?: Array<{ href: string }>;
+  }): boolean => {
     if (item.href) {
       return (
         pathname === item.href ||
@@ -59,7 +62,7 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
       );
     }
     if (item.children) {
-      return item.children.some((child: any) => isActive(child));
+      return item.children.some((child: { href: string }) => isActive(child));
     }
     return false;
   };
@@ -110,27 +113,33 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                   </button>
                   {isExpanded && (
                     <div className='ml-4 space-y-1'>
-                      {children.map((child: any) => {
-                        const childIsActive = isActive(child);
-                        return (
-                          <Link
-                            key={child.href}
-                            href={child.href!}
-                            className='block'
-                          >
-                            <div
-                              className={cn(
-                                'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                                childIsActive &&
-                                  'bg-accent text-accent-foreground'
-                              )}
+                      {children.map(
+                        (child: {
+                          href: string;
+                          label: string;
+                          icon: React.ComponentType<{ className?: string }>;
+                        }) => {
+                          const childIsActive = isActive(child);
+                          return (
+                            <Link
+                              key={child.href}
+                              href={child.href!}
+                              className='block'
                             >
-                              <child.icon className='h-4 w-4' />
-                              <span>{child.label}</span>
-                            </div>
-                          </Link>
-                        );
-                      })}
+                              <div
+                                className={cn(
+                                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+                                  childIsActive &&
+                                    'bg-accent text-accent-foreground'
+                                )}
+                              >
+                                <child.icon className='h-4 w-4' />
+                                <span>{child.label}</span>
+                              </div>
+                            </Link>
+                          );
+                        }
+                      )}
                     </div>
                   )}
                 </div>
@@ -227,28 +236,34 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                       </button>
                       {isExpanded && (
                         <div className='ml-4 space-y-1'>
-                          {children.map((child: any) => {
-                            const childIsActive = isActive(child);
-                            return (
-                              <Link
-                                key={child.href}
-                                href={child.href!}
-                                className='block'
-                                onClick={() => setOpen(false)}
-                              >
-                                <div
-                                  className={cn(
-                                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                                    childIsActive &&
-                                      'bg-accent text-accent-foreground'
-                                  )}
+                          {children.map(
+                            (child: {
+                              href: string;
+                              label: string;
+                              icon: React.ComponentType<{ className?: string }>;
+                            }) => {
+                              const childIsActive = isActive(child);
+                              return (
+                                <Link
+                                  key={child.href}
+                                  href={child.href!}
+                                  className='block'
+                                  onClick={() => setOpen(false)}
                                 >
-                                  <child.icon className='h-4 w-4' />
-                                  <span>{child.label}</span>
-                                </div>
-                              </Link>
-                            );
-                          })}
+                                  <div
+                                    className={cn(
+                                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+                                      childIsActive &&
+                                        'bg-accent text-accent-foreground'
+                                    )}
+                                  >
+                                    <child.icon className='h-4 w-4' />
+                                    <span>{child.label}</span>
+                                  </div>
+                                </Link>
+                              );
+                            }
+                          )}
                         </div>
                       )}
                     </div>

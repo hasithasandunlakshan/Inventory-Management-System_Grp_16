@@ -2,11 +2,10 @@
 
 import { PurchaseOrderStats } from '@/components/PurchaseOrderStats';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { UserHeader } from '@/components/UserHeader';
 import { useState } from 'react';
 
 function PurchaseOrdersPageContent() {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [refreshTrigger] = useState(0);
 
   return (
     <div className='container mx-auto p-6 space-y-6'>

@@ -14,8 +14,6 @@ import {
   RotateCcw,
   Truck,
   CreditCard,
-  ChevronDown,
-  ChevronRight,
   UserCheck,
   Car,
   Route,

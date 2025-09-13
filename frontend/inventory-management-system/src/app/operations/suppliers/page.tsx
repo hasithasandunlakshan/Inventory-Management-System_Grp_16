@@ -50,8 +50,6 @@ import {
   Legend,
   LineChart,
   Line,
-  Area,
-  AreaChart,
 } from 'recharts';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -94,9 +92,7 @@ import {
   PurchaseOrderItem,
   NoteCreateRequest,
 } from '@/lib/types/supplier';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { AuthModal } from '@/components/AuthModal';
-import { UserHeader } from '@/components/UserHeader';
+import { useAuth } from '@/contexts/AuthContext';
 import { PurchaseOrderStats } from '@/components/PurchaseOrderStats';
 import { SupplierPageStats } from '@/components/SupplierPageStats';
 import { userService, UserInfo } from '@/lib/services/userService';
@@ -122,7 +118,7 @@ function SuppliersPageContent() {
   const [isAddPurchaseOrderOpen, setIsAddPurchaseOrderOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   const handleViewSupplier = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
@@ -2714,7 +2710,7 @@ function AnalyticsTab() {
 
         // Convert to chart data with percentages
         const chartData = statusConfig
-          .map((config, index) => {
+          .map(config => {
             const count = statusCounts.get(config.key) || 0;
             const percentage =
               totalOrders > 0 ? (count / totalOrders) * 100 : 0;
@@ -3389,7 +3385,7 @@ function AnalyticsTab() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: any) => [
+                      formatter={(value: number) => [
                         `${value} suppliers`,
                         'Count',
                       ]}
@@ -3471,8 +3467,8 @@ function AnalyticsTab() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: any, name: any, props: any) => [
-                        `${value} orders (${props.payload.percentage}%)`,
+                      formatter={(value: number, name: string, props: any) => [
+                        `${value} orders (${(props.payload as any)?.percentage || 0}%)`,
                         'Count',
                       ]}
                       labelFormatter={label => `Status: ${label}`}
@@ -3480,10 +3476,12 @@ function AnalyticsTab() {
                     <Legend
                       verticalAlign='bottom'
                       height={36}
-                      formatter={(value, entry: any) => (
-                        <span style={{ color: entry.color || '#000' }}>
-                          {value} ({entry.payload?.value || 0} -{' '}
-                          {entry.payload?.percentage || 0}%)
+                      formatter={(value: number, entry: any) => (
+                        <span
+                          style={{ color: (entry.color as string) || '#000' }}
+                        >
+                          {value} ({(entry.payload as any)?.value || 0} -{' '}
+                          {(entry.payload as any)?.percentage || 0}%)
                         </span>
                       )}
                     />
@@ -3624,7 +3622,7 @@ function AnalyticsTab() {
                       }}
                     />
                     <Tooltip
-                      formatter={(value: any, name: any) => {
+                      formatter={(value: number, name: string) => {
                         if (name === 'orders')
                           return [`${value} orders`, 'Orders Created'];
                         if (name === 'spend')
@@ -4007,7 +4005,7 @@ function AnalyticsTab() {
                       }}
                     />
                     <Tooltip
-                      formatter={(value: any, name: any) => {
+                      formatter={(value: number, name: string) => {
                         if (name === 'totalSpend')
                           return [`$${value.toLocaleString()}`, 'Total Spend'];
                         if (name === 'orderCount')
