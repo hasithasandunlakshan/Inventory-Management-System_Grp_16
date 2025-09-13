@@ -3,16 +3,19 @@ package com.Orderservice.Orderservice.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.Orderservice.Orderservice.dto.AllPaymentsResponse;
 import com.Orderservice.Orderservice.dto.CreatePaymentIntentRequest;
 import com.Orderservice.Orderservice.dto.PaymentConfirmationRequest;
 import com.Orderservice.Orderservice.dto.PaymentConfirmationResponse;
 import com.Orderservice.Orderservice.dto.PaymentIntentDto;
 import com.Orderservice.Orderservice.dto.PaymentIntentResponse;
+import com.Orderservice.Orderservice.dto.PaymentResponse;
 import com.Orderservice.Orderservice.entity.Invoice;
 import com.Orderservice.Orderservice.entity.Order;
 import com.Orderservice.Orderservice.entity.OrderItem;
@@ -332,5 +335,61 @@ public class PaymentService {
         dto.setCurrency(paymentIntent.getCurrency());
         dto.setStatus(paymentIntent.getStatus());
         return dto;
+    }
+    
+    /**
+     * Get all payments with order details
+     * @return AllPaymentsResponse containing all payments
+     */
+    public AllPaymentsResponse getAllPayments() {
+        try {
+            System.out.println("=== GETTING ALL PAYMENTS ===");
+            
+            List<Payment> payments = paymentRepository.findAll();
+            List<PaymentResponse> paymentResponses = new ArrayList<>();
+            
+            for (Payment payment : payments) {
+                PaymentResponse paymentResponse = PaymentResponse.builder()
+                    .paymentId(payment.getPaymentId())
+                    .orderId(payment.getOrder() != null ? payment.getOrder().getOrderId() : null)
+                    .customerId(payment.getOrder() != null ? payment.getOrder().getCustomerId() : null)
+                    .stripePaymentIntentId(payment.getStripePaymentIntentId())
+                    .stripePaymentMethodId(payment.getStripePaymentMethodId())
+                    .amount(payment.getAmount())
+                    .currency(payment.getCurrency())
+                    .method(payment.getMethod())
+                    .status(payment.getStatus().toString())
+                    .paymentDate(payment.getPaymentDate())
+                    .createdAt(payment.getCreatedAt())
+                    .updatedAt(payment.getUpdatedAt())
+                    // Order details
+                    .orderStatus(payment.getOrder() != null ? payment.getOrder().getStatus().toString() : null)
+                    .orderTotalAmount(payment.getOrder() != null ? payment.getOrder().getTotalAmount() : null)
+                    .orderDate(payment.getOrder() != null ? payment.getOrder().getOrderDate() : null)
+                    .build();
+                
+                paymentResponses.add(paymentResponse);
+            }
+            
+            System.out.println("✅ Retrieved " + payments.size() + " payments successfully");
+            
+            return AllPaymentsResponse.builder()
+                .success(true)
+                .message("Payments retrieved successfully")
+                .payments(paymentResponses)
+                .totalPayments(paymentResponses.size())
+                .build();
+                
+        } catch (Exception e) {
+            System.err.println("❌ Error retrieving payments: " + e.getMessage());
+            e.printStackTrace();
+            
+            return AllPaymentsResponse.builder()
+                .success(false)
+                .message("Failed to retrieve payments: " + e.getMessage())
+                .payments(new ArrayList<>())
+                .totalPayments(0)
+                .build();
+        }
     }
 }
