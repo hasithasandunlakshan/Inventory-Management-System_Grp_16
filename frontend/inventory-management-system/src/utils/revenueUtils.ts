@@ -1,4 +1,7 @@
-export const formatCurrency = (amount: number, currency: string = 'USD'): string => {
+export const formatCurrency = (
+  amount: number,
+  currency: string = 'USD'
+): string => {
   if (currency.toLowerCase() === 'usd') {
     return `$${amount.toFixed(2)}`;
   }
@@ -20,8 +23,18 @@ export const getMonthsWithRevenue = (monthlyData: any[], limit: number = 6) => {
 
 export const getCurrentMonth = (monthlyData: any[]) => {
   const monthNames = [
-    "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
-    "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+    'JANUARY',
+    'FEBRUARY',
+    'MARCH',
+    'APRIL',
+    'MAY',
+    'JUNE',
+    'JULY',
+    'AUGUST',
+    'SEPTEMBER',
+    'OCTOBER',
+    'NOVEMBER',
+    'DECEMBER',
   ];
   const currentMonthName = monthNames[new Date().getMonth()];
   return monthlyData.find(m => m.month === currentMonthName);

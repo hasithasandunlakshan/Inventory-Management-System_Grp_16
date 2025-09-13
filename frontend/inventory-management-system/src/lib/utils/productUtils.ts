@@ -13,7 +13,7 @@ export const productUtils = {
     try {
       await productService.deleteProduct(Number(id));
       toast.success('Product deleted successfully');
-      
+
       if (onSuccessCallback) {
         onSuccessCallback();
       }
@@ -24,7 +24,7 @@ export const productUtils = {
   },
 
   /**
-   * Edit a product 
+   * Edit a product
    * @param product Product to edit
    * @param router Next.js router for navigation
    */
@@ -38,7 +38,10 @@ export const productUtils = {
    * @param productId Product ID to view
    * @param router Next.js router for navigation
    */
-  viewProductDetails: (productId: string, router: ReturnType<typeof useRouter>) => {
+  viewProductDetails: (
+    productId: string,
+    router: ReturnType<typeof useRouter>
+  ) => {
     router.push(`/products/${productId}`);
-  }
+  },
 };

@@ -98,9 +98,9 @@ export interface ReceiveRequest {
 export enum PurchaseOrderStatus {
   DRAFT = 'DRAFT',
   SENT = 'SENT',
-  PENDING = 'PENDING', 
+  PENDING = 'PENDING',
   RECEIVED = 'RECEIVED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 // Search parameters for purchase orders
@@ -169,8 +169,8 @@ export interface DeliveryLog {
   };
   // Computed fields for UI compatibility
   purchaseOrderId?: number; // Derived from purchaseOrder.poId
-  deliveryDate?: string;    // Alias for receivedDate
-  status?: string;          // You may need to derive this or add to backend
+  deliveryDate?: string; // Alias for receivedDate
+  status?: string; // You may need to derive this or add to backend
 }
 
 export interface DeliveryLogCreateRequest {
@@ -195,7 +195,7 @@ export interface PageResponse<T> {
 // Purchase Order Notes - Updated to match backend NoteDTO
 export interface PurchaseOrderNote {
   id: number;
-  text: string;  // Backend uses 'text', not 'note'
+  text: string; // Backend uses 'text', not 'note'
   createdAt: string; // Backend uses 'createdAt', not 'createdDate'
   createdBy: string;
 }

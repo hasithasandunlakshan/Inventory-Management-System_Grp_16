@@ -1,17 +1,17 @@
-import { 
-  Home, 
-  Users, 
-  Package, 
-  BarChart3, 
-  Settings, 
-  Truck, 
+import {
+  Home,
+  Users,
+  Package,
+  BarChart3,
+  Settings,
+  Truck,
   ShoppingCart,
   FileText,
   Shield,
   UserCheck,
   Car,
-  Route
-} from "lucide-react";
+  Route,
+} from 'lucide-react';
 
 export interface NavItem {
   label: string;
@@ -23,190 +23,194 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    label: "Dashboard",
-    href: "/dashboard",
+    label: 'Dashboard',
+    href: '/dashboard',
     icon: Home,
-    roles: ["USER", "Store Keeper", "MANAGER", "ADMIN", "SUPPLIER"],
+    roles: ['USER', 'Store Keeper', 'MANAGER', 'ADMIN', 'SUPPLIER'],
   },
   {
-    label: "Products",
-    href: "/products",
+    label: 'Products',
+    href: '/products',
     icon: Package,
-    roles: ["Store Keeper", "MANAGER", "ADMIN"],
+    roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
     children: [
       {
-        label: "All Products",
-        href: "/products",
+        label: 'All Products',
+        href: '/products',
         icon: Package,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
       {
-        label: "Add Product",
-        href: "/products/add",
+        label: 'Add Product',
+        href: '/products/add',
         icon: Package,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
       {
-        label: "Categories",
-        href: "/categories",
+        label: 'Categories',
+        href: '/categories',
         icon: Package,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
     ],
   },
   {
-    label: "Operations",
-    href: "/operations",
+    label: 'Operations',
+    href: '/operations',
     icon: Truck,
-    roles: ["Store Keeper", "MANAGER", "ADMIN"],
+    roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
     children: [
       {
-        label: "Suppliers",
-        href: "/operations/suppliers",
+        label: 'Suppliers',
+        href: '/operations/suppliers',
         icon: Users,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
       {
-        label: "Inventory",
-        href: "/operations/inventory",
+        label: 'Inventory',
+        href: '/operations/inventory',
         icon: Package,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
       {
-        label: "Returns",
-        href: "/operations/returns",
+        label: 'Returns',
+        href: '/operations/returns',
         icon: Truck,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
     ],
   },
   {
-    label: "Sales",
-    href: "/sales",
+    label: 'Sales',
+    href: '/sales',
     icon: ShoppingCart,
-    roles: ["Store Keeper", "MANAGER", "ADMIN"],
+    roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
     children: [
       {
-        label: "Orders",
-        href: "/sales/orders",
+        label: 'Orders',
+        href: '/sales/orders',
         icon: ShoppingCart,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
       {
-        label: "Customers",
-        href: "/sales/customers",
+        label: 'Customers',
+        href: '/sales/customers',
         icon: Users,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
       {
-        label: "Reviews",
-        href: "/sales/reviews",
+        label: 'Reviews',
+        href: '/sales/reviews',
         icon: FileText,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
     ],
   },
   {
-    label: "Analytics",
-    href: "/analytics",
+    label: 'Analytics',
+    href: '/analytics',
     icon: BarChart3,
-    roles: ["MANAGER", "ADMIN"],
+    roles: ['MANAGER', 'ADMIN'],
     children: [
       {
-        label: "Reports",
-        href: "/analytics/reports",
+        label: 'Reports',
+        href: '/analytics/reports',
         icon: BarChart3,
-        roles: ["MANAGER", "ADMIN"],
+        roles: ['MANAGER', 'ADMIN'],
       },
       {
-        label: "Promotions",
-        href: "/analytics/promotions",
+        label: 'Promotions',
+        href: '/analytics/promotions',
         icon: BarChart3,
-        roles: ["MANAGER", "ADMIN"],
+        roles: ['MANAGER', 'ADMIN'],
       },
     ],
   },
   {
-    label: "Logistics",
-    href: "/logistics",
+    label: 'Logistics',
+    href: '/logistics',
     icon: Truck,
-    roles: ["Store Keeper", "MANAGER", "ADMIN"],
+    roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
     children: [
       {
-        label: "Shipping",
-        href: "/logistics/shipping",
+        label: 'Shipping',
+        href: '/logistics/shipping',
         icon: Truck,
-        roles: ["Store Keeper", "MANAGER", "ADMIN"],
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
       {
-        label: "Payments",
-        href: "/logistics/payments",
+        label: 'Payments',
+        href: '/logistics/payments',
         icon: FileText,
-        roles: ["MANAGER", "ADMIN"],
+        roles: ['MANAGER', 'ADMIN'],
       },
     ],
   },
   {
-    label: "Driver Management",
-    href: "/drivers",
+    label: 'Driver Management',
+    href: '/drivers',
     icon: UserCheck,
-    roles: ["MANAGER", "ADMIN", "DRIVER"],
+    roles: ['MANAGER', 'ADMIN', 'DRIVER'],
     children: [
       {
-        label: "Drivers",
-        href: "/drivers",
+        label: 'Drivers',
+        href: '/drivers',
         icon: UserCheck,
-        roles: ["MANAGER", "ADMIN", "DRIVER"],
+        roles: ['MANAGER', 'ADMIN', 'DRIVER'],
       },
       {
-        label: "Vehicles",
-        href: "/vehicles",
+        label: 'Vehicles',
+        href: '/vehicles',
         icon: Car,
-        roles: ["MANAGER", "ADMIN", "DRIVER"],
+        roles: ['MANAGER', 'ADMIN', 'DRIVER'],
       },
       {
-        label: "Assignments",
-        href: "/assignments",
+        label: 'Assignments',
+        href: '/assignments',
         icon: Route,
-        roles: ["MANAGER", "ADMIN", "DRIVER"],
+        roles: ['MANAGER', 'ADMIN', 'DRIVER'],
       },
     ],
   },
   {
-    label: "Settings",
-    href: "/settings",
+    label: 'Settings',
+    href: '/settings',
     icon: Settings,
-    roles: ["ADMIN"],
+    roles: ['ADMIN'],
   },
 ];
 
 export function getNavItemsForRole(role: string): NavItem[] {
   const normalizedRole = role.toUpperCase();
-  
-  return NAV_ITEMS.filter(item => 
+
+  return NAV_ITEMS.filter(item =>
     item.roles.some(r => r.toUpperCase() === normalizedRole)
   ).map(item => ({
     ...item,
-    children: item.children?.filter(child => 
+    children: item.children?.filter(child =>
       child.roles.some(r => r.toUpperCase() === normalizedRole)
-    )
+    ),
   }));
 }
 
 export function canAccessRoute(route: string, role: string): boolean {
   const normalizedRole = role.toUpperCase();
-  
+
   // Check direct route access
-  const directAccess = NAV_ITEMS.some(item => 
-    item.href === route && item.roles.some(r => r.toUpperCase() === normalizedRole)
+  const directAccess = NAV_ITEMS.some(
+    item =>
+      item.href === route &&
+      item.roles.some(r => r.toUpperCase() === normalizedRole)
   );
-  
+
   if (directAccess) return true;
-  
+
   // Check child route access
-  return NAV_ITEMS.some(item => 
-    item.children?.some(child => 
-      child.href === route && child.roles.some(r => r.toUpperCase() === normalizedRole)
+  return NAV_ITEMS.some(item =>
+    item.children?.some(
+      child =>
+        child.href === route &&
+        child.roles.some(r => r.toUpperCase() === normalizedRole)
     )
   );
 }

@@ -1,9 +1,18 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { stockAlertService, type StockAlert } from "@/lib/services/stockAlertService";
+import { useEffect, useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  stockAlertService,
+  type StockAlert,
+} from '@/lib/services/stockAlertService';
 
 export default function AlertsTasks() {
   const [alerts, setAlerts] = useState<StockAlert[]>([]);
@@ -39,26 +48,39 @@ export default function AlertsTasks() {
   }, []);
 
   return (
-    <Card className="col-span-1">
+    <Card className='col-span-1'>
       <CardHeader>
         <CardTitle>Alerts & Tasks</CardTitle>
         <CardDescription>What needs your attention</CardDescription>
       </CardHeader>
       <CardContent>
-        {loading && <div className="text-sm text-muted-foreground">Loading alerts...</div>}
-        {error && <div className="text-sm text-red-600">{error}</div>}
-        {!loading && alerts.length === 0 && !error && (
-          <div className="text-sm text-muted-foreground">No active alerts</div>
+        {loading && (
+          <div className='text-sm text-muted-foreground'>Loading alerts...</div>
         )}
-        <div className="space-y-3 text-sm">
-          {alerts.map((a) => (
-            <div key={a.alertId} className="flex items-start justify-between">
+        {error && <div className='text-sm text-red-600'>{error}</div>}
+        {!loading && alerts.length === 0 && !error && (
+          <div className='text-sm text-muted-foreground'>No active alerts</div>
+        )}
+        <div className='space-y-3 text-sm'>
+          {alerts.map(a => (
+            <div key={a.alertId} className='flex items-start justify-between'>
               <div>
-                <div className="font-medium">{a.alertType === 'LOW_STOCK' ? 'Low Stock' : 'Out of Stock'}</div>
-                <div className="text-muted-foreground">{a.message}</div>
-                <div className="text-xs text-muted-foreground">Product ID: {a.productId} · {new Date(a.createdAt).toLocaleString()}</div>
+                <div className='font-medium'>
+                  {a.alertType === 'LOW_STOCK' ? 'Low Stock' : 'Out of Stock'}
+                </div>
+                <div className='text-muted-foreground'>{a.message}</div>
+                <div className='text-xs text-muted-foreground'>
+                  Product ID: {a.productId} ·{' '}
+                  {new Date(a.createdAt).toLocaleString()}
+                </div>
               </div>
-              <Button size="sm" variant="secondary" onClick={() => resolveAlert(a.alertId)}>Resolve</Button>
+              <Button
+                size='sm'
+                variant='secondary'
+                onClick={() => resolveAlert(a.alertId)}
+              >
+                Resolve
+              </Button>
             </div>
           ))}
         </div>
@@ -66,4 +88,3 @@ export default function AlertsTasks() {
     </Card>
   );
 }
-

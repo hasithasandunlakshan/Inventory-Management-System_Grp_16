@@ -23,49 +23,53 @@ interface EmptyStateProps {
 }
 
 const EmptyState = ({ icon: Icon, message, subMessage }: EmptyStateProps) => (
-  <div className="text-center py-8">
-    <Icon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-    <p className="text-gray-500">{message}</p>
-    {subMessage && (
-      <p className="text-sm text-gray-400">{subMessage}</p>
-    )}
+  <div className='text-center py-8'>
+    <Icon className='h-12 w-12 text-gray-400 mx-auto mb-4' />
+    <p className='text-gray-500'>{message}</p>
+    {subMessage && <p className='text-sm text-gray-400'>{subMessage}</p>}
   </div>
 );
 
-export default function DriverList({ 
-  drivers, 
-  availableDrivers, 
-  filters, 
+export default function DriverList({
+  drivers,
+  availableDrivers,
+  filters,
   canManageDrivers,
-  onViewDriverDetails 
+  onViewDriverDetails,
 }: DriverListProps) {
   const filteredDrivers = filterDrivers(drivers, filters);
   const busyDrivers = drivers.filter(d => d.availabilityStatus === 'BUSY');
   const filteredBusyDrivers = filterDrivers(busyDrivers, filters);
 
   return (
-    <Tabs defaultValue="all" className="space-y-4">
+    <Tabs defaultValue='all' className='space-y-4'>
       <TabsList>
-        <TabsTrigger value="all">All Drivers ({drivers.length})</TabsTrigger>
-        <TabsTrigger value="available">Available ({availableDrivers.length})</TabsTrigger>
-        <TabsTrigger value="busy">Busy ({busyDrivers.length})</TabsTrigger>
+        <TabsTrigger value='all'>All Drivers ({drivers.length})</TabsTrigger>
+        <TabsTrigger value='available'>
+          Available ({availableDrivers.length})
+        </TabsTrigger>
+        <TabsTrigger value='busy'>Busy ({busyDrivers.length})</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="all">
+      <TabsContent value='all'>
         <Card>
           <CardHeader>
             <CardTitle>All Drivers</CardTitle>
           </CardHeader>
           <CardContent>
             {filteredDrivers.length === 0 ? (
-              <EmptyState 
+              <EmptyState
                 icon={Users}
-                message="No drivers found"
-                subMessage={canManageDrivers ? 'Click "Register Driver" to add your first driver' : undefined}
+                message='No drivers found'
+                subMessage={
+                  canManageDrivers
+                    ? 'Click "Register Driver" to add your first driver'
+                    : undefined
+                }
               />
             ) : (
-              <div className="space-y-4">
-                {filteredDrivers.map((driver) => (
+              <div className='space-y-4'>
+                {filteredDrivers.map(driver => (
                   <DriverCard
                     key={driver.driverId}
                     driver={driver}
@@ -78,20 +82,17 @@ export default function DriverList({
         </Card>
       </TabsContent>
 
-      <TabsContent value="available">
+      <TabsContent value='available'>
         <Card>
           <CardHeader>
             <CardTitle>Available Drivers</CardTitle>
           </CardHeader>
           <CardContent>
             {availableDrivers.length === 0 ? (
-              <EmptyState 
-                icon={UserCheck}
-                message="No available drivers"
-              />
+              <EmptyState icon={UserCheck} message='No available drivers' />
             ) : (
-              <div className="space-y-4">
-                {availableDrivers.map((driver) => (
+              <div className='space-y-4'>
+                {availableDrivers.map(driver => (
                   <DriverCard
                     key={driver.driverId}
                     driver={driver}
@@ -104,20 +105,17 @@ export default function DriverList({
         </Card>
       </TabsContent>
 
-      <TabsContent value="busy">
+      <TabsContent value='busy'>
         <Card>
           <CardHeader>
             <CardTitle>Busy Drivers</CardTitle>
           </CardHeader>
           <CardContent>
             {filteredBusyDrivers.length === 0 ? (
-              <EmptyState 
-                icon={AlertCircle}
-                message="No busy drivers"
-              />
+              <EmptyState icon={AlertCircle} message='No busy drivers' />
             ) : (
-              <div className="space-y-4">
-                {filteredBusyDrivers.map((driver) => (
+              <div className='space-y-4'>
+                {filteredBusyDrivers.map(driver => (
                   <DriverCard
                     key={driver.driverId}
                     driver={driver}

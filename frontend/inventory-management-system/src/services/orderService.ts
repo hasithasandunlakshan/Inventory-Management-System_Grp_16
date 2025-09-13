@@ -52,17 +52,17 @@ class OrderService {
     const token = authService.getToken();
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
 
   async getAllOrders(): Promise<OrdersResponse> {
     try {
       const headers = await this.getAuthHeaders();
-      
+
       const response = await fetch(`${ORDER_API_BASE_URL}/all`, {
         method: 'GET',
-        headers
+        headers,
       });
 
       if (!response.ok) {
@@ -80,10 +80,10 @@ class OrderService {
   async getOrderById(orderId: number): Promise<Order> {
     try {
       const headers = await this.getAuthHeaders();
-      
+
       const response = await fetch(`${ORDER_API_BASE_URL}/${orderId}`, {
         method: 'GET',
-        headers
+        headers,
       });
 
       if (!response.ok) {
@@ -99,18 +99,24 @@ class OrderService {
   }
 
   // Filter and search utilities
-  filterOrders(orders: Order[], filters: {
-    status?: string;
-    minAmount?: number;
-    maxAmount?: number;
-    dateFrom?: string;
-    dateTo?: string;
-    searchTerm?: string;
-  }): Order[] {
+  filterOrders(
+    orders: Order[],
+    filters: {
+      status?: string;
+      minAmount?: number;
+      maxAmount?: number;
+      dateFrom?: string;
+      dateTo?: string;
+      searchTerm?: string;
+    }
+  ): Order[] {
     return orders.filter(order => {
       // Status filter
-      if (filters.status && filters.status !== 'all' && 
-          order.status.toLowerCase() !== filters.status.toLowerCase()) {
+      if (
+        filters.status &&
+        filters.status !== 'all' &&
+        order.status.toLowerCase() !== filters.status.toLowerCase()
+      ) {
         return false;
       }
 
@@ -135,11 +141,13 @@ class OrderService {
       if (filters.searchTerm) {
         const searchLower = filters.searchTerm.toLowerCase();
         const matchesOrderId = order.orderId.toString().includes(searchLower);
-        const matchesCustomer = order.customerId.toString().includes(searchLower);
-        const matchesProducts = order.orderItems.some(item => 
+        const matchesCustomer = order.customerId
+          .toString()
+          .includes(searchLower);
+        const matchesProducts = order.orderItems.some(item =>
           item.productName.toLowerCase().includes(searchLower)
         );
-        
+
         if (!matchesOrderId && !matchesCustomer && !matchesProducts) {
           return false;
         }
@@ -153,18 +161,22 @@ class OrderService {
   getOrderStats(orders: Order[]) {
     const totalOrders = orders.length;
     const confirmedOrders = orders.filter(o => o.status === 'CONFIRMED').length;
-    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalRevenue = orders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    
+
     // Get unique customers
     const uniqueCustomers = new Set(orders.map(o => o.customerId)).size;
-    
+
     // Get most popular products
     const productCounts: { [key: string]: number } = {};
     orders.forEach(order => {
       order.orderItems.forEach(item => {
         if (item.productName && item.productName !== 'No Product ID') {
-          productCounts[item.productName] = (productCounts[item.productName] || 0) + item.quantity;
+          productCounts[item.productName] =
+            (productCounts[item.productName] || 0) + item.quantity;
         }
       });
     });
@@ -175,30 +187,31 @@ class OrderService {
       totalRevenue,
       averageOrderValue,
       uniqueCustomers,
-      productCounts
+      productCounts,
     };
   }
 
   async processRefund(refundRequest: RefundRequest): Promise<RefundResponse> {
     try {
       const headers = await this.getAuthHeaders();
-      
+
       const response = await fetch(`${ORDER_API_BASE_URL}/refund`, {
         method: 'POST',
         headers,
-        body: JSON.stringify(refundRequest)
+        body: JSON.stringify(refundRequest),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Failed to process refund: ${errorData.message || response.statusText}`);
+        throw new Error(
+          `Failed to process refund: ${errorData.message || response.statusText}`
+        );
       }
 
       const refundResponse = await response.json();
-      
+
       console.log('Refund processed:', refundResponse);
       return refundResponse;
-      
     } catch (error) {
       console.error('Error processing refund:', error);
       throw error;

@@ -23,16 +23,22 @@ describe('productUtils', () => {
 
   describe('deleteProduct', () => {
     it('calls service, shows success, and runs callback on success', async () => {
-      (productService.deleteProduct as jest.Mock).mockResolvedValueOnce(undefined);
+      (productService.deleteProduct as jest.Mock).mockResolvedValueOnce(
+        undefined
+      );
       const cb = jest.fn();
       await productUtils.deleteProduct('42', cb);
       expect(productService.deleteProduct).toHaveBeenCalledWith(42);
-      expect(toast.success).toHaveBeenCalledWith('Product deleted successfully');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Product deleted successfully'
+      );
       expect(cb).toHaveBeenCalled();
     });
 
     it('shows error toast and does not call callback on failure', async () => {
-      (productService.deleteProduct as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+      (productService.deleteProduct as jest.Mock).mockRejectedValueOnce(
+        new Error('boom')
+      );
       const cb = jest.fn();
       await productUtils.deleteProduct('7', cb);
       expect(productService.deleteProduct).toHaveBeenCalledWith(7);
@@ -56,5 +62,3 @@ describe('productUtils', () => {
     });
   });
 });
-
-

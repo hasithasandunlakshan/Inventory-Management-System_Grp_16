@@ -3,7 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { driverService, DriverProfile, UserDropdownInfo } from '@/lib/services/driverService';
+import {
+  driverService,
+  DriverProfile,
+  UserDropdownInfo,
+} from '@/lib/services/driverService';
 import { DriverFilters, DriverStats } from '@/types/driver';
 import { calculateDriverStats } from '@/utils/driverUtils';
 import DriverRegistrationModal from '@/components/driver/DriverRegistrationModal';
@@ -51,17 +55,22 @@ export default function DriversPage() {
 
   const loadAvailableUsers = async () => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('inventory_auth_token') : null;
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('inventory_auth_token')
+          : null;
       if (!token) return; // wait until token exists
 
       const users = await driverService.getUsersByRole('USER');
       console.log('🔍 loadAvailableUsers - Raw users:', users);
-      
+
       if (Array.isArray(users)) {
-        setAvailableUsers(users.map(user => ({ 
-          userId: parseInt(user.id), 
-          username: user.username 
-        })));
+        setAvailableUsers(
+          users.map(user => ({
+            userId: parseInt(user.id),
+            username: user.username,
+          }))
+        );
       } else {
         console.error('🔍 loadAvailableUsers - Users is not an array:', users);
         setAvailableUsers([]);
@@ -78,7 +87,7 @@ export default function DriversPage() {
       setLoading(true);
       const [allDriversResponse, availableDriversResponse] = await Promise.all([
         driverService.getAllDrivers(),
-        driverService.getAvailableDrivers()
+        driverService.getAvailableDrivers(),
       ]);
 
       if (allDriversResponse.success && allDriversResponse.data) {
@@ -98,19 +107,21 @@ export default function DriversPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className='flex items-center justify-center h-64'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900'></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className='flex justify-between items-center'>
         <div>
-          <h1 className="text-3xl font-bold">Driver Management</h1>
-          <p className="text-gray-600">Manage drivers, profiles, and availability</p>
+          <h1 className='text-3xl font-bold'>Driver Management</h1>
+          <p className='text-gray-600'>
+            Manage drivers, profiles, and availability
+          </p>
         </div>
         {canManageDrivers && (
           <DriverRegistrationModal
@@ -125,10 +136,7 @@ export default function DriversPage() {
       <DriverStatsCards stats={stats} />
 
       {/* Search */}
-      <DriverSearch
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-      />
+      <DriverSearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
       {/* Drivers List */}
       <DriverList

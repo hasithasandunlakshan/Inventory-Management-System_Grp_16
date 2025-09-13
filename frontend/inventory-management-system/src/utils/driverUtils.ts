@@ -1,4 +1,11 @@
-import { DriverProfile, DriverRegistrationForm, FormErrors, DriverStatus, DriverStats, DriverFilters } from '@/types/driver';
+import {
+  DriverProfile,
+  DriverRegistrationForm,
+  FormErrors,
+  DriverStatus,
+  DriverStats,
+  DriverFilters,
+} from '@/types/driver';
 
 /**
  * Validates the driver registration form
@@ -27,7 +34,8 @@ export const validateDriverForm = (
   } else {
     const licenseClassRegex = /^[A-Z]$|^[A-Z]{2}$/;
     if (!licenseClassRegex.test(form.licenseClass.trim())) {
-      errors.licenseClass = 'License class must be a single letter (A, B, C) or two letters (AB, CD)';
+      errors.licenseClass =
+        'License class must be a single letter (A, B, C) or two letters (AB, CD)';
     }
   }
 
@@ -38,7 +46,7 @@ export const validateDriverForm = (
     const expiryDate = new Date(form.licenseExpiry);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     if (expiryDate <= today) {
       errors.licenseExpiry = 'License expiry date must be in the future';
     }
@@ -48,7 +56,8 @@ export const validateDriverForm = (
   if (form.emergencyContact && form.emergencyContact.trim()) {
     const phoneRegex = /^\+?[1-9]\d{1,14}$/;
     if (!phoneRegex.test(form.emergencyContact.trim())) {
-      errors.emergencyContact = 'Please enter a valid phone number (e.g., +1234567890)';
+      errors.emergencyContact =
+        'Please enter a valid phone number (e.g., +1234567890)';
     }
   }
 
@@ -62,33 +71,50 @@ export const getInitialDriverForm = (): DriverRegistrationForm => ({
   licenseNumber: '',
   licenseClass: '',
   licenseExpiry: '',
-  emergencyContact: ''
+  emergencyContact: '',
 });
 
 /**
  * Gets the badge variant for driver status
  */
-export const getStatusBadgeVariant = (status: DriverStatus): "default" | "secondary" | "outline" | "destructive" => {
+export const getStatusBadgeVariant = (
+  status: DriverStatus
+): 'default' | 'secondary' | 'outline' | 'destructive' => {
   switch (status) {
-    case 'AVAILABLE': return 'default';
-    case 'BUSY': return 'secondary';
-    case 'OFF_DUTY': return 'outline';
-    case 'ON_LEAVE': return 'destructive';
-    default: return 'outline';
+    case 'AVAILABLE':
+      return 'default';
+    case 'BUSY':
+      return 'secondary';
+    case 'OFF_DUTY':
+      return 'outline';
+    case 'ON_LEAVE':
+      return 'destructive';
+    default:
+      return 'outline';
   }
 };
 
 /**
  * Filters drivers based on search term and status
  */
-export const filterDrivers = (drivers: DriverProfile[], filters: DriverFilters): DriverProfile[] => {
+export const filterDrivers = (
+  drivers: DriverProfile[],
+  filters: DriverFilters
+): DriverProfile[] => {
   return drivers.filter(driver => {
-    const matchesSearch = 
-      driver.licenseNumber.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      driver.licenseClass.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      driver.emergencyContact?.toLowerCase().includes(filters.searchTerm.toLowerCase());
+    const matchesSearch =
+      driver.licenseNumber
+        .toLowerCase()
+        .includes(filters.searchTerm.toLowerCase()) ||
+      driver.licenseClass
+        .toLowerCase()
+        .includes(filters.searchTerm.toLowerCase()) ||
+      driver.emergencyContact
+        ?.toLowerCase()
+        .includes(filters.searchTerm.toLowerCase());
 
-    const matchesStatus = !filters.status || driver.availabilityStatus === filters.status;
+    const matchesStatus =
+      !filters.status || driver.availabilityStatus === filters.status;
 
     return matchesSearch && matchesStatus;
   });
@@ -97,11 +123,14 @@ export const filterDrivers = (drivers: DriverProfile[], filters: DriverFilters):
 /**
  * Calculates driver statistics
  */
-export const calculateDriverStats = (drivers: DriverProfile[], availableDrivers: DriverProfile[]): DriverStats => {
+export const calculateDriverStats = (
+  drivers: DriverProfile[],
+  availableDrivers: DriverProfile[]
+): DriverStats => {
   return {
     totalDrivers: drivers.length,
     availableDrivers: availableDrivers.length,
-    busyDrivers: drivers.filter(d => d.availabilityStatus === 'BUSY').length
+    busyDrivers: drivers.filter(d => d.availabilityStatus === 'BUSY').length,
   };
 };
 
@@ -148,7 +177,10 @@ export const handleUserSelectionChange = (
  * Formats driver status for display
  */
 export const formatDriverStatus = (status: DriverStatus): string => {
-  return status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  return status
+    .replace('_', ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, l => l.toUpperCase());
 };
 
 /**
@@ -156,10 +188,15 @@ export const formatDriverStatus = (status: DriverStatus): string => {
  */
 export const getStatusColorClass = (status: DriverStatus): string => {
   switch (status) {
-    case 'AVAILABLE': return 'text-green-600 bg-green-50';
-    case 'BUSY': return 'text-blue-600 bg-blue-50';
-    case 'OFF_DUTY': return 'text-gray-600 bg-gray-50';
-    case 'ON_LEAVE': return 'text-red-600 bg-red-50';
-    default: return 'text-gray-600 bg-gray-50';
+    case 'AVAILABLE':
+      return 'text-green-600 bg-green-50';
+    case 'BUSY':
+      return 'text-blue-600 bg-blue-50';
+    case 'OFF_DUTY':
+      return 'text-gray-600 bg-gray-50';
+    case 'ON_LEAVE':
+      return 'text-red-600 bg-red-50';
+    default:
+      return 'text-gray-600 bg-gray-50';
   }
 };

@@ -25,10 +25,10 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
       if (e.key === 'Escape') setOpen(false);
     };
     const onToggleSidebar = () => setOpen(true);
-    
+
     window.addEventListener('keydown', onKey);
     document.addEventListener('toggleSidebar', onToggleSidebar);
-    
+
     return () => {
       window.removeEventListener('keydown', onKey);
       document.removeEventListener('toggleSidebar', onToggleSidebar);
@@ -53,7 +53,10 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
 
   const isActive = (item: any) => {
     if (item.href) {
-      return pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
+      return (
+        pathname === item.href ||
+        (item.href !== '/' && pathname?.startsWith(item.href))
+      );
     }
     if (item.children) {
       return item.children.some((child: any) => isActive(child));
@@ -67,22 +70,27 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
 
   return (
     <>
-      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-60 md:flex-col md:border-r md:bg-background">
-        <div className="h-14 border-b px-4 flex items-center justify-between">
-          <div className="text-lg font-semibold tracking-tight">{title}</div>
-          <Button variant="ghost" size="icon" onClick={() => setOpen(true)} className="md:hidden">
-            <Menu className="h-5 w-5" />
+      <aside className='hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-60 md:flex-col md:border-r md:bg-background'>
+        <div className='h-14 border-b px-4 flex items-center justify-between'>
+          <div className='text-lg font-semibold tracking-tight'>{title}</div>
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={() => setOpen(true)}
+            className='md:hidden'
+          >
+            <Menu className='h-5 w-5' />
           </Button>
         </div>
-        <nav className="flex-1 overflow-y-auto p-2">
-          {filteredNavItems.map((item) => {
+        <nav className='flex-1 overflow-y-auto p-2'>
+          {filteredNavItems.map(item => {
             const { href, label, icon: Icon, children } = item;
             const itemIsActive = isActive(item);
             const isExpanded = expandedItems.has(label);
 
             if (children) {
               return (
-                <div key={label} className="space-y-1">
+                <div key={label} className='space-y-1'>
                   <button
                     onClick={() => toggleExpanded(label)}
                     className={cn(
@@ -90,29 +98,34 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                       itemIsActive && 'bg-accent text-accent-foreground'
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon className="h-4 w-4" />
+                    <div className='flex items-center gap-3'>
+                      <Icon className='h-4 w-4' />
                       <span>{label}</span>
                     </div>
                     {isExpanded ? (
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className='h-4 w-4' />
                     ) : (
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className='h-4 w-4' />
                     )}
                   </button>
                   {isExpanded && (
-                    <div className="ml-4 space-y-1">
+                    <div className='ml-4 space-y-1'>
                       {children.map((child: any) => {
                         const childIsActive = isActive(child);
                         return (
-                          <Link key={child.href} href={child.href!} className="block">
+                          <Link
+                            key={child.href}
+                            href={child.href!}
+                            className='block'
+                          >
                             <div
                               className={cn(
                                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                                childIsActive && 'bg-accent text-accent-foreground'
+                                childIsActive &&
+                                  'bg-accent text-accent-foreground'
                               )}
                             >
-                              <child.icon className="h-4 w-4" />
+                              <child.icon className='h-4 w-4' />
                               <span>{child.label}</span>
                             </div>
                           </Link>
@@ -125,47 +138,47 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
             }
 
             return (
-              <Link key={href} href={href!} className="block">
+              <Link key={href} href={href!} className='block'>
                 <div
                   className={cn(
                     'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
                     itemIsActive && 'bg-accent text-accent-foreground'
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className='h-4 w-4' />
                   <span>{label}</span>
                 </div>
               </Link>
             );
           })}
         </nav>
-        
+
         {/* User Info and Logout */}
         {user && (
-          <div className="border-t p-4">
-            <Link href="/profile" className="block mb-3">
-              <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+          <div className='border-t p-4'>
+            <Link href='/profile' className='block mb-3'>
+              <div className='flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer'>
+                <div className='w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium'>
                   {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
+                <div className='flex-1 min-w-0'>
+                  <p className='text-sm font-medium text-foreground truncate'>
                     {user.fullName || user.username}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className='text-xs text-muted-foreground truncate'>
                     {user.role}
                   </p>
                 </div>
-                <User className="h-4 w-4 text-muted-foreground" />
+                <User className='h-4 w-4 text-muted-foreground' />
               </div>
             </Link>
             <Button
-              variant="ghost"
-              size="sm"
+              variant='ghost'
+              size='sm'
               onClick={logout}
-              className="w-full justify-start text-muted-foreground hover:text-foreground"
+              className='w-full justify-start text-muted-foreground hover:text-foreground'
             >
-              <LogOut className="h-4 w-4 mr-2" />
+              <LogOut className='h-4 w-4 mr-2' />
               Logout
             </Button>
           </div>
@@ -173,24 +186,28 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
       </aside>
 
       {open && (
-        <dialog open className="fixed inset-0 z-50 md:hidden bg-transparent">
-          <button className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} aria-label="Close menu overlay" />
+        <dialog open className='fixed inset-0 z-50 md:hidden bg-transparent'>
+          <button
+            className='absolute inset-0 bg-black/40'
+            onClick={() => setOpen(false)}
+            aria-label='Close menu overlay'
+          />
           <div
             ref={panelRef}
-            className="absolute inset-y-0 left-0 w-72 translate-x-0 transform bg-background p-2 shadow-xl transition-transform"
+            className='absolute inset-y-0 left-0 w-72 translate-x-0 transform bg-background p-2 shadow-xl transition-transform'
           >
-            <div className="h-14 border-b px-3 flex items-center text-base font-semibold tracking-tight">
+            <div className='h-14 border-b px-3 flex items-center text-base font-semibold tracking-tight'>
               {title}
             </div>
-            <nav className="mt-2 space-y-1">
-              {filteredNavItems.map((item) => {
+            <nav className='mt-2 space-y-1'>
+              {filteredNavItems.map(item => {
                 const { href, label, icon: Icon, children } = item;
                 const itemIsActive = isActive(item);
                 const isExpanded = expandedItems.has(label);
 
                 if (children) {
                   return (
-                    <div key={label} className="space-y-1">
+                    <div key={label} className='space-y-1'>
                       <button
                         onClick={() => toggleExpanded(label)}
                         className={cn(
@@ -198,29 +215,35 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                           itemIsActive && 'bg-accent text-accent-foreground'
                         )}
                       >
-                        <div className="flex items-center gap-3">
-                          <Icon className="h-4 w-4" />
+                        <div className='flex items-center gap-3'>
+                          <Icon className='h-4 w-4' />
                           <span>{label}</span>
                         </div>
                         {isExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className='h-4 w-4' />
                         ) : (
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronRight className='h-4 w-4' />
                         )}
                       </button>
                       {isExpanded && (
-                        <div className="ml-4 space-y-1">
+                        <div className='ml-4 space-y-1'>
                           {children.map((child: any) => {
                             const childIsActive = isActive(child);
                             return (
-                              <Link key={child.href} href={child.href!} className="block" onClick={() => setOpen(false)}>
+                              <Link
+                                key={child.href}
+                                href={child.href!}
+                                className='block'
+                                onClick={() => setOpen(false)}
+                              >
                                 <div
                                   className={cn(
                                     'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                                    childIsActive && 'bg-accent text-accent-foreground'
+                                    childIsActive &&
+                                      'bg-accent text-accent-foreground'
                                   )}
                                 >
-                                  <child.icon className="h-4 w-4" />
+                                  <child.icon className='h-4 w-4' />
                                   <span>{child.label}</span>
                                 </div>
                               </Link>
@@ -233,47 +256,58 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                 }
 
                 return (
-                  <Link key={href} href={href!} className="block" onClick={() => setOpen(false)}>
+                  <Link
+                    key={href}
+                    href={href!}
+                    className='block'
+                    onClick={() => setOpen(false)}
+                  >
                     <div
                       className={cn(
                         'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
                         itemIsActive && 'bg-accent text-accent-foreground'
                       )}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className='h-4 w-4' />
                       <span>{label}</span>
                     </div>
                   </Link>
                 );
               })}
             </nav>
-            
+
             {/* Mobile User Info and Logout */}
             {user && (
-              <div className="border-t p-4 mt-4">
-                <Link href="/profile" className="block mb-3" onClick={() => setOpen(false)}>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-                      {user.fullName?.charAt(0) || user.username?.charAt(0) || 'U'}
+              <div className='border-t p-4 mt-4'>
+                <Link
+                  href='/profile'
+                  className='block mb-3'
+                  onClick={() => setOpen(false)}
+                >
+                  <div className='flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer'>
+                    <div className='w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium'>
+                      {user.fullName?.charAt(0) ||
+                        user.username?.charAt(0) ||
+                        'U'}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
+                    <div className='flex-1 min-w-0'>
+                      <p className='text-sm font-medium text-foreground truncate'>
                         {user.fullName || user.username}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className='text-xs text-muted-foreground truncate'>
                         {user.role}
                       </p>
                     </div>
-                    <User className="h-4 w-4 text-muted-foreground" />
+                    <User className='h-4 w-4 text-muted-foreground' />
                   </div>
                 </Link>
                 <Button
-                  variant="ghost"
-                  size="sm"
+                  variant='ghost'
+                  size='sm'
                   onClick={logout}
-                  className="w-full justify-start text-muted-foreground hover:text-foreground"
+                  className='w-full justify-start text-muted-foreground hover:text-foreground'
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
+                  <LogOut className='h-4 w-4 mr-2' />
                   Logout
                 </Button>
               </div>

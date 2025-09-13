@@ -15,11 +15,11 @@ interface ProtectedRouteProps {
   readonly redirectTo?: string;
 }
 
-export default function ProtectedRoute({ 
-  children, 
-  requiredRoles = [], 
+export default function ProtectedRoute({
+  children,
+  requiredRoles = [],
   fallback,
-  redirectTo = '/login'
+  redirectTo = '/login',
 }: ProtectedRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -35,10 +35,10 @@ export default function ProtectedRoute({
 
     // Check specific role requirements
     if (requiredRoles.length > 0) {
-      const hasRequiredRole = requiredRoles.some(role => 
-        user.role === role || user.role.includes(role)
+      const hasRequiredRole = requiredRoles.some(
+        role => user.role === role || user.role.includes(role)
       );
-      
+
       if (!hasRequiredRole) {
         setAccessDenied(true);
         return;
@@ -58,32 +58,32 @@ export default function ProtectedRoute({
 
   if (accessDenied) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <div className="max-w-md w-full">
-          <Alert variant="destructive">
-            <Lock className="h-4 w-4" />
-            <AlertDescription className="space-y-4">
+      <div className='flex items-center justify-center min-h-screen p-4'>
+        <div className='max-w-md w-full'>
+          <Alert variant='destructive'>
+            <Lock className='h-4 w-4' />
+            <AlertDescription className='space-y-4'>
               <div>
-                <h3 className="font-semibold">Access Denied</h3>
-                <p className="text-sm">
-                  You don't have permission to access this page. 
-                  Required role: {requiredRoles.join(' or ')}
+                <h3 className='font-semibold'>Access Denied</h3>
+                <p className='text-sm'>
+                  You don't have permission to access this page. Required role:{' '}
+                  {requiredRoles.join(' or ')}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className='text-sm text-muted-foreground'>
                   Your current role: {user.role}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+              <div className='flex gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
                   onClick={() => router.back()}
                 >
                   Go Back
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant='outline'
+                  size='sm'
                   onClick={() => router.push('/dashboard')}
                 >
                   Dashboard
@@ -124,17 +124,18 @@ export function withAuth<P extends object>(
  */
 export function usePermissions() {
   const { user } = useAuth();
-  
+
   if (!user) {
     return {
       hasRole: () => false,
       hasAnyRole: () => false,
-      permissions: {}
+      permissions: {},
     };
   }
 
-  const hasRole = (role: string) => user.role === role || user.role.includes(role);
-  
+  const hasRole = (role: string) =>
+    user.role === role || user.role.includes(role);
+
   const hasAnyRole = (roles: string[]) => roles.some(role => hasRole(role));
 
   const permissions = {
@@ -155,6 +156,6 @@ export function usePermissions() {
   return {
     hasRole,
     hasAnyRole,
-    permissions
+    permissions,
   };
 }

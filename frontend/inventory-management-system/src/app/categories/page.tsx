@@ -58,7 +58,9 @@ export default function CategoriesPage() {
     if (!categoryName.trim()) return;
 
     try {
-      const newCategory = await categoryService.createCategory({ categoryName: categoryName.trim() });
+      const newCategory = await categoryService.createCategory({
+        categoryName: categoryName.trim(),
+      });
       setCategories([...categories, newCategory]);
       setCategoryName('');
       setIsCreateDialogOpen(false);
@@ -71,12 +73,17 @@ export default function CategoriesPage() {
     if (!editingCategory || !categoryName.trim()) return;
 
     try {
-      const updatedCategory = await categoryService.updateCategory(editingCategory.id, { 
-        categoryName: categoryName.trim() 
-      });
-      setCategories(categories.map(cat => 
-        cat.id === editingCategory.id ? updatedCategory : cat
-      ));
+      const updatedCategory = await categoryService.updateCategory(
+        editingCategory.id,
+        {
+          categoryName: categoryName.trim(),
+        }
+      );
+      setCategories(
+        categories.map(cat =>
+          cat.id === editingCategory.id ? updatedCategory : cat
+        )
+      );
       setCategoryName('');
       setEditingCategory(null);
       setIsEditDialogOpen(false);
@@ -105,13 +112,13 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Categories</h1>
+    <div className='space-y-6'>
+      <div className='flex justify-between items-center'>
+        <h1 className='text-2xl font-bold'>Categories</h1>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className='w-4 h-4 mr-2' />
               Add Category
             </Button>
           </DialogTrigger>
@@ -122,53 +129,63 @@ export default function CategoriesPage() {
                 Add a new product category to organize your inventory.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className='space-y-4'>
               <Input
-                placeholder="Category name"
+                placeholder='Category name'
                 value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
+                onChange={e => setCategoryName(e.target.value)}
               />
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button
+                variant='outline'
+                onClick={() => setIsCreateDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateCategory}>
-                Create Category
-              </Button>
+              <Button onClick={handleCreateCategory}>Create Category</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-4'>
         {categories.length === 0 ? (
-          <div className="col-span-full text-center text-gray-500 py-8">
+          <div className='col-span-full text-center text-gray-500 py-8'>
             No categories available. Create your first category to get started.
           </div>
         ) : (
-          categories.map((category) => (
-            <Card key={category.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{category.categoryName}</CardTitle>
-                  <Badge variant="secondary">ID: {category.id}</Badge>
+          categories.map(category => (
+            <Card
+              key={category.id}
+              className='hover:shadow-md transition-shadow'
+            >
+              <CardHeader className='pb-3'>
+                <div className='flex justify-between items-start'>
+                  <CardTitle className='text-lg'>
+                    {category.categoryName}
+                  </CardTitle>
+                  <Badge variant='secondary'>ID: {category.id}</Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex space-x-2">
+                <div className='flex space-x-2'>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant='outline'
+                    size='sm'
                     onClick={() => openEditDialog(category)}
                   >
-                    <Edit className="w-4 h-4 mr-1" />
+                    <Edit className='w-4 h-4 mr-1' />
                     Edit
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                        <Trash2 className="w-4 h-4 mr-1" />
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='text-red-600 hover:text-red-700'
+                      >
+                        <Trash2 className='w-4 h-4 mr-1' />
                         Delete
                       </Button>
                     </AlertDialogTrigger>
@@ -176,15 +193,16 @@ export default function CategoriesPage() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the category
-                          "{category.categoryName}" and remove it from all associated products.
+                          This action cannot be undone. This will permanently
+                          delete the category "{category.categoryName}" and
+                          remove it from all associated products.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => handleDeleteCategory(category.id)}
-                          className="bg-red-600 hover:bg-red-700"
+                          className='bg-red-600 hover:bg-red-700'
                         >
                           Delete
                         </AlertDialogAction>
@@ -203,24 +221,23 @@ export default function CategoriesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
-            <DialogDescription>
-              Update the category name.
-            </DialogDescription>
+            <DialogDescription>Update the category name.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <Input
-              placeholder="Category name"
+              placeholder='Category name'
               value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
+              onChange={e => setCategoryName(e.target.value)}
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant='outline'
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleEditCategory}>
-              Update Category
-            </Button>
+            <Button onClick={handleEditCategory}>Update Category</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

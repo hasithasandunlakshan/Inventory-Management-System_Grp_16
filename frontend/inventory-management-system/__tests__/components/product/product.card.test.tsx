@@ -42,6 +42,9 @@ describe('ProductCard', () => {
   it('navigates to product details on click', () => {
     render(<ProductCard {...baseProps} />);
     fireEvent.click(screen.getByText('Sample Product'));
-    expect(productUtils.viewProductDetails).toHaveBeenCalledWith('p1', expect.any(Object));
+    expect(productUtils.viewProductDetails).toHaveBeenCalledWith(
+      'p1',
+      expect.any(Object)
+    );
   });
 });
