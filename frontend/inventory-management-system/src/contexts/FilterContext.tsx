@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
@@ -22,13 +22,13 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     timeRange: 'last30',
     fromDate: '',
     toDate: '',
-    warehouse: 'all'
+    warehouse: 'all',
   });
 
   const updateFilter = (key: keyof FilterState, value: string) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
@@ -68,7 +68,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
 
     return {
       startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0]
+      endDate: endDate.toISOString().split('T')[0],
     };
   };
 

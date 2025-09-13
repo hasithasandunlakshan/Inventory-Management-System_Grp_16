@@ -31,17 +31,17 @@ class UserService {
     const token = authService.getToken();
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
 
   async getUsersWithUserRole(): Promise<UsersResponse> {
     try {
       const headers = await this.getAuthHeaders();
-      
+
       const response = await fetch(`${USER_API_BASE_URL}/users`, {
         method: 'GET',
-        headers
+        headers,
       });
 
       if (!response.ok) {
@@ -57,16 +57,22 @@ class UserService {
   }
 
   // Filter and search utilities
-  filterUsers(users: UserInfo[], filters: {
-    status?: string;
-    searchTerm?: string;
-    dateFrom?: string;
-    dateTo?: string;
-  }): UserInfo[] {
+  filterUsers(
+    users: UserInfo[],
+    filters: {
+      status?: string;
+      searchTerm?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    }
+  ): UserInfo[] {
     return users.filter(user => {
       // Status filter
-      if (filters.status && filters.status !== 'all' && 
-          user.accountStatus.toLowerCase() !== filters.status.toLowerCase()) {
+      if (
+        filters.status &&
+        filters.status !== 'all' &&
+        user.accountStatus.toLowerCase() !== filters.status.toLowerCase()
+      ) {
         return false;
       }
 
@@ -84,12 +90,21 @@ class UserService {
       // Search term (search in username, email, full name, phone)
       if (filters.searchTerm) {
         const searchLower = filters.searchTerm.toLowerCase();
-        const matchesUsername = user.username.toLowerCase().includes(searchLower);
+        const matchesUsername = user.username
+          .toLowerCase()
+          .includes(searchLower);
         const matchesEmail = user.email.toLowerCase().includes(searchLower);
         const matchesName = user.fullName?.toLowerCase().includes(searchLower);
-        const matchesPhone = user.phoneNumber?.toLowerCase().includes(searchLower);
-        
-        if (!matchesUsername && !matchesEmail && !matchesName && !matchesPhone) {
+        const matchesPhone = user.phoneNumber
+          ?.toLowerCase()
+          .includes(searchLower);
+
+        if (
+          !matchesUsername &&
+          !matchesEmail &&
+          !matchesName &&
+          !matchesPhone
+        ) {
           return false;
         }
       }
@@ -103,16 +118,20 @@ class UserService {
     const totalUsers = users.length;
     const activeUsers = users.filter(u => u.accountStatus === 'ACTIVE').length;
     const verifiedUsers = users.filter(u => u.emailVerified).length;
-    
+
     // Get recent signups (last 7 days)
     const lastWeek = new Date();
     lastWeek.setDate(lastWeek.getDate() - 7);
-    const recentSignups = users.filter(u => new Date(u.createdAt) > lastWeek).length;
-    
+    const recentSignups = users.filter(
+      u => new Date(u.createdAt) > lastWeek
+    ).length;
+
     // Get users by month
     const thisMonth = new Date();
     thisMonth.setDate(1);
-    const thisMonthSignups = users.filter(u => new Date(u.createdAt) > thisMonth).length;
+    const thisMonthSignups = users.filter(
+      u => new Date(u.createdAt) > thisMonth
+    ).length;
 
     return {
       totalUsers,
@@ -120,7 +139,7 @@ class UserService {
       verifiedUsers,
       recentSignups,
       thisMonthSignups,
-      verificationRate: totalUsers > 0 ? (verifiedUsers / totalUsers) * 100 : 0
+      verificationRate: totalUsers > 0 ? (verifiedUsers / totalUsers) * 100 : 0,
     };
   }
 }

@@ -55,7 +55,7 @@ jobs:
       - name: Run Prettier check
         run: |
           cd frontend/inventory-management-system
-          npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css,md}"
+          npm run format:check
 
       # Testing Steps
       - name: Run Unit Tests

@@ -1,4 +1,9 @@
-export const formatCurrency = (amount: number, currency: string = 'USD'): string => {
+import { MonthlyRevenueData } from '@/types/revenue';
+
+export const formatCurrency = (
+  amount: number,
+  currency: string = 'USD'
+): string => {
   if (currency.toLowerCase() === 'usd') {
     return `$${amount.toFixed(2)}`;
   }
@@ -14,14 +19,27 @@ export const calculatePercentage = (value: number, max: number): number => {
   return (value / max) * 100;
 };
 
-export const getMonthsWithRevenue = (monthlyData: any[], limit: number = 6) => {
+export const getMonthsWithRevenue = (
+  monthlyData: MonthlyRevenueData[],
+  limit: number = 6
+) => {
   return monthlyData.filter(month => month.revenue > 0).slice(-limit);
 };
 
-export const getCurrentMonth = (monthlyData: any[]) => {
+export const getCurrentMonth = (monthlyData: MonthlyRevenueData[]) => {
   const monthNames = [
-    "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
-    "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+    'JANUARY',
+    'FEBRUARY',
+    'MARCH',
+    'APRIL',
+    'MAY',
+    'JUNE',
+    'JULY',
+    'AUGUST',
+    'SEPTEMBER',
+    'OCTOBER',
+    'NOVEMBER',
+    'DECEMBER',
   ];
   const currentMonthName = monthNames[new Date().getMonth()];
   return monthlyData.find(m => m.month === currentMonthName);

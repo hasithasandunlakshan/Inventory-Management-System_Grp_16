@@ -54,7 +54,9 @@ class AdminService {
   }
 
   // Assign role to user
-  async assignRoleToUser(request: RoleAssignmentRequest): Promise<{ message: string }> {
+  async assignRoleToUser(
+    request: RoleAssignmentRequest
+  ): Promise<{ message: string }> {
     const response = await fetch(`${API_BASE_URL}/admin/assign-role`, {
       method: 'POST',
       headers: {
@@ -73,7 +75,9 @@ class AdminService {
   }
 
   // Remove role from user
-  async removeRoleFromUser(request: RoleAssignmentRequest): Promise<{ message: string }> {
+  async removeRoleFromUser(
+    request: RoleAssignmentRequest
+  ): Promise<{ message: string }> {
     const response = await fetch(`${API_BASE_URL}/admin/remove-role`, {
       method: 'DELETE',
       headers: {

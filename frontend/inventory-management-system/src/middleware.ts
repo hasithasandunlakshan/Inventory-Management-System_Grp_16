@@ -10,7 +10,7 @@ const publicRoutes = [
   '/contact',
   '/about',
   '/privacy',
-  '/terms'
+  '/terms',
 ];
 
 // Role-based route permissions
@@ -50,45 +50,49 @@ function findRoutePermission(pathname: string): string[] | null {
   if (ROUTE_PERMISSIONS[pathname]) {
     return ROUTE_PERMISSIONS[pathname];
   }
-  
+
   // Find prefix match
   for (const route in ROUTE_PERMISSIONS) {
     if (pathname.startsWith(route)) {
       return ROUTE_PERMISSIONS[route];
     }
   }
-  
+
   return null;
 }
 
 // Helper function to validate JWT token
-function validateToken(token: string): { valid: boolean; role?: string; expired?: boolean } {
+function validateToken(token: string): {
+  valid: boolean;
+  role?: string;
+  expired?: boolean;
+} {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) {
       return { valid: false };
     }
-    
+
     const payload = JSON.parse(atob(parts[1]));
     const currentTime = Math.floor(Date.now() / 1000);
-    
+
     // Check if token is expired
     if (payload.exp && payload.exp < currentTime) {
       return { valid: false, expired: true };
     }
-    
+
     // Debug: Log the payload to see what's in the token
     console.log('🔐 Middleware: JWT payload:', {
       userId: payload.userId,
       email: payload.email,
       role: payload.role,
       exp: payload.exp,
-      iat: payload.iat
+      iat: payload.iat,
     });
-    
-    return { 
-      valid: true, 
-      role: payload.role || 'USER' 
+
+    return {
+      valid: true,
+      role: payload.role || 'USER',
     };
   } catch (error) {
     console.error('🔐 Middleware: Token validation error:', error);
@@ -98,7 +102,7 @@ function validateToken(token: string): { valid: boolean; role?: string; expired?
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Skip middleware for static files, API routes, and Next.js internals
   if (
     pathname.startsWith('/_next') ||
@@ -112,14 +116,19 @@ export function middleware(request: NextRequest) {
 
   // Check if it's a public route
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-  
+
   if (isPublicRoute) {
     return NextResponse.next();
   }
 
   // Get token from cookies
   const token = request.cookies.get('inventory_auth_token')?.value;
-  console.log('🔐 Middleware: Processing request for', pathname, 'with token:', !!token);
+  console.log(
+    '🔐 Middleware: Processing request for',
+    pathname,
+    'with token:',
+    !!token
+  );
 
   // If no token, redirect to login
   if (!token) {
@@ -132,7 +141,7 @@ export function middleware(request: NextRequest) {
   // Validate token
   const tokenValidation = validateToken(token);
   console.log('🔐 Middleware: Token validation result:', tokenValidation);
-  
+
   if (!tokenValidation.valid) {
     console.log('🔐 Middleware: Token invalid, redirecting to login');
     const loginUrl = new URL('/login', request.url);
@@ -148,7 +157,7 @@ export function middleware(request: NextRequest) {
 
   // Check route permissions
   const requiredRoles = findRoutePermission(pathname);
-  
+
   if (requiredRoles && !hasRequiredRole(userRole, requiredRoles)) {
     // User doesn't have permission for this route
     const dashboardUrl = new URL('/dashboard', request.url);
@@ -159,7 +168,7 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next();
   response.headers.set('X-User-Role', userRole);
   response.headers.set('X-User-Authenticated', 'true');
-  
+
   return response;
 }
 
