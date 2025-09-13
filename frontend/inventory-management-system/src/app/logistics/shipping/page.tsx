@@ -1,7 +1,6 @@
 'use client';
 
-
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -10,10 +9,12 @@ import {
   DirectionsRenderer,
   Marker,
   useJsApiLoader,
-
-} from "@react-google-maps/api";
-import { orderService, Order, OrderWithCustomer } from "@/lib/services/orderService";
-
+} from '@react-google-maps/api';
+import {
+  orderService,
+  Order,
+  OrderWithCustomer,
+} from '@/lib/services/orderService';
 
 type ShippingOrder = {
   id: number;
@@ -116,16 +117,14 @@ function kMeansCluster(points: number[][], k: number): number[] {
   return assignments;
 }
 
-
 const dummyOrders: ShippingOrder[] = [
-  { 
-    id: 1, 
-    name: "Order #001", 
-    lat: 6.9271, 
-    lng: 79.8612, 
-    address: "Colombo, Sri Lanka",
-    status: "Pending"
-
+  {
+    id: 1,
+    name: 'Order #001',
+    lat: 6.9271,
+    lng: 79.8612,
+    address: 'Colombo, Sri Lanka',
+    status: 'Pending',
   },
   {
     id: 2,
@@ -221,10 +220,14 @@ function ShippingPage() {
       // Use real customer address from the order data
       let lat = 6.9271; // Default to Colombo coordinates
       let lng = 79.8612;
-      let address = "Address not available";
+      let address = 'Address not available';
 
       // Check if order has customer address information
-      if (order.customerAddress && order.customerAddress !== "Address not available" && order.customerAddress !== "Address not provided") {
+      if (
+        order.customerAddress &&
+        order.customerAddress !== 'Address not available' &&
+        order.customerAddress !== 'Address not provided'
+      ) {
         address = order.customerAddress;
         // Use customer coordinates if available
         if (order.customerLatitude && order.customerLongitude) {
@@ -234,28 +237,39 @@ function ShippingPage() {
           // If no coordinates but have address, try to assign reasonable Sri Lankan coordinates
           // Based on common city patterns in addresses
           if (address.toLowerCase().includes('kandy')) {
-            lat = 7.2906; lng = 80.6337;
+            lat = 7.2906;
+            lng = 80.6337;
           } else if (address.toLowerCase().includes('galle')) {
-            lat = 6.0535; lng = 80.221;
+            lat = 6.0535;
+            lng = 80.221;
           } else if (address.toLowerCase().includes('negombo')) {
-            lat = 7.2083; lng = 79.8358;
+            lat = 7.2083;
+            lng = 79.8358;
           } else if (address.toLowerCase().includes('matara')) {
-            lat = 5.9549; lng = 80.555;
+            lat = 5.9549;
+            lng = 80.555;
           } else if (address.toLowerCase().includes('anuradhapura')) {
-            lat = 7.8731; lng = 80.7718;
+            lat = 7.8731;
+            lng = 80.7718;
           } else if (address.toLowerCase().includes('batticaloa')) {
-            lat = 6.9534; lng = 81.0077;
+            lat = 6.9534;
+            lng = 81.0077;
           } else if (address.toLowerCase().includes('kurunegala')) {
-            lat = 8.3114; lng = 80.4037;
+            lat = 8.3114;
+            lng = 80.4037;
           }
           // Default to Colombo for other addresses
         }
       } else {
         // Fallback: assign default Sri Lankan locations for orders without addresses
         const fallbackLocations = [
-          { lat: 6.9271, lng: 79.8612, address: "Colombo, Sri Lanka (Default)" },
-          { lat: 7.2906, lng: 80.6337, address: "Kandy, Sri Lanka (Default)" },
-          { lat: 6.0535, lng: 80.221, address: "Galle, Sri Lanka (Default)" }
+          {
+            lat: 6.9271,
+            lng: 79.8612,
+            address: 'Colombo, Sri Lanka (Default)',
+          },
+          { lat: 7.2906, lng: 80.6337, address: 'Kandy, Sri Lanka (Default)' },
+          { lat: 6.0535, lng: 80.221, address: 'Galle, Sri Lanka (Default)' },
         ];
         const location = fallbackLocations[index % fallbackLocations.length];
         lat = location.lat;
@@ -269,30 +283,35 @@ function ShippingPage() {
         lat: lat,
         lng: lng,
         address: address,
-        status: order.status === 'CONFIRMED' ? 'Ready' : 
-                order.status === 'PROCESSED' ? 'Processing' : 
-                order.status === 'PENDING' ? 'Pending' : order.status,
-        originalOrder: order
+        status:
+          order.status === 'CONFIRMED'
+            ? 'Ready'
+            : order.status === 'PROCESSED'
+              ? 'Processing'
+              : order.status === 'PENDING'
+                ? 'Pending'
+                : order.status,
+        originalOrder: order,
       };
     });
   };
 
   // Fetch real orders function (made reusable)
-  const fetchOrders = async (showLoadingState = true) => {
+  const fetchOrders = useCallback(async (showLoadingState = true) => {
     try {
       if (showLoadingState) {
         setIsLoadingOrders(true);
       }
       setOrdersError(null);
-      
+
       // Check if user is authenticated
       const token = localStorage.getItem('inventory_auth_token');
       console.log('🔐 Authentication status:', {
         hasToken: !!token,
         tokenLength: token?.length || 0,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
+
       if (!token) {
         console.warn('❌ No authentication token found. User needs to log in.');
         setOrdersError('Please log in to view orders.');
@@ -300,39 +319,53 @@ function ShippingPage() {
         setUsingDummyData(true);
         return;
       }
-      
+
       // Add cache-busting parameter to ensure fresh data
-      console.log('🚀 Fetching fresh orders from backend... (timestamp: ' + Date.now() + ')');
+      console.log(
+        '🚀 Fetching fresh orders from backend... (timestamp: ' +
+          Date.now() +
+          ')'
+      );
       const response = await orderService.getAllOrders();
-      
+
       console.log('📡 Order service response:', {
         success: response.success,
         message: response.message,
         ordersCount: response.orders?.length || 0,
         totalOrders: response.totalOrders,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
+
       if (response.success && response.orders.length > 0) {
         const shippingOrders = convertToShippingOrders(response.orders);
-        
+
         // Force state update with a new array reference
         setRealOrders([...shippingOrders]);
         setUsingDummyData(false);
-        
-        console.log(`✅ Successfully loaded ${response.orders.length} fresh orders from database`);
+
+        console.log(
+          `✅ Successfully loaded ${response.orders.length} fresh orders from database`
+        );
         console.log('📦 First few orders:', response.orders.slice(0, 3));
-        console.log('🚢 Converted shipping orders:', shippingOrders.slice(0, 3));
+        console.log(
+          '🚢 Converted shipping orders:',
+          shippingOrders.slice(0, 3)
+        );
         console.log('🔄 State updated at:', new Date().toISOString());
       } else {
-        console.warn('⚠️ No orders found or failed to fetch orders:', response.message);
+        console.warn(
+          '⚠️ No orders found or failed to fetch orders:',
+          response.message
+        );
         setOrdersError(response.message || 'No orders found in database.');
         setRealOrders(dummyOrders);
         setUsingDummyData(true);
       }
     } catch (error) {
       console.error('💥 Failed to fetch orders:', error);
-      setOrdersError(`Failed to load orders: ${error instanceof Error ? error.message : String(error)}`);
+      setOrdersError(
+        `Failed to load orders: ${error instanceof Error ? error.message : String(error)}`
+      );
       setRealOrders(dummyOrders);
       setUsingDummyData(true);
     } finally {
@@ -340,7 +373,7 @@ function ShippingPage() {
         setIsLoadingOrders(false);
       }
     }
-  };
+  }, []);
 
   // Fetch orders on component mount and set up auto-refresh
   useEffect(() => {
@@ -354,15 +387,14 @@ function ShippingPage() {
     }, 120000); // 2 minutes = 120,000ms
 
     return () => clearInterval(intervalId);
-  }, []); // Empty dependency array to run only once
+  }, [fetchOrders]); // Include fetchOrders in dependencies
 
   // Get the current orders to display (real or dummy)
   const currentOrders = realOrders.length > 0 ? realOrders : dummyOrders;
 
   // Cluster Orders
   const handleClustering = () => {
-  
-    const coords = currentOrders.map((o) => [o.lat, o.lng]);
+    const coords = currentOrders.map(o => [o.lat, o.lng]);
 
     const clusterAssignments = kMeansCluster(coords, numClusters);
 
@@ -457,13 +489,11 @@ function ShippingPage() {
 
   if (!isLoaded) {
     return (
-
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent mx-auto mb-4" />
-          <p className="text-gray-600">Loading Google Maps...</p>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='h-10 w-10 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent mx-auto mb-4' />
+          <p className='text-gray-600'>Loading Google Maps...</p>
         </div>
-
       </div>
     );
   }
@@ -490,12 +520,16 @@ function ShippingPage() {
                 </span>
               </div>
 
-              <div className="text-sm text-gray-500">
-                Total Orders: <span className="font-semibold text-gray-900">{isLoadingOrders ? '...' : currentOrders.length}</span>
+              <div className='text-sm text-gray-500'>
+                Total Orders:{' '}
+                <span className='font-semibold text-gray-900'>
+                  {isLoadingOrders ? '...' : currentOrders.length}
+                </span>
                 {usingDummyData && (
-                  <span className="ml-2 text-xs text-blue-600">(Sample Data)</span>
+                  <span className='ml-2 text-xs text-blue-600'>
+                    (Sample Data)
+                  </span>
                 )}
-
               </div>
               <div className='text-sm text-gray-500'>
                 Clusters:{' '}
@@ -508,22 +542,33 @@ function ShippingPage() {
         </div>
       </div>
 
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Status and Error Messages */}
         {ordersError && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          <div className='mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
+            <div className='flex'>
+              <div className='flex-shrink-0'>
+                <svg
+                  className='h-5 w-5 text-yellow-400'
+                  fill='currentColor'
+                  viewBox='0 0 20 20'
+                >
+                  <path
+                    fillRule='evenodd'
+                    d='M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z'
+                    clipRule='evenodd'
+                  />
                 </svg>
               </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">Authentication Required</h3>
-                <p className="mt-1 text-sm text-yellow-700">{ordersError}</p>
+              <div className='ml-3'>
+                <h3 className='text-sm font-medium text-yellow-800'>
+                  Authentication Required
+                </h3>
+                <p className='mt-1 text-sm text-yellow-700'>{ordersError}</p>
                 {usingDummyData && (
-                  <p className="mt-1 text-sm text-yellow-700">Showing sample data for demonstration purposes.</p>
+                  <p className='mt-1 text-sm text-yellow-700'>
+                    Showing sample data for demonstration purposes.
+                  </p>
                 )}
               </div>
             </div>
@@ -531,31 +576,43 @@ function ShippingPage() {
         )}
 
         {isLoadingOrders && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent mr-3" />
-              <p className="text-sm text-blue-700">Loading orders from database...</p>
+          <div className='mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4'>
+            <div className='flex items-center'>
+              <div className='h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent mr-3' />
+              <p className='text-sm text-blue-700'>
+                Loading orders from database...
+              </p>
             </div>
           </div>
         )}
 
         {!isLoadingOrders && !ordersError && !usingDummyData && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.293a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          <div className='mb-6 bg-green-50 border border-green-200 rounded-lg p-4'>
+            <div className='flex'>
+              <div className='flex-shrink-0'>
+                <svg
+                  className='h-5 w-5 text-green-400'
+                  fill='currentColor'
+                  viewBox='0 0 20 20'
+                >
+                  <path
+                    fillRule='evenodd'
+                    d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.293a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z'
+                    clipRule='evenodd'
+                  />
                 </svg>
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-700">✅ Successfully loaded {realOrders.length} orders from database</p>
+              <div className='ml-3'>
+                <p className='text-sm text-green-700'>
+                  ✅ Successfully loaded {realOrders.length} orders from
+                  database
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
           {/* Control Panel */}
           <div className='lg:col-span-1 space-y-6'>
             {/* Clustering Controls */}
@@ -595,14 +652,12 @@ function ShippingPage() {
                   />
                 </div>
 
-                
-                <div className="flex space-x-3">
-                  <Button 
-                    className="flex-1" 
+                <div className='flex space-x-3'>
+                  <Button
+                    className='flex-1'
                     onClick={handleClustering}
                     disabled={isLoadingOrders || currentOrders.length === 0}
                   >
-
                     Create Clusters
                   </Button>
                   <Button
@@ -613,16 +668,26 @@ function ShippingPage() {
                     Reset View
                   </Button>
                 </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+
+                <Button
+                  variant='outline'
+                  size='sm'
                   onClick={() => fetchOrders()}
                   disabled={isLoadingOrders}
-                  className="w-full mt-2"
+                  className='w-full mt-2'
                 >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  <svg
+                    className='w-4 h-4 mr-2'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                    />
                   </svg>
                   {isLoadingOrders ? 'Refreshing...' : 'Refresh Orders'}
                 </Button>
@@ -649,58 +714,78 @@ function ShippingPage() {
                   All Orders
                 </h2>
 
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className='space-y-3 max-h-96 overflow-y-auto'>
                   {isLoadingOrders ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                      <span className="ml-2 text-sm text-gray-600">Loading orders...</span>
+                    <div className='flex items-center justify-center py-8'>
+                      <div className='h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent' />
+                      <span className='ml-2 text-sm text-gray-600'>
+                        Loading orders...
+                      </span>
                     </div>
                   ) : ordersError ? (
-                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-800">{ordersError}</p>
+                    <div className='p-3 bg-yellow-50 border border-yellow-200 rounded-lg'>
+                      <p className='text-sm text-yellow-800'>{ordersError}</p>
                     </div>
                   ) : currentOrders.length === 0 ? (
-                    <div className="p-3 text-center text-gray-500">
-                      <p className="text-sm">No orders available for delivery</p>
+                    <div className='p-3 text-center text-gray-500'>
+                      <p className='text-sm'>
+                        No orders available for delivery
+                      </p>
                     </div>
                   ) : (
                     <>
                       {usingDummyData && (
-                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-3">
-                          <p className="text-sm text-blue-800">
-                            📝 Using sample data for demonstration. Connect to database to see real orders.
+                        <div className='p-3 bg-blue-50 border border-blue-200 rounded-lg mb-3'>
+                          <p className='text-sm text-blue-800'>
+                            📝 Using sample data for demonstration. Connect to
+                            database to see real orders.
                           </p>
                         </div>
                       )}
-                      {currentOrders.map((order) => (
-                    <div key={order.id} className="p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{order.name}</h3>
-                          <p className="text-sm text-gray-600">{order.address}</p>
-                          {order.originalOrder?.customerInfo && (
-                            <div className="mt-1 text-xs text-gray-500">
-                              Customer: {order.originalOrder.customerInfo.fullName}
-                              {order.originalOrder.customerInfo.phoneNumber && (
-                                <span className="ml-2">📞 {order.originalOrder.customerInfo.phoneNumber}</span>
+                      {currentOrders.map(order => (
+                        <div
+                          key={order.id}
+                          className='p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow'
+                        >
+                          <div className='flex justify-between items-start'>
+                            <div className='flex-1'>
+                              <h3 className='font-medium text-gray-900'>
+                                {order.name}
+                              </h3>
+                              <p className='text-sm text-gray-600'>
+                                {order.address}
+                              </p>
+                              {order.originalOrder?.customerInfo && (
+                                <div className='mt-1 text-xs text-gray-500'>
+                                  Customer:{' '}
+                                  {order.originalOrder.customerInfo.fullName}
+                                  {order.originalOrder.customerInfo
+                                    .phoneNumber && (
+                                    <span className='ml-2'>
+                                      📞{' '}
+                                      {
+                                        order.originalOrder.customerInfo
+                                          .phoneNumber
+                                      }
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {order.originalOrder && (
+                                <div className='mt-1 text-xs text-gray-500'>
+                                  Items: {order.originalOrder.orderItems.length}{' '}
+                                  | Total: ${order.originalOrder.totalAmount}
+                                </div>
                               )}
                             </div>
-                          )}
-                          {order.originalOrder && (
-                            <div className="mt-1 text-xs text-gray-500">
-                              Items: {order.originalOrder.orderItems.length} | 
-                              Total: ${order.originalOrder.totalAmount}
-                            </div>
-                          )}
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
+                            >
+                              {order.status}
+                            </span>
+                          </div>
                         </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
-                        >
-                          {order.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                      ))}
                     </>
                   )}
                 </div>
@@ -731,46 +816,56 @@ function ShippingPage() {
                     const clusterKey =
                       cluster.map(o => o.id).join('-') || String(idx);
                     return (
-                    <button 
-                      key={clusterKey} 
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                        selectedCluster === idx 
-                          ? 'border-blue-500 bg-blue-50 shadow-md' 
-                          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
-                      }`}
-                      onClick={() => handleClusterClick(idx)}
-                      type="button"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 flex items-center">
-                          <div 
-                            className="w-4 h-4 rounded-full mr-2"
-                            style={{ backgroundColor: clusterColors[idx % clusterColors.length] }}
-                          ></div>
-                          Cluster {idx + 1}
-                        </h3>
-                        <span className="text-sm text-gray-500">{cluster.length} orders</span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        {cluster.map((order) => (
-                          <div key={order.id} className="text-sm">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-700">{order.name}</span>
-                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
-                                {order.status}
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-500">{order.address}</div>
-                            {order.originalOrder?.customerInfo && (
-                              <div className="text-xs text-gray-400 mt-1">
-                                👤 {order.originalOrder.customerInfo.fullName}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                      <button
+                        key={clusterKey}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                          selectedCluster === idx
+                            ? 'border-blue-500 bg-blue-50 shadow-md'
+                            : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                        }`}
+                        onClick={() => handleClusterClick(idx)}
+                        type='button'
+                      >
+                        <div className='flex items-center justify-between mb-3'>
+                          <h3 className='font-semibold text-gray-900 flex items-center'>
+                            <div
+                              className='w-4 h-4 rounded-full mr-2'
+                              style={{
+                                backgroundColor:
+                                  clusterColors[idx % clusterColors.length],
+                              }}
+                            ></div>
+                            Cluster {idx + 1}
+                          </h3>
+                          <span className='text-sm text-gray-500'>
+                            {cluster.length} orders
+                          </span>
+                        </div>
 
+                        <div className='space-y-2'>
+                          {cluster.map(order => (
+                            <div key={order.id} className='text-sm'>
+                              <div className='flex justify-between items-center'>
+                                <span className='text-gray-700'>
+                                  {order.name}
+                                </span>
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}
+                                >
+                                  {order.status}
+                                </span>
+                              </div>
+                              <div className='text-xs text-gray-500'>
+                                {order.address}
+                              </div>
+                              {order.originalOrder?.customerInfo && (
+                                <div className='text-xs text-gray-400 mt-1'>
+                                  👤 {order.originalOrder.customerInfo.fullName}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
 
                         <div className='space-y-2'>
                           {cluster.map(order => (
@@ -886,18 +981,8 @@ function ShippingPage() {
 
                   {/* Show all orders when no clustering */}
 
-                  {showAllOrders && currentOrders.map((order) => (
-                    <Marker
-                      key={order.id}
-                      position={{ lat: order.lat, lng: order.lng }}
-                      title={`${order.name} - ${order.address}`}
-                    />
-                  ))}
-
-                  {/* Show clustered orders */}
-                  {!showAllOrders && clusters.map((cluster, clusterIdx) =>
-                    cluster.map((order) => (
-
+                  {showAllOrders &&
+                    currentOrders.map(order => (
                       <Marker
                         key={order.id}
                         position={{ lat: order.lat, lng: order.lng }}

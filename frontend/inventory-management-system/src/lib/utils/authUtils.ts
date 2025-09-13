@@ -87,8 +87,8 @@ export function createAuthenticatedRequestOptions(
       'Content-Type': 'application/json',
       // Add cache-busting headers to prevent stale data
       'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0',
+      Pragma: 'no-cache',
+      Expires: '0',
       // Add timestamp to prevent browser caching
       'X-Requested-At': new Date().toISOString(),
       ...(token && { Authorization: `Bearer ${token}` }),

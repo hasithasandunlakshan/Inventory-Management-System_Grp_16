@@ -59,25 +59,35 @@ export const orderService = {
       const timestamp = Date.now();
       const url = `${API_BASE_URL}/all?_t=${timestamp}`;
       console.log('🚀 Fetching fresh orders from:', url);
-      
+
       const requestOptions = createAuthenticatedRequestOptions();
-      
+
       console.log('📡 Request options:', requestOptions);
-        
+
       const response = await fetch(url, requestOptions);
-      
+
       console.log('📥 Response status:', response.status, response.statusText);
-      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
-      
+      console.log(
+        '📥 Response headers:',
+        Object.fromEntries(response.headers.entries())
+      );
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Response error:', errorText);
-        throw new Error(`Failed to fetch orders: ${response.status} - ${errorText}`);
+        throw new Error(
+          `Failed to fetch orders: ${response.status} - ${errorText}`
+        );
       }
-      
+
       const data = await response.json();
-      console.log('✅ Orders fetched successfully at', new Date().toISOString(), ':', data);
-      
+      console.log(
+        '✅ Orders fetched successfully at',
+        new Date().toISOString(),
+        ':',
+        data
+      );
+
       // Add fetch timestamp to response for debugging
       data.fetchedAt = new Date().toISOString();
       return data;
@@ -93,32 +103,35 @@ export const orderService = {
   async getAllOrdersWithCustomers(): Promise<AllOrdersWithCustomerResponse> {
     try {
       const ordersResponse = await this.getAllOrders();
-      
+
       if (!ordersResponse.success) {
         return {
           success: false,
           message: ordersResponse.message,
           orders: [],
-          totalOrders: 0
+          totalOrders: 0,
         };
       }
 
       // Fetch customer info for each order
       const ordersWithCustomers: OrderWithCustomer[] = [];
-      
+
       for (const order of ordersResponse.orders) {
         try {
           const customerInfo = await userService.getUserById(order.customerId);
           ordersWithCustomers.push({
             ...order,
-            customerInfo
+            customerInfo,
           });
         } catch (error) {
-          console.warn(`Failed to fetch customer info for order ${order.orderId} (customer ${order.customerId}):`, error);
+          console.warn(
+            `Failed to fetch customer info for order ${order.orderId} (customer ${order.customerId}):`,
+            error
+          );
           // Add order without customer info
           ordersWithCustomers.push({
             ...order,
-            customerInfo: undefined
+            customerInfo: undefined,
           });
         }
       }
@@ -127,11 +140,13 @@ export const orderService = {
         success: true,
         message: 'Orders with customer info retrieved successfully',
         orders: ordersWithCustomers,
-        totalOrders: ordersWithCustomers.length
+        totalOrders: ordersWithCustomers.length,
       };
     } catch (error) {
       console.error('Failed to fetch orders with customers:', error);
-      throw new Error('Failed to fetch orders with customers - backend not available');
+      throw new Error(
+        'Failed to fetch orders with customers - backend not available'
+      );
     }
   },
 
@@ -140,16 +155,21 @@ export const orderService = {
    */
   async getOrdersByStatus(status: string): Promise<AllOrdersResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/all/${status}`, createAuthenticatedRequestOptions());
-      
+      const response = await fetch(
+        `${API_BASE_URL}/all/${status}`,
+        createAuthenticatedRequestOptions()
+      );
+
       if (!response.ok) {
         throw new Error(`Failed to fetch orders by status: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Failed to fetch orders by status:', error);
-      throw new Error('Failed to fetch orders by status - backend not available');
+      throw new Error(
+        'Failed to fetch orders by status - backend not available'
+      );
     }
   },
 
@@ -158,12 +178,15 @@ export const orderService = {
    */
   async getOrderById(orderId: number): Promise<Order> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${orderId}`, createAuthenticatedRequestOptions());
-      
+      const response = await fetch(
+        `${API_BASE_URL}/${orderId}`,
+        createAuthenticatedRequestOptions()
+      );
+
       if (!response.ok) {
         throw new Error(`Failed to fetch order: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Failed to fetch order:', error);
@@ -174,16 +197,20 @@ export const orderService = {
   /**
    * Update order status
    */
-  async updateOrderStatus(orderId: number, status: string): Promise<any> {
+  async updateOrderStatus(
+    orderId: number,
+    status: string
+  ): Promise<{ success: boolean; message?: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${orderId}/status`, 
+      const response = await fetch(
+        `${API_BASE_URL}/${orderId}/status`,
         createAuthenticatedRequestOptions('PUT', { status })
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to update order status: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Failed to update order status:', error);
@@ -194,18 +221,21 @@ export const orderService = {
   /**
    * Get orders count by status
    */
-  async getOrdersCountByStatus(status: string): Promise<any> {
+  async getOrdersCountByStatus(status: string): Promise<{ count: number }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/count/status/${status}`, createAuthenticatedRequestOptions());
-      
+      const response = await fetch(
+        `${API_BASE_URL}/count/status/${status}`,
+        createAuthenticatedRequestOptions()
+      );
+
       if (!response.ok) {
         throw new Error(`Failed to fetch orders count: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Failed to fetch orders count:', error);
       throw new Error('Failed to fetch orders count - backend not available');
     }
-  }
+  },
 };
