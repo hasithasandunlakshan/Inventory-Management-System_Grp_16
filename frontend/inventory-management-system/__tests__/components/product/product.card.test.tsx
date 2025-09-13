@@ -35,7 +35,7 @@ describe('ProductCard', () => {
     expect(screen.getByText('Great product')).toBeInTheDocument();
     expect(screen.getByText(/Barcode:/i)).toBeInTheDocument();
     expect(screen.getByText(/Price: \$123.45/)).toBeInTheDocument();
-    expect(screen.getByText(/Qty: 7/)).toBeInTheDocument();
+    expect(screen.getByText(/Available: 7/)).toBeInTheDocument();
     expect(screen.getByText(/No image/i)).toBeInTheDocument();
   });
 
@@ -43,7 +43,7 @@ describe('ProductCard', () => {
     render(<ProductCard {...baseProps} />);
     fireEvent.click(screen.getByText('Sample Product'));
     expect(productUtils.viewProductDetails).toHaveBeenCalledWith(
-      1,
+      "1",
       expect.any(Object)
     );
   });

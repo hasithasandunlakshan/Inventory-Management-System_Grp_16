@@ -50,9 +50,9 @@ describe('productUtils', () => {
   describe('navigation helpers', () => {
     it('editProduct pushes to edit route', () => {
       const router = { push: jest.fn() } as any;
-      const product = { id: 'abc' } as any;
+      const product = { productId: 1 } as any;
       productUtils.editProduct(product, router);
-      expect(router.push).toHaveBeenCalledWith('/products/edit/abc');
+      expect(router.push).toHaveBeenCalledWith('/products/edit/1');
     });
 
     it('viewProductDetails pushes to details route', () => {
