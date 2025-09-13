@@ -65,7 +65,7 @@ public class ApiGatewayApplication {
                                                 .path("/api/orders/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("http://localhost:8084"))
-                                
+
                                 // Revenue Service (MANAGER) - New route for revenue endpoints
                                 .route("revenue-service", r -> r
                                                 .path("/api/revenue/**")
@@ -95,13 +95,26 @@ public class ApiGatewayApplication {
                                 // Resource Service - Driver Management (Public GET operations)
                                 .route("resource-service-drivers-public", r -> r
                                                 .method("GET")
-                                                .and().path("/api/resources/drivers", "/api/resources/drivers/available")
+                                                .and()
+                                                .path("/api/resources/drivers", "/api/resources/drivers/available")
                                                 .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
                                                 .uri("http://localhost:8086"))
 
                                 // Resource Service - Driver Management (Secured operations)
                                 .route("resource-service-drivers", r -> r
                                                 .path("/api/resources/drivers/**")
+                                                .filters(f -> f.filter(jwtAuthenticationFilter))
+                                                .uri("http://localhost:8086"))
+
+                                // Resource Service - Vehicle Management (Secured operations)
+                                .route("resource-service-vehicles", r -> r
+                                                .path("/api/resources/vehicles/**")
+                                                .filters(f -> f.filter(jwtAuthenticationFilter))
+                                                .uri("http://localhost:8086"))
+
+                                // Resource Service - Assignment Management (Secured operations)
+                                .route("resource-service-assignments", r -> r
+                                                .path("/api/resources/assignments/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("http://localhost:8086"))
 

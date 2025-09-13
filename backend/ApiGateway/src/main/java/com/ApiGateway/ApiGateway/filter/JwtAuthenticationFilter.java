@@ -30,11 +30,9 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         System.out.println("🔍 JWT Filter - Full URL: " + request.getURI());
         System.out.println("🔍 JWT Filter - Method: " + request.getMethod());
 
-
         // Skip JWT validation only for public auth endpoints (login/signup)
         if (path.equals("/api/auth/login") || path.equals("/api/auth/signup")) {
             System.out.println("🔍 JWT Filter - Public endpoint, skipping JWT validation");
-
             return chain.filter(exchange);
         }
 
