@@ -30,9 +30,11 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         System.out.println("🔍 JWT Filter - Full URL: " + request.getURI());
         System.out.println("🔍 JWT Filter - Method: " + request.getMethod());
 
+
         // Skip JWT validation only for public auth endpoints (login/signup)
         if (path.equals("/api/auth/login") || path.equals("/api/auth/signup")) {
             System.out.println("🔍 JWT Filter - Public endpoint, skipping JWT validation");
+
             return chain.filter(exchange);
         }
 
@@ -106,6 +108,15 @@ public class JwtAuthenticationFilter implements GatewayFilter {
             return result;
         };
 
+
+        // User service - protected auth endpoints (users list) - ADMIN or MANAGER only
+        if (path.equals("/api/auth/users")) {
+            return has.test("ADMIN") || has.test("MANAGER");
+        }
+
+        // User service - other secure endpoints - allow all authenticated
+        
+
         // User service - specific endpoints
         if (path.startsWith("/api/secure")) {
             System.out.println("🔍 Matched /api/secure - allowing access");
@@ -131,6 +142,7 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         // User service - other auth endpoints allow all authenticated
         if (path.startsWith("/api/auth")) {
             System.out.println("🔍 Matched /api/auth - allowing access");
+
             return true;
         }
 

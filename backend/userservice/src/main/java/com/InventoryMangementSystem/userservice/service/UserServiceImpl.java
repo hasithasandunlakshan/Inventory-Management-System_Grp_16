@@ -1,5 +1,7 @@
 package com.InventoryMangementSystem.userservice.service;
 
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,17 +10,20 @@ import com.InventoryMangementSystem.userservice.dto.LoginRequest;
 import com.InventoryMangementSystem.userservice.dto.LoginResponse;
 import com.InventoryMangementSystem.userservice.dto.SignupRequest;
 import com.InventoryMangementSystem.userservice.dto.UserInfo;
+
 import com.InventoryMangementSystem.userservice.dto.UserDropdownDto;
-import com.InventoryMangementSystem.userservice.entity.User;
+
 import com.InventoryMangementSystem.userservice.entity.Role;
+import com.InventoryMangementSystem.userservice.entity.User;
 import com.InventoryMangementSystem.userservice.entity.UserRole;
-import com.InventoryMangementSystem.userservice.repository.UserRepository;
 import com.InventoryMangementSystem.userservice.repository.RoleRepository;
+import com.InventoryMangementSystem.userservice.repository.UserRepository;
 import com.InventoryMangementSystem.userservice.repository.UserRoleRepository;
 import com.InventoryMangementSystem.userservice.security.JwtTokenUtil;
 
-import java.util.List;
+
 import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -206,6 +211,28 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             System.err.println("Error fetching all users: " + e.getMessage());
             throw new RuntimeException("Failed to fetch all users: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<UserInfo> getUsersByRole(String roleName) {
+        try {
+            System.out.println("Fetching users with role: " + roleName);
+
+            List<User> users = userRepository.findAll();
+            System.out.println("Found " + users.size() + " total users, filtering by role: " + roleName);
+
+            List<UserInfo> filteredUsers = users.stream()
+                    .map(this::convertUserToUserInfo) // Convert to UserInfo first
+                    .filter(userInfo -> roleName.equalsIgnoreCase(userInfo.getRole())) // Then filter by the determined primary role
+                    .collect(java.util.stream.Collectors.toList());
+
+            System.out.println("Found " + filteredUsers.size() + " users with primary role: " + roleName);
+            return filteredUsers;
+
+        } catch (Exception e) {
+            System.err.println("Error fetching users by role: " + e.getMessage());
+            throw new RuntimeException("Failed to fetch users by role: " + e.getMessage());
         }
     }
 
