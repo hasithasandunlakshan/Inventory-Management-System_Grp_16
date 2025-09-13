@@ -19,7 +19,7 @@ jest.mock('@/lib/utils/productUtils', () => ({
 const { productUtils } = jest.requireMock('@/lib/utils/productUtils');
 
 const baseProps = {
-  id: 'p1',
+  id: 1,
   name: 'Sample Product',
   description: 'Great product',
   price: 123.45,
@@ -43,7 +43,7 @@ describe('ProductCard', () => {
     render(<ProductCard {...baseProps} />);
     fireEvent.click(screen.getByText('Sample Product'));
     expect(productUtils.viewProductDetails).toHaveBeenCalledWith(
-      'p1',
+      1,
       expect.any(Object)
     );
   });

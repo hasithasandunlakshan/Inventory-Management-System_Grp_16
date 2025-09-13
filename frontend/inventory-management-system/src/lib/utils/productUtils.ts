@@ -30,7 +30,7 @@ export const productUtils = {
    */
   editProduct: (product: Product, router: ReturnType<typeof useRouter>) => {
     // Navigate to edit page for the specific product
-    router.push(`/products/edit/${product.id}`);
+    router.push(`/products/edit/${product.productId}`);
   },
 
   /**

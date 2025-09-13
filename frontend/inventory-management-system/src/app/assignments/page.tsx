@@ -53,6 +53,7 @@ export default function AssignmentsPage() {
   const [assignmentForm, setAssignmentForm] = useState<AssignmentRequest>({
     driverId: 0,
     vehicleId: 0,
+    assignedBy: 0,
     notes: '',
   });
 
@@ -110,7 +111,12 @@ export default function AssignmentsPage() {
     }
 
     try {
-      const response = await driverService.createAssignment(assignmentForm);
+      // Set the assignedBy field to current user's ID
+      const assignmentData = {
+        ...assignmentForm,
+        assignedBy: user?.id ? parseInt(user.id) : 0,
+      };
+      const response = await driverService.createAssignment(assignmentData);
 
       if (response.success) {
         toast.success('Assignment created successfully!');
@@ -118,6 +124,7 @@ export default function AssignmentsPage() {
         setAssignmentForm({
           driverId: 0,
           vehicleId: 0,
+          assignedBy: 0,
           notes: '',
         });
         loadData();

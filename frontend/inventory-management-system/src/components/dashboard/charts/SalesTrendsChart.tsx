@@ -26,8 +26,8 @@ export default function SalesTrendsChart() {
 
         // Simulate data based on filters
         const mockData = generateMockSalesData(
-          startDate,
-          endDate,
+          new Date(startDate),
+          new Date(endDate),
           filters.warehouse
         );
         setSalesData(mockData);

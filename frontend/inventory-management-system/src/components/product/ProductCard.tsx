@@ -27,7 +27,7 @@ export default function ProductCard({
   const router = useRouter();
 
   const handleCardClick = () => {
-    productUtils.viewProductDetails(id, router);
+    productUtils.viewProductDetails(id.toString(), router);
   };
 
   return (
