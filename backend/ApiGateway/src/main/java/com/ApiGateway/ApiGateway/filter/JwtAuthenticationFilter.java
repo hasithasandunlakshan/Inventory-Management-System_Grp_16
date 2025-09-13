@@ -27,8 +27,8 @@ public class JwtAuthenticationFilter implements GatewayFilter {
 
         String path = request.getPath().value();
 
-        // Skip JWT validation for auth endpoints (login/signup)
-        if (path.startsWith("/api/auth")) {
+        // Skip JWT validation for public auth endpoints (login/signup)
+        if (path.equals("/api/auth/login") || path.equals("/api/auth/signup")) {
             return chain.filter(exchange);
         }
 
@@ -79,7 +79,12 @@ public class JwtAuthenticationFilter implements GatewayFilter {
             return roleUpper.contains(rUpper) || roleCompact.contains(rUpper.replace(" ", ""));
         };
 
-        // User service - allow all authenticated
+        // User service - protected auth endpoints (users list) - ADMIN or MANAGER only
+        if (path.equals("/api/auth/users")) {
+            return has.test("ADMIN") || has.test("MANAGER");
+        }
+
+        // User service - other secure endpoints - allow all authenticated
         if (path.startsWith("/api/secure") || path.startsWith("/api/auth")) {
             return true;
         }
