@@ -16,6 +16,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/internal/**").permitAll() // Allow internal API for service-to-service
+                                                                         // communication
                         .requestMatchers("/api/secure/**").permitAll() // Allow secure endpoints to be handled by custom
                                                                        // filter
                         .requestMatchers("/api/admin/**").permitAll() // Allow admin endpoints (auth handled by API

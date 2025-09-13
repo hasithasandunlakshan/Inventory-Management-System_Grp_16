@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,17 +9,19 @@ import {
   Marker,
   useJsApiLoader,
 } from "@react-google-maps/api";
+import { orderService, Order, OrderWithCustomer } from "@/lib/services/orderService";
 
-type Order = {
+type ShippingOrder = {
   id: number;
   name: string;
   lat: number;
   lng: number;
   address: string;
   status: string;
+  originalOrder?: OrderWithCustomer;
 };
 
-type ClusteredOrder = Order & {
+type ClusteredOrder = ShippingOrder & {
   cluster: number;
 };
 
@@ -101,8 +103,8 @@ function kMeansCluster(points: number[][], k: number): number[] {
   return assignments;
 }
 
-// Dummy Orders with complete data
-const dummyOrders: Order[] = [
+// Dummy Orders with complete data (fallback for when real data is unavailable)
+const dummyOrders: ShippingOrder[] = [
   { 
     id: 1, 
     name: "Order #001", 
@@ -189,6 +191,10 @@ function ShippingPage() {
   );
   const [selectedCluster, setSelectedCluster] = useState<number | null>(null);
   const [showAllOrders, setShowAllOrders] = useState(true);
+  const [realOrders, setRealOrders] = useState<ShippingOrder[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [usingDummyData, setUsingDummyData] = useState(false);
 
   // Load Google Maps API
   const { isLoaded } = useJsApiLoader({
@@ -196,12 +202,156 @@ function ShippingPage() {
       .NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
   });
 
+  // Convert real order data to shipping order format
+  const convertToShippingOrders = (orders: Order[]): ShippingOrder[] => {
+    return orders.map((order, index) => {
+      // Use real customer address from the order data
+      let lat = 6.9271; // Default to Colombo coordinates
+      let lng = 79.8612;
+      let address = "Address not available";
+
+      // Check if order has customer address information
+      if (order.customerAddress && order.customerAddress !== "Address not available" && order.customerAddress !== "Address not provided") {
+        address = order.customerAddress;
+        // Use customer coordinates if available
+        if (order.customerLatitude && order.customerLongitude) {
+          lat = order.customerLatitude;
+          lng = order.customerLongitude;
+        } else {
+          // If no coordinates but have address, try to assign reasonable Sri Lankan coordinates
+          // Based on common city patterns in addresses
+          if (address.toLowerCase().includes('kandy')) {
+            lat = 7.2906; lng = 80.6337;
+          } else if (address.toLowerCase().includes('galle')) {
+            lat = 6.0535; lng = 80.221;
+          } else if (address.toLowerCase().includes('negombo')) {
+            lat = 7.2083; lng = 79.8358;
+          } else if (address.toLowerCase().includes('matara')) {
+            lat = 5.9549; lng = 80.555;
+          } else if (address.toLowerCase().includes('anuradhapura')) {
+            lat = 7.8731; lng = 80.7718;
+          } else if (address.toLowerCase().includes('batticaloa')) {
+            lat = 6.9534; lng = 81.0077;
+          } else if (address.toLowerCase().includes('kurunegala')) {
+            lat = 8.3114; lng = 80.4037;
+          }
+          // Default to Colombo for other addresses
+        }
+      } else {
+        // Fallback: assign default Sri Lankan locations for orders without addresses
+        const fallbackLocations = [
+          { lat: 6.9271, lng: 79.8612, address: "Colombo, Sri Lanka (Default)" },
+          { lat: 7.2906, lng: 80.6337, address: "Kandy, Sri Lanka (Default)" },
+          { lat: 6.0535, lng: 80.221, address: "Galle, Sri Lanka (Default)" }
+        ];
+        const location = fallbackLocations[index % fallbackLocations.length];
+        lat = location.lat;
+        lng = location.lng;
+        address = location.address;
+      }
+
+      return {
+        id: order.orderId,
+        name: `Order #${order.orderId.toString().padStart(3, '0')}`,
+        lat: lat,
+        lng: lng,
+        address: address,
+        status: order.status === 'CONFIRMED' ? 'Ready' : 
+                order.status === 'PROCESSED' ? 'Processing' : 
+                order.status === 'PENDING' ? 'Pending' : order.status,
+        originalOrder: order
+      };
+    });
+  };
+
+  // Fetch real orders function (made reusable)
+  const fetchOrders = async (showLoadingState = true) => {
+    try {
+      if (showLoadingState) {
+        setIsLoadingOrders(true);
+      }
+      setOrdersError(null);
+      
+      // Check if user is authenticated
+      const token = localStorage.getItem('inventory_auth_token');
+      console.log('🔐 Authentication status:', {
+        hasToken: !!token,
+        tokenLength: token?.length || 0,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!token) {
+        console.warn('❌ No authentication token found. User needs to log in.');
+        setOrdersError('Please log in to view orders.');
+        setRealOrders(dummyOrders);
+        setUsingDummyData(true);
+        return;
+      }
+      
+      // Add cache-busting parameter to ensure fresh data
+      console.log('🚀 Fetching fresh orders from backend... (timestamp: ' + Date.now() + ')');
+      const response = await orderService.getAllOrders();
+      
+      console.log('📡 Order service response:', {
+        success: response.success,
+        message: response.message,
+        ordersCount: response.orders?.length || 0,
+        totalOrders: response.totalOrders,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (response.success && response.orders.length > 0) {
+        const shippingOrders = convertToShippingOrders(response.orders);
+        
+        // Force state update with a new array reference
+        setRealOrders([...shippingOrders]);
+        setUsingDummyData(false);
+        
+        console.log(`✅ Successfully loaded ${response.orders.length} fresh orders from database`);
+        console.log('📦 First few orders:', response.orders.slice(0, 3));
+        console.log('🚢 Converted shipping orders:', shippingOrders.slice(0, 3));
+        console.log('🔄 State updated at:', new Date().toISOString());
+      } else {
+        console.warn('⚠️ No orders found or failed to fetch orders:', response.message);
+        setOrdersError(response.message || 'No orders found in database.');
+        setRealOrders(dummyOrders);
+        setUsingDummyData(true);
+      }
+    } catch (error) {
+      console.error('💥 Failed to fetch orders:', error);
+      setOrdersError(`Failed to load orders: ${error instanceof Error ? error.message : String(error)}`);
+      setRealOrders(dummyOrders);
+      setUsingDummyData(true);
+    } finally {
+      if (showLoadingState) {
+        setIsLoadingOrders(false);
+      }
+    }
+  };
+
+  // Fetch orders on component mount and set up auto-refresh
+  useEffect(() => {
+    // Initial fetch
+    fetchOrders();
+
+    // Auto-refresh every 2 minutes (reduced frequency)
+    const intervalId = setInterval(() => {
+      console.log('🔄 Auto-refreshing orders every 2 minutes...');
+      fetchOrders(false); // Don't show loading state for auto-refresh
+    }, 120000); // 2 minutes = 120,000ms
+
+    return () => clearInterval(intervalId);
+  }, []); // Empty dependency array to run only once
+
+  // Get the current orders to display (real or dummy)
+  const currentOrders = realOrders.length > 0 ? realOrders : dummyOrders;
+
   // Cluster Orders
   const handleClustering = () => {
-    const coords = dummyOrders.map((o) => [o.lat, o.lng]);
+    const coords = currentOrders.map((o) => [o.lat, o.lng]);
     const clusterAssignments = kMeansCluster(coords, numClusters);
 
-    const clustered: ClusteredOrder[] = dummyOrders.map((order, i) => ({
+    const clustered: ClusteredOrder[] = currentOrders.map((order, i) => ({
       ...order,
       cluster: clusterAssignments[i],
     }));
@@ -289,7 +439,10 @@ function ShippingPage() {
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+        <div className="text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent mx-auto mb-4" />
+          <p className="text-gray-600">Loading Google Maps...</p>
+        </div>
       </div>
     );
   }
@@ -309,7 +462,10 @@ function ShippingPage() {
                 Store: <span className="font-semibold text-gray-900">{storeLocation.address}</span>
               </div>
               <div className="text-sm text-gray-500">
-                Total Orders: <span className="font-semibold text-gray-900">{dummyOrders.length}</span>
+                Total Orders: <span className="font-semibold text-gray-900">{isLoadingOrders ? '...' : currentOrders.length}</span>
+                {usingDummyData && (
+                  <span className="ml-2 text-xs text-blue-600">(Sample Data)</span>
+                )}
               </div>
               <div className="text-sm text-gray-500">
                 Clusters: <span className="font-semibold text-gray-900">{clusters.length}</span>
@@ -320,6 +476,50 @@ function ShippingPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Status and Error Messages */}
+        {ordersError && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">Authentication Required</h3>
+                <p className="mt-1 text-sm text-yellow-700">{ordersError}</p>
+                {usingDummyData && (
+                  <p className="mt-1 text-sm text-yellow-700">Showing sample data for demonstration purposes.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isLoadingOrders && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent mr-3" />
+              <p className="text-sm text-blue-700">Loading orders from database...</p>
+            </div>
+          </div>
+        )}
+
+        {!isLoadingOrders && !ordersError && !usingDummyData && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.293a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-700">✅ Successfully loaded {realOrders.length} orders from database</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Control Panel */}
           <div className="lg:col-span-1 space-y-6">
@@ -341,20 +541,37 @@ function ShippingPage() {
                     id="num-clusters"
                     type="number"
                     min={1}
-                    max={dummyOrders.length}
+                    max={currentOrders.length}
                     value={numClusters}
                     onChange={(e) => setNumClusters(Number(e.target.value))}
                   />
                 </div>
                 
                 <div className="flex space-x-3">
-                  <Button className="flex-1" onClick={handleClustering}>
+                  <Button 
+                    className="flex-1" 
+                    onClick={handleClustering}
+                    disabled={isLoadingOrders || currentOrders.length === 0}
+                  >
                     Create Clusters
                   </Button>
                   <Button variant="outline" className="flex-1" onClick={resetView}>
                     Reset View
                   </Button>
                 </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => fetchOrders()}
+                  disabled={isLoadingOrders}
+                  className="w-full mt-2"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {isLoadingOrders ? 'Refreshing...' : 'Refresh Orders'}
+                </Button>
               </div>
             </div>
 
@@ -368,12 +585,48 @@ function ShippingPage() {
                   All Orders
                 </h2>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {dummyOrders.map((order) => (
+                  {isLoadingOrders ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                      <span className="ml-2 text-sm text-gray-600">Loading orders...</span>
+                    </div>
+                  ) : ordersError ? (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">{ordersError}</p>
+                    </div>
+                  ) : currentOrders.length === 0 ? (
+                    <div className="p-3 text-center text-gray-500">
+                      <p className="text-sm">No orders available for delivery</p>
+                    </div>
+                  ) : (
+                    <>
+                      {usingDummyData && (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-3">
+                          <p className="text-sm text-blue-800">
+                            📝 Using sample data for demonstration. Connect to database to see real orders.
+                          </p>
+                        </div>
+                      )}
+                      {currentOrders.map((order) => (
                     <div key={order.id} className="p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
                       <div className="flex justify-between items-start">
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-medium text-gray-900">{order.name}</h3>
                           <p className="text-sm text-gray-600">{order.address}</p>
+                          {order.originalOrder?.customerInfo && (
+                            <div className="mt-1 text-xs text-gray-500">
+                              Customer: {order.originalOrder.customerInfo.fullName}
+                              {order.originalOrder.customerInfo.phoneNumber && (
+                                <span className="ml-2">📞 {order.originalOrder.customerInfo.phoneNumber}</span>
+                              )}
+                            </div>
+                          )}
+                          {order.originalOrder && (
+                            <div className="mt-1 text-xs text-gray-500">
+                              Items: {order.originalOrder.orderItems.length} | 
+                              Total: ${order.originalOrder.totalAmount}
+                            </div>
+                          )}
                         </div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                           {order.status}
@@ -381,6 +634,8 @@ function ShippingPage() {
                       </div>
                     </div>
                   ))}
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -429,6 +684,11 @@ function ShippingPage() {
                               </span>
                             </div>
                             <div className="text-xs text-gray-500">{order.address}</div>
+                            {order.originalOrder?.customerInfo && (
+                              <div className="text-xs text-gray-400 mt-1">
+                                👤 {order.originalOrder.customerInfo.fullName}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -511,7 +771,7 @@ function ShippingPage() {
                   />
 
                   {/* Show all orders when no clustering */}
-                  {showAllOrders && dummyOrders.map((order) => (
+                  {showAllOrders && currentOrders.map((order) => (
                     <Marker
                       key={order.id}
                       position={{ lat: order.lat, lng: order.lng }}
