@@ -25,7 +25,7 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
-    
+
     @Autowired
     private OrderRepository orderRepository;
 
@@ -123,52 +123,51 @@ public class OrderController {
         try {
             System.out.println("=== DEBUG: RAW DATABASE QUERY ===");
             System.out.println("Timestamp: " + LocalDateTime.now());
-            
+
             // Get raw orders from database
             List<Order> allOrders = orderRepository.findAll();
             List<Order> confirmedOrders = orderRepository.findAllConfirmedOrdersWithItems();
-            
+
             System.out.println("Total orders in database: " + allOrders.size());
             System.out.println("Confirmed orders: " + confirmedOrders.size());
-            
+
             // Log order details
             Map<String, Long> statusCounts = allOrders.stream()
-                .collect(java.util.stream.Collectors.groupingBy(
-                    o -> o.getStatus().toString(), 
-                    java.util.stream.Collectors.counting()
-                ));
-            
+                    .collect(java.util.stream.Collectors.groupingBy(
+                            o -> o.getStatus().toString(),
+                            java.util.stream.Collectors.counting()));
+
             System.out.println("Orders by status: " + statusCounts);
-            
+
             Map<String, Object> debugInfo = new java.util.HashMap<>();
             debugInfo.put("timestamp", LocalDateTime.now().toString());
             debugInfo.put("totalOrdersInDb", allOrders.size());
             debugInfo.put("confirmedOrders", confirmedOrders.size());
             debugInfo.put("statusBreakdown", statusCounts);
             debugInfo.put("latestOrderIds", allOrders.stream()
-                .sorted((a, b) -> b.getOrderId().compareTo(a.getOrderId()))
-                .limit(5)
-                .map(Order::getOrderId)
-                .toList());
+                    .sorted((a, b) -> b.getOrderId().compareTo(a.getOrderId()))
+                    .limit(5)
+                    .map(Order::getOrderId)
+                    .toList());
             debugInfo.put("confirmedOrderIds", confirmedOrders.stream()
-                .map(Order::getOrderId)
-                .toList());
-            
+                    .map(Order::getOrderId)
+                    .toList());
+
             return ResponseEntity.ok()
-                .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                .body(debugInfo);
-                
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .body(debugInfo);
+
         } catch (Exception e) {
             System.err.println("Error in debug endpoint: " + e.getMessage());
             e.printStackTrace();
-            
+
             Map<String, Object> errorInfo = new java.util.HashMap<>();
             errorInfo.put("error", e.getMessage());
             errorInfo.put("timestamp", LocalDateTime.now().toString());
-            
+
             return ResponseEntity.internalServerError()
-                .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                .body(errorInfo);
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .body(errorInfo);
         }
     }
 

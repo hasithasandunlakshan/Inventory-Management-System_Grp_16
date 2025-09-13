@@ -1,279 +1,383 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Order Update Test</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
-        .button { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; margin: 5px; border-radius: 4px; }
-        .button:hover { background: #0056b3; }
-        .button:disabled { background: #ccc; cursor: not-allowed; }
-        .result { margin: 10px 0; padding: 15px; border: 1px solid #ddd; background: #f9f9f9; border-radius: 4px; }
-        .timestamp { color: #666; font-size: 0.9em; margin-bottom: 10px; }
-        .error { color: red; border-left: 4px solid red; }
-        .success { color: green; border-left: 4px solid green; }
-        .warning { color: orange; border-left: 4px solid orange; }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .data-table th, .data-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .data-table th { background-color: #f2f2f2; }
-        .comparison { display: flex; gap: 20px; }
-        .comparison > div { flex: 1; }
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .button {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        margin: 5px;
+        border-radius: 4px;
+      }
+      .button:hover {
+        background: #0056b3;
+      }
+      .button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .result {
+        margin: 10px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        background: #f9f9f9;
+        border-radius: 4px;
+      }
+      .timestamp {
+        color: #666;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+      }
+      .error {
+        color: red;
+        border-left: 4px solid red;
+      }
+      .success {
+        color: green;
+        border-left: 4px solid green;
+      }
+      .warning {
+        color: orange;
+        border-left: 4px solid orange;
+      }
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      .data-table th,
+      .data-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      .data-table th {
+        background-color: #f2f2f2;
+      }
+      .comparison {
+        display: flex;
+        gap: 20px;
+      }
+      .comparison > div {
+        flex: 1;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Order Update Debug Tool</h1>
-    <p>This tool helps debug why database changes aren't showing in the frontend.</p>
-    
+    <p>
+      This tool helps debug why database changes aren't showing in the frontend.
+    </p>
+
     <div>
-        <button class="button" onclick="testBackendRaw()" id="btnRaw">Test Backend Raw Data</button>
-        <button class="button" onclick="testBackendAPI()" id="btnAPI">Test Backend API</button>
-        <button class="button" onclick="testFrontendAPI()" id="btnFrontend">Test Frontend API</button>
-        <button class="button" onclick="compareResults()" id="btnCompare">Compare All Results</button>
-        <button class="button" onclick="clearResults()">Clear Results</button>
+      <button class="button" onclick="testBackendRaw()" id="btnRaw">
+        Test Backend Raw Data
+      </button>
+      <button class="button" onclick="testBackendAPI()" id="btnAPI">
+        Test Backend API
+      </button>
+      <button class="button" onclick="testFrontendAPI()" id="btnFrontend">
+        Test Frontend API
+      </button>
+      <button class="button" onclick="compareResults()" id="btnCompare">
+        Compare All Results
+      </button>
+      <button class="button" onclick="clearResults()">Clear Results</button>
     </div>
-    
+
     <div id="results"></div>
 
     <script>
-        const API_BASE = 'http://localhost:8090/api/orders';
-        let lastRawData = null;
-        let lastAPIData = null;
-        let lastFrontendData = null;
-        
-        function addResult(title, content, type = 'info') {
-            const results = document.getElementById('results');
-            const div = document.createElement('div');
-            div.className = `result ${type}`;
-            div.innerHTML = `
+      const API_BASE = "http://localhost:8090/api/orders";
+      let lastRawData = null;
+      let lastAPIData = null;
+      let lastFrontendData = null;
+
+      function addResult(title, content, type = "info") {
+        const results = document.getElementById("results");
+        const div = document.createElement("div");
+        div.className = `result ${type}`;
+        div.innerHTML = `
                 <div class="timestamp"><strong>${title}</strong> - ${new Date().toISOString()}</div>
                 <div>${content}</div>
             `;
-            results.insertBefore(div, results.firstChild);
+        results.insertBefore(div, results.firstChild);
+      }
+
+      function getAuthToken() {
+        return localStorage.getItem("inventory_auth_token");
+      }
+
+      function createOrderTable(orders, title) {
+        if (!orders || orders.length === 0) {
+          return `<p><strong>${title}:</strong> No orders found</p>`;
         }
 
-        function getAuthToken() {
-            return localStorage.getItem('inventory_auth_token');
-        }
+        let html = `<h4>${title} (${orders.length} orders):</h4>`;
+        html +=
+          '<table class="data-table"><thead><tr><th>Order ID</th><th>Status</th><th>Customer ID</th><th>Total Amount</th><th>Created At</th></tr></thead><tbody>';
 
-        function createOrderTable(orders, title) {
-            if (!orders || orders.length === 0) {
-                return `<p><strong>${title}:</strong> No orders found</p>`;
-            }
-            
-            let html = `<h4>${title} (${orders.length} orders):</h4>`;
-            html += '<table class="data-table"><thead><tr><th>Order ID</th><th>Status</th><th>Customer ID</th><th>Total Amount</th><th>Created At</th></tr></thead><tbody>';
-            
-            orders.slice(0, 10).forEach(order => {
-                html += `<tr>
-                    <td>${order.orderId || order.id || 'N/A'}</td>
-                    <td>${order.status || 'N/A'}</td>
-                    <td>${order.customerId || 'N/A'}</td>
-                    <td>${order.totalAmount || 'N/A'}</td>
-                    <td>${order.createdAt || order.orderDate || 'N/A'}</td>
+        orders.slice(0, 10).forEach((order) => {
+          html += `<tr>
+                    <td>${order.orderId || order.id || "N/A"}</td>
+                    <td>${order.status || "N/A"}</td>
+                    <td>${order.customerId || "N/A"}</td>
+                    <td>${order.totalAmount || "N/A"}</td>
+                    <td>${order.createdAt || order.orderDate || "N/A"}</td>
                 </tr>`;
-            });
-            
-            html += '</tbody></table>';
-            if (orders.length > 10) {
-                html += `<p><em>Showing first 10 of ${orders.length} orders</em></p>`;
-            }
-            return html;
+        });
+
+        html += "</tbody></table>";
+        if (orders.length > 10) {
+          html += `<p><em>Showing first 10 of ${orders.length} orders</em></p>`;
         }
+        return html;
+      }
 
-        async function testBackendRaw() {
-            const btn = document.getElementById('btnRaw');
-            btn.disabled = true;
-            btn.textContent = 'Testing...';
-            
-            try {
-                const token = getAuthToken();
-                if (!token) {
-                    addResult('Backend Raw Test', 'No auth token found. Please log in first.', 'error');
-                    return;
-                }
+      async function testBackendRaw() {
+        const btn = document.getElementById("btnRaw");
+        btn.disabled = true;
+        btn.textContent = "Testing...";
 
-                const response = await fetch(`${API_BASE}/debug/raw`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
+        try {
+          const token = getAuthToken();
+          if (!token) {
+            addResult(
+              "Backend Raw Test",
+              "No auth token found. Please log in first.",
+              "error"
+            );
+            return;
+          }
 
-                const data = await response.json();
-                lastRawData = data;
-                
-                let content = `<strong>Database Raw Data:</strong><br>`;
-                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                
-                addResult('Backend Raw Data', content, response.ok ? 'success' : 'error');
-                
-            } catch (error) {
-                addResult('Backend Raw Test', `Error: ${error.message}`, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Test Backend Raw Data';
-            }
+          const response = await fetch(`${API_BASE}/debug/raw`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "Cache-Control": "no-cache",
+            },
+          });
+
+          const data = await response.json();
+          lastRawData = data;
+
+          let content = `<strong>Database Raw Data:</strong><br>`;
+          content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+          addResult(
+            "Backend Raw Data",
+            content,
+            response.ok ? "success" : "error"
+          );
+        } catch (error) {
+          addResult("Backend Raw Test", `Error: ${error.message}`, "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Test Backend Raw Data";
         }
+      }
 
-        async function testBackendAPI() {
-            const btn = document.getElementById('btnAPI');
-            btn.disabled = true;
-            btn.textContent = 'Testing...';
-            
-            try {
-                const token = getAuthToken();
-                if (!token) {
-                    addResult('Backend API Test', 'No auth token found. Please log in first.', 'error');
-                    return;
-                }
+      async function testBackendAPI() {
+        const btn = document.getElementById("btnAPI");
+        btn.disabled = true;
+        btn.textContent = "Testing...";
 
-                const timestamp = Date.now();
-                const response = await fetch(`${API_BASE}/all?_t=${timestamp}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
+        try {
+          const token = getAuthToken();
+          if (!token) {
+            addResult(
+              "Backend API Test",
+              "No auth token found. Please log in first.",
+              "error"
+            );
+            return;
+          }
 
-                const data = await response.json();
-                lastAPIData = data;
-                
-                let content = createOrderTable(data.orders, 'Backend API Orders');
-                content += `<p><strong>API Response Summary:</strong></p>`;
-                content += `<ul>
+          const timestamp = Date.now();
+          const response = await fetch(`${API_BASE}/all?_t=${timestamp}`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "Cache-Control": "no-cache",
+            },
+          });
+
+          const data = await response.json();
+          lastAPIData = data;
+
+          let content = createOrderTable(data.orders, "Backend API Orders");
+          content += `<p><strong>API Response Summary:</strong></p>`;
+          content += `<ul>
                     <li>Success: ${data.success}</li>
                     <li>Message: ${data.message}</li>
                     <li>Total Orders: ${data.totalOrders}</li>
                     <li>Response Time: ${new Date().toISOString()}</li>
                 </ul>`;
-                
-                addResult('Backend API Data', content, response.ok ? 'success' : 'error');
-                
-            } catch (error) {
-                addResult('Backend API Test', `Error: ${error.message}`, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Test Backend API';
-            }
+
+          addResult(
+            "Backend API Data",
+            content,
+            response.ok ? "success" : "error"
+          );
+        } catch (error) {
+          addResult("Backend API Test", `Error: ${error.message}`, "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Test Backend API";
         }
+      }
 
-        async function testFrontendAPI() {
-            const btn = document.getElementById('btnFrontend');
-            btn.disabled = true;
-            btn.textContent = 'Testing...';
-            
-            try {
-                // Simulate exactly what the frontend does
-                const timestamp = Date.now();
-                const url = `${API_BASE}/all?_t=${timestamp}`;
-                
-                const token = getAuthToken();
-                if (!token) {
-                    addResult('Frontend API Test', 'No auth token found. Please log in first.', 'error');
-                    return;
-                }
+      async function testFrontendAPI() {
+        const btn = document.getElementById("btnFrontend");
+        btn.disabled = true;
+        btn.textContent = "Testing...";
 
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0',
-                        'X-Requested-At': new Date().toISOString(),
-                        'Authorization': `Bearer ${token}`
-                    },
-                    cache: 'no-store'
-                });
+        try {
+          // Simulate exactly what the frontend does
+          const timestamp = Date.now();
+          const url = `${API_BASE}/all?_t=${timestamp}`;
 
-                const data = await response.json();
-                lastFrontendData = data;
-                
-                let content = createOrderTable(data.orders, 'Frontend API Orders');
-                content += `<p><strong>Frontend Request Details:</strong></p>`;
-                content += `<ul>
+          const token = getAuthToken();
+          if (!token) {
+            addResult(
+              "Frontend API Test",
+              "No auth token found. Please log in first.",
+              "error"
+            );
+            return;
+          }
+
+          const response = await fetch(url, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              Pragma: "no-cache",
+              Expires: "0",
+              "X-Requested-At": new Date().toISOString(),
+              Authorization: `Bearer ${token}`,
+            },
+            cache: "no-store",
+          });
+
+          const data = await response.json();
+          lastFrontendData = data;
+
+          let content = createOrderTable(data.orders, "Frontend API Orders");
+          content += `<p><strong>Frontend Request Details:</strong></p>`;
+          content += `<ul>
                     <li>URL: ${url}</li>
                     <li>Cache Strategy: no-store</li>
                     <li>Headers: Cache-Control, Pragma, Expires set</li>
                     <li>Response Status: ${response.status}</li>
                 </ul>`;
-                
-                addResult('Frontend API Data', content, response.ok ? 'success' : 'error');
-                
-            } catch (error) {
-                addResult('Frontend API Test', `Error: ${error.message}`, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Test Frontend API';
-            }
+
+          addResult(
+            "Frontend API Data",
+            content,
+            response.ok ? "success" : "error"
+          );
+        } catch (error) {
+          addResult("Frontend API Test", `Error: ${error.message}`, "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Test Frontend API";
+        }
+      }
+
+      async function compareResults() {
+        if (!lastRawData || !lastAPIData || !lastFrontendData) {
+          addResult(
+            "Comparison",
+            "Please run all three tests first before comparing.",
+            "warning"
+          );
+          return;
         }
 
-        async function compareResults() {
-            if (!lastRawData || !lastAPIData || !lastFrontendData) {
-                addResult('Comparison', 'Please run all three tests first before comparing.', 'warning');
-                return;
-            }
-            
-            let content = '<div class="comparison">';
-            
-            // Raw data comparison
-            content += '<div>';
-            content += `<h4>Raw Database</h4>`;
-            content += `<p>Total in DB: ${lastRawData.totalOrdersInDb}</p>`;
-            content += `<p>Confirmed: ${lastRawData.confirmedOrders}</p>`;
-            content += `<p>Status breakdown: ${JSON.stringify(lastRawData.statusBreakdown)}</p>`;
-            content += '</div>';
-            
-            // API comparison
-            content += '<div>';
-            content += `<h4>Backend API</h4>`;
-            content += `<p>Orders returned: ${lastAPIData.totalOrders}</p>`;
-            content += `<p>Success: ${lastAPIData.success}</p>`;
-            content += `<p>Message: ${lastAPIData.message}</p>`;
-            content += '</div>';
-            
-            // Frontend comparison
-            content += '<div>';
-            content += `<h4>Frontend API</h4>`;
-            content += `<p>Orders returned: ${lastFrontendData.totalOrders}</p>`;
-            content += `<p>Success: ${lastFrontendData.success}</p>`;
-            content += `<p>Same as backend: ${JSON.stringify(lastAPIData) === JSON.stringify(lastFrontendData)}</p>`;
-            content += '</div>';
-            
-            content += '</div>';
-            
-            // Analysis
-            content += '<h4>Analysis:</h4>';
-            if (lastRawData.confirmedOrders !== lastAPIData.totalOrders) {
-                content += '<p class="error">⚠️ Mismatch: Raw DB confirmed orders != API returned orders</p>';
-            }
-            if (JSON.stringify(lastAPIData) === JSON.stringify(lastFrontendData)) {
-                content += '<p class="success">✅ Backend and Frontend APIs return identical data</p>';
-            } else {
-                content += '<p class="error">❌ Backend and Frontend APIs return different data</p>';
-            }
-            
-            addResult('Data Comparison', content, 'info');
+        let content = '<div class="comparison">';
+
+        // Raw data comparison
+        content += "<div>";
+        content += `<h4>Raw Database</h4>`;
+        content += `<p>Total in DB: ${lastRawData.totalOrdersInDb}</p>`;
+        content += `<p>Confirmed: ${lastRawData.confirmedOrders}</p>`;
+        content += `<p>Status breakdown: ${JSON.stringify(
+          lastRawData.statusBreakdown
+        )}</p>`;
+        content += "</div>";
+
+        // API comparison
+        content += "<div>";
+        content += `<h4>Backend API</h4>`;
+        content += `<p>Orders returned: ${lastAPIData.totalOrders}</p>`;
+        content += `<p>Success: ${lastAPIData.success}</p>`;
+        content += `<p>Message: ${lastAPIData.message}</p>`;
+        content += "</div>";
+
+        // Frontend comparison
+        content += "<div>";
+        content += `<h4>Frontend API</h4>`;
+        content += `<p>Orders returned: ${lastFrontendData.totalOrders}</p>`;
+        content += `<p>Success: ${lastFrontendData.success}</p>`;
+        content += `<p>Same as backend: ${
+          JSON.stringify(lastAPIData) === JSON.stringify(lastFrontendData)
+        }</p>`;
+        content += "</div>";
+
+        content += "</div>";
+
+        // Analysis
+        content += "<h4>Analysis:</h4>";
+        if (lastRawData.confirmedOrders !== lastAPIData.totalOrders) {
+          content +=
+            '<p class="error">⚠️ Mismatch: Raw DB confirmed orders != API returned orders</p>';
+        }
+        if (JSON.stringify(lastAPIData) === JSON.stringify(lastFrontendData)) {
+          content +=
+            '<p class="success">✅ Backend and Frontend APIs return identical data</p>';
+        } else {
+          content +=
+            '<p class="error">❌ Backend and Frontend APIs return different data</p>';
         }
 
-        function clearResults() {
-            document.getElementById('results').innerHTML = '';
-        }
+        addResult("Data Comparison", content, "info");
+      }
 
-        // Auto-check token on load
-        window.onload = function() {
-            const token = getAuthToken();
-            if (token) {
-                addResult('Debug Tool Ready', 'Authentication token found. You can run the tests.', 'success');
-            } else {
-                addResult('Debug Tool Ready', 'No authentication token found. Please log in to the application first.', 'warning');
-            }
-        };
+      function clearResults() {
+        document.getElementById("results").innerHTML = "";
+      }
+
+      // Auto-check token on load
+      window.onload = function () {
+        const token = getAuthToken();
+        if (token) {
+          addResult(
+            "Debug Tool Ready",
+            "Authentication token found. You can run the tests.",
+            "success"
+          );
+        } else {
+          addResult(
+            "Debug Tool Ready",
+            "No authentication token found. Please log in to the application first.",
+            "warning"
+          );
+        }
+      };
     </script>
-</body>
+  </body>
 </html>
