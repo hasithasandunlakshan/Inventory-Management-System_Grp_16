@@ -294,4 +294,59 @@ public class OrderController {
                     "count", 0));
         }
     }
+
+    /**
+     * Debug endpoint to get order count by status
+     * 
+     * @return Map containing counts by status
+     */
+    @GetMapping("/debug/status-counts")
+    public ResponseEntity<Map<String, Object>> getOrderStatusCounts() {
+        try {
+            System.out.println("=== DEBUG: GETTING ORDER STATUS COUNTS ===");
+            Map<String, Object> response = orderService.getOrderStatusCounts();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("Error in getOrderStatusCounts: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Internal server error: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Debug endpoint to get all orders regardless of status (for testing)
+     * 
+     * @return AllOrdersResponse containing all orders with any status
+     */
+    @GetMapping("/debug/all")
+    public ResponseEntity<AllOrdersResponse> getAllOrdersDebug() {
+        try {
+            System.out.println("=== DEBUG: GETTING ALL ORDERS REGARDLESS OF STATUS ===");
+            AllOrdersResponse response = orderService.getAllOrdersDebug();
+
+            System.out.println("Total orders found: " + response.getTotalOrders());
+            System.out.println("Success: " + response.isSuccess());
+
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body(response);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error in getAllOrdersDebug: " + e.getMessage());
+            e.printStackTrace();
+
+            AllOrdersResponse errorResponse = AllOrdersResponse.builder()
+                    .success(false)
+                    .message("Internal server error: " + e.getMessage())
+                    .orders(null)
+                    .totalOrders(0)
+                    .build();
+
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
 }
