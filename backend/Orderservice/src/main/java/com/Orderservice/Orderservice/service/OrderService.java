@@ -181,8 +181,43 @@ public class OrderService {
 
     public AllOrdersResponse getAllOrders() {
         try {
-            // Get only CONFIRMED orders
+            System.out.println("🔍 OrderService.getAllOrders() called at: " + java.time.LocalDateTime.now());
+            
+            // First, let's check ALL orders to see what's in the database
+            List<Order> allOrders = orderRepository.findAll();
+            System.out.println("📊 Total orders in database: " + allOrders.size());
+            
+            // Count by status
+            long confirmedCount = allOrders.stream().filter(o -> "CONFIRMED".equals(o.getStatus().toString())).count();
+            long pendingCount = allOrders.stream().filter(o -> "PENDING".equals(o.getStatus().toString())).count();
+            long processedCount = allOrders.stream().filter(o -> "PROCESSED".equals(o.getStatus().toString())).count();
+            
+            System.out.println("📈 Order counts by status:");
+            System.out.println("  - CONFIRMED: " + confirmedCount);
+            System.out.println("  - PENDING: " + pendingCount);
+            System.out.println("  - PROCESSED: " + processedCount);
+            
+            // Test both queries to see if JOIN FETCH is causing issues
+            List<Order> confirmedOrdersOnly = orderRepository.findAllConfirmedOrdersOnly();
+            System.out.println("📊 Confirmed orders (without JOIN FETCH): " + confirmedOrdersOnly.size());
+            
             List<Order> orders = orderRepository.findAllConfirmedOrdersWithItems();
+            System.out.println("📊 Confirmed orders (with JOIN FETCH): " + orders.size());
+            
+            // Check if the difference is due to orders without items
+            if (confirmedOrdersOnly.size() != orders.size()) {
+                System.out.println("⚠️  Some confirmed orders don't have items! Difference: " + 
+                    (confirmedOrdersOnly.size() - orders.size()));
+            }
+            
+            // Log ALL confirmed order IDs for debugging
+            if (!orders.isEmpty()) {
+                System.out.println("📋 All confirmed order IDs: " + 
+                    orders.stream().map(o -> o.getOrderId()).sorted().toList());
+                System.out.println("📅 Order dates: " + 
+                    orders.stream().limit(5).map(o -> o.getOrderId() + ":" + o.getOrderDate()).toList());
+            }
+            
             List<OrderDetailResponse> orderDetails = new ArrayList<>();
 
             for (Order order : orders) {

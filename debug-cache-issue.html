@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Database Cache Debug Tool</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .button {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        margin: 5px;
+      }
+      .button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #ddd;
+        background: #f9f9f9;
+      }
+      .timestamp {
+        color: #666;
+        font-size: 0.9em;
+      }
+      .error {
+        color: red;
+      }
+      .success {
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Database Cache Debug Tool</h1>
+    <p>
+      This tool helps diagnose cache issues between the frontend and backend.
+    </p>
+
+    <div>
+      <button class="button" onclick="testDirectAPI()">Test Direct API</button>
+      <button class="button" onclick="testWithCacheBusting()">
+        Test with Cache Busting
+      </button>
+      <button class="button" onclick="testFrontendService()">
+        Test Frontend Service
+      </button>
+      <button class="button" onclick="clearBrowserCache()">
+        Clear Browser Cache
+      </button>
+      <button class="button" onclick="checkAuthToken()">
+        Check Auth Token
+      </button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+      const API_BASE = "http://localhost:8090/api/orders";
+
+      function addResult(title, content, type = "info") {
+        const results = document.getElementById("results");
+        const div = document.createElement("div");
+        div.className = `result ${type}`;
+        div.innerHTML = `
+                <strong>${title}</strong>
+                <div class="timestamp">${new Date().toISOString()}</div>
+                <pre style="white-space: pre-wrap; font-size: 12px;">${content}</pre>
+            `;
+        results.insertBefore(div, results.firstChild);
+      }
+
+      function getAuthToken() {
+        return localStorage.getItem("inventory_auth_token");
+      }
+
+      async function testDirectAPI() {
+        try {
+          const token = getAuthToken();
+          if (!token) {
+            addResult(
+              "Direct API Test",
+              "No auth token found. Please log in first.",
+              "error"
+            );
+            return;
+          }
+
+          const response = await fetch(`${API_BASE}/all`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              Pragma: "no-cache",
+              Expires: "0",
+            },
+            cache: "no-store",
+          });
+
+          const responseHeaders = {};
+          response.headers.forEach((value, key) => {
+            responseHeaders[key] = value;
+          });
+
+          const data = await response.json();
+
+          addResult(
+            "Direct API Test",
+            JSON.stringify(
+              {
+                status: response.status,
+                headers: responseHeaders,
+                ordersCount: data.orders?.length || 0,
+                message: data.message,
+                success: data.success,
+              },
+              null,
+              2
+            ),
+            response.ok ? "success" : "error"
+          );
+        } catch (error) {
+          addResult("Direct API Test", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testWithCacheBusting() {
+        try {
+          const token = getAuthToken();
+          if (!token) {
+            addResult(
+              "Cache Busting Test",
+              "No auth token found. Please log in first.",
+              "error"
+            );
+            return;
+          }
+
+          const timestamp = Date.now();
+          const response = await fetch(
+            `${API_BASE}/all?_t=${timestamp}&_cb=${Math.random()}`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                Pragma: "no-cache",
+                Expires: "0",
+                "X-Requested-At": new Date().toISOString(),
+              },
+              cache: "no-store",
+            }
+          );
+
+          const data = await response.json();
+
+          addResult(
+            "Cache Busting Test",
+            JSON.stringify(
+              {
+                status: response.status,
+                timestamp: timestamp,
+                ordersCount: data.orders?.length || 0,
+                message: data.message,
+                success: data.success,
+                firstOrderId: data.orders?.[0]?.orderId || "No orders",
+              },
+              null,
+              2
+            ),
+            response.ok ? "success" : "error"
+          );
+        } catch (error) {
+          addResult("Cache Busting Test", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testFrontendService() {
+        try {
+          // Simulate the frontend service call
+          const token = getAuthToken();
+          if (!token) {
+            addResult(
+              "Frontend Service Test",
+              "No auth token found. Please log in first.",
+              "error"
+            );
+            return;
+          }
+
+          const timestamp = Date.now();
+          const response = await fetch(`${API_BASE}/all?_t=${timestamp}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              Pragma: "no-cache",
+              Expires: "0",
+              "X-Requested-At": new Date().toISOString(),
+              Authorization: `Bearer ${token}`,
+            },
+            cache: "no-store",
+          });
+
+          const data = await response.json();
+
+          addResult(
+            "Frontend Service Test",
+            JSON.stringify(
+              {
+                status: response.status,
+                ordersCount: data.orders?.length || 0,
+                success: data.success,
+                fetchedAt: data.fetchedAt || "Not set",
+                orders: data.orders?.slice(0, 2) || [],
+              },
+              null,
+              2
+            ),
+            response.ok ? "success" : "error"
+          );
+        } catch (error) {
+          addResult(
+            "Frontend Service Test",
+            `Error: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      function clearBrowserCache() {
+        // Clear various types of browser storage
+        if ("caches" in window) {
+          caches.keys().then((names) => {
+            names.forEach((name) => {
+              caches.delete(name);
+            });
+          });
+        }
+
+        // Clear sessionStorage and localStorage (except auth token)
+        const token = localStorage.getItem("inventory_auth_token");
+        localStorage.clear();
+        sessionStorage.clear();
+        if (token) {
+          localStorage.setItem("inventory_auth_token", token);
+        }
+
+        addResult(
+          "Clear Browser Cache",
+          "Browser cache cleared (auth token preserved)",
+          "success"
+        );
+      }
+
+      function checkAuthToken() {
+        const token = getAuthToken();
+        if (token) {
+          // Decode JWT payload (basic decode, no verification)
+          try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            const exp = new Date(payload.exp * 1000);
+            const now = new Date();
+
+            addResult(
+              "Auth Token Check",
+              JSON.stringify(
+                {
+                  hasToken: true,
+                  tokenLength: token.length,
+                  expiresAt: exp.toISOString(),
+                  isExpired: now > exp,
+                  username: payload.sub || payload.username || "Unknown",
+                  roles: payload.roles || payload.authorities || "Not found",
+                },
+                null,
+                2
+              ),
+              now > exp ? "error" : "success"
+            );
+          } catch (e) {
+            addResult(
+              "Auth Token Check",
+              `Token exists but cannot be decoded: ${e.message}`,
+              "error"
+            );
+          }
+        } else {
+          addResult(
+            "Auth Token Check",
+            "No authentication token found",
+            "error"
+          );
+        }
+      }
+
+      // Auto-check token on load
+      window.onload = function () {
+        checkAuthToken();
+        addResult(
+          "Debug Tool Ready",
+          "Click the buttons above to test different scenarios",
+          "success"
+        );
+      };
+    </script>
+  </body>
+</html>

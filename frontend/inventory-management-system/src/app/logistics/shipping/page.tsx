@@ -264,63 +264,84 @@ function ShippingPage() {
     });
   };
 
-  // Fetch real orders on component mount
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
+  // Fetch real orders function (made reusable)
+  const fetchOrders = async (showLoadingState = true) => {
+    try {
+      if (showLoadingState) {
         setIsLoadingOrders(true);
-        setOrdersError(null);
-        
-        // Check if user is authenticated
-        const token = localStorage.getItem('inventory_auth_token');
-        console.log('🔐 Authentication status:', {
-          hasToken: !!token,
-          tokenLength: token?.length || 0
-        });
-        
-        if (!token) {
-          console.warn('❌ No authentication token found. User needs to log in.');
-          setOrdersError('Please log in to view orders.');
-          setRealOrders(dummyOrders);
-          setUsingDummyData(true);
-          return;
-        }
-        
-        // First try to get basic orders without customer info
-        console.log('🚀 Fetching orders from backend...');
-        const response = await orderService.getAllOrders();
-        
-        console.log('📡 Order service response:', {
-          success: response.success,
-          message: response.message,
-          ordersCount: response.orders?.length || 0,
-          totalOrders: response.totalOrders
-        });
-        
-        if (response.success && response.orders.length > 0) {
-          const shippingOrders = convertToShippingOrders(response.orders);
-          setRealOrders(shippingOrders);
-          setUsingDummyData(false);
-          console.log(`✅ Successfully loaded ${response.orders.length} real orders from database`);
-          console.log('📦 First few orders:', response.orders.slice(0, 3));
-        } else {
-          console.warn('⚠️ No orders found or failed to fetch orders:', response.message);
-          setOrdersError(response.message || 'No orders found in database.');
-          setRealOrders(dummyOrders);
-          setUsingDummyData(true);
-        }
-      } catch (error) {
-        console.error('💥 Failed to fetch orders:', error);
-        setOrdersError(`Failed to load orders: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      setOrdersError(null);
+      
+      // Check if user is authenticated
+      const token = localStorage.getItem('inventory_auth_token');
+      console.log('🔐 Authentication status:', {
+        hasToken: !!token,
+        tokenLength: token?.length || 0,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!token) {
+        console.warn('❌ No authentication token found. User needs to log in.');
+        setOrdersError('Please log in to view orders.');
         setRealOrders(dummyOrders);
         setUsingDummyData(true);
-      } finally {
+        return;
+      }
+      
+      // Add cache-busting parameter to ensure fresh data
+      console.log('🚀 Fetching fresh orders from backend... (timestamp: ' + Date.now() + ')');
+      const response = await orderService.getAllOrders();
+      
+      console.log('📡 Order service response:', {
+        success: response.success,
+        message: response.message,
+        ordersCount: response.orders?.length || 0,
+        totalOrders: response.totalOrders,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (response.success && response.orders.length > 0) {
+        const shippingOrders = convertToShippingOrders(response.orders);
+        
+        // Force state update with a new array reference
+        setRealOrders([...shippingOrders]);
+        setUsingDummyData(false);
+        
+        console.log(`✅ Successfully loaded ${response.orders.length} fresh orders from database`);
+        console.log('📦 First few orders:', response.orders.slice(0, 3));
+        console.log('🚢 Converted shipping orders:', shippingOrders.slice(0, 3));
+        console.log('🔄 State updated at:', new Date().toISOString());
+      } else {
+        console.warn('⚠️ No orders found or failed to fetch orders:', response.message);
+        setOrdersError(response.message || 'No orders found in database.');
+        setRealOrders(dummyOrders);
+        setUsingDummyData(true);
+      }
+    } catch (error) {
+      console.error('💥 Failed to fetch orders:', error);
+      setOrdersError(`Failed to load orders: ${error instanceof Error ? error.message : String(error)}`);
+      setRealOrders(dummyOrders);
+      setUsingDummyData(true);
+    } finally {
+      if (showLoadingState) {
         setIsLoadingOrders(false);
       }
-    };
+    }
+  };
 
+  // Fetch orders on component mount and set up auto-refresh
+  useEffect(() => {
+    // Initial fetch
     fetchOrders();
-  }, []);
+
+    // Auto-refresh every 2 minutes (reduced frequency)
+    const intervalId = setInterval(() => {
+      console.log('🔄 Auto-refreshing orders every 2 minutes...');
+      fetchOrders(false); // Don't show loading state for auto-refresh
+    }, 120000); // 2 minutes = 120,000ms
+
+    return () => clearInterval(intervalId);
+  }, []); // Empty dependency array to run only once
 
   // Get the current orders to display (real or dummy)
   const currentOrders = realOrders.length > 0 ? realOrders : dummyOrders;
@@ -542,13 +563,14 @@ function ShippingPage() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => window.location.reload()}
+                  onClick={() => fetchOrders()}
+                  disabled={isLoadingOrders}
                   className="w-full mt-2"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  Refresh Orders
+                  {isLoadingOrders ? 'Refreshing...' : 'Refresh Orders'}
                 </Button>
               </div>
             </div>
