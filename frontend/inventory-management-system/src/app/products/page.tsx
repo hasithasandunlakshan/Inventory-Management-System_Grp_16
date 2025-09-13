@@ -117,10 +117,14 @@ export default function ProductsPage() {
               name={product.name}
               description={product.description}
               price={product.price}
-              stock={product.availableStock}
+              stock={product.stock}
+              availableStock={product.availableStock}
+              reserved={product.reserved}
               imageUrl={product.imageUrl || ''}
               barcode={product.barcode || 'N/A'}
               categoryName={product.categoryName}
+              minThreshold={product.minThreshold}
+              showActions={true}
             />
           ))
         )}

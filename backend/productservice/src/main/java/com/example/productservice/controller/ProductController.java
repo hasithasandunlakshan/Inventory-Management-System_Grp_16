@@ -59,6 +59,7 @@ public class ProductController {
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductDTO dto) {
         try {
             Product updatedProduct = service.updateProduct(id, dto);
+            System.out.println("Updated product: " + updatedProduct);
             return ResponseEntity.ok(updatedProduct);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
