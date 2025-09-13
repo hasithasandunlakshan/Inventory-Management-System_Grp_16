@@ -76,17 +76,17 @@ public class OrderService {
                 }
                 OrderDetailResponse orderDetail = OrderDetailResponse.builder()
 
-                    .orderId(order.getOrderId())
-                    .customerId(order.getCustomerId())
-                    .orderDate(order.getOrderDate())
-                    .status(order.getStatus().toString())
-                    .totalAmount(order.getTotalAmount())
-                    .createdAt(order.getCreatedAt())
-                    .updatedAt(order.getUpdatedAt())
-                    .refundReason(order.getRefundReason())
-                    .refundProcessedAt(order.getRefundProcessedAt())
-                    .orderItems(itemDetails)
-                    .build();
+                        .orderId(order.getOrderId())
+                        .customerId(order.getCustomerId())
+                        .orderDate(order.getOrderDate())
+                        .status(order.getStatus().toString())
+                        .totalAmount(order.getTotalAmount())
+                        .createdAt(order.getCreatedAt())
+                        .updatedAt(order.getUpdatedAt())
+                        .refundReason(order.getRefundReason())
+                        .refundProcessedAt(order.getRefundProcessedAt())
+                        .orderItems(itemDetails)
+                        .build();
                 orderDetails.add(orderDetail);
             }
             return AllOrdersResponse.builder()
@@ -189,7 +189,7 @@ public class OrderService {
 
     @Autowired
     private PaymentRepository paymentRepository;
-    
+
     @Autowired
     private ProductRepository productRepository;
 
@@ -411,18 +411,18 @@ public class OrderService {
             }
 
             return OrderDetailResponse.builder()
-                .orderId(order.getOrderId())
-                .customerId(order.getCustomerId())
-                .orderDate(order.getOrderDate())
-                .status(order.getStatus().toString())
-                .totalAmount(order.getTotalAmount())
-                .createdAt(order.getCreatedAt())
-                .updatedAt(order.getUpdatedAt())
-                .refundReason(order.getRefundReason())
-                .refundProcessedAt(order.getRefundProcessedAt())
-                .orderItems(itemDetails)
-                .build();
-                
+                    .orderId(order.getOrderId())
+                    .customerId(order.getCustomerId())
+                    .orderDate(order.getOrderDate())
+                    .status(order.getStatus().toString())
+                    .totalAmount(order.getTotalAmount())
+                    .createdAt(order.getCreatedAt())
+                    .updatedAt(order.getUpdatedAt())
+                    .refundReason(order.getRefundReason())
+                    .refundProcessedAt(order.getRefundProcessedAt())
+                    .orderItems(itemDetails)
+                    .build();
+
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -536,9 +536,10 @@ public class OrderService {
         } catch (IllegalArgumentException e) {
             System.err.println("Invalid order status: " + statusStr);
 
-            System.err.println("Valid statuses: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED, REFUNDED");
-            throw new IllegalArgumentException("Invalid order status: " + statusStr + 
-                ". Valid statuses are: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED, REFUNDED");
+            System.err
+                    .println("Valid statuses: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED, REFUNDED");
+            throw new IllegalArgumentException("Invalid order status: " + statusStr +
+                    ". Valid statuses are: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED, REFUNDED");
         } catch (Exception e) {
             System.err.println("Error counting orders by status: " + e.getMessage());
             e.printStackTrace();
@@ -705,10 +706,13 @@ public class OrderService {
             response.put("confirmedOrders", 0);
 
             return response;
-    
+        }
+    }
+
     /**
      * Process a refund for an order
-     * @param orderId The ID of the order to refund
+     * 
+     * @param orderId      The ID of the order to refund
      * @param refundReason The reason for the refund
      * @return RefundResponse indicating success or failure
      */
@@ -717,16 +721,16 @@ public class OrderService {
             System.out.println("=== PROCESSING REFUND ===");
             System.out.println("Order ID: " + orderId);
             System.out.println("Reason: " + refundReason);
-            
+
             // Find the order
             Optional<Order> orderOpt = orderRepository.findById(orderId);
             if (!orderOpt.isPresent()) {
                 System.err.println("Order not found with ID: " + orderId);
                 return RefundResponse.failure(orderId, "Order not found");
             }
-            
+
             Order order = orderOpt.get();
-            
+
             // Validate order status for refund eligibility
             OrderStatus currentStatus = order.getStatus();
             if (!isEligibleForRefund(currentStatus)) {
@@ -734,16 +738,16 @@ public class OrderService {
                 System.err.println(message);
                 return RefundResponse.failure(orderId, message);
             }
-            
+
             // Check if order is already refunded
             if (currentStatus == OrderStatus.REFUNDED) {
                 String message = "Order is already refunded";
                 System.err.println(message);
                 return RefundResponse.failure(orderId, message);
             }
-            
+
             BigDecimal refundAmount = order.getTotalAmount();
-            
+
             // Update payment status to REFUNDED (includes Stripe refund processing)
             boolean paymentRefunded = updatePaymentStatusToRefunded(orderId, refundReason);
             if (!paymentRefunded) {
@@ -751,65 +755,65 @@ public class OrderService {
                 System.err.println(errorMessage);
                 return RefundResponse.failure(orderId, errorMessage);
             }
-            
+
             // Restore inventory for order items
             restoreInventoryForOrder(order);
-            
+
             // Update order status to REFUNDED and store refund details
             OrderStatus oldStatus = order.getStatus();
             order.setStatus(OrderStatus.REFUNDED);
             order.setRefundReason(refundReason);
             order.setRefundProcessedAt(LocalDateTime.now());
             Order updatedOrder = orderRepository.save(order);
-            
+
             // Send refund notification
             try {
                 String notificationMessage = createRefundNotificationMessage(updatedOrder, refundReason);
-                
+
                 eventPublisherService.publishOrderNotification(
-                    "ORDER_REFUNDED",
-                    updatedOrder.getOrderId(),
-                    updatedOrder.getCustomerId(),
-                    OrderStatus.REFUNDED.toString(),
-                    updatedOrder.getTotalAmount().doubleValue(),
-                    notificationMessage
-                );
-                
+                        "ORDER_REFUNDED",
+                        updatedOrder.getOrderId(),
+                        updatedOrder.getCustomerId(),
+                        OrderStatus.REFUNDED.toString(),
+                        updatedOrder.getTotalAmount().doubleValue(),
+                        notificationMessage);
+
                 System.out.println("✅ Refund notification sent to Kafka successfully!");
                 System.out.println("Message: " + notificationMessage);
-                
+
             } catch (Exception e) {
                 System.err.println("❌ Failed to publish refund notification: " + e.getMessage());
                 e.printStackTrace();
             }
-            
+
             System.out.println("✅ Refund processed successfully");
             System.out.println("Amount refunded: $" + refundAmount);
             System.out.println("Status changed from " + oldStatus + " to " + OrderStatus.REFUNDED);
             System.out.println("===============================");
-            
+
             return RefundResponse.success(orderId, refundAmount, refundReason);
-            
+
         } catch (Exception e) {
             System.err.println("Error processing refund for order " + orderId + ": " + e.getMessage());
             e.printStackTrace();
             return RefundResponse.failure(orderId, "Failed to process refund: " + e.getMessage());
         }
     }
-    
+
     /**
      * Check if an order status is eligible for refund
      */
     private boolean isEligibleForRefund(OrderStatus status) {
-        // Orders can be refunded if they are CONFIRMED, PROCESSED, SHIPPED, or DELIVERED
+        // Orders can be refunded if they are CONFIRMED, PROCESSED, SHIPPED, or
+        // DELIVERED
         // PENDING orders should be cancelled instead of refunded
         // CANCELLED and REFUNDED orders cannot be refunded
-        return status == OrderStatus.CONFIRMED || 
-               status == OrderStatus.PROCESSED || 
-               status == OrderStatus.SHIPPED || 
-               status == OrderStatus.DELIVERED;
+        return status == OrderStatus.CONFIRMED ||
+                status == OrderStatus.PROCESSED ||
+                status == OrderStatus.SHIPPED ||
+                status == OrderStatus.DELIVERED;
     }
-    
+
     /**
      * Update payment status to REFUNDED for all payments associated with the order
      */
@@ -818,18 +822,19 @@ public class OrderService {
             // Find payments for this order and process refunds
             List<Payment> payments = paymentRepository.findByOrderOrderId(orderId);
             boolean allRefundsSuccessful = true;
-            
+
             for (Payment payment : payments) {
                 // Only process refund if payment is not already refunded
                 if (payment.getStatus() != PaymentStatus.REFUNDED) {
                     // First, process the refund through Stripe
                     boolean stripeRefundSuccessful = processStripeRefund(payment, refundReason);
-                    
+
                     if (stripeRefundSuccessful) {
                         // Only update local status if Stripe refund was successful
                         payment.setStatus(PaymentStatus.REFUNDED);
                         paymentRepository.save(payment);
-                        System.out.println("Payment " + payment.getPaymentId() + " successfully refunded through Stripe and status updated to REFUNDED");
+                        System.out.println("Payment " + payment.getPaymentId()
+                                + " successfully refunded through Stripe and status updated to REFUNDED");
                     } else {
                         System.err.println("Failed to process Stripe refund for payment " + payment.getPaymentId());
                         allRefundsSuccessful = false;
@@ -839,7 +844,7 @@ public class OrderService {
                     System.out.println("Payment " + payment.getPaymentId() + " is already refunded, skipping");
                 }
             }
-            
+
             return allRefundsSuccessful;
         } catch (Exception e) {
             System.err.println("Error updating payment status to REFUNDED: " + e.getMessage());
@@ -847,7 +852,7 @@ public class OrderService {
             return false;
         }
     }
-    
+
     /**
      * Process Stripe refund for a payment
      */
@@ -858,28 +863,28 @@ public class OrderService {
                 System.err.println("Payment " + payment.getPaymentId() + " has no Stripe payment intent ID");
                 return false;
             }
-            
+
             // Create refund parameters
             RefundCreateParams params = RefundCreateParams.builder()
-                .setPaymentIntent(payment.getStripePaymentIntentId())
-                .setAmount((long) (payment.getAmount().doubleValue() * 100)) // Convert to cents
-                .setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)
-                .putMetadata("refund_reason", refundReason != null ? refundReason : "Order refund")
-                .putMetadata("order_id", payment.getOrder().getOrderId().toString())
-                .putMetadata("payment_id", payment.getPaymentId().toString())
-                .build();
-            
+                    .setPaymentIntent(payment.getStripePaymentIntentId())
+                    .setAmount((long) (payment.getAmount().doubleValue() * 100)) // Convert to cents
+                    .setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)
+                    .putMetadata("refund_reason", refundReason != null ? refundReason : "Order refund")
+                    .putMetadata("order_id", payment.getOrder().getOrderId().toString())
+                    .putMetadata("payment_id", payment.getPaymentId().toString())
+                    .build();
+
             // Process the refund through Stripe
             Refund refund = Refund.create(params);
-            
+
             System.out.println("Stripe refund created successfully:");
             System.out.println("  Refund ID: " + refund.getId());
             System.out.println("  Payment Intent: " + payment.getStripePaymentIntentId());
             System.out.println("  Amount: $" + refund.getAmount() / 100.0);
             System.out.println("  Status: " + refund.getStatus());
-            
+
             return true;
-            
+
         } catch (StripeException e) {
             System.err.println("Stripe refund failed for payment " + payment.getPaymentId() + ": " + e.getMessage());
             System.err.println("Stripe error type: " + e.getStripeError().getType());
@@ -898,48 +903,49 @@ public class OrderService {
     private void restoreInventoryForOrder(Order order) {
         try {
             System.out.println("--- Restoring inventory for order items ---");
-            
+
             for (OrderItem orderItem : order.getOrderItems()) {
                 if (orderItem.getProductId() != null) {
                     try {
                         Optional<Product> productOpt = productRepository.findById(orderItem.getProductId());
                         if (productOpt.isPresent()) {
                             Product product = productOpt.get();
-                            
+
                             // Restore the quantity
                             int currentStock = product.getStockQuantity();
                             int orderedQuantity = orderItem.getQuantity();
                             int newStock = currentStock + orderedQuantity;
-                            
+
                             product.setStockQuantity(newStock);
                             productRepository.save(product);
-                            
-                            System.out.println("Product " + product.getName() + " stock restored: " + 
-                                             currentStock + " + " + orderedQuantity + " = " + newStock);
+
+                            System.out.println("Product " + product.getName() + " stock restored: " +
+                                    currentStock + " + " + orderedQuantity + " = " + newStock);
                         } else {
                             System.err.println("Product not found for ID: " + orderItem.getProductId());
                         }
                     } catch (Exception e) {
-                        System.err.println("Error restoring inventory for product " + orderItem.getProductId() + ": " + e.getMessage());
+                        System.err.println("Error restoring inventory for product " + orderItem.getProductId() + ": "
+                                + e.getMessage());
                     }
                 }
             }
-            
+
             System.out.println("--- Inventory restoration completed ---");
-            
+
         } catch (Exception e) {
             System.err.println("Error during inventory restoration: " + e.getMessage());
             e.printStackTrace();
         }
     }
-    
+
     /**
      * Create a user-friendly refund notification message
      */
     private String createRefundNotificationMessage(Order order, String refundReason) {
         String orderNumber = "#" + order.getOrderId();
         String amount = "$" + order.getTotalAmount().toString();
-        
+
         if (refundReason != null && !refundReason.trim().isEmpty()) {
             return "💰 Your order " + orderNumber + " has been refunded (" + amount + "). Reason: " + refundReason;
         } else {
