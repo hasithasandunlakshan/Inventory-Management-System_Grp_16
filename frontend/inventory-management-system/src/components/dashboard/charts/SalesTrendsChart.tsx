@@ -27,8 +27,7 @@ export default function SalesTrendsChart() {
         // Simulate data based on filters
         const mockData = generateMockSalesData(
           new Date(startDate),
-          new Date(endDate),
-          filters.warehouse
+          new Date(endDate)
         );
         setSalesData(mockData);
 
@@ -60,15 +59,13 @@ export default function SalesTrendsChart() {
 
   const generateMockSalesData = (
     startDate: Date,
-    endDate: Date,
-    warehouse: string
+    endDate: Date
   ): SalesData[] => {
     const data: SalesData[] = [];
     const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
-      const baseRevenue =
-        warehouse === 'wh1' ? 800 : warehouse === 'wh2' ? 600 : 1400;
+      const baseRevenue = 1400;
       const variance = (Math.random() - 0.5) * 400;
 
       data.push({
@@ -169,7 +166,7 @@ export default function SalesTrendsChart() {
                   100;
                 return (
                   <div
-                    key={index}
+                    key={`${item.date}-${index}`}
                     className='flex-1 flex flex-col items-center'
                   >
                     <div
@@ -188,12 +185,7 @@ export default function SalesTrendsChart() {
 
           {/* Filter Info */}
           <div className='text-xs text-gray-500 flex justify-between'>
-            <span>
-              Warehouse:{' '}
-              {filters.warehouse === 'all'
-                ? 'All'
-                : filters.warehouse.toUpperCase()}
-            </span>
+            <span>All Warehouses</span>
             <span>Range: {filters.timeRange}</span>
           </div>
         </div>

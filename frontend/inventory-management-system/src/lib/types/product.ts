@@ -11,6 +11,9 @@ export interface Product {
   barcodeImageUrl: string; // URL for the barcode image
   categoryId?: number;
   categoryName?: string;
+  // Additional properties for analytics
+  minThreshold?: number;
+  unitPrice?: number;
 }
 
 export interface Category {
