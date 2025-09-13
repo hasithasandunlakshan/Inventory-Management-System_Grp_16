@@ -8,6 +8,8 @@ class ProductserviceApplicationTests {
 
     @Test
     void contextLoads() {
+        // This test verifies that the Spring application context loads successfully
+        // No additional assertions needed as the test passes if the context loads
     }
 
 }

@@ -38,7 +38,9 @@ public class Product {
     private String barcodeImageUrl; // Optional, can be used to store a barcode image URL
 
     // Many-to-many relationship with categories through ProductCategory
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     @JsonIgnore
-    private Set<ProductCategory> productCategories;
+    @Builder.Default
+    private Set<ProductCategory> productCategories = new java.util.HashSet<>();
 }
+
