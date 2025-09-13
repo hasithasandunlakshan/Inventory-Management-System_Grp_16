@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 
 export interface FilterState {
   timeRange: string;
@@ -23,14 +23,14 @@ export function FilterProvider({ children }: { readonly children: ReactNode }) {
     toDate: '',
   });
 
-  const updateFilter = (key: keyof FilterState, value: string) => {
+  const updateFilter = useCallback((key: keyof FilterState, value: string) => {
     setFilters(prev => ({
       ...prev,
       [key]: value,
     }));
-  };
+  }, []);
 
-  const getDateRange = () => {
+  const getDateRange = useCallback(() => {
     const today = new Date();
     let startDate = new Date();
     let endDate = new Date();
@@ -69,13 +69,13 @@ export function FilterProvider({ children }: { readonly children: ReactNode }) {
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],
     };
-  };
+  }, [filters.timeRange, filters.fromDate, filters.toDate]);
 
   const contextValue = useMemo(() => ({
     filters,
     updateFilter,
     getDateRange
-  }), [filters]);
+  }), [filters, updateFilter, getDateRange]);
 
   return (
     <FilterContext.Provider value={contextValue}>

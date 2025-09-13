@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/chart';
 
 interface PieChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   config: ChartConfig;
   className?: string;
   height?: number;
@@ -31,7 +31,6 @@ export function PieChart({
   data,
   config,
   className,
-  height = 300,
   showTooltip = true,
   showLegend = true,
   dataKey = 'value',

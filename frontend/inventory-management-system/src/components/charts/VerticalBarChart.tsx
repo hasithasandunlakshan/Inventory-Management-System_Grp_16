@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/chart';
 
 interface VerticalBarChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   config: ChartConfig;
   className?: string;
   height?: number;
@@ -34,7 +34,6 @@ export function VerticalBarChart({
   height = 300,
   showGrid = true,
   showTooltip = true,
-  showLegend = false,
   dataKey = 'value',
   xAxisKey = 'name',
 }: VerticalBarChartProps) {

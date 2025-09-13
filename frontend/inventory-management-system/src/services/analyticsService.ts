@@ -17,6 +17,7 @@ export interface StockMovementData {
   incoming: number;
   outgoing: number;
   net: number;
+  [key: string]: unknown;
 }
 
 export interface SalesAnalytics {

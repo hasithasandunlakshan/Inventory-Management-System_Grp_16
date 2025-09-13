@@ -22,7 +22,6 @@ export interface InventoryItem {
 // Use direct service for inventory cost (CORS issue with API Gateway)
 const INVENTORY_COST_URL = 'http://localhost:8083/api/products';
 const INVENTORY_SERVICE_URL = 'http://localhost:8085/api/inventory';
-const BASE_URL = 'http://localhost:8090/api/products';
 
 export const inventoryService = {
   getInventoryCost: async (): Promise<InventoryCostResponse> => {

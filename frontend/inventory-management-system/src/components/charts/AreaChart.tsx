@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/chart';
 
 interface AreaChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   config: ChartConfig;
   className?: string;
   height?: number;
@@ -29,7 +29,6 @@ export function AreaChart({
   data,
   config,
   className,
-  height = 300,
   showGrid = true,
   showTooltip = true,
   dataKey = 'value',

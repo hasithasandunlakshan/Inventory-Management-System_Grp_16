@@ -24,6 +24,7 @@ interface StockMovement {
   incoming: number;
   outgoing: number;
   net: number;
+  [key: string]: unknown;
 }
 
 interface CategoryDistribution {

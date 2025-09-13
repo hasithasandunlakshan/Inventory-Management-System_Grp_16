@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/chart';
 
 interface BarChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   config: ChartConfig;
   className?: string;
   height?: number;
@@ -34,13 +34,11 @@ export function BarChart({
   data,
   config,
   className,
-  height = 300,
   showGrid = true,
   showTooltip = true,
   showLegend = false,
   dataKey = 'value',
   xAxisKey = 'name',
-  orientation = 'vertical',
   multipleBars = false,
 }: BarChartProps) {
   const configKeys = Object.keys(config);

@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/chart';
 
 interface LineChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   config: ChartConfig;
   className?: string;
   height?: number;
@@ -34,7 +34,6 @@ export function LineChart({
   data,
   config,
   className,
-  height = 300,
   showGrid = true,
   showTooltip = true,
   showLegend = false,

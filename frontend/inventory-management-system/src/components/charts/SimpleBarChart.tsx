@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 
 interface SimpleBarChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   dataKey: string;
   xAxisKey: string;
   height?: number;
