@@ -50,10 +50,16 @@ public class ApiGatewayApplication {
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("http://localhost:8080"))
 
-                                // Product Service (MANAGER only)
+                                // Product Service - Public access
                                 .route("product-service", r -> r
                                                 .path("/api/products/**")
-                                                .filters(f -> f.filter(jwtAuthenticationFilter))
+                                                .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
+                                                .uri("http://localhost:8083"))
+
+                                // Categories Service (part of Product Service) - Public access
+                                .route("categories-service", r -> r
+                                                .path("/api/categories/**")
+                                                .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
                                                 .uri("http://localhost:8083"))
 
                                 // Order Service (STOREKEEPER, MANAGER)

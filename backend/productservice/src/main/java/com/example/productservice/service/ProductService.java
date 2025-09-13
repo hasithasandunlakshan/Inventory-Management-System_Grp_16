@@ -123,6 +123,8 @@ public class ProductService {
         existingProduct.setName(dto.getName());
         existingProduct.setDescription(dto.getDescription());
         existingProduct.setPrice(dto.getPrice());
+        existingProduct.setImageUrl(dto.getImageUrl());
+    
 
         // If stock is being updated, recalculate available stock
         if (dto.getStock() != existingProduct.getStock()) {

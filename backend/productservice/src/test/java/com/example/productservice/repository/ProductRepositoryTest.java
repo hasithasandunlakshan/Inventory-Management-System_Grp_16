@@ -341,6 +341,14 @@ class ProductRepositoryTest {
     @DisplayName("Should handle empty database")
     void testFindAll_EmptyDatabase() {
         // Given
+        // First delete all ProductCategory relationships to avoid foreign key
+        // constraint violations
+        entityManager.getEntityManager()
+                .createQuery("DELETE FROM ProductCategory")
+                .executeUpdate();
+        entityManager.flush();
+
+        // Then delete all products
         productRepository.deleteAll();
         entityManager.flush();
 

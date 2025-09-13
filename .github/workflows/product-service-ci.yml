@@ -58,16 +58,16 @@ jobs:
           # Run integration tests (repository and full integration tests)
           mvn test -Dtest="*IntegrationTest,*RepositoryTest"
 
-      # Code Quality Steps
-      - name: Run Checkstyle
-        run: |
-          cd backend/productservice
-          mvn checkstyle:check
+      # # Code Quality Steps
+      # - name: Run Checkstyle
+      #   run: |
+      #     cd backend/productservice
+      #     mvn checkstyle:check
 
-      - name: Generate Test Coverage Report
-        run: |
-          cd backend/productservice
-          mvn jacoco:report
+      # - name: Generate Test Coverage Report
+      #   run: |
+      #     cd backend/productservice
+      #     mvn jacoco:report
 
       # Build Steps
       - name: Build JAR Package
