@@ -1,5 +1,7 @@
 package com.Orderservice.Orderservice.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -9,10 +11,15 @@ import org.springframework.stereotype.Service;
 
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
 import com.Orderservice.Orderservice.dto.OrderDetailResponse;
+import com.Orderservice.Orderservice.dto.RefundResponse;
 import com.Orderservice.Orderservice.entity.Order;
 import com.Orderservice.Orderservice.entity.OrderItem;
+import com.Orderservice.Orderservice.entity.Payment;
 import com.Orderservice.Orderservice.entity.Product;
+import com.Orderservice.Orderservice.enums.OrderStatus;
+import com.Orderservice.Orderservice.enums.PaymentStatus;
 import com.Orderservice.Orderservice.repository.OrderRepository;
+import com.Orderservice.Orderservice.repository.PaymentRepository;
 import com.Orderservice.Orderservice.repository.ProductRepository;
 
 @Service
@@ -66,6 +73,8 @@ public class OrderService {
                     .totalAmount(order.getTotalAmount())
                     .createdAt(order.getCreatedAt())
                     .updatedAt(order.getUpdatedAt())
+                    .refundReason(order.getRefundReason())
+                    .refundProcessedAt(order.getRefundProcessedAt())
                     .orderItems(itemDetails)
                     .build();
                 orderDetails.add(orderDetail);
@@ -156,6 +165,8 @@ public class OrderService {
                 return "🎉 Your order " + orderNumber + " is delivered!";
             case CANCELLED:
                 return "❌ Your order " + orderNumber + " is cancelled.";
+            case REFUNDED:
+                return "💰 Your order " + orderNumber + " has been refunded.";
             default:
                 return "📦 Your order " + orderNumber + " is " + newStatus.toString().toLowerCase() + ".";
         }
@@ -163,6 +174,9 @@ public class OrderService {
     
     @Autowired
     private OrderRepository orderRepository;
+    
+    @Autowired
+    private PaymentRepository paymentRepository;
     
     @Autowired
     private ProductRepository productRepository;
@@ -317,6 +331,8 @@ public class OrderService {
                 .totalAmount(order.getTotalAmount())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
+                .refundReason(order.getRefundReason())
+                .refundProcessedAt(order.getRefundProcessedAt())
                 .orderItems(itemDetails)
                 .build();
                 
@@ -430,13 +446,193 @@ public class OrderService {
             
         } catch (IllegalArgumentException e) {
             System.err.println("Invalid order status: " + statusStr);
-            System.err.println("Valid statuses: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED");
+            System.err.println("Valid statuses: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED, REFUNDED");
             throw new IllegalArgumentException("Invalid order status: " + statusStr + 
-                ". Valid statuses are: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED");
+                ". Valid statuses are: PENDING, CONFIRMED, PROCESSED, SHIPPED, DELIVERED, CANCELLED, REFUNDED");
         } catch (Exception e) {
             System.err.println("Error counting orders by status: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("Failed to count orders by status", e);
+        }
+    }
+    
+    /**
+     * Process a refund for an order
+     * @param orderId The ID of the order to refund
+     * @param refundReason The reason for the refund
+     * @return RefundResponse indicating success or failure
+     */
+    public RefundResponse processRefund(Long orderId, String refundReason) {
+        try {
+            System.out.println("=== PROCESSING REFUND ===");
+            System.out.println("Order ID: " + orderId);
+            System.out.println("Reason: " + refundReason);
+            
+            // Find the order
+            Optional<Order> orderOpt = orderRepository.findById(orderId);
+            if (!orderOpt.isPresent()) {
+                System.err.println("Order not found with ID: " + orderId);
+                return RefundResponse.failure(orderId, "Order not found");
+            }
+            
+            Order order = orderOpt.get();
+            
+            // Validate order status for refund eligibility
+            OrderStatus currentStatus = order.getStatus();
+            if (!isEligibleForRefund(currentStatus)) {
+                String message = "Order with status " + currentStatus + " is not eligible for refund";
+                System.err.println(message);
+                return RefundResponse.failure(orderId, message);
+            }
+            
+            // Check if order is already refunded
+            if (currentStatus == OrderStatus.REFUNDED) {
+                String message = "Order is already refunded";
+                System.err.println(message);
+                return RefundResponse.failure(orderId, message);
+            }
+            
+            BigDecimal refundAmount = order.getTotalAmount();
+            
+            // Update payment status to REFUNDED
+            boolean paymentRefunded = updatePaymentStatusToRefunded(orderId);
+            if (!paymentRefunded) {
+                System.err.println("Failed to update payment status to REFUNDED");
+                // Continue with order status update even if payment update fails
+            }
+            
+            // Restore inventory for order items
+            restoreInventoryForOrder(order);
+            
+            // Update order status to REFUNDED and store refund details
+            OrderStatus oldStatus = order.getStatus();
+            order.setStatus(OrderStatus.REFUNDED);
+            order.setRefundReason(refundReason);
+            order.setRefundProcessedAt(LocalDateTime.now());
+            Order updatedOrder = orderRepository.save(order);
+            
+            // Send refund notification
+            try {
+                String notificationMessage = createRefundNotificationMessage(updatedOrder, refundReason);
+                
+                eventPublisherService.publishOrderNotification(
+                    "ORDER_REFUNDED",
+                    updatedOrder.getOrderId(),
+                    updatedOrder.getCustomerId(),
+                    OrderStatus.REFUNDED.toString(),
+                    updatedOrder.getTotalAmount().doubleValue(),
+                    notificationMessage
+                );
+                
+                System.out.println("✅ Refund notification sent to Kafka successfully!");
+                System.out.println("Message: " + notificationMessage);
+                
+            } catch (Exception e) {
+                System.err.println("❌ Failed to publish refund notification: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
+            System.out.println("✅ Refund processed successfully");
+            System.out.println("Amount refunded: $" + refundAmount);
+            System.out.println("Status changed from " + oldStatus + " to " + OrderStatus.REFUNDED);
+            System.out.println("===============================");
+            
+            return RefundResponse.success(orderId, refundAmount, refundReason);
+            
+        } catch (Exception e) {
+            System.err.println("Error processing refund for order " + orderId + ": " + e.getMessage());
+            e.printStackTrace();
+            return RefundResponse.failure(orderId, "Failed to process refund: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Check if an order status is eligible for refund
+     */
+    private boolean isEligibleForRefund(OrderStatus status) {
+        // Orders can be refunded if they are CONFIRMED, PROCESSED, SHIPPED, or DELIVERED
+        // PENDING orders should be cancelled instead of refunded
+        // CANCELLED and REFUNDED orders cannot be refunded
+        return status == OrderStatus.CONFIRMED || 
+               status == OrderStatus.PROCESSED || 
+               status == OrderStatus.SHIPPED || 
+               status == OrderStatus.DELIVERED;
+    }
+    
+    /**
+     * Update payment status to REFUNDED for all payments associated with the order
+     */
+    private boolean updatePaymentStatusToRefunded(Long orderId) {
+        try {
+            // Find payments for this order and update their status
+            List<Payment> payments = paymentRepository.findByOrderOrderId(orderId);
+            
+            for (Payment payment : payments) {
+                payment.setStatus(PaymentStatus.REFUNDED);
+                paymentRepository.save(payment);
+                System.out.println("Payment " + payment.getPaymentId() + " status updated to REFUNDED");
+            }
+            
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error updating payment status to REFUNDED: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Restore inventory quantities for order items
+     */
+    private void restoreInventoryForOrder(Order order) {
+        try {
+            System.out.println("--- Restoring inventory for order items ---");
+            
+            for (OrderItem orderItem : order.getOrderItems()) {
+                if (orderItem.getProductId() != null) {
+                    try {
+                        Optional<Product> productOpt = productRepository.findById(orderItem.getProductId());
+                        if (productOpt.isPresent()) {
+                            Product product = productOpt.get();
+                            
+                            // Restore the quantity
+                            int currentStock = product.getStockQuantity();
+                            int orderedQuantity = orderItem.getQuantity();
+                            int newStock = currentStock + orderedQuantity;
+                            
+                            product.setStockQuantity(newStock);
+                            productRepository.save(product);
+                            
+                            System.out.println("Product " + product.getName() + " stock restored: " + 
+                                             currentStock + " + " + orderedQuantity + " = " + newStock);
+                        } else {
+                            System.err.println("Product not found for ID: " + orderItem.getProductId());
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error restoring inventory for product " + orderItem.getProductId() + ": " + e.getMessage());
+                    }
+                }
+            }
+            
+            System.out.println("--- Inventory restoration completed ---");
+            
+        } catch (Exception e) {
+            System.err.println("Error during inventory restoration: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Create a user-friendly refund notification message
+     */
+    private String createRefundNotificationMessage(Order order, String refundReason) {
+        String orderNumber = "#" + order.getOrderId();
+        String amount = "$" + order.getTotalAmount().toString();
+        
+        if (refundReason != null && !refundReason.trim().isEmpty()) {
+            return "💰 Your order " + orderNumber + " has been refunded (" + amount + "). Reason: " + refundReason;
+        } else {
+            return "💰 Your order " + orderNumber + " has been refunded (" + amount + ").";
         }
     }
 }

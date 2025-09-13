@@ -31,6 +31,22 @@ export interface OrdersResponse {
   totalOrders: number;
 }
 
+export interface RefundRequest {
+  orderId: number;
+  refundReason: string;
+}
+
+export interface RefundResponse {
+  success: boolean;
+  message: string;
+  orderId: number;
+  orderStatus?: string;
+  refundAmount?: number;
+  refundReason?: string;
+  refundProcessedAt?: string;
+  paymentStatus?: string;
+}
+
 class OrderService {
   private async getAuthHeaders() {
     const token = authService.getToken();
@@ -161,6 +177,32 @@ class OrderService {
       uniqueCustomers,
       productCounts
     };
+  }
+
+  async processRefund(refundRequest: RefundRequest): Promise<RefundResponse> {
+    try {
+      const headers = await this.getAuthHeaders();
+      
+      const response = await fetch(`${ORDER_API_BASE_URL}/refund`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(refundRequest)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to process refund: ${errorData.message || response.statusText}`);
+      }
+
+      const refundResponse = await response.json();
+      
+      console.log('Refund processed:', refundResponse);
+      return refundResponse;
+      
+    } catch (error) {
+      console.error('Error processing refund:', error);
+      throw error;
+    }
   }
 }
 

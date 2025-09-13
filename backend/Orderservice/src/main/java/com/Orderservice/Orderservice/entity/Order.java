@@ -44,6 +44,12 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    @Column(name = "refund_reason", length = 500)
+    private String refundReason;
+    
+    @Column(name = "refund_processed_at")
+    private LocalDateTime refundProcessedAt;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems = new ArrayList<>();
 }
