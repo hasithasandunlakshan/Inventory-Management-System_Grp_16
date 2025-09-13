@@ -27,39 +27,48 @@ export const userService = {
   async getUserById(userId: number): Promise<UserInfo> {
     try {
       // First try the secure endpoint (for own user access)
-      const response = await fetch(`${API_BASE_URL}/user/${userId}`, createAuthenticatedRequestOptions());
-      
+      const response = await fetch(
+        `${API_BASE_URL}/user/${userId}`,
+        createAuthenticatedRequestOptions()
+      );
+
       if (response.ok) {
         return response.json();
       }
-      
+
       // If secure endpoint fails with 403, try admin endpoint
       if (response.status === 403) {
-        console.log(`Secure endpoint returned 403 for user ${userId}, trying admin endpoint...`);
+        console.log(
+          `Secure endpoint returned 403 for user ${userId}, trying admin endpoint...`
+        );
         try {
-          const adminResponse = await fetch(`${ADMIN_API_BASE_URL}/user/${userId}`, createAuthenticatedRequestOptions());
-          
+          const adminResponse = await fetch(
+            `${ADMIN_API_BASE_URL}/user/${userId}`,
+            createAuthenticatedRequestOptions()
+          );
+
           if (adminResponse.ok) {
             return adminResponse.json();
           }
-          
+
           if (adminResponse.status === 403) {
-            throw new Error('Access denied - insufficient permissions to view user details');
+            throw new Error(
+              'Access denied - insufficient permissions to view user details'
+            );
           }
-          
+
           throw new Error(`Admin endpoint failed: ${adminResponse.status}`);
         } catch (adminError) {
           console.error('Admin endpoint also failed:', adminError);
           throw new Error('Failed to fetch user details - access denied');
         }
       }
-      
+
       if (response.status === 404) {
         throw new Error('User not found');
       }
-      
+
       throw new Error(`Failed to fetch user details: ${response.status}`);
-      
     } catch (error) {
       console.error('Failed to fetch user details:', error);
       if (error instanceof Error && error.message.includes('access denied')) {
@@ -97,30 +106,39 @@ export const userService = {
         throw new Error('Invalid authentication token - please login again');
       }
 
-      const response = await fetch(`${API_BASE_URL}/user/current`, createAuthenticatedRequestOptions());
-      
+      const response = await fetch(
+        `${API_BASE_URL}/user/current`,
+        createAuthenticatedRequestOptions()
+      );
+
       if (response.status === 401 || response.status === 403) {
         // Clear invalid token
         localStorage.removeItem('inventory_auth_token');
         localStorage.removeItem('inventory_user_info');
         throw new Error('Authentication failed - please login again');
       }
-      
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch current user details: ${response.status}`);
+        throw new Error(
+          `Failed to fetch current user details: ${response.status}`
+        );
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Failed to fetch current user details:', error);
       // Re-throw authentication errors as-is
-      if (error instanceof Error && 
-          (error.message.includes('login') || 
-           error.message.includes('Authentication') || 
-           error.message.includes('token'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('login') ||
+          error.message.includes('Authentication') ||
+          error.message.includes('token'))
+      ) {
         throw error;
       }
-      throw new Error('Failed to fetch current user details - backend not available');
+      throw new Error(
+        'Failed to fetch current user details - backend not available'
+      );
     }
   },
 
@@ -130,34 +148,37 @@ export const userService = {
   async searchUsers(query: string): Promise<UserInfo[]> {
     try {
       console.log('🔍 Searching users with query:', query);
-      
+
       if (!query.trim()) {
         console.log('Empty query, returning empty array');
         return [];
       }
 
       const response = await fetch(
-        `${API_BASE_URL}/users/search?query=${encodeURIComponent(query)}`, 
+        `${API_BASE_URL}/users/search?query=${encodeURIComponent(query)}`,
         createAuthenticatedRequestOptions()
       );
-      
+
       if (response.status === 401 || response.status === 403) {
-        throw new Error('Access denied - insufficient permissions to search users');
+        throw new Error(
+          'Access denied - insufficient permissions to search users'
+        );
       }
-      
+
       if (!response.ok) {
         throw new Error(`Failed to search users: ${response.status}`);
       }
-      
+
       const users = await response.json();
       console.log('🔍 Search returned', users.length, 'users');
       return users;
-      
     } catch (error) {
       console.error('Failed to search users:', error);
-      if (error instanceof Error && 
-          (error.message.includes('Access denied') || 
-           error.message.includes('permissions'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('Access denied') ||
+          error.message.includes('permissions'))
+      ) {
         throw error;
       }
       throw new Error('Failed to search users - backend not available');
@@ -170,29 +191,35 @@ export const userService = {
   async getAllUsers(): Promise<UserInfo[]> {
     try {
       console.log('👥 Fetching all users');
-      
-      const response = await fetch(`${API_BASE_URL}/users`, createAuthenticatedRequestOptions());
-      
+
+      const response = await fetch(
+        `${API_BASE_URL}/users`,
+        createAuthenticatedRequestOptions()
+      );
+
       if (response.status === 401 || response.status === 403) {
-        throw new Error('Access denied - insufficient permissions to view all users');
+        throw new Error(
+          'Access denied - insufficient permissions to view all users'
+        );
       }
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch all users: ${response.status}`);
       }
-      
+
       const users = await response.json();
       console.log('👥 Retrieved', users.length, 'total users');
       return users;
-      
     } catch (error) {
       console.error('Failed to fetch all users:', error);
-      if (error instanceof Error && 
-          (error.message.includes('Access denied') || 
-           error.message.includes('permissions'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('Access denied') ||
+          error.message.includes('permissions'))
+      ) {
         throw error;
       }
       throw new Error('Failed to fetch all users - backend not available');
     }
-  }
+  },
 };

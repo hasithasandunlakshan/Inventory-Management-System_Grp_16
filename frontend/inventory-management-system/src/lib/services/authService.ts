@@ -52,7 +52,7 @@ class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
       console.log('🔐 AuthService: Attempting login...', credentials.username);
-      
+
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -62,10 +62,10 @@ class AuthService {
       });
 
       const data: LoginResponse = await response.json();
-      console.log('🔐 AuthService: Login response:', { 
-        success: data.success, 
-        hasToken: !!data.token, 
-        tokenLength: data.token?.length || 0 
+      console.log('🔐 AuthService: Login response:', {
+        success: data.success,
+        hasToken: !!data.token,
+        tokenLength: data.token?.length || 0,
       });
 
       if (data.success && data.token) {
@@ -75,16 +75,16 @@ class AuthService {
         if (data.user) {
           localStorage.setItem(this.userKey, JSON.stringify(data.user));
         }
-        
+
         // Set HTTP-only cookie for middleware
         document.cookie = `inventory_auth_token=${data.token}; path=/; max-age=${24 * 60 * 60}; SameSite=Lax`;
-        
+
         // Verify storage
         const storedToken = localStorage.getItem(this.tokenKey);
         console.log('🔐 AuthService: Token storage verification:', {
           stored: !!storedToken,
           length: storedToken?.length || 0,
-          matches: storedToken === data.token
+          matches: storedToken === data.token,
         });
       }
 
@@ -98,7 +98,9 @@ class AuthService {
   }
 
   // Sign up new user
-  async signup(userData: SignupRequest): Promise<{ success: boolean; message?: string; error?: string }> {
+  async signup(
+    userData: SignupRequest
+  ): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
         method: 'POST',
@@ -152,7 +154,7 @@ class AuthService {
   }
 
   // Get authorization header for API calls
-  getAuthHeader(): { Authorization: string } | {} {
+  getAuthHeader(): { Authorization: string } | Record<string, never> {
     const token = this.getToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
   }

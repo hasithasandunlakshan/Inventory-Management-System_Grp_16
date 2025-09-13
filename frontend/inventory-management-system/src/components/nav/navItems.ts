@@ -14,11 +14,9 @@ import {
   RotateCcw,
   Truck,
   CreditCard,
-  ChevronDown,
-  ChevronRight,
   UserCheck,
   Car,
-  Route
+  Route,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -37,7 +35,7 @@ export const navItems: NavItem[] = [
     children: [
       { href: '/products', label: 'All Products', icon: Package },
       { href: '/products/add', label: 'Add Product', icon: PlusSquare },
-    ]
+    ],
   },
   { href: '/categories', label: 'Categories', icon: Tag },
   {
@@ -47,7 +45,7 @@ export const navItems: NavItem[] = [
       { href: '/sales/orders', label: 'Orders', icon: ShoppingCart },
       { href: '/sales/customers', label: 'Customers', icon: Users },
       { href: '/sales/reviews', label: 'Reviews', icon: MessageSquare },
-    ]
+    ],
   },
   {
     label: 'Operations',
@@ -56,15 +54,19 @@ export const navItems: NavItem[] = [
       { href: '/operations/suppliers', label: 'Suppliers', icon: Factory },
       { href: '/operations/inventory', label: 'Inventory', icon: Boxes },
       { href: '/operations/returns', label: 'Returns', icon: RotateCcw },
-    ]
+    ],
   },
   {
     label: 'Analytics',
     icon: BarChart3,
     children: [
       { href: '/analytics/reports', label: 'Reports', icon: BarChart3 },
-      { href: '/analytics/promotions', label: 'Promotions', icon: BadgePercent },
-    ]
+      {
+        href: '/analytics/promotions',
+        label: 'Promotions',
+        icon: BadgePercent,
+      },
+    ],
   },
   {
     label: 'Logistics',
@@ -72,7 +74,7 @@ export const navItems: NavItem[] = [
     children: [
       { href: '/logistics/shipping', label: 'Shipping', icon: Truck },
       { href: '/logistics/payments', label: 'Payments', icon: CreditCard },
-    ]
+    ],
   },
   {
     label: 'Driver Management',
@@ -81,9 +83,7 @@ export const navItems: NavItem[] = [
       { href: '/drivers', label: 'Drivers', icon: UserCheck },
       { href: '/vehicles', label: 'Vehicles', icon: Car },
       { href: '/assignments', label: 'Assignments', icon: Route },
-    ]
+    ],
   },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
-
-

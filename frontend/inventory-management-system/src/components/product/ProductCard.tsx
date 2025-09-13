@@ -1,71 +1,71 @@
-import React from 'react'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
-import { productUtils } from '@/lib/utils/productUtils'
+import React from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { productUtils } from '@/lib/utils/productUtils';
 
 interface ProductCardProps {
-    id: number;
-    name: string;   
-    description: string;
-    price: number;
-    stock: number;
-    imageUrl: string;
-    barcode: string;
-    categoryName?: string;
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  imageUrl: string;
+  barcode: string;
+  categoryName?: string;
 }
 
-export default function ProductCard({ 
-    id, 
-    name, 
-    description, 
-    price, 
-    stock, 
-    imageUrl,
-    barcode,
-    categoryName
+export default function ProductCard({
+  id,
+  name,
+  description,
+  price,
+  stock,
+  imageUrl,
+  barcode,
+  categoryName,
 }: ProductCardProps) {
   const router = useRouter();
 
   const handleCardClick = () => {
-    productUtils.viewProductDetails(id, router);
+    productUtils.viewProductDetails(id.toString(), router);
   };
 
   return (
-    <div 
-      className="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between cursor-pointer hover:shadow-lg transition-shadow duration-200"
+    <div
+      className='bg-white shadow-md rounded-lg p-4 flex flex-col justify-between cursor-pointer hover:shadow-lg transition-shadow duration-200'
       onClick={handleCardClick}
     >
       <div>
         {imageUrl ? (
-          <div className="relative w-full h-48 mb-4">
-            <Image 
-              src={imageUrl} 
-              alt={name} 
+          <div className='relative w-full h-48 mb-4'>
+            <Image
+              src={imageUrl}
+              alt={name}
               fill
-              className="object-cover rounded-md"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className='object-cover rounded-md'
+              sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
             />
           </div>
         ) : (
-          <div className="w-full h-48 bg-gray-200 rounded-md mb-4 flex items-center justify-center">
-            <p className="text-gray-500">No image</p>
+          <div className='w-full h-48 bg-gray-200 rounded-md mb-4 flex items-center justify-center'>
+            <p className='text-gray-500'>No image</p>
           </div>
         )}
-        <h3 className="font-bold text-lg mb-2">{name}</h3>
+        <h3 className='font-bold text-lg mb-2'>{name}</h3>
         {categoryName && (
-          <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full inline-block mb-2">
+          <div className='text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full inline-block mb-2'>
             {categoryName}
           </div>
         )}
-        <p className="text-gray-600 mb-2 line-clamp-2">{description}</p>
-        <div className="text-sm text-gray-500 mb-2">
-          <span className="font-semibold">Barcode:</span> {barcode} 
+        <p className='text-gray-600 mb-2 line-clamp-2'>{description}</p>
+        <div className='text-sm text-gray-500 mb-2'>
+          <span className='font-semibold'>Barcode:</span> {barcode}
         </div>
-        <div className="flex justify-between text-sm text-gray-500">
+        <div className='flex justify-between text-sm text-gray-500'>
           <span>Price: ${price.toFixed(2)}</span>
           <span>Available: {stock}</span>
         </div>
       </div>
     </div>
-  )
+  );
 }

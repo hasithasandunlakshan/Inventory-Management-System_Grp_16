@@ -7,7 +7,9 @@ export const categoryService = {
     try {
       const response = await fetch(API_BASE_URL);
       if (!response.ok) {
-        throw new Error(`Failed to fetch categories: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch categories: ${response.status} ${response.statusText}`
+        );
       }
       return response.json();
     } catch (error) {
@@ -19,12 +21,14 @@ export const categoryService = {
   async getCategoryById(id: number): Promise<Category> {
     try {
       const response = await fetch(`${API_BASE_URL}/${id}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Category not found');
         }
-        throw new Error(`Failed to fetch category: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch category: ${response.status} ${response.statusText}`
+        );
       }
       return response.json();
     } catch (error) {
@@ -53,7 +57,10 @@ export const categoryService = {
     }
   },
 
-  async updateCategory(id: number, category: CreateCategoryRequest): Promise<Category> {
+  async updateCategory(
+    id: number,
+    category: CreateCategoryRequest
+  ): Promise<Category> {
     try {
       const response = await fetch(`${API_BASE_URL}/${id}`, {
         method: 'PUT',
@@ -86,7 +93,5 @@ export const categoryService = {
       console.error('Failed to delete category:', error);
       throw new Error('Failed to delete category - backend not available');
     }
-  }
+  },
 };
-
-

@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react';
 import { authService } from '../lib/services/authService';
 
 export interface AuthUser {
@@ -24,8 +31,13 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (userData: any) => Promise<{ success: boolean; error?: string; message?: string }>;
+  login: (
+    username: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  signup: (
+    userData: Record<string, unknown>
+  ) => Promise<{ success: boolean; error?: string; message?: string }>;
   logout: () => void;
   canAccessSupplierService: () => boolean;
   hasRole: (role: string) => boolean;
@@ -35,7 +47,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { readonly children: React.ReactNode }) {
+export function AuthProvider({
+  children,
+}: {
+  readonly children: React.ReactNode;
+}) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +62,7 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
       try {
         if (authService.isAuthenticated()) {
           const token = authService.getToken();
-          
+
           if (!token) {
             console.log('No token found, clearing auth state');
             authService.logout();
@@ -58,14 +74,17 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
 
           // Verify the token is still valid by making a test request
           try {
-            const response = await fetch('http://localhost:8090/api/secure/user/current', {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+            const response = await fetch(
+              'http://localhost:8090/api/secure/user/current',
+              {
+                method: 'GET',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
               }
-            });
-            
+            );
+
             if (response.ok) {
               // Token is valid, update user data if response contains user info
               const currentUserData = await response.json();
@@ -78,7 +97,10 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
               setIsAuthenticated(false);
             } else {
               // Other error, assume token might still be valid but backend issue
-              console.warn('Token validation request failed with status:', response.status);
+              console.warn(
+                'Token validation request failed with status:',
+                response.status
+              );
               // For safety, clear authentication on persistent failures
               authService.logout();
               setUser(null);
@@ -86,7 +108,10 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
             }
           } catch (error) {
             // Network error - could be temporary, but clear auth for safety
-            console.error('Token validation failed due to network error:', error);
+            console.error(
+              'Token validation failed due to network error:',
+              error
+            );
             authService.logout();
             setUser(null);
             setIsAuthenticated(false);
@@ -103,17 +128,17 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
         setUser(null);
         setIsAuthenticated(false);
       }
-      
+
       setIsLoading(false);
     };
 
     checkAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     try {
       const response = await authService.login({ username, password });
-      
+
       if (response.success && response.user && response.token) {
         setUser(response.user);
         setIsAuthenticated(true);
@@ -123,61 +148,72 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
       }
     } catch (error) {
       console.error('Login error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Login failed' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Login failed',
       };
     }
-  };
+  }, []);
 
-  const signup = async (userData: any) => {
+  const signup = useCallback(async (userData: Record<string, unknown>) => {
     try {
-      const response = await authService.signup(userData);
+      const response = await authService.signup(
+        userData as unknown as Parameters<typeof authService.signup>[0]
+      );
       return response;
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Signup failed' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Signup failed',
       };
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
     // Redirect to login page
     window.location.href = '/login';
-  };
+  }, []);
 
-  const canAccessSupplierService = () => {
+  const canAccessSupplierService = useCallback(() => {
     return authService.canAccessSupplierService();
-  };
+  }, []);
 
-  const hasRole = (role: string): boolean => {
-    return user?.role === role || user?.role.includes(role) || false;
-  };
+  const hasRole = useCallback(
+    (role: string): boolean => {
+      return user?.role === role || user?.role.includes(role) || false;
+    },
+    [user]
+  );
 
-  const hasAnyRole = (roles: string[]): boolean => {
-    return roles.some(role => hasRole(role));
-  };
+  const hasAnyRole = useCallback(
+    (roles: string[]): boolean => {
+      return roles.some(role => hasRole(role));
+    },
+    [hasRole]
+  );
 
-  const refreshAuth = async () => {
+  const refreshAuth = useCallback(async () => {
     setIsLoading(true);
     try {
       if (authService.isAuthenticated()) {
         const token = authService.getToken();
-        
+
         if (token) {
           // Verify token with backend
-          const response = await fetch('http://localhost:8090/api/secure/user/current', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+          const response = await fetch(
+            'http://localhost:8090/api/secure/user/current',
+            {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
             }
-          });
-          
+          );
+
           if (response.ok) {
             const currentUserData = await response.json();
             setUser(currentUserData);
@@ -204,20 +240,34 @@ export function AuthProvider({ children }: { readonly children: React.ReactNode 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const value = useMemo(() => ({
-    user,
-    isAuthenticated,
-    isLoading,
-    login,
-    signup,
-    logout,
-    canAccessSupplierService,
-    hasRole,
-    hasAnyRole,
-    refreshAuth,
-  }), [user, isAuthenticated, isLoading, login, signup, logout, canAccessSupplierService, hasRole, hasAnyRole, refreshAuth]);
+  const value = useMemo(
+    () => ({
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      signup,
+      logout,
+      canAccessSupplierService,
+      hasRole,
+      hasAnyRole,
+      refreshAuth,
+    }),
+    [
+      user,
+      isAuthenticated,
+      isLoading,
+      login,
+      signup,
+      logout,
+      canAccessSupplierService,
+      hasRole,
+      hasAnyRole,
+      refreshAuth,
+    ]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

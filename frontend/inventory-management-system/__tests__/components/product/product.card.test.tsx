@@ -19,7 +19,7 @@ jest.mock('@/lib/utils/productUtils', () => ({
 const { productUtils } = jest.requireMock('@/lib/utils/productUtils');
 
 const baseProps = {
-  id: 'p1',
+  id: 1,
   name: 'Sample Product',
   description: 'Great product',
   price: 123.45,
@@ -35,13 +35,16 @@ describe('ProductCard', () => {
     expect(screen.getByText('Great product')).toBeInTheDocument();
     expect(screen.getByText(/Barcode:/i)).toBeInTheDocument();
     expect(screen.getByText(/Price: \$123.45/)).toBeInTheDocument();
-    expect(screen.getByText(/Qty: 7/)).toBeInTheDocument();
+    expect(screen.getByText(/Available: 7/)).toBeInTheDocument();
     expect(screen.getByText(/No image/i)).toBeInTheDocument();
   });
 
   it('navigates to product details on click', () => {
     render(<ProductCard {...baseProps} />);
     fireEvent.click(screen.getByText('Sample Product'));
-    expect(productUtils.viewProductDetails).toHaveBeenCalledWith('p1', expect.any(Object));
+    expect(productUtils.viewProductDetails).toHaveBeenCalledWith(
+      '1',
+      expect.any(Object)
+    );
   });
 });
