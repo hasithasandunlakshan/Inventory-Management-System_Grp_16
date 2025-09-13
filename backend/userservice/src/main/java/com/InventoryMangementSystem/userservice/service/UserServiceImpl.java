@@ -56,8 +56,10 @@ public class UserServiceImpl implements UserService {
 
         // Profile image and location details
         user.setProfileImageUrl(request.getProfileImageUrl());
-        user.setLatitude(request.getLatitude() != null ? request.getLatitude() : 0.0);
-        user.setLongitude(request.getLongitude() != null ? request.getLongitude() : 0.0);
+        Double latitude = request.getLatitude();
+        Double longitude = request.getLongitude();
+        user.setLatitude(latitude != null ? latitude : 0.0);
+        user.setLongitude(longitude != null ? longitude : 0.0);
         user.setFormattedAddress(request.getFormattedAddress());
 
         // Save user first
@@ -214,28 +216,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
-    public List<UserInfo> getUsersByRole(String roleName) {
-        try {
-            System.out.println("Fetching users with role: " + roleName);
-
-            List<User> users = userRepository.findAll();
-            System.out.println("Found " + users.size() + " total users, filtering by role: " + roleName);
-
-            List<UserInfo> filteredUsers = users.stream()
-                    .map(this::convertUserToUserInfo) // Convert to UserInfo first
-                    .filter(userInfo -> roleName.equalsIgnoreCase(userInfo.getRole())) // Then filter by the determined primary role
-                    .collect(java.util.stream.Collectors.toList());
-
-            System.out.println("Found " + filteredUsers.size() + " users with primary role: " + roleName);
-            return filteredUsers;
-
-        } catch (Exception e) {
-            System.err.println("Error fetching users by role: " + e.getMessage());
-            throw new RuntimeException("Failed to fetch users by role: " + e.getMessage());
-        }
-    }
-
     private UserInfo convertUserToUserInfo(User user) {
         // Get user roles and determine the highest priority role
         String role = "USER"; // Default role
@@ -293,7 +273,6 @@ public class UserServiceImpl implements UserService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             System.err.println("ERROR getting users for dropdown: " + e.getMessage());
-            e.printStackTrace();
             throw new RuntimeException("Failed to get users for dropdown: " + e.getMessage());
         }
     }

@@ -22,6 +22,11 @@ import com.Orderservice.Orderservice.repository.OrderRepository;
 import com.Orderservice.Orderservice.repository.PaymentRepository;
 import com.Orderservice.Orderservice.repository.ProductRepository;
 
+// Stripe imports for refund processing
+import com.stripe.exception.StripeException;
+import com.stripe.model.Refund;
+import com.stripe.param.RefundCreateParams;
+
 @Service
 public class OrderService {
     public AllOrdersResponse getAllOrdersByStatus(String statusStr) {
@@ -494,11 +499,12 @@ public class OrderService {
             
             BigDecimal refundAmount = order.getTotalAmount();
             
-            // Update payment status to REFUNDED
-            boolean paymentRefunded = updatePaymentStatusToRefunded(orderId);
+            // Update payment status to REFUNDED (includes Stripe refund processing)
+            boolean paymentRefunded = updatePaymentStatusToRefunded(orderId, refundReason);
             if (!paymentRefunded) {
-                System.err.println("Failed to update payment status to REFUNDED");
-                // Continue with order status update even if payment update fails
+                String errorMessage = "Failed to process refund through Stripe. Refund request not completed.";
+                System.err.println(errorMessage);
+                return RefundResponse.failure(orderId, errorMessage);
             }
             
             // Restore inventory for order items
@@ -562,18 +568,34 @@ public class OrderService {
     /**
      * Update payment status to REFUNDED for all payments associated with the order
      */
-    private boolean updatePaymentStatusToRefunded(Long orderId) {
+    private boolean updatePaymentStatusToRefunded(Long orderId, String refundReason) {
         try {
-            // Find payments for this order and update their status
+            // Find payments for this order and process refunds
             List<Payment> payments = paymentRepository.findByOrderOrderId(orderId);
+            boolean allRefundsSuccessful = true;
             
             for (Payment payment : payments) {
-                payment.setStatus(PaymentStatus.REFUNDED);
-                paymentRepository.save(payment);
-                System.out.println("Payment " + payment.getPaymentId() + " status updated to REFUNDED");
+                // Only process refund if payment is not already refunded
+                if (payment.getStatus() != PaymentStatus.REFUNDED) {
+                    // First, process the refund through Stripe
+                    boolean stripeRefundSuccessful = processStripeRefund(payment, refundReason);
+                    
+                    if (stripeRefundSuccessful) {
+                        // Only update local status if Stripe refund was successful
+                        payment.setStatus(PaymentStatus.REFUNDED);
+                        paymentRepository.save(payment);
+                        System.out.println("Payment " + payment.getPaymentId() + " successfully refunded through Stripe and status updated to REFUNDED");
+                    } else {
+                        System.err.println("Failed to process Stripe refund for payment " + payment.getPaymentId());
+                        allRefundsSuccessful = false;
+                        // Continue processing other payments even if one fails
+                    }
+                } else {
+                    System.out.println("Payment " + payment.getPaymentId() + " is already refunded, skipping");
+                }
             }
             
-            return true;
+            return allRefundsSuccessful;
         } catch (Exception e) {
             System.err.println("Error updating payment status to REFUNDED: " + e.getMessage());
             e.printStackTrace();
@@ -581,6 +603,50 @@ public class OrderService {
         }
     }
     
+    /**
+     * Process Stripe refund for a payment
+     */
+    private boolean processStripeRefund(Payment payment, String refundReason) {
+        try {
+            // Check if payment has a Stripe payment intent ID
+            if (payment.getStripePaymentIntentId() == null || payment.getStripePaymentIntentId().isEmpty()) {
+                System.err.println("Payment " + payment.getPaymentId() + " has no Stripe payment intent ID");
+                return false;
+            }
+            
+            // Create refund parameters
+            RefundCreateParams params = RefundCreateParams.builder()
+                .setPaymentIntent(payment.getStripePaymentIntentId())
+                .setAmount((long) (payment.getAmount().doubleValue() * 100)) // Convert to cents
+                .setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)
+                .putMetadata("refund_reason", refundReason != null ? refundReason : "Order refund")
+                .putMetadata("order_id", payment.getOrder().getOrderId().toString())
+                .putMetadata("payment_id", payment.getPaymentId().toString())
+                .build();
+            
+            // Process the refund through Stripe
+            Refund refund = Refund.create(params);
+            
+            System.out.println("Stripe refund created successfully:");
+            System.out.println("  Refund ID: " + refund.getId());
+            System.out.println("  Payment Intent: " + payment.getStripePaymentIntentId());
+            System.out.println("  Amount: $" + refund.getAmount() / 100.0);
+            System.out.println("  Status: " + refund.getStatus());
+            
+            return true;
+            
+        } catch (StripeException e) {
+            System.err.println("Stripe refund failed for payment " + payment.getPaymentId() + ": " + e.getMessage());
+            System.err.println("Stripe error type: " + e.getStripeError().getType());
+            System.err.println("Stripe error code: " + e.getStripeError().getCode());
+            return false;
+        } catch (Exception e) {
+            System.err.println("Unexpected error during Stripe refund: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     /**
      * Restore inventory quantities for order items
      */
