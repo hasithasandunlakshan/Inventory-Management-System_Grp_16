@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import {
   Card,
   CardContent,
@@ -219,7 +220,9 @@ function ProfileContent() {
                   ) : (
                     <XCircle className='h-4 w-4 text-red-600' />
                   )}
-                  {icon({ className: 'h-4 w-4 text-gray-500' })}
+                  {React.createElement(icon, {
+                    className: 'h-4 w-4 text-gray-500',
+                  })}
                   <span
                     className={`text-sm ${hasPermission ? 'text-green-700' : 'text-red-700'}`}
                   >
