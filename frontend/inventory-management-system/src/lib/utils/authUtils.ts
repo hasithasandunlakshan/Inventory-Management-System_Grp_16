@@ -85,8 +85,16 @@ export function createAuthenticatedRequestOptions(
     method,
     headers: {
       'Content-Type': 'application/json',
+      // Add cache-busting headers to prevent stale data
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      // Add timestamp to prevent browser caching
+      'X-Requested-At': new Date().toISOString(),
       ...(token && { Authorization: `Bearer ${token}` }),
     },
+    // Disable browser caching for GET requests
+    cache: method === 'GET' ? 'no-store' : 'default',
   };
 
   if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
