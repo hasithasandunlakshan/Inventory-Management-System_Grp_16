@@ -1,11 +1,12 @@
 import { Category, CreateCategoryRequest } from '../types/product';
+import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-const API_BASE_URL = 'http://localhost:8083/api/categories';
+const API_BASE_URL = 'http://localhost:8090/api/categories';
 
 export const categoryService = {
   async getAllCategories(): Promise<Category[]> {
     try {
-      const response = await fetch(API_BASE_URL);
+      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions());
       if (!response.ok) {
         throw new Error(
           `Failed to fetch categories: ${response.status} ${response.statusText}`

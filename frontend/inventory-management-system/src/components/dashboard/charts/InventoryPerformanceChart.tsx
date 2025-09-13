@@ -24,7 +24,7 @@ export default function InventoryPerformanceChart() {
       setLoading(true);
       try {
         // Simulate data based on filters
-        const mockData = generateMockInventoryData(filters.warehouse);
+        const mockData = generateMockInventoryData();
         setInventoryData(mockData);
         setTotalValue(mockData.reduce((sum, item) => sum + item.totalValue, 0));
       } catch (error) {
@@ -37,7 +37,7 @@ export default function InventoryPerformanceChart() {
     fetchInventoryData();
   }, [filters]);
 
-  const generateMockInventoryData = (warehouse: string): InventoryData[] => {
+  const generateMockInventoryData = (): InventoryData[] => {
     const baseCategories = [
       { name: 'Electronics', base: 5000, stock: 85 },
       { name: 'Furniture', base: 8000, stock: 70 },
@@ -46,8 +46,7 @@ export default function InventoryPerformanceChart() {
       { name: 'Sports', base: 2800, stock: 80 },
     ];
 
-    const warehouseMultiplier =
-      warehouse === 'wh1' ? 0.6 : warehouse === 'wh2' ? 0.4 : 1;
+    const warehouseMultiplier = 1;
 
     return baseCategories.map(category => {
       const adjustedValue = category.base * warehouseMultiplier;
@@ -59,8 +58,11 @@ export default function InventoryPerformanceChart() {
         category: category.name,
         totalValue: adjustedValue,
         stockLevel: adjustedStock,
-        status:
-          adjustedStock > 80 ? 'high' : adjustedStock > 50 ? 'medium' : 'low',
+        status: (() => {
+          if (adjustedStock > 80) return 'high';
+          if (adjustedStock > 50) return 'medium';
+          return 'low';
+        })(),
         products: Math.floor(
           (adjustedValue / 100) * (0.5 + Math.random() * 0.5)
         ),
@@ -151,7 +153,7 @@ export default function InventoryPerformanceChart() {
               Category Performance
             </h4>
             {inventoryData.map((item, index) => (
-              <div key={index} className='space-y-2'>
+              <div key={`${item.category}-${index}`} className='space-y-2'>
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
                     {getStatusIcon(item.status)}
@@ -180,11 +182,11 @@ export default function InventoryPerformanceChart() {
                   <span>Stock Level: {item.stockLevel}%</span>
                   <span
                     className={`font-medium ${
-                      item.status === 'high'
-                        ? 'text-green-600'
-                        : item.status === 'medium'
-                          ? 'text-yellow-600'
-                          : 'text-red-600'
+                      (() => {
+                        if (item.status === 'high') return 'text-green-600';
+                        if (item.status === 'medium') return 'text-yellow-600';
+                        return 'text-red-600';
+                      })()
                     }`}
                   >
                     {item.status.toUpperCase()}
@@ -197,10 +199,7 @@ export default function InventoryPerformanceChart() {
           {/* Filter Info */}
           <div className='text-xs text-gray-500 flex justify-between pt-2 border-t'>
             <span>
-              Warehouse:{' '}
-              {filters.warehouse === 'all'
-                ? 'All Warehouses'
-                : filters.warehouse.toUpperCase()}
+              All Warehouses
             </span>
             <span>Updated: {new Date().toLocaleTimeString()}</span>
           </div>

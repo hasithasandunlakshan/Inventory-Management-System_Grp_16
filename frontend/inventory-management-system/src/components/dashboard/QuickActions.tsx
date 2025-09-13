@@ -8,8 +8,15 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 export default function QuickActions() {
+  const router = useRouter();
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
+
   return (
     <Card className='col-span-1'>
       <CardHeader>
@@ -18,10 +25,34 @@ export default function QuickActions() {
       </CardHeader>
       <CardContent>
         <div className='grid grid-cols-2 gap-2'>
-          <Button variant='outline'>Add Product</Button>
-          <Button variant='outline'>New Purchase Order</Button>
-          <Button variant='outline'>Start Promotion</Button>
-          <Button variant='outline'>Process Refund</Button>
+          <Button 
+            variant='outline' 
+            onClick={() => handleNavigation('/dashboard/products/add')}
+            className='h-12'
+          >
+            Add Product
+          </Button>
+          <Button 
+            variant='outline' 
+            onClick={() => handleNavigation('/dashboard/purchase-orders/new')}
+            className='h-12'
+          >
+            New Purchase Order
+          </Button>
+          <Button 
+            variant='outline' 
+            onClick={() => handleNavigation('/dashboard/promotions/new')}
+            className='h-12'
+          >
+            Start Promotion
+          </Button>
+          <Button 
+            variant='outline' 
+            onClick={() => handleNavigation('/dashboard/manager/refunds/process')}
+            className='h-12'
+          >
+            Process Refund
+          </Button>
         </div>
       </CardContent>
     </Card>

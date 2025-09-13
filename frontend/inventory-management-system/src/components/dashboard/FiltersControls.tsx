@@ -28,7 +28,7 @@ export default function FiltersControls() {
         <CardDescription>Refine the dashboard data</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className='grid gap-4 md:grid-cols-4'>
+        <div className='grid gap-4 md:grid-cols-3'>
           <div className='space-y-2'>
             <Label>Time Range</Label>
             <Select
@@ -62,22 +62,6 @@ export default function FiltersControls() {
               value={filters.toDate}
               onChange={e => updateFilter('toDate', e.target.value)}
             />
-          </div>
-          <div className='space-y-2'>
-            <Label>Warehouse</Label>
-            <Select
-              value={filters.warehouse}
-              onValueChange={value => updateFilter('warehouse', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='All' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='all'>All</SelectItem>
-                <SelectItem value='wh1'>Warehouse 1</SelectItem>
-                <SelectItem value='wh2'>Warehouse 2</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
       </CardContent>
