@@ -5,16 +5,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Calendar, User, DollarSign, Eye, X } from "lucide-react";
-import { Order, OrderItem } from "@/services/orderService";
+import { Input } from "@/components/ui/input";
+import { Package, Calendar, User, DollarSign, Eye, X, RefreshCw } from "lucide-react";
+import { Order, OrderItem, orderService } from "@/services/orderService";
+import { toast } from "sonner";
 
 interface OrderDetailsModalProps {
   order: Order | null;
   isOpen: boolean;
   onClose: () => void;
+  onRefundSuccess?: () => void;
 }
 
-export default function OrderDetailsModal({ order, isOpen, onClose }: OrderDetailsModalProps) {
+export default function OrderDetailsModal({ order, isOpen, onClose, onRefundSuccess }: OrderDetailsModalProps) {
+  const [isProcessingRefund, setIsProcessingRefund] = useState(false);
+  const [refundReason, setRefundReason] = useState('');
+  const [showRefundForm, setShowRefundForm] = useState(false);
+
   if (!order) return null;
 
   const formatDate = (dateString: string) => {
@@ -35,10 +42,53 @@ export default function OrderDetailsModal({ order, isOpen, onClose }: OrderDetai
         return 'bg-yellow-100 text-yellow-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
+      case 'refunded':
+        return 'bg-purple-100 text-purple-800';
       case 'processing':
         return 'bg-blue-100 text-blue-800';
+      case 'shipped':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'delivered':
+        return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const isEligibleForRefund = (status: string) => {
+    const eligibleStatuses = ['confirmed', 'processed', 'shipped', 'delivered'];
+    return eligibleStatuses.includes(status.toLowerCase());
+  };
+
+  const handleRefundSubmit = async () => {
+    if (!refundReason.trim()) {
+      toast.error('Please provide a reason for the refund');
+      return;
+    }
+
+    setIsProcessingRefund(true);
+    try {
+      const response = await orderService.processRefund({
+        orderId: order.orderId,
+        refundReason: refundReason.trim()
+      });
+
+      if (response.success) {
+        toast.success(`Refund processed successfully! Amount: $${response.refundAmount?.toFixed(2) || order.totalAmount.toFixed(2)}`);
+        setShowRefundForm(false);
+        setRefundReason('');
+        if (onRefundSuccess) {
+          onRefundSuccess();
+        }
+        onClose();
+      } else {
+        toast.error(response.message || 'Failed to process refund');
+      }
+    } catch (error) {
+      console.error('Error processing refund:', error);
+      toast.error('Failed to process refund. Please try again.');
+    } finally {
+      setIsProcessingRefund(false);
     }
   };
 
@@ -115,10 +165,73 @@ export default function OrderDetailsModal({ order, isOpen, onClose }: OrderDetai
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Order Status</h3>
-                <Badge className={getStatusColor(order.status)}>
-                  {order.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className={getStatusColor(order.status)}>
+                    {order.status}
+                  </Badge>
+                  {isEligibleForRefund(order.status) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowRefundForm(!showRefundForm)}
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-1" />
+                      Refund
+                    </Button>
+                  )}
+                </div>
               </div>
+              
+              {showRefundForm && (
+                <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                  <h4 className="font-semibold text-red-800 mb-2">Process Refund</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-red-700 mb-1">
+                        Refund Reason
+                      </label>
+                      <Input
+                        value={refundReason}
+                        onChange={(e) => setRefundReason(e.target.value)}
+                        placeholder="Enter reason for refund..."
+                        className="border-red-200 focus:border-red-400"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={handleRefundSubmit}
+                        disabled={isProcessingRefund || !refundReason.trim()}
+                        variant="destructive"
+                        size="sm"
+                      >
+                        {isProcessingRefund ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          'Confirm Refund'
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setShowRefundForm(false);
+                          setRefundReason('');
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                    <p className="text-sm text-red-600">
+                      Refund amount: <strong>${order.totalAmount.toFixed(2)}</strong>
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
                   <p className="text-gray-500">Created At</p>
