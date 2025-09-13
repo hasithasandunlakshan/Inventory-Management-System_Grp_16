@@ -1,399 +1,398 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-type PaymentStatus = "Pending" | "Completed" | "Failed" | "Cancelled" | "Refunded";
-
-type Payment = {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  amount: number;
-  currency: string;
-  status: PaymentStatus;
-  paymentMethod: string;
-  date: string;
-  description: string;
-  transactionId?: string;
-};
-
-// Dummy payment data
-const dummyPayments: Payment[] = [
-  {
-    id: "PAY001",
-    orderNumber: "ORD-2025-001",
-    customerName: "Nimal Perera",
-    amount: 25000,
-    currency: "LKR",
-    status: "Completed",
-    paymentMethod: "Credit Card",
-    date: "2025-01-15",
-    description: "Product delivery payment",
-    transactionId: "TXN123456789"
-  },
-  {
-    id: "PAY002",
-    orderNumber: "ORD-2025-002",
-    customerName: "Kamala Silva",
-    amount: 15500,
-    currency: "LKR",
-    status: "Pending",
-    paymentMethod: "Bank Transfer",
-    date: "2025-01-18",
-    description: "Bulk order payment"
-  },
-  {
-    id: "PAY003",
-    orderNumber: "ORD-2025-003",
-    customerName: "Sunil Fernando",
-    amount: 8750,
-    currency: "LKR",
-    status: "Failed",
-    paymentMethod: "Credit Card",
-    date: "2025-01-20",
-    description: "Express delivery payment"
-  },
-  {
-    id: "PAY004",
-    orderNumber: "ORD-2025-004",
-    customerName: "Priya Jayawardena",
-    amount: 42000,
-    currency: "LKR",
-    status: "Completed",
-    paymentMethod: "Cash",
-    date: "2025-01-22",
-    description: "Wholesale purchase",
-    transactionId: "TXN987654321"
-  },
-  {
-    id: "PAY005",
-    orderNumber: "ORD-2025-005",
-    customerName: "Rajesh Kumar",
-    amount: 18200,
-    currency: "LKR",
-    status: "Refunded",
-    paymentMethod: "Digital Wallet",
-    date: "2025-01-25",
-    description: "Product return refund",
-    transactionId: "TXN456789123"
-  },
-  {
-    id: "PAY006",
-    orderNumber: "ORD-2025-006",
-    customerName: "Manjula Rathnayake",
-    amount: 33500,
-    currency: "LKR",
-    status: "Cancelled",
-    paymentMethod: "Bank Transfer",
-    date: "2025-01-28",
-    description: "Cancelled order payment"
-  },
-  {
-    id: "PAY007",
-    orderNumber: "ORD-2025-007",
-    customerName: "Ashen Wijesinghe",
-    amount: 12750,
-    currency: "LKR",
-    status: "Completed",
-    paymentMethod: "Credit Card",
-    date: "2025-02-01",
-    description: "Regular delivery payment",
-    transactionId: "TXN789123456"
-  },
-  {
-    id: "PAY008",
-    orderNumber: "ORD-2025-008",
-    customerName: "Dilani Seneviratne",
-    amount: 28900,
-    currency: "LKR",
-    status: "Pending",
-    paymentMethod: "Digital Wallet",
-    date: "2025-02-05",
-    description: "Premium product payment"
-  }
-];
+import { 
+  CreditCard, 
+  DollarSign, 
+  TrendingUp, 
+  Activity, 
+  RefreshCw, 
+  Download,
+  Search,
+  Filter,
+  Eye,
+  CheckCircle,
+  Clock,
+  XCircle,
+  AlertCircle,
+  Calendar,
+  User
+} from "lucide-react";
+import { paymentService, PaymentData } from "@/services/paymentService";
 
 export default function PaymentsPage() {
-  const [selectedStatus, setSelectedStatus] = useState<PaymentStatus | "All">("All");
-  const [selectedMonth, setSelectedMonth] = useState<string>("All");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [payments, setPayments] = useState<PaymentData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [methodFilter, setMethodFilter] = useState("all");
 
-  // Get status color and icon
-  const getStatusStyle = (status: PaymentStatus) => {
-    switch (status) {
-      case "Completed":
-        return {
-          bg: "bg-green-100",
-          text: "text-green-800",
-          border: "border-green-200"
-        };
-      case "Pending":
-        return {
-          bg: "bg-yellow-100",
-          text: "text-yellow-800",
-          border: "border-yellow-200"
-        };
-      case "Failed":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-800",
-          border: "border-red-200"
-        };
-      case "Cancelled":
-        return {
-          bg: "bg-gray-100",
-          text: "text-gray-800",
-          border: "border-gray-200"
-        };
-      case "Refunded":
-        return {
-          bg: "bg-blue-100",
-          text: "text-blue-800",
-          border: "border-blue-200"
-        };
-      default:
-        return {
-          bg: "bg-gray-100",
-          text: "text-gray-800",
-          border: "border-gray-200"
-        };
+  useEffect(() => {
+    fetchPayments();
+  }, []);
+
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await paymentService.getAllPayments();
+      
+      if (response.success) {
+        setPayments(response.payments);
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      console.error('Error fetching payments:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch payments');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // No emoji icons for payment methods
-
-  // Filter payments
   const filteredPayments = useMemo(() => {
-    return dummyPayments.filter(payment => {
-      const matchesStatus = selectedStatus === "All" || payment.status === selectedStatus;
+    return payments.filter(payment => {
+      const matchesSearch = searchQuery === "" || 
+        payment.paymentId.toString().includes(searchQuery) ||
+        payment.orderId?.toString().includes(searchQuery) ||
+        payment.customerId?.toString().includes(searchQuery) ||
+        payment.stripePaymentIntentId?.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const paymentDate = new Date(payment.date);
-      const paymentMonth = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
-      const matchesMonth = selectedMonth === "All" || paymentMonth === selectedMonth;
+      const matchesStatus = statusFilter === "all" || payment.status.toLowerCase() === statusFilter.toLowerCase();
+      const matchesMethod = methodFilter === "all" || payment.method.toLowerCase() === methodFilter.toLowerCase();
       
-      const matchesSearch = searchTerm === "" || 
-        payment.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.id.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      return matchesStatus && matchesMonth && matchesSearch;
+      return matchesSearch && matchesStatus && matchesMethod;
     });
-  }, [selectedStatus, selectedMonth, searchTerm]);
+  }, [payments, searchQuery, statusFilter, methodFilter]);
 
-  // Calculate statistics
   const stats = useMemo(() => {
-    const total = filteredPayments.reduce((sum, payment) => sum + payment.amount, 0);
-    const completed = filteredPayments.filter(p => p.status === "Completed").length;
-    const pending = filteredPayments.filter(p => p.status === "Pending").length;
-    const failed = filteredPayments.filter(p => p.status === "Failed").length;
-    
-    return { total, completed, pending, failed, count: filteredPayments.length };
-  }, [filteredPayments]);
-
-  // Get unique months from payments
-  const availableMonths = useMemo(() => {
-    const months = dummyPayments.map(payment => {
-      const date = new Date(payment.date);
+    if (payments.length === 0) {
       return {
-        value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
-        label: date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+        totalPayments: 0,
+        totalAmount: 0,
+        averagePayment: 0,
+        statusGroups: {},
+        methodGroups: {},
+        recentPayments: 0,
+        recentAmount: 0
       };
+    }
+    return paymentService.calculatePaymentStats(payments);
+  }, [payments]);
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'pending':
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+      case 'failed':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      case 'refunded':
+        return <RefreshCw className="h-4 w-4 text-purple-600" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      case 'refunded':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
-    
-    const uniqueMonths = months.filter((month, index, self) => 
-      index === self.findIndex(m => m.value === month.value)
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center space-x-2">
+          <RefreshCw className="h-6 w-6 animate-spin" />
+          <span>Loading payments...</span>
+        </div>
+      </div>
     );
-    
-    return uniqueMonths.sort((a, b) => b.value.localeCompare(a.value));
-  }, []);
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-            <div>
+        <div>
           <h1 className="text-3xl font-bold tracking-tight">Payment Management</h1>
-          <p className="text-muted-foreground">Track and manage all payment transactions</p>
+          <p className="text-muted-foreground">
+            Track and manage all payment transactions
+          </p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button onClick={fetchPayments} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.completed}</div>
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 text-red-800">
+              <XCircle className="h-5 w-5" />
+              <span>{error}</span>
+            </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
+            <div className="text-2xl font-bold">{stats.totalPayments}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.recentPayments} in last 30 days
+            </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Failed</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.failed}</div>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalAmount)}</div>
+            <p className="text-xs text-muted-foreground">
+              {formatCurrency(stats.recentAmount)} recent
+            </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Payment</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats.averagePayment)}</div>
+            <p className="text-xs text-muted-foreground">
+              Per transaction
+            </p>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.count > 0 ? Math.round((stats.completed / stats.count) * 100) : 0}%</div>
+            <div className="text-2xl font-bold">
+              {stats.totalPayments > 0 
+                ? Math.round((stats.statusGroups['PAID'] || 0) / stats.totalPayments * 100)
+                : 0}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Payment success rate
+            </p>
           </CardContent>
         </Card>
-          </div>
-          
+      </div>
+
+      {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Search & Filters</CardTitle>
-          <CardDescription>Find specific payments</CardDescription>
+          <CardTitle>Filters</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="search" className="text-sm font-medium">Search Payments</Label>
-              <Input
-                id="search"
-                placeholder="Search by customer, order, or payment ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <Label htmlFor="search">Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search payments..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
+            
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Payment Status</Label>
-              <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as PaymentStatus | "All")}>
+              <Label htmlFor="status">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Statuses" />
+                  <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Failed">Failed</SelectItem>
-                  <SelectItem value="Cancelled">Cancelled</SelectItem>
-                  <SelectItem value="Refunded">Refunded</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                  <SelectItem value="refunded">Refunded</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Filter by Month</Label>
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <Label htmlFor="method">Payment Method</Label>
+              <Select value={methodFilter} onValueChange={setMethodFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Months" />
+                  <SelectValue placeholder="All methods" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All">All Months</SelectItem>
-                  {availableMonths.map((month) => (
-                    <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
-                  ))}
+                  <SelectItem value="all">All Methods</SelectItem>
+                  <SelectItem value="card">Card</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="digital_wallet">Digital Wallet</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end">
-              <Button
-                variant="outline"
+
+            <div className="space-y-2">
+              <Label>&nbsp;</Label>
+              <Button 
+                variant="outline" 
                 className="w-full"
                 onClick={() => {
-                  setSelectedStatus("All");
-                  setSelectedMonth("All");
-                  setSearchTerm("");
+                  setSearchQuery("");
+                  setStatusFilter("all");
+                  setMethodFilter("all");
                 }}
               >
-                Reset Filters
+                <Filter className="h-4 w-4 mr-2" />
+                Clear Filters
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Payments Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Payment Transactions</CardTitle>
-          <CardDescription>Showing {filteredPayments.length} of {dummyPayments.length} payments</CardDescription>
+          <CardTitle>Payment Transactions ({filteredPayments.length})</CardTitle>
+          <CardDescription>
+            Complete list of payment transactions
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Details</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Method</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPayments.map((payment) => {
-                  const statusStyle = getStatusStyle(payment.status);
-                  return (
-                    <tr key={payment.id} className="hover:bg-muted/30">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-semibold">{payment.id}</div>
-                          <div className="text-sm text-muted-foreground">{payment.orderNumber}</div>
-                          <div className="text-xs text-muted-foreground">{payment.description}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium">{payment.customerName}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-lg font-bold">
-                          {payment.currency} {payment.amount.toLocaleString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className="text-sm font-medium">{payment.paymentMethod}</span>
-                        </div>
-                        {payment.transactionId && (
-                          <div className="text-xs text-muted-foreground">ID: {payment.transactionId}</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
-                          {payment.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {new Date(payment.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="flex space-x-2">
-                          <Button variant="ghost" size="sm">View</Button>
-                          {payment.status === "Pending" && (
-                            <Button variant="ghost" size="sm">Process</Button>
-                          )}
-                          {payment.status === "Completed" && (
-                            <Button variant="ghost" size="sm">Refund</Button>
-                          )}
-                        </div>
-                      </td>
+          <div className="space-y-4">
+            {filteredPayments.length === 0 ? (
+              <div className="text-center py-8">
+                <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No payments found</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 font-medium">Payment ID</th>
+                      <th className="text-left py-3 px-4 font-medium">Order ID</th>
+                      <th className="text-left py-3 px-4 font-medium">Customer</th>
+                      <th className="text-left py-3 px-4 font-medium">Amount</th>
+                      <th className="text-left py-3 px-4 font-medium">Method</th>
+                      <th className="text-left py-3 px-4 font-medium">Status</th>
+                      <th className="text-left py-3 px-4 font-medium">Date</th>
+                      <th className="text-left py-3 px-4 font-medium">Actions</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            {filteredPayments.length === 0 && (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-semibold mb-2">No payments found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filter criteria.</p>
+                  </thead>
+                  <tbody>
+                    {filteredPayments.map((payment) => (
+                      <tr key={payment.paymentId} className="border-b hover:bg-muted/50">
+                        <td className="py-3 px-4">
+                          <span className="font-mono text-sm">#{payment.paymentId}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-mono text-sm">
+                            {payment.orderId ? `#${payment.orderId}` : 'N/A'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center space-x-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span>{payment.customerId || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-semibold">
+                            {formatCurrency(payment.amount)}
+                          </span>
+                          <div className="text-xs text-muted-foreground">
+                            {payment.currency}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="capitalize">{payment.method}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center space-x-2">
+                            {getStatusIcon(payment.status)}
+                            <Badge className={getStatusColor(payment.status)}>
+                              {payment.status}
+                            </Badge>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              {formatDate(payment.createdAt)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -402,6 +401,4 @@ export default function PaymentsPage() {
     </div>
   );
 }
-
-
-
+    transactionId: "TXN987654321"
