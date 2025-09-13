@@ -1,5 +1,9 @@
 package com.InventoryMangementSystem.userservice.controller;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -88,6 +92,40 @@ public class AuthController {
     }
 
     @GetMapping("/users")
+
+    public ResponseEntity<Map<String, Object>> getAllUsersWithUserRole() {
+        System.out.println("\n=== GET ALL USERS WITH USER ROLE REQUEST RECEIVED ===");
+        System.out.println("Timestamp: " + java.time.LocalDateTime.now());
+        
+        try {
+            System.out.println("Calling UserService.getUsersByRole with role: USER");
+            List<UserInfo> users = userService.getUsersByRole("USER");
+            
+            // Create response map
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Users with role 'USER' retrieved successfully");
+            response.put("users", users);
+            response.put("totalUsers", users.size());
+            
+            System.out.println("Successfully retrieved " + users.size() + " users with USER role");
+            System.out.println("=== GET ALL USERS WITH USER ROLE REQUEST COMPLETED ===\n");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.err.println("ERROR during get users request: " + e.getMessage());
+            e.printStackTrace();
+            System.out.println("=== GET ALL USERS WITH USER ROLE REQUEST FAILED ===\n");
+            
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Failed to retrieve users: " + e.getMessage());
+            errorResponse.put("users", List.of());
+            errorResponse.put("totalUsers", 0);
+            
+            return ResponseEntity.status(500).body(errorResponse);
+
     public ResponseEntity<List<UserInfo>> getUsersByRole(@RequestParam(defaultValue = "USER") String role) {
         try {
             List<UserInfo> users = userService.getUsersByRole(role);
@@ -109,6 +147,7 @@ public class AuthController {
             System.err.println("ERROR getting users for dropdown: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(500).build();
+
         }
     }
 
