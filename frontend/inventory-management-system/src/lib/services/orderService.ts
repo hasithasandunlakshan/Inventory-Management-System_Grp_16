@@ -55,15 +55,19 @@ export const orderService = {
    */
   async getAllOrders(): Promise<AllOrdersResponse> {
     try {
-      console.log('🚀 Fetching orders from:', `${API_BASE_URL}/all`);
+      // Add timestamp to URL to prevent caching
+      const timestamp = Date.now();
+      const url = `${API_BASE_URL}/all?_t=${timestamp}`;
+      console.log('🚀 Fetching fresh orders from:', url);
       
       const requestOptions = createAuthenticatedRequestOptions();
       
       console.log('📡 Request options:', requestOptions);
         
-      const response = await fetch(`${API_BASE_URL}/all`, requestOptions);
+      const response = await fetch(url, requestOptions);
       
       console.log('📥 Response status:', response.status, response.statusText);
+      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -72,7 +76,10 @@ export const orderService = {
       }
       
       const data = await response.json();
-      console.log('✅ Orders fetched successfully:', data);
+      console.log('✅ Orders fetched successfully at', new Date().toISOString(), ':', data);
+      
+      // Add fetch timestamp to response for debugging
+      data.fetchedAt = new Date().toISOString();
       return data;
     } catch (error) {
       console.error('💥 Failed to fetch orders:', error);

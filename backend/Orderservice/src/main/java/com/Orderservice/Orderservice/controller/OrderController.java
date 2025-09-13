@@ -1,5 +1,7 @@
 package com.Orderservice.Orderservice.controller;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
 import com.Orderservice.Orderservice.dto.OrderDetailResponse;
+import com.Orderservice.Orderservice.entity.Order;
+import com.Orderservice.Orderservice.repository.OrderRepository;
 import com.Orderservice.Orderservice.service.OrderService;
 
 @RestController
@@ -21,6 +25,9 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+    
+    @Autowired
+    private OrderRepository orderRepository;
 
     /**
      * Get all orders for a specific user/customer
@@ -69,12 +76,26 @@ public class OrderController {
     @GetMapping("/all")
     public ResponseEntity<AllOrdersResponse> getAllOrders() {
         try {
+            System.out.println("=== FETCHING ALL ORDERS ===");
+            System.out.println("Timestamp: " + LocalDateTime.now());
+
             AllOrdersResponse response = orderService.getAllOrders();
 
             if (response.isSuccess()) {
-                return ResponseEntity.ok(response);
+                System.out.println("Orders fetched successfully: " + response.getTotalOrders() + " orders");
+
+                // Add cache-control headers to prevent caching
+                return ResponseEntity.ok()
+                        .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                        .header("Pragma", "no-cache")
+                        .header("Expires", "0")
+                        .header("X-Timestamp", String.valueOf(System.currentTimeMillis()))
+                        .body(response);
             } else {
-                return ResponseEntity.badRequest().body(response);
+                System.out.println("Failed to fetch orders: " + response.getMessage());
+                return ResponseEntity.badRequest()
+                        .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                        .body(response);
             }
 
         } catch (Exception e) {
@@ -88,7 +109,66 @@ public class OrderController {
                     .totalOrders(0)
                     .build();
 
-            return ResponseEntity.internalServerError().body(errorResponse);
+            return ResponseEntity.internalServerError()
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .body(errorResponse);
+        }
+    }
+
+    /**
+     * Debug endpoint to show raw database data
+     */
+    @GetMapping("/debug/raw")
+    public ResponseEntity<Map<String, Object>> getDebugOrders() {
+        try {
+            System.out.println("=== DEBUG: RAW DATABASE QUERY ===");
+            System.out.println("Timestamp: " + LocalDateTime.now());
+            
+            // Get raw orders from database
+            List<Order> allOrders = orderRepository.findAll();
+            List<Order> confirmedOrders = orderRepository.findAllConfirmedOrdersWithItems();
+            
+            System.out.println("Total orders in database: " + allOrders.size());
+            System.out.println("Confirmed orders: " + confirmedOrders.size());
+            
+            // Log order details
+            Map<String, Long> statusCounts = allOrders.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                    o -> o.getStatus().toString(), 
+                    java.util.stream.Collectors.counting()
+                ));
+            
+            System.out.println("Orders by status: " + statusCounts);
+            
+            Map<String, Object> debugInfo = new java.util.HashMap<>();
+            debugInfo.put("timestamp", LocalDateTime.now().toString());
+            debugInfo.put("totalOrdersInDb", allOrders.size());
+            debugInfo.put("confirmedOrders", confirmedOrders.size());
+            debugInfo.put("statusBreakdown", statusCounts);
+            debugInfo.put("latestOrderIds", allOrders.stream()
+                .sorted((a, b) -> b.getOrderId().compareTo(a.getOrderId()))
+                .limit(5)
+                .map(Order::getOrderId)
+                .toList());
+            debugInfo.put("confirmedOrderIds", confirmedOrders.stream()
+                .map(Order::getOrderId)
+                .toList());
+            
+            return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .body(debugInfo);
+                
+        } catch (Exception e) {
+            System.err.println("Error in debug endpoint: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, Object> errorInfo = new java.util.HashMap<>();
+            errorInfo.put("error", e.getMessage());
+            errorInfo.put("timestamp", LocalDateTime.now().toString());
+            
+            return ResponseEntity.internalServerError()
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .body(errorInfo);
         }
     }
 
