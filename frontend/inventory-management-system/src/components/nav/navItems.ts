@@ -15,7 +15,10 @@ import {
   Truck,
   CreditCard,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  UserCheck,
+  Car,
+  Route
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -69,6 +72,15 @@ export const navItems: NavItem[] = [
     children: [
       { href: '/logistics/shipping', label: 'Shipping', icon: Truck },
       { href: '/logistics/payments', label: 'Payments', icon: CreditCard },
+    ]
+  },
+  {
+    label: 'Driver Management',
+    icon: UserCheck,
+    children: [
+      { href: '/drivers', label: 'Drivers', icon: UserCheck },
+      { href: '/vehicles', label: 'Vehicles', icon: Car },
+      { href: '/assignments', label: 'Assignments', icon: Route },
     ]
   },
   { href: '/settings', label: 'Settings', icon: Settings },

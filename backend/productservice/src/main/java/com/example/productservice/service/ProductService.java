@@ -28,10 +28,10 @@ public class ProductService {
     private final CategoryService categoryService;
 
     @Autowired
-    public ProductService(ProductRepository repository, 
-                         ProductCategoryRepository productCategoryRepository,
-                         BarcodeService barcodeService,
-                         CategoryService categoryService) {
+    public ProductService(ProductRepository repository,
+            ProductCategoryRepository productCategoryRepository,
+            BarcodeService barcodeService,
+            CategoryService categoryService) {
         this.repository = repository;
         this.productCategoryRepository = productCategoryRepository;
         this.barcodeService = barcodeService;
@@ -61,30 +61,30 @@ public class ProductService {
         Product savedProduct = repository.save(product);
         String barcode = generateProductId(savedProduct.getName());
         savedProduct.setBarcode(barcode);
-        
+
         try {
             String barcodeUrl = barcodeService.generateAndUploadBarcode(barcode);
             savedProduct.setBarcodeImageUrl(barcodeUrl);
         } catch (Exception e) {
             throw new BarcodeGenerationException("Failed to generate/upload barcode: " + e.getMessage(), e);
         }
-        
+
         // Save product with barcode
         savedProduct = repository.save(savedProduct);
-        
+
         // Create category relationship if categoryId is provided
         if (dto.getCategoryId() != null) {
             Category category = categoryService.getCategoryById(dto.getCategoryId())
                     .orElseThrow(() -> new RuntimeException("Category not found with id: " + dto.getCategoryId()));
-            
+
             ProductCategory productCategory = ProductCategory.builder()
                     .productId(savedProduct.getId())
                     .categoryId(category.getId())
                     .build();
-            
+
             productCategoryRepository.save(productCategory);
         }
-        
+
         return savedProduct;
     }
 
@@ -131,21 +131,21 @@ public class ProductService {
         }
 
         Product savedProduct = repository.save(existingProduct);
-        
+
         // Update category relationship if categoryId is provided
         if (dto.getCategoryId() != null) {
             // Remove existing category relationships
             productCategoryRepository.deleteByProductId(id);
-            
+
             // Add new category relationship
             Category category = categoryService.getCategoryById(dto.getCategoryId())
                     .orElseThrow(() -> new RuntimeException("Category not found with id: " + dto.getCategoryId()));
-            
+
             ProductCategory productCategory = ProductCategory.builder()
                     .productId(id)
                     .categoryId(category.getId())
                     .build();
-            
+
             productCategoryRepository.save(productCategory);
         }
 
@@ -227,18 +227,18 @@ public class ProductService {
         if (!repository.existsById(id)) {
             throw new ProductNotFoundException(id);
         }
-        
+
         // Delete category relationships first
         productCategoryRepository.deleteByProductId(id);
-        
+
         // Then delete the product
         repository.deleteById(id);
     }
-    
+
     /**
      * Convert Product entity to ProductWithCategoryDTO
      */
-    private ProductWithCategoryDTO convertToProductWithCategoryDTO(Product product) {
+    ProductWithCategoryDTO convertToProductWithCategoryDTO(Product product) {
         ProductWithCategoryDTO.ProductWithCategoryDTOBuilder builder = ProductWithCategoryDTO.builder()
                 .productId(product.getId())
                 .name(product.getName())
@@ -250,25 +250,26 @@ public class ProductService {
                 .price(product.getPrice())
                 .barcode(product.getBarcode())
                 .barcodeImageUrl(product.getBarcodeImageUrl());
-        
+
         // Get the first category (assuming one category per product for now)
         List<ProductCategory> productCategories = productCategoryRepository.findByProductId(product.getId());
-        if (!productCategories.isEmpty()) {
+        if (productCategories != null && !productCategories.isEmpty()) {
             ProductCategory productCategory = productCategories.get(0);
             Category category = categoryService.getCategoryById(productCategory.getCategoryId()).orElse(null);
             if (category != null) {
                 builder.categoryId(category.getId())
-                       .categoryName(category.getCategoryName());
+                        .categoryName(category.getCategoryName());
             }
         }
-        
+
         return builder.build();
     }
 
     /**
      * Reduce inventory by updating both physical_stock and reserved columns
+     * 
      * @param productId The ID of the product
-     * @param quantity The quantity to reduce
+     * @param quantity  The quantity to reduce
      * @return Updated product
      * @throws ProductNotFoundException if product not found
      * @throws IllegalArgumentException if quantity is invalid
@@ -277,87 +278,87 @@ public class ProductService {
     public Product reduceInventory(Long productId, int quantity) {
         System.out.println("=== REDUCING INVENTORY SERVICE ===");
         System.out.println("Product ID: " + productId + ", Quantity: " + quantity);
-        
+
         // Validate inputs
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than 0");
         }
-        
+
         // Find the product
         Product product = repository.findById(productId)
-            .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
-        
-        System.out.println("Current stock - Physical: " + product.getStock() + 
-                          ", Reserved: " + product.getReserved() + 
-                          ", Available: " + product.getAvailableStock());
-        
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
+
+        System.out.println("Current stock - Physical: " + product.getStock() +
+                ", Reserved: " + product.getReserved() +
+                ", Available: " + product.getAvailableStock());
+
         // Check if we have enough physical stock
         if (product.getStock() < quantity) {
             throw new IllegalArgumentException(
-                "Insufficient physical stock. Available: " + product.getStock() + 
-                ", Requested: " + quantity
-            );
+                    "Insufficient physical stock. Available: " + product.getStock() +
+                            ", Requested: " + quantity);
         }
-        
+
         // Check if we have enough reserved stock
         if (product.getReserved() < quantity) {
             throw new IllegalArgumentException(
-                "Insufficient reserved stock. Available: " + product.getReserved() + 
-                ", Requested: " + quantity
-            );
+                    "Insufficient reserved stock. Available: " + product.getReserved() +
+                            ", Requested: " + quantity);
         }
 
         // Reduce physical stock (items leaving warehouse)
         product.setStock(product.getStock() - quantity);
-        
+
         // Reduce reserved stock by the same quantity
         product.setReserved(product.getReserved() - quantity);
 
         // Update available stock (physical_stock - reserved)
         product.setAvailableStock(product.getStock() - product.getReserved());
-        
-        System.out.println("After reduction - Physical: " + product.getStock() + 
-                          ", Reserved: " + product.getReserved() + 
-                          ", Available: " + product.getAvailableStock());
-        
+
+        System.out.println("After reduction - Physical: " + product.getStock() +
+                ", Reserved: " + product.getReserved() +
+                ", Available: " + product.getAvailableStock());
+
         // Save the updated product
         Product updatedProduct = repository.save(product);
-        
+
         System.out.println("✅ Inventory reduced successfully for product: " + product.getName());
         System.out.println("===============================");
-        
+
         return updatedProduct;
     }
 
     /**
      * Calculate total available inventory cost
      * Sum of (price * available_stock) for all products
+     * 
      * @return Total cost of available inventory
      */
     public double calculateTotalAvailableInventoryCost() {
         System.out.println("=== CALCULATING TOTAL AVAILABLE INVENTORY COST ===");
-        
+
         List<Product> allProducts = repository.findAll();
         double totalCost = 0.0;
-        
+
         for (Product product : allProducts) {
             double productInventoryCost = product.getPrice() * product.getAvailableStock();
             totalCost += productInventoryCost;
-            
-            System.out.println("Product: " + product.getName() + 
-                             " | Price: $" + product.getPrice() + 
-                             " | Available Stock: " + product.getAvailableStock() + 
-                             " | Inventory Cost: $" + productInventoryCost);
+
+            System.out.println("Product: " + product.getName() +
+                    " | Price: $" + product.getPrice() +
+                    " | Available Stock: " + product.getAvailableStock() +
+                    " | Inventory Cost: $" + productInventoryCost);
         }
-        
+
         System.out.println("Total Available Inventory Cost: $" + totalCost);
         System.out.println("=======================================");
-        
+
         return totalCost;
     }
 
     /**
      * Get count of products that have available stock > 0
+     * 
      * @return Number of products with available stock
      */
     public int getProductsWithAvailableStock() {
@@ -369,15 +370,16 @@ public class ProductService {
 
     /**
      * Get product by barcode
+     * 
      * @param barcode The product barcode
      * @return ProductWithCategoryDTO or null if not found
      */
     public ProductWithCategoryDTO getProductByBarcode(String barcode) {
         System.out.println("=== SEARCHING PRODUCT BY BARCODE ===");
         System.out.println("Barcode: " + barcode);
-        
+
         Optional<Product> productOpt = repository.findByBarcode(barcode);
-        
+
         if (productOpt.isPresent()) {
             Product product = productOpt.get();
             System.out.println("Product found: " + product.getName());
@@ -390,8 +392,9 @@ public class ProductService {
 
     /**
      * Restock product by adding quantity to both physical_stock and available_stock
+     * 
      * @param productId The ID of the product to restock
-     * @param quantity The quantity to add (must be positive)
+     * @param quantity  The quantity to add (must be positive)
      * @return Updated product
      * @throws ProductNotFoundException if product not found
      * @throws IllegalArgumentException if quantity is invalid
@@ -400,44 +403,46 @@ public class ProductService {
     public Product restockProduct(Long productId, int quantity) {
         System.out.println("=== RESTOCKING PRODUCT SERVICE ===");
         System.out.println("Product ID: " + productId + ", Quantity to add: " + quantity);
-        
+
         // Validate inputs
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than 0");
         }
-        
+
         // Find the product
         Product product = repository.findById(productId)
-            .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
-        
-        System.out.println("Before restock - Physical: " + product.getStock() + 
-                          ", Reserved: " + product.getReserved() + 
-                          ", Available: " + product.getAvailableStock());
-        
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
+
+        System.out.println("Before restock - Physical: " + product.getStock() +
+                ", Reserved: " + product.getReserved() +
+                ", Available: " + product.getAvailableStock());
+
         // Add quantity to physical stock
         product.setStock(product.getStock() + quantity);
-        
+
         // Update available stock (physical_stock - reserved)
-        // Since we're adding to physical stock, available stock increases by the same amount
+        // Since we're adding to physical stock, available stock increases by the same
+        // amount
         product.setAvailableStock(product.getStock() - product.getReserved());
-        
-        System.out.println("After restock - Physical: " + product.getStock() + 
-                          ", Reserved: " + product.getReserved() + 
-                          ", Available: " + product.getAvailableStock());
-        
+
+        System.out.println("After restock - Physical: " + product.getStock() +
+                ", Reserved: " + product.getReserved() +
+                ", Available: " + product.getAvailableStock());
+
         // Save the updated product
         Product updatedProduct = repository.save(product);
-        
+
         System.out.println("✅ Product restocked successfully: " + product.getName());
         System.out.println("Quantity added: " + quantity);
         System.out.println("===============================");
-        
+
         return updatedProduct;
     }
 
     /**
      * Restock product by barcode
-     * @param barcode The product barcode
+     * 
+     * @param barcode  The product barcode
      * @param quantity The quantity to add (must be positive)
      * @return Updated product
      * @throws ProductNotFoundException if product not found
@@ -447,11 +452,11 @@ public class ProductService {
     public Product restockProductByBarcode(String barcode, int quantity) {
         System.out.println("=== RESTOCKING BY BARCODE SERVICE ===");
         System.out.println("Barcode: " + barcode + ", Quantity: " + quantity);
-        
+
         // Find product by barcode
         Product product = repository.findByBarcode(barcode)
-            .orElseThrow(() -> new ProductNotFoundException("Product not found with barcode: " + barcode));
-        
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with barcode: " + barcode));
+
         // Use the existing restock method
         return restockProduct(product.getId(), quantity);
     }
