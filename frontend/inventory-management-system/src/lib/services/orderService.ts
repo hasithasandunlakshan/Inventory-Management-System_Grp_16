@@ -197,7 +197,10 @@ export const orderService = {
   /**
    * Update order status
    */
-  async updateOrderStatus(orderId: number, status: string): Promise<any> {
+  async updateOrderStatus(
+    orderId: number,
+    status: string
+  ): Promise<{ success: boolean; message?: string }> {
     try {
       const response = await fetch(
         `${API_BASE_URL}/${orderId}/status`,
@@ -218,7 +221,7 @@ export const orderService = {
   /**
    * Get orders count by status
    */
-  async getOrdersCountByStatus(status: string): Promise<any> {
+  async getOrdersCountByStatus(status: string): Promise<{ count: number }> {
     try {
       const response = await fetch(
         `${API_BASE_URL}/count/status/${status}`,
