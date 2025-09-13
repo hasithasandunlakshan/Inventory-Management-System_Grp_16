@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
 import com.Orderservice.Orderservice.dto.OrderDetailResponse;
+import com.Orderservice.Orderservice.dto.RefundRequest;
+import com.Orderservice.Orderservice.dto.RefundResponse;
 import com.Orderservice.Orderservice.service.OrderService;
 
 @RestController
@@ -295,6 +298,51 @@ public class OrderController {
                 "status", status.toUpperCase(),
                 "count", 0
             ));
+        }
+    }
+    
+    /**
+     * Process a refund for an order
+     * @param refundRequest Request containing orderId and refundReason
+     * @return RefundResponse indicating success or failure
+     */
+    @PostMapping("/refund")
+    public ResponseEntity<RefundResponse> processRefund(@RequestBody RefundRequest refundRequest) {
+        try {
+            System.out.println("=== PROCESSING REFUND REQUEST ===");
+            System.out.println("Order ID: " + refundRequest.getOrderId());
+            System.out.println("Refund Reason: " + refundRequest.getRefundReason());
+            
+            // Validate request
+            if (refundRequest.getOrderId() == null) {
+                RefundResponse errorResponse = RefundResponse.failure(null, "Order ID is required");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            
+            // Process the refund
+            RefundResponse response = orderService.processRefund(
+                refundRequest.getOrderId(), 
+                refundRequest.getRefundReason()
+            );
+            
+            if (response.isSuccess()) {
+                System.out.println("✅ Refund processed successfully for order: " + refundRequest.getOrderId());
+                return ResponseEntity.ok(response);
+            } else {
+                System.err.println("❌ Refund failed for order: " + refundRequest.getOrderId());
+                System.err.println("Reason: " + response.getMessage());
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error processing refund request: " + e.getMessage());
+            e.printStackTrace();
+            
+            RefundResponse errorResponse = RefundResponse.failure(
+                refundRequest.getOrderId(), 
+                "Internal server error: " + e.getMessage()
+            );
+            return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
 }
