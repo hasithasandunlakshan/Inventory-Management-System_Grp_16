@@ -19,6 +19,7 @@ Client → API Gateway → Microservice → Database
 ```
 
 **Communication Patterns:**
+
 - **Synchronous**: REST API calls between services
 - **Asynchronous**: Event-driven communication (planned)
 - **Service Mesh**: Istio for service-to-service communication (planned)
@@ -59,7 +60,7 @@ Client → API Gateway → Microservice → Database
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('inventory_auth_token')?.value;
   const userRole = validateToken(token)?.role;
-  
+
   if (!hasRequiredRole(userRole, requiredRoles)) {
     return NextResponse.redirect('/unauthorized');
   }
@@ -161,35 +162,37 @@ spring:
 ### Service Endpoints
 
 #### User Service (Port 8081)
+
 ```java
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request);
-    
+
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request);
-    
+
     @GetMapping("/users")
     public ResponseEntity<List<UserInfo>> getAllUsers();
 }
 ```
 
 #### Product Service (Port 8083)
+
 ```java
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts();
-    
+
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody CreateProductRequest request);
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody UpdateProductRequest request);
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id);
 }
@@ -249,7 +252,7 @@ export default function ProductCard({
   stock,
   imageUrl,
   categoryName,
-  showActions = true
+  showActions = true,
 }: ProductCardProps) {
   // Component logic
 }
@@ -259,7 +262,9 @@ export default function ProductCard({
 
 ```typescript
 // Context for global state
-export const FilterContext = createContext<FilterContextType | undefined>(undefined);
+export const FilterContext = createContext<FilterContextType | undefined>(
+  undefined
+);
 
 // Custom hooks for state management
 export function useAuth() {
@@ -378,24 +383,24 @@ services:
   frontend:
     build: ./frontend/inventory-management-system
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NEXT_PUBLIC_API_BASE_URL=http://localhost:8090
-  
+
   api-gateway:
     build: ./backend/ApiGateway
     ports:
-      - "8090:8090"
+      - '8090:8090'
     depends_on:
       - mysql
-  
+
   mysql:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: inventory_db
     ports:
-      - "3306:3306"
+      - '3306:3306'
 ```
 
 ## 📊 Monitoring & Logging
@@ -441,7 +446,7 @@ public class CreateProductRequest {
     @NotBlank(message = "Product name is required")
     @Size(max = 100, message = "Product name must be less than 100 characters")
     private String name;
-    
+
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.0", message = "Price must be positive")
     private BigDecimal price;
@@ -453,7 +458,7 @@ public class CreateProductRequest {
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   price: z.number().min(0, 'Price must be positive'),
-  stock: z.number().int().min(0, 'Stock must be non-negative')
+  stock: z.number().int().min(0, 'Stock must be non-negative'),
 });
 ```
 
@@ -498,10 +503,10 @@ describe('ProductCard', () => {
 class ProductServiceTest {
     @Mock
     private ProductRepository productRepository;
-    
+
     @InjectMocks
     private ProductService productService;
-    
+
     @Test
     void shouldCreateProduct() {
         // Test implementation
@@ -626,6 +631,7 @@ java -jar app.jar --debug
 ## 📞 Support
 
 For technical support or questions:
+
 - Create an issue in the repository
 - Email: tech-support@inventorysystem.com
 - Documentation: [Link to full docs]
