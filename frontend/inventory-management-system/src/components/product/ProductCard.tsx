@@ -110,7 +110,13 @@ export default function ProductCard({
           {/* Stock Status Badge */}
           <div className='absolute top-2 right-2'>
             <Badge
-              variant={stockStatus.color as 'default' | 'secondary' | 'destructive' | 'outline'}
+              variant={
+                stockStatus.color as
+                  | 'default'
+                  | 'secondary'
+                  | 'destructive'
+                  | 'outline'
+              }
               className='flex items-center gap-1'
             >
               <StockIcon className='h-3 w-3' />
