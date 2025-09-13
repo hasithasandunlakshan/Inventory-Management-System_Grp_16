@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
+import com.Orderservice.Orderservice.dto.AllPaymentsResponse;
 import com.Orderservice.Orderservice.dto.CreatePaymentIntentRequest;
 import com.Orderservice.Orderservice.dto.OrderDetailResponse;
 import com.Orderservice.Orderservice.dto.PaymentConfirmationRequest;
@@ -111,6 +112,41 @@ public class PaymentController {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
+     * Get all payments with order details
+     * @return AllPaymentsResponse containing all payments
+     */
+    @GetMapping("/all")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity<AllPaymentsResponse> getAllPayments() {
+        try {
+            System.out.println("=== GETTING ALL PAYMENTS ===");
+            
+            AllPaymentsResponse response = paymentService.getAllPayments();
+            
+            if (response.isSuccess()) {
+                System.out.println("✅ Successfully retrieved " + response.getTotalPayments() + " payments");
+                return ResponseEntity.ok(response);
+            } else {
+                System.err.println("❌ Failed to retrieve payments: " + response.getMessage());
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error in getAllPayments endpoint: " + e.getMessage());
+            e.printStackTrace();
+            
+            AllPaymentsResponse errorResponse = AllPaymentsResponse.builder()
+                .success(false)
+                .message("Internal server error: " + e.getMessage())
+                .payments(new java.util.ArrayList<>())
+                .totalPayments(0)
+                .build();
+                
+            return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
 }
