@@ -106,6 +106,15 @@ public class JwtAuthenticationFilter implements GatewayFilter {
             return result;
         };
 
+
+        // User service - protected auth endpoints (users list) - ADMIN or MANAGER only
+        if (path.equals("/api/auth/users")) {
+            return has.test("ADMIN") || has.test("MANAGER");
+        }
+
+        // User service - other secure endpoints - allow all authenticated
+        
+
         // User service - specific endpoints
         if (path.startsWith("/api/secure")) {
             System.out.println("🔍 Matched /api/secure - allowing access");
@@ -131,6 +140,7 @@ public class JwtAuthenticationFilter implements GatewayFilter {
         // User service - other auth endpoints allow all authenticated
         if (path.startsWith("/api/auth")) {
             System.out.println("🔍 Matched /api/auth - allowing access");
+
             return true;
         }
 

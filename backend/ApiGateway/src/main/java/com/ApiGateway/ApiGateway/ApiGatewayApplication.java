@@ -22,7 +22,16 @@ public class ApiGatewayApplication {
         @Bean
         public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
                 return builder.routes()
+
+                                // User Service - Protected auth endpoints (require authentication)
+                                .route("user-service-auth-protected", r -> r
+                                                .path("/api/auth/users")
+                                                .filters(f -> f.filter(jwtAuthenticationFilter))
+                                                .uri("http://localhost:8080"))
+                                // User Service - Public auth endpoints (login/signup)
+
                                 // User Service - Public endpoints
+
                                 .route("user-service-auth-public", r -> r
                                                 .path("/api/auth/login", "/api/auth/signup")
                                                 .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
