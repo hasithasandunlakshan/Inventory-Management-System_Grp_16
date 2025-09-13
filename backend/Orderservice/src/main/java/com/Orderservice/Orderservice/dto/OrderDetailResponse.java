@@ -21,6 +21,8 @@ public class OrderDetailResponse {
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String refundReason;
+    private LocalDateTime refundProcessedAt;
     private List<OrderItemDetail> orderItems;
 
     @Data
