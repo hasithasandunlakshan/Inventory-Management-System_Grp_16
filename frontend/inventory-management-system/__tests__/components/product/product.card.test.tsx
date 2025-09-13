@@ -34,14 +34,15 @@ describe('ProductCard', () => {
     expect(screen.getByText('Sample Product')).toBeInTheDocument();
     expect(screen.getByText('Great product')).toBeInTheDocument();
     expect(screen.getByText(/Barcode:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Price: \$123.45/)).toBeInTheDocument();
-    expect(screen.getByText(/Available: 7/)).toBeInTheDocument();
+    expect(screen.getByText('123.45')).toBeInTheDocument(); // Price without "Price:" label
+    expect(screen.getByText(/Available Stock:/i)).toBeInTheDocument();
+    expect(screen.getByText('7')).toBeInTheDocument(); // Stock number
     expect(screen.getByText(/No image/i)).toBeInTheDocument();
   });
 
-  it('navigates to product details on click', () => {
+  it('navigates to product details on view button click', () => {
     render(<ProductCard {...baseProps} />);
-    fireEvent.click(screen.getByText('Sample Product'));
+    fireEvent.click(screen.getByText('View'));
     expect(productUtils.viewProductDetails).toHaveBeenCalledWith(
       '1',
       expect.any(Object)
