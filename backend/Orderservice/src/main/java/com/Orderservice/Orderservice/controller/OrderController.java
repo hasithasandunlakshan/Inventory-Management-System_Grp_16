@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
@@ -95,16 +96,48 @@ public class OrderController {
     }
     
     /**
-     * Get all orders with a specific status
+     * Get all orders with a specific status (with optional pagination)
      * @param status The order status to filter by
+     * @param page Page number (0-based, optional, default: 0)
+     * @param size Number of items per page (optional, default: 10)
      * @return AllOrdersResponse containing orders with the specified status
      */
     @GetMapping("/all/{status}")
-    public ResponseEntity<AllOrdersResponse> getAllOrdersByStatus(@PathVariable String status) {
+    public ResponseEntity<AllOrdersResponse> getAllOrdersByStatus(
+            @PathVariable String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            AllOrdersResponse response = orderService.getAllOrdersByStatus(status);
+            System.out.println("=== GETTING ORDERS BY STATUS WITH PAGINATION ===");
+            System.out.println("Status: " + status);
+            System.out.println("Page: " + page);
+            System.out.println("Size: " + size);
+            
+            // Validate pagination parameters
+            if (page < 0) {
+                return ResponseEntity.badRequest().body(AllOrdersResponse.builder()
+                    .success(false)
+                    .message("Page number cannot be negative")
+                    .orders(null)
+                    .totalOrders(0)
+                    .build());
+            }
+            
+            if (size <= 0 || size > 100) {
+                return ResponseEntity.badRequest().body(AllOrdersResponse.builder()
+                    .success(false)
+                    .message("Page size must be between 1 and 100")
+                    .orders(null)
+                    .totalOrders(0)
+                    .build());
+            }
+            
+            AllOrdersResponse response = orderService.getAllOrdersByStatusWithPagination(status, page, size);
             
             if (response.isSuccess()) {
+                System.out.println("✅ Retrieved " + response.getOrders().size() + " orders for page " + page);
+                System.out.println("Total elements: " + response.getPagination().getTotalElements());
+                System.out.println("Total pages: " + response.getPagination().getTotalPages());
                 return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.badRequest().body(response);
@@ -119,6 +152,7 @@ public class OrderController {
                 .message("Internal server error: " + e.getMessage())
                 .orders(null)
                 .totalOrders(0)
+                .pagination(null)
                 .build();
                 
             return ResponseEntity.internalServerError().body(errorResponse);
