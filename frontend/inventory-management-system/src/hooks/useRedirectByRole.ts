@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,7 +22,7 @@ export function useRedirectByRole() {
     }
 
     const role = user.role.toUpperCase();
-    
+
     // Redirect based on role
     switch (role) {
       case 'ADMIN':
@@ -46,7 +46,7 @@ export function useRedirectByRole() {
 
 export function getDashboardPathByRole(role: string): string {
   const normalizedRole = role.toUpperCase();
-  
+
   switch (normalizedRole) {
     case 'ADMIN':
     case 'MANAGER':

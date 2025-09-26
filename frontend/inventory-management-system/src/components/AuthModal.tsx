@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { LoginForm } from './LoginForm';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from './ui/sheet';
 
@@ -10,18 +10,17 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
-
   const handleLoginSuccess = () => {
     onClose();
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="sm:max-w-md">
+    <Sheet open={isOpen} onOpenChange={open => !open && onClose()}>
+      <SheetContent className='sm:max-w-md'>
         <SheetHeader>
           <SheetTitle>Welcome Back</SheetTitle>
         </SheetHeader>
-        <div className="mt-6">
+        <div className='mt-6'>
           <LoginForm onLoginSuccess={handleLoginSuccess} />
         </div>
       </SheetContent>

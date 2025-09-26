@@ -6,7 +6,7 @@ import { notificationService } from '../services/notificationService';
  * @param {number} userId - The user ID
  * @returns {Object} - Notification data and methods
  */
-export const useNotifications = (userId) => {
+export const useNotifications = userId => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -15,18 +15,18 @@ export const useNotifications = (userId) => {
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     if (!userId) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
-      const fetchedNotifications = await notificationService.getUserNotifications(userId);
+
+      const fetchedNotifications =
+        await notificationService.getUserNotifications(userId);
       setNotifications(fetchedNotifications);
-      
+
       // Calculate unread count
       const unread = fetchedNotifications.filter(n => !n.isRead).length;
       setUnreadCount(unread);
-      
     } catch (err) {
       setError(err.message || 'Failed to fetch notifications');
       console.error('Error fetching notifications:', err);
@@ -36,10 +36,10 @@ export const useNotifications = (userId) => {
   }, [userId]);
 
   // Mark notification as read
-  const markAsRead = async (notificationId) => {
+  const markAsRead = async notificationId => {
     try {
       await notificationService.markAsRead(notificationId);
-      
+
       // Update local state
       setNotifications(prevNotifications =>
         prevNotifications.map(notification =>
@@ -48,10 +48,9 @@ export const useNotifications = (userId) => {
             : notification
         )
       );
-      
+
       // Update unread count
       setUnreadCount(prev => Math.max(0, prev - 1));
-      
     } catch (err) {
       console.error('Error marking notification as read:', err);
       throw err;
@@ -62,24 +61,23 @@ export const useNotifications = (userId) => {
   const markAllAsRead = async () => {
     try {
       const unreadNotifications = notifications.filter(n => !n.isRead);
-      
+
       // Mark all unread notifications as read
       await Promise.all(
         unreadNotifications.map(notification =>
           notificationService.markAsRead(notification.id)
         )
       );
-      
+
       // Update local state
       setNotifications(prevNotifications =>
         prevNotifications.map(notification => ({
           ...notification,
-          isRead: true
+          isRead: true,
         }))
       );
-      
+
       setUnreadCount(0);
-      
     } catch (err) {
       console.error('Error marking all notifications as read:', err);
       throw err;
@@ -87,7 +85,7 @@ export const useNotifications = (userId) => {
   };
 
   // Add a new notification (for real-time updates)
-  const addNotification = (newNotification) => {
+  const addNotification = newNotification => {
     setNotifications(prev => [newNotification, ...prev]);
     if (!newNotification.isRead) {
       setUnreadCount(prev => prev + 1);

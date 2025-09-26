@@ -12,7 +12,9 @@ interface DeliveryLogResponse {
 
 export const deliveryLogService = {
   // Create a new delivery log
-  async logDelivery(deliveryLog: DeliveryLogCreateRequest): Promise<DeliveryLogResponse> {
+  async logDelivery(
+    deliveryLog: DeliveryLogCreateRequest
+  ): Promise<DeliveryLogResponse> {
     const response = await fetch(`${API_BASE_URL}/api/delivery-logs/log`, {
       method: 'POST',
       headers: {
@@ -24,11 +26,13 @@ export const deliveryLogService = {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to create delivery log: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(
+        `Failed to create delivery log: ${response.status} ${response.statusText} - ${errorText}`
+      );
     }
 
     const result: DeliveryLogResponse = await response.json();
-    
+
     // If the backend returns success: false, throw an error so it gets caught by the frontend
     if (!result.success) {
       throw new Error(result.message || 'Failed to create delivery log');
@@ -39,17 +43,22 @@ export const deliveryLogService = {
 
   // Get delivery logs by purchase order ID
   async getDeliveryLogs(poId: number): Promise<DeliveryLog[]> {
-    const response = await fetch(`${API_BASE_URL}/api/delivery-logs?purchaseOrderId=${poId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authService.getAuthHeader(), // Add JWT token
-      },
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/delivery-logs?purchaseOrderId=${poId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authService.getAuthHeader(), // Add JWT token
+        },
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to fetch delivery logs: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(
+        `Failed to fetch delivery logs: ${response.status} ${response.statusText} - ${errorText}`
+      );
     }
 
     return response.json();
@@ -59,7 +68,7 @@ export const deliveryLogService = {
   async getAllDeliveryLogs(): Promise<DeliveryLog[]> {
     const authHeader = authService.getAuthHeader();
     console.log('Fetching delivery logs with auth header:', authHeader);
-    
+
     const response = await fetch(`${API_BASE_URL}/api/delivery-logs/recent`, {
       method: 'GET',
       headers: {
@@ -69,16 +78,18 @@ export const deliveryLogService = {
     });
 
     console.log('API Response status:', response.status);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('API Error response:', errorText);
-      throw new Error(`Failed to fetch recent delivery logs: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(
+        `Failed to fetch recent delivery logs: ${response.status} ${response.statusText} - ${errorText}`
+      );
     }
 
-    const rawLogs: any[] = await response.json();
+    const rawLogs: Record<string, unknown>[] = await response.json();
     console.log('Raw API response:', rawLogs);
-    
+
     // Transform backend response to match frontend expectations
     const transformedLogs = rawLogs.map((log, index) => ({
       id: log.id,
@@ -90,10 +101,10 @@ export const deliveryLogService = {
       purchaseOrderId: log.purchaseOrderId || `PO-${1000 + index}`, // Real PO ID or fallback
       deliveryDate: log.receivedDate,
       // Use the actual purchase order status from backend instead of deriving from date
-      status: log.purchaseOrderStatus || 'UNKNOWN' // Real PO status from database
+      status: log.purchaseOrderStatus || 'UNKNOWN', // Real PO status from database
     }));
-    
+
     console.log('Transformed logs:', transformedLogs);
-    return transformedLogs;
+    return transformedLogs as unknown as DeliveryLog[];
   },
 };
