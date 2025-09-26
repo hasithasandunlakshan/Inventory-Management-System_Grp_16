@@ -3,11 +3,17 @@ package com.Orderservice.Orderservice.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.Orderservice.Orderservice.client.UserServiceClient;
@@ -24,8 +30,6 @@ import com.Orderservice.Orderservice.enums.PaymentStatus;
 import com.Orderservice.Orderservice.repository.OrderRepository;
 import com.Orderservice.Orderservice.repository.PaymentRepository;
 import com.Orderservice.Orderservice.repository.ProductRepository;
-
-// Stripe imports for refund processing
 import com.stripe.exception.StripeException;
 import com.stripe.model.Refund;
 import com.stripe.param.RefundCreateParams;
@@ -105,6 +109,139 @@ public class OrderService {
                     .build();
         }
     }
+
+    
+    /**
+     * OPTIMIZED: Get orders by status with pagination support
+     * @param statusStr The order status to filter by
+     * @param page Page number (0-based)
+     * @param size Number of items per page
+     * @return AllOrdersResponse containing paginated orders with pagination metadata
+     */
+    public AllOrdersResponse getAllOrdersByStatusWithPagination(String statusStr, int page, int size) {
+        try {
+            long startTime = System.currentTimeMillis();
+            
+            // Create pageable without sorting - sorting is done in query for better performance
+            Pageable pageable = PageRequest.of(page, size);
+            
+            Page<Order> orderPage;
+            if (statusStr != null && !statusStr.isEmpty()) {
+                com.Orderservice.Orderservice.enums.OrderStatus status = 
+                    com.Orderservice.Orderservice.enums.OrderStatus.valueOf(statusStr.toUpperCase());
+                // Use optimized query
+                orderPage = orderRepository.findByStatusWithOrderItemsOptimized(status, pageable);
+            } else {
+                orderPage = orderRepository.findAllConfirmedOrdersWithItems(pageable);
+            }
+            
+            long queryTime = System.currentTimeMillis();
+            System.out.println("⚡ Database query completed in: " + (queryTime - startTime) + "ms");
+            
+            // OPTIMIZATION: Bulk fetch all products instead of N+1 queries
+            Set<Long> productIds = orderPage.getContent().stream()
+                .flatMap(order -> order.getOrderItems().stream())
+                .map(OrderItem::getProductId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+            
+            // Single query to fetch all products
+            Map<Long, Product> productMap = new HashMap<>();
+            if (!productIds.isEmpty()) {
+                List<Product> products = productRepository.findByProductIdIn(productIds);
+                productMap = products.stream()
+                    .collect(Collectors.toMap(Product::getProductId, product -> product));
+            }
+            
+            long productFetchTime = System.currentTimeMillis();
+            System.out.println("⚡ Product fetch completed in: " + (productFetchTime - queryTime) + "ms");
+            
+            // Build response efficiently
+            List<OrderDetailResponse> orderDetails = new ArrayList<>();
+            for (Order order : orderPage.getContent()) {
+                List<OrderDetailResponse.OrderItemDetail> itemDetails = new ArrayList<>();
+                
+                for (OrderItem orderItem : order.getOrderItems()) {
+                    String productName = "Unknown Product";
+                    String productImageUrl = null;
+                    String barcode = null;
+                    
+                    if (orderItem.getProductId() != null) {
+                        Product product = productMap.get(orderItem.getProductId());
+                        if (product != null) {
+                            productName = product.getName();
+                            productImageUrl = product.getImageUrl();
+                            barcode = product.getBarcode();
+                        } else {
+                            productName = "Product Not Found";
+                        }
+                    } else {
+                        productName = "No Product ID";
+                    }
+                    
+                    OrderDetailResponse.OrderItemDetail itemDetail = OrderDetailResponse.OrderItemDetail.builder()
+                        .orderItemId(orderItem.getOrderItemId())
+                        .productId(orderItem.getProductId())
+                        .productName(productName)
+                        .productImageUrl(productImageUrl)
+                        .quantity(orderItem.getQuantity())
+                        .price(orderItem.getPrice())
+                        .createdAt(orderItem.getCreatedAt())
+                        .barcode(barcode)
+                        .build();
+                    itemDetails.add(itemDetail);
+                }
+                
+                OrderDetailResponse orderDetail = OrderDetailResponse.builder()
+                    .orderId(order.getOrderId())
+                    .customerId(order.getCustomerId())
+                    .orderDate(order.getOrderDate())
+                    .status(order.getStatus().toString())
+                    .totalAmount(order.getTotalAmount())
+                    .createdAt(order.getCreatedAt())
+                    .updatedAt(order.getUpdatedAt())
+                    .refundReason(order.getRefundReason())
+                    .refundProcessedAt(order.getRefundProcessedAt())
+                    .orderItems(itemDetails)
+                    .build();
+                orderDetails.add(orderDetail);
+            }
+            
+            // Build pagination info
+            AllOrdersResponse.PaginationInfo paginationInfo = AllOrdersResponse.PaginationInfo.builder()
+                .currentPage(orderPage.getNumber())
+                .pageSize(orderPage.getSize())
+                .totalElements(orderPage.getTotalElements())
+                .totalPages(orderPage.getTotalPages())
+                .hasNext(orderPage.hasNext())
+                .hasPrevious(orderPage.hasPrevious())
+                .isFirst(orderPage.isFirst())
+                .isLast(orderPage.isLast())
+                .build();
+            
+            long totalTime = System.currentTimeMillis() - startTime;
+            System.out.println("🚀 TOTAL RESPONSE TIME: " + totalTime + "ms for " + orderDetails.size() + " orders");
+            
+            return AllOrdersResponse.builder()
+                .success(true)
+                .message("Orders retrieved successfully with pagination (Optimized)")
+                .orders(orderDetails)
+                .totalOrders((int) orderPage.getTotalElements())
+                .pagination(paginationInfo)
+                .build();
+                
+        } catch (Exception e) {
+            e.printStackTrace();
+            return AllOrdersResponse.builder()
+                .success(false)
+                .message("Error retrieving orders with pagination: " + e.getMessage())
+                .orders(new ArrayList<>())
+                .totalOrders(0)
+                .pagination(null)
+                .build();
+        }
+    }
+    
 
     public boolean updateOrderStatus(Long orderId, String statusStr) {
         Optional<Order> orderOpt = orderRepository.findById(orderId);
