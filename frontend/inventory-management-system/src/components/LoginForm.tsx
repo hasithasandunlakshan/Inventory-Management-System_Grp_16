@@ -3,7 +3,13 @@
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from './ui/card';
 import { Alert, AlertDescription } from './ui/alert';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -16,7 +22,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,8 +33,11 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     try {
       console.log('🔐 Attempting login with:', { username, password: '***' });
       const result = await login(username, password);
-      console.log('🔐 Login result:', { success: result.success, error: result.error });
-      
+      console.log('🔐 Login result:', {
+        success: result.success,
+        error: result.error,
+      });
+
       if (result.success) {
         console.log('✅ Login successful, calling onLoginSuccess');
         onLoginSuccess?.();
@@ -44,52 +53,54 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className='w-full max-w-md mx-auto'>
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>
           Enter your credentials to access the inventory management system
           <br />
-          <small className="text-green-600 mt-1 block">Default credentials: storekeeper / password123</small>
+          <small className='text-green-600 mt-1 block'>
+            Default credentials: storekeeper / password123
+          </small>
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className='space-y-4'>
           {error && (
-            <Alert variant="destructive">
+            <Alert variant='destructive'>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
-          <div className="space-y-2">
-            <label htmlFor="username" className="text-sm font-medium">
+
+          <div className='space-y-2'>
+            <label htmlFor='username' className='text-sm font-medium'>
               Username
             </label>
             <Input
-              id="username"
-              type="text"
-              placeholder="Enter your username"
+              id='username'
+              type='text'
+              placeholder='Enter your username'
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={e => setUsername(e.target.value)}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
+          <div className='space-y-2'>
+            <label htmlFor='password' className='text-sm font-medium'>
               Password
             </label>
             <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
+              id='password'
+              type='password'
+              placeholder='Enter your password'
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type='submit' className='w-full' disabled={isLoading}>
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
 

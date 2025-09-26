@@ -11,12 +11,15 @@ export const supplierService = {
    */
   async getAllSuppliers(): Promise<Supplier[]> {
     try {
-      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions());
-      
+      const response = await fetch(
+        API_BASE_URL,
+        createAuthenticatedRequestOptions()
+      );
+
       if (!response.ok) {
         throw new Error(`Failed to fetch suppliers: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Failed to fetch suppliers:', error);
@@ -29,15 +32,18 @@ export const supplierService = {
    */
   async getSupplierById(id: string): Promise<Supplier> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions());
-      
+      const response = await fetch(
+        `${API_BASE_URL}/${id}`,
+        createAuthenticatedRequestOptions()
+      );
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Supplier not found');
         }
         throw new Error(`Failed to fetch supplier: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Failed to fetch supplier:', error);
@@ -56,31 +62,38 @@ export const supplierService = {
         userId: supplier.userId,
         userName: null, // Will be populated by backend
         categoryId: supplier.categoryId,
-        categoryName: null // Will be populated by backend
+        categoryName: null, // Will be populated by backend
       };
 
       // First try through API Gateway
-      const response = await fetch(API_BASE_URL, createAuthenticatedRequestOptions('POST', supplierDTO));
+      const response = await fetch(
+        API_BASE_URL,
+        createAuthenticatedRequestOptions('POST', supplierDTO)
+      );
 
       if (response.ok) {
         return response.json();
       }
-      
+
       // If API Gateway fails, try direct access for development
-      console.log('API Gateway failed for create, trying direct access to supplier service...');
+      console.log(
+        'API Gateway failed for create, trying direct access to supplier service...'
+      );
       const directResponse = await fetch(DIRECT_API_BASE_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(supplierDTO)
+        body: JSON.stringify(supplierDTO),
       });
-      
+
       if (directResponse.ok) {
         return directResponse.json();
       }
-      
-      throw new Error(`Failed to create supplier: API Gateway: ${response.status}, Direct: ${directResponse.status}`);
+
+      throw new Error(
+        `Failed to create supplier: API Gateway: ${response.status}, Direct: ${directResponse.status}`
+      );
     } catch (error) {
       console.error('Failed to create supplier:', error);
       throw new Error('Failed to create supplier - backend not available');
@@ -92,12 +105,15 @@ export const supplierService = {
    */
   async updateSupplier(supplier: Supplier): Promise<Supplier> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${supplier.supplierId}`, createAuthenticatedRequestOptions('PUT', supplier));
+      const response = await fetch(
+        `${API_BASE_URL}/${supplier.supplierId}`,
+        createAuthenticatedRequestOptions('PUT', supplier)
+      );
 
       if (!response.ok) {
         throw new Error('Failed to update supplier');
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Failed to update supplier:', error);
@@ -110,7 +126,10 @@ export const supplierService = {
    */
   async deleteSupplier(id: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, createAuthenticatedRequestOptions('DELETE'));
+      const response = await fetch(
+        `${API_BASE_URL}/${id}`,
+        createAuthenticatedRequestOptions('DELETE')
+      );
 
       if (!response.ok) {
         throw new Error('Failed to delete supplier');
@@ -119,5 +138,5 @@ export const supplierService = {
       console.error('Failed to delete supplier:', error);
       throw new Error('Failed to delete supplier - backend not available');
     }
-  }
+  },
 };

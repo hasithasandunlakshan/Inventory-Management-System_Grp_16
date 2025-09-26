@@ -1,5 +1,3 @@
-
-
 import { authService } from '../services/authService';
 
 /**
@@ -9,7 +7,7 @@ import { authService } from '../services/authService';
 export const getAuthHeaders = (): HeadersInit => {
   return {
     ...authService.getAuthHeader(),
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   };
 };
 
@@ -19,7 +17,6 @@ export const getAuthHeaders = (): HeadersInit => {
 export const getAuthHeadersWithoutContentType = (): HeadersInit => {
   return authService.getAuthHeader();
 };
-
 
 /**
  * Create authenticated fetch request options for file uploads
@@ -31,13 +28,13 @@ export const createAuthenticatedFileUploadOptions = (
 ): RequestInit => {
   const headers = {
     ...getAuthHeadersWithoutContentType(),
-    ...additionalHeaders
+    ...additionalHeaders,
   };
 
   return {
     method,
     headers,
-    body: formData
+    body: formData,
   };
 };
 
@@ -73,23 +70,31 @@ export const hasAnyRole = (roles: string[]): boolean => {
 
 export function createAuthenticatedRequestOptions(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' = 'GET',
-  body?: any
+  body?: unknown
 ): RequestInit {
   const token = localStorage.getItem('inventory_auth_token');
-  
+
   console.log('🔑 Creating authenticated request:', {
     method,
     hasToken: !!token,
     tokenLength: token?.length || 0,
-    tokenStart: token?.substring(0, 20) + '...' || 'null'
+    tokenStart: token?.substring(0, 20) + '...' || 'null',
   });
-  
+
   const options: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
+      // Add cache-busting headers to prevent stale data
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: '0',
+      // Add timestamp to prevent browser caching
+      'X-Requested-At': new Date().toISOString(),
       ...(token && { Authorization: `Bearer ${token}` }),
     },
+    // Disable browser caching for GET requests
+    cache: method === 'GET' ? 'no-store' : 'default',
   };
 
   if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
@@ -97,8 +102,6 @@ export function createAuthenticatedRequestOptions(
   }
 
   console.log('🔑 Request headers:', options.headers);
-  
+
   return options;
 }
-
-

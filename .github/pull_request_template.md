@@ -47,13 +47,11 @@
 <!-- Make sure all items are checked before requesting review -->
 
 - [ ] CI/CD pipeline is passing (all tests, linting, and builds succeed)
-- [ ] Used Cursor agent to write code for this feature
-- [ ] Used Cursor agent to review all changes before submitting for human review
 - [ ] Personally tested the feature in development environment
-- [ ] Verified feature works on Mobile first(most important), Tablet, and Desktop
 - [ ] Added or updated documentation as needed
 - [ ] Ensured there are no console errors or warnings
 - [ ] Removed any debugging code or console.log statements
+
 
 ## Additional Notes
 

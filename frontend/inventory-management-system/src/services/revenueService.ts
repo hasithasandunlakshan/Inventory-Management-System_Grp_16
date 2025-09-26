@@ -1,4 +1,8 @@
-import { TodayRevenueResponse, MonthlyRevenueResponse, StripeStatsResponse } from '@/types/revenue';
+import {
+  TodayRevenueResponse,
+  MonthlyRevenueResponse,
+  StripeStatsResponse,
+} from '@/types/revenue';
 import { authService } from '@/lib/services/authService';
 
 const BASE_URL = 'http://localhost:8090/api/revenue'; // Changed to API Gateway port
@@ -6,25 +10,25 @@ const BASE_URL = 'http://localhost:8090/api/revenue'; // Changed to API Gateway 
 export const revenueService = {
   getTodayRevenue: async (): Promise<TodayRevenueResponse> => {
     try {
-      console.log('Fetching today\'s revenue from:', `${BASE_URL}/today`);
-      
+      console.log("Fetching today's revenue from:", `${BASE_URL}/today`);
+
       // Debug authentication
       const token = authService.getToken();
       const isAuthenticated = authService.isAuthenticated();
       const userRole = authService.getUserRole();
-      console.log('🔐 Auth Debug:', { 
-        hasToken: !!token, 
+      console.log('🔐 Auth Debug:', {
+        hasToken: !!token,
         tokenLength: token?.length || 0,
-        isAuthenticated, 
-        userRole 
+        isAuthenticated,
+        userRole,
       });
-      
+
       const headers = {
         'Content-Type': 'application/json',
         ...authService.getAuthHeader(),
       };
       console.log('📡 Request headers:', headers);
-      
+
       const response = await fetch(`${BASE_URL}/today`, {
         method: 'GET',
         headers,
@@ -33,13 +37,15 @@ export const revenueService = {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API Error:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
       }
       const data = await response.json();
       console.log('Today revenue data:', data);
       return data;
     } catch (error) {
-      console.error('Error fetching today\'s revenue:', error);
+      console.error("Error fetching today's revenue:", error);
       throw error;
     }
   },
@@ -88,5 +94,5 @@ export const revenueService = {
       console.error('Error fetching Stripe stats:', error);
       throw error;
     }
-  }
+  },
 };

@@ -1,4 +1,3 @@
-
 const API_BASE_URL = 'http://localhost:8090';
 
 export interface DriverProfile {
@@ -64,6 +63,7 @@ export interface VehicleRegistrationRequest {
 export interface AssignmentRequest {
   driverId: number;
   vehicleId: number;
+  assignedBy: number;
   notes?: string;
 }
 
@@ -102,25 +102,34 @@ class DriverService {
     const token = localStorage.getItem('inventory_auth_token');
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Network error' }));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      const errorData = await response
+        .json()
+        .catch(() => ({ message: 'Network error' }));
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
     }
     return response.json();
   }
 
   // Driver Management
-  async registerDriver(request: DriverRegistrationRequest): Promise<ApiResponse<DriverProfile>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/drivers/register`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(request),
-    });
+  async registerDriver(
+    request: DriverRegistrationRequest
+  ): Promise<ApiResponse<DriverProfile>> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/drivers/register`,
+      {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(request),
+      }
+    );
     return this.handleResponse<DriverProfile>(response);
   }
 
@@ -133,36 +142,50 @@ class DriverService {
   }
 
   async getDriverById(driverId: number): Promise<ApiResponse<DriverProfile>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/drivers/${driverId}`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/drivers/${driverId}`,
+      {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      }
+    );
     return this.handleResponse<DriverProfile>(response);
   }
 
   async getDriverByUserId(userId: number): Promise<ApiResponse<DriverProfile>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/drivers/user/${userId}`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/drivers/user/${userId}`,
+      {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      }
+    );
     return this.handleResponse<DriverProfile>(response);
   }
 
   async getAvailableDrivers(): Promise<ApiResponse<DriverProfile[]>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/drivers/available`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/drivers/available`,
+      {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      }
+    );
     return this.handleResponse<DriverProfile[]>(response);
   }
 
   // Vehicle Management
-  async registerVehicle(request: VehicleRegistrationRequest): Promise<ApiResponse<Vehicle>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/vehicles/register`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(request),
-    });
+  async registerVehicle(
+    request: VehicleRegistrationRequest
+  ): Promise<ApiResponse<Vehicle>> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/vehicles/register`,
+      {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(request),
+      }
+    );
     return this.handleResponse<Vehicle>(response);
   }
 
@@ -175,15 +198,20 @@ class DriverService {
   }
 
   async getAvailableVehicles(): Promise<ApiResponse<Vehicle[]>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/vehicles/available`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/vehicles/available`,
+      {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      }
+    );
     return this.handleResponse<Vehicle[]>(response);
   }
 
   // Assignment Management
-  async createAssignment(request: AssignmentRequest): Promise<ApiResponse<DriverVehicleAssignment>> {
+  async createAssignment(
+    request: AssignmentRequest
+  ): Promise<ApiResponse<DriverVehicleAssignment>> {
     const response = await fetch(`${API_BASE_URL}/api/resources/assignments`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
@@ -200,11 +228,16 @@ class DriverService {
     return this.handleResponse<DriverVehicleAssignment[]>(response);
   }
 
-  async getActiveAssignments(): Promise<ApiResponse<DriverVehicleAssignment[]>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/assignments/active`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+  async getActiveAssignments(): Promise<
+    ApiResponse<DriverVehicleAssignment[]>
+  > {
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/assignments/active`,
+      {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      }
+    );
     return this.handleResponse<DriverVehicleAssignment[]>(response);
   }
 
@@ -225,7 +258,9 @@ class DriverService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Network error' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ message: 'Network error' }));
       throw new Error(errorData.message || 'Failed to create driver account');
     }
 
@@ -242,15 +277,24 @@ class DriverService {
   async getUsersByRole(role: string = 'USER'): Promise<UserInfo[]> {
     const headers = this.getAuthHeaders();
     console.log('🔍 getUsersByRole - Headers:', headers);
-    console.log('🔍 getUsersByRole - URL:', `${API_BASE_URL}/api/auth/users?role=${role}`);
-    
-    const response = await fetch(`${API_BASE_URL}/api/auth/users?role=${role}`, {
-      method: 'GET',
-      headers: headers,
-    });
+    console.log(
+      '🔍 getUsersByRole - URL:',
+      `${API_BASE_URL}/api/auth/users?role=${role}`
+    );
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/auth/users?role=${role}`,
+      {
+        method: 'GET',
+        headers: headers,
+      }
+    );
 
     console.log('🔍 getUsersByRole - Response status:', response.status);
-    console.log('🔍 getUsersByRole - Response headers:', Object.fromEntries(response.headers.entries()));
+    console.log(
+      '🔍 getUsersByRole - Response headers:',
+      Object.fromEntries(response.headers.entries())
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -260,7 +304,14 @@ class DriverService {
 
     const data = await response.json();
     console.log('🔍 getUsersByRole - Success data:', data);
-    return data;
+
+    // Extract users array from the response
+    if (data.success && Array.isArray(data.users)) {
+      return data.users;
+    } else {
+      console.error('🔍 getUsersByRole - Invalid response structure:', data);
+      return [];
+    }
   }
 }
 

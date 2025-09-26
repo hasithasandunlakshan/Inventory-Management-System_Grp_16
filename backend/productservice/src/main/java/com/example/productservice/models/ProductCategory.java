@@ -1,10 +1,25 @@
 package com.example.productservice.models;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
+/**
+ * ProductCategory entity representing the many-to-many relationship
+ * between products and categories.
+ */
 @Entity
 @Table(name = "product_categories")
 @Data
@@ -12,54 +27,52 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Builder
 @IdClass(ProductCategoryId.class)
-public class ProductCategory {
+public final class ProductCategory {
+    /**
+     * The product ID.
+     */
     @Id
     @Column(name = "product_id")
     private Long productId;
 
+    /**
+     * The category ID.
+     */
     @Id
     @Column(name = "category_id")
     private Long categoryId;
 
+    /**
+     * The product entity.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
     private Product product;
 
+    /**
+     * The category entity.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", insertable = false, updatable = false)
     private Category category;
 }
 
-// Composite key class
-class ProductCategoryId implements Serializable {
+/**
+ * Composite key class for ProductCategory.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+final class ProductCategoryId implements Serializable {
+
+    /**
+     * The product ID.
+     */
     private Long productId;
+
+    /**
+     * The category ID.
+     */
     private Long categoryId;
-
-    public ProductCategoryId() {}
-
-    public ProductCategoryId(Long productId, Long categoryId) {
-        this.productId = productId;
-        this.categoryId = categoryId;
-    }
-
-    // Getters and setters
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
-    public Long getCategoryId() { return categoryId; }
-    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ProductCategoryId that = (ProductCategoryId) o;
-        return productId.equals(that.productId) && categoryId.equals(that.categoryId);
-    }
-
-    @Override
-    public int hashCode() {
-        return productId.hashCode() + categoryId.hashCode();
-    }
 }
-
-

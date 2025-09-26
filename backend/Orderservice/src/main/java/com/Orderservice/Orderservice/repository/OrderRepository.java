@@ -15,7 +15,9 @@ import com.Orderservice.Orderservice.enums.OrderStatus;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCustomerId(Long customerId);
+
     List<Order> findByStatus(OrderStatus status);
+
     
     // Paginated version for status-based queries
     Page<Order> findByStatus(OrderStatus status, Pageable pageable);
@@ -47,4 +49,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            countQuery = "SELECT COUNT(DISTINCT o) FROM Order o WHERE o.status = :status")
     Page<Order> findByStatusWithOrderItemsOptimized(@Param("status") OrderStatus status, Pageable pageable);
     
+
 }

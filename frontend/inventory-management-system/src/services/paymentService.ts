@@ -1,6 +1,6 @@
 import { authService } from '../lib/services/authService';
 
-const PAYMENT_API_BASE_URL = 'http://localhost:8084/api/payments';
+const PAYMENT_API_BASE_URL = 'http://localhost:8090/api/payments';
 
 export interface PaymentData {
   paymentId: number;
@@ -32,17 +32,17 @@ class PaymentService {
     const token = authService.getToken();
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      ...(token && { Authorization: `Bearer ${token}` }),
     };
   }
 
   async getAllPayments(): Promise<PaymentsResponse> {
     try {
       const headers = await this.getAuthHeaders();
-      
+
       const response = await fetch(`${PAYMENT_API_BASE_URL}/all`, {
         method: 'GET',
-        headers
+        headers,
       });
 
       if (!response.ok) {
@@ -50,10 +50,9 @@ class PaymentService {
       }
 
       const data = await response.json();
-      
+
       console.log('Payments retrieved:', data);
       return data;
-      
     } catch (error) {
       console.error('Error fetching payments:', error);
       throw error;
@@ -63,29 +62,38 @@ class PaymentService {
   // Payment analytics
   calculatePaymentStats(payments: PaymentData[]) {
     const totalPayments = payments.length;
-    const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
+    const totalAmount = payments.reduce(
+      (sum, payment) => sum + payment.amount,
+      0
+    );
     const averagePayment = totalPayments > 0 ? totalAmount / totalPayments : 0;
-    
+
     // Group by status
-    const statusGroups = payments.reduce((acc, payment) => {
-      acc[payment.status] = (acc[payment.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
+    const statusGroups = payments.reduce(
+      (acc, payment) => {
+        acc[payment.status] = (acc[payment.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
     // Group by payment method
-    const methodGroups = payments.reduce((acc, payment) => {
-      acc[payment.method] = (acc[payment.method] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
+    const methodGroups = payments.reduce(
+      (acc, payment) => {
+        acc[payment.method] = (acc[payment.method] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
     // Recent payments (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const recentPayments = payments.filter(payment => 
-      new Date(payment.createdAt) >= thirtyDaysAgo
+
+    const recentPayments = payments.filter(
+      payment => new Date(payment.createdAt) >= thirtyDaysAgo
     );
-    
+
     return {
       totalPayments,
       totalAmount,
@@ -93,7 +101,10 @@ class PaymentService {
       statusGroups,
       methodGroups,
       recentPayments: recentPayments.length,
-      recentAmount: recentPayments.reduce((sum, payment) => sum + payment.amount, 0)
+      recentAmount: recentPayments.reduce(
+        (sum, payment) => sum + payment.amount,
+        0
+      ),
     };
   }
 }

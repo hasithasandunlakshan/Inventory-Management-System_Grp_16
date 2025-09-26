@@ -1,5 +1,3 @@
-import { authService } from '@/lib/services/authService';
-
 export interface InventoryCostResponse {
   message: string;
   success: boolean;
@@ -9,30 +7,46 @@ export interface InventoryCostResponse {
   totalAvailableInventoryCost: number;
 }
 
-// Temporarily use direct API for debugging
-const BASE_URL = 'http://localhost:8083/api/products'; // Direct to Product Service
+export interface InventoryItem {
+  productId: number;
+  productName: string;
+  availableStock: number;
+  minThreshold: number;
+  maxThreshold: number;
+  unitPrice: number;
+  categoryId: number;
+  categoryName: string;
+}
+
+// Use direct service for inventory cost (CORS issue with API Gateway)
+const INVENTORY_COST_URL = 'http://localhost:8083/api/products';
+const INVENTORY_SERVICE_URL = 'http://localhost:8085/api/inventory';
 
 export const inventoryService = {
   getInventoryCost: async (): Promise<InventoryCostResponse> => {
     try {
-      console.log('Fetching inventory cost from:', `${BASE_URL}/inventory/cost`);
-      
-      const response = await fetch(`${BASE_URL}/inventory/cost`, {
+      console.log(
+        'Fetching inventory cost from:',
+        `${INVENTORY_COST_URL}/inventory/cost`
+      );
+
+      const response = await fetch(`${INVENTORY_COST_URL}/inventory/cost`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // Removed auth header for direct API call
         },
       });
-      
+
       console.log('Inventory cost response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Inventory API Error:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
       }
-      
+
       const data = await response.json();
       console.log('Inventory cost data:', data);
       return data;
@@ -40,5 +54,38 @@ export const inventoryService = {
       console.error('Error fetching inventory cost:', error);
       throw error;
     }
-  }
+  },
+
+  /**
+   * Get all inventory items
+   */
+  listAll: async (): Promise<InventoryItem[]> => {
+    try {
+      console.log('Fetching all inventory items from:', INVENTORY_SERVICE_URL);
+
+      const response = await fetch(INVENTORY_SERVICE_URL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Inventory list response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Inventory list API Error:', errorText);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      console.log('Inventory list data:', data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching inventory list:', error);
+      throw error;
+    }
+  },
 };

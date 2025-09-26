@@ -44,7 +44,10 @@ describe('ProductDetails', () => {
     render(<ProductDetails product={product as any} onBack={onBack} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Edit Product/i }));
-    expect(productUtils.editProduct).toHaveBeenCalledWith(expect.objectContaining(product), expect.any(Object));
+    expect(productUtils.editProduct).toHaveBeenCalledWith(
+      expect.objectContaining(product),
+      expect.any(Object)
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /View All Products/i }));
     expect(onBack).toHaveBeenCalled();

@@ -2,7 +2,6 @@
 const API_BASE_URL = 'http://localhost:8085/api'; // Notification service URL
 
 export const notificationService = {
-  
   /**
    * Get notification history for a specific user
    * @param {number} userId - The user ID
@@ -10,19 +9,22 @@ export const notificationService = {
    */
   async getUserNotifications(userId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/user/${userId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add authorization header if needed
-          // 'Authorization': `Bearer ${token}`
-        },
-      });
-      
+      const response = await fetch(
+        `${API_BASE_URL}/notifications/user/${userId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            // Add authorization header if needed
+            // 'Authorization': `Bearer ${token}`
+          },
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const notifications = await response.json();
       return notifications;
     } catch (error) {
@@ -38,17 +40,20 @@ export const notificationService = {
    */
   async markAsRead(notificationId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
+      const response = await fetch(
+        `${API_BASE_URL}/notifications/${notificationId}/read`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const updatedNotification = await response.json();
       return updatedNotification;
     } catch (error) {
@@ -69,11 +74,11 @@ export const notificationService = {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const notifications = await response.json();
       return notifications;
     } catch (error) {
