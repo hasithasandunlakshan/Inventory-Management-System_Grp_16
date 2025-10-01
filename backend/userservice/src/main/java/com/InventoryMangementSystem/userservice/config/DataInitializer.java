@@ -33,7 +33,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initializeRoles() {
-        String[] roles = { "USER", "ADMIN", "MANAGER", "Store Keeper" };
+        String[] roles = { "USER", "ADMIN", "MANAGER", "Store Keeper", "DRIVER" };
 
         for (String roleName : roles) {
             Optional<Role> existingRole = roleRepository.findByRoleName(roleName);
