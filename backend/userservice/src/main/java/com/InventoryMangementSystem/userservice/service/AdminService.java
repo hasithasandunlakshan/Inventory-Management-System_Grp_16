@@ -10,6 +10,8 @@ public interface AdminService {
 
     void removeRoleFromUser(Long userId, String roleName);
 
+    void updateUserRole(Long userId, String newRoleName);
+
     List<Map<String, Object>> getAllUsersWithRoles();
 
     List<String> getAllAvailableRoles();

@@ -3,6 +3,7 @@ package com.InventoryMangementSystem.userservice.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import com.InventoryMangementSystem.userservice.dto.UserInfo;
 import com.InventoryMangementSystem.userservice.entity.User;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminServiceImpl implements AdminService {
 
     private final UserRepository userRepository;
@@ -70,6 +72,40 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new RuntimeException("User does not have role: " + roleName));
 
         userRoleRepository.delete(roleToRemove);
+    }
+
+    /**
+     * Update user's role by replacing existing role with new role
+     * This is used for driver registration - replaces USER role with DRIVER role
+     */
+    @Override
+    @Transactional
+    public void updateUserRole(Long userId, String newRoleName) {
+        // Find user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        // Find or create new role and get its ID
+        Role newRole = roleRepository.findByRoleName(newRoleName)
+                .orElseGet(() -> {
+                    Role role = new Role();
+                    role.setRoleName(newRoleName);
+                    return roleRepository.save(role);
+                });
+
+        // Check if user already has the new role
+        List<UserRole> existingUserRoles = userRoleRepository.findByUser(user);
+        boolean alreadyHasNewRole = existingUserRoles.stream()
+                .anyMatch(ur -> ur.getRole().getRoleName().equals(newRoleName));
+
+        if (alreadyHasNewRole) {
+            log.info("User {} already has role: {}", userId, newRoleName);
+            return; // No need to update
+        }
+
+        // Update user role using role ID
+        userRoleRepository.updateUserRole(userId, newRole.getRoleId());
+        log.info("Updated user {} role to: {} (role ID: {})", userId, newRoleName, newRole.getRoleId());
     }
 
     @Override

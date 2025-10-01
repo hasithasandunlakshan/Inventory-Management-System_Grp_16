@@ -1,10 +1,12 @@
 package com.resourseservice.resourseservice.service;
 
+import com.resourseservice.resourseservice.dto.DriverProfileCreatedEvent;
 import com.resourseservice.resourseservice.dto.DriverRegistrationRequest;
 import com.resourseservice.resourseservice.entity.DriverProfile;
 import com.resourseservice.resourseservice.repository.DriverProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,7 @@ import java.util.Optional;
 public class DriverProfileService {
 
     private final DriverProfileRepository driverProfileRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public DriverProfile registerDriver(DriverRegistrationRequest request) {
         log.info("Registering driver profile for user ID: {}", request.getUserId());
@@ -44,6 +47,17 @@ public class DriverProfileService {
         DriverProfile savedProfile = driverProfileRepository.save(driverProfile);
         log.info("Successfully registered driver profile with ID: {} for user ID: {}",
                 savedProfile.getDriverId(), savedProfile.getUserId());
+
+        // Publish Kafka event for role assignment
+        try {
+            DriverProfileCreatedEvent event = new DriverProfileCreatedEvent(request.getUserId());
+            kafkaTemplate.send("driver-profile-created-events", event);
+            log.info("Published DriverProfileCreated event for user ID: {}", request.getUserId());
+        } catch (Exception e) {
+            log.error("Failed to publish DriverProfileCreated event for user ID: {}: {}",
+                    request.getUserId(), e.getMessage());
+            // Don't throw exception - driver profile is created successfully
+        }
 
         return savedProfile;
     }
