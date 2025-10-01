@@ -1,5 +1,6 @@
 package com.resourseservice.resourseservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -20,6 +21,7 @@ public class DriverRegistrationRequest {
     @Pattern(regexp = "^[A-Z]$|^[A-Z]{2}$", message = "License class should be a valid class (A, B, C, etc.)")
     private String licenseClass;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @NotNull(message = "License expiry date is required")
     private LocalDate licenseExpiry;
 

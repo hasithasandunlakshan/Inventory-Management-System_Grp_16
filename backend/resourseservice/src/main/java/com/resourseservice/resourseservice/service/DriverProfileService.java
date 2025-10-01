@@ -21,17 +21,17 @@ public class DriverProfileService {
 
     public DriverProfile registerDriver(DriverRegistrationRequest request) {
         log.info("Registering driver profile for user ID: {}", request.getUserId());
-        
+
         // Check if license number already exists
         if (driverProfileRepository.existsByLicenseNumber(request.getLicenseNumber())) {
             throw new RuntimeException("Driver with license number " + request.getLicenseNumber() + " already exists");
         }
-        
+
         // Check if user already has a driver profile
         if (driverProfileRepository.findByUserId(request.getUserId()).isPresent()) {
             throw new RuntimeException("Driver profile for user ID " + request.getUserId() + " already exists");
         }
-        
+
         // Create new driver profile
         DriverProfile driverProfile = new DriverProfile();
         driverProfile.setUserId(request.getUserId());
@@ -40,27 +40,28 @@ public class DriverProfileService {
         driverProfile.setLicenseExpiry(request.getLicenseExpiry());
         driverProfile.setEmergencyContact(request.getEmergencyContact());
         driverProfile.setAvailabilityStatus(DriverProfile.AvailabilityStatus.AVAILABLE);
-        
+
         DriverProfile savedProfile = driverProfileRepository.save(driverProfile);
-        log.info("Successfully registered driver profile with ID: {} for user ID: {}", 
+        log.info("Successfully registered driver profile with ID: {} for user ID: {}",
                 savedProfile.getDriverId(), savedProfile.getUserId());
-        
+
         return savedProfile;
     }
 
     public DriverProfile createDriverProfile(DriverProfile driverProfile) {
         log.info("Creating driver profile for user ID: {}", driverProfile.getUserId());
-        
+
         // Check if license number already exists
         if (driverProfileRepository.existsByLicenseNumber(driverProfile.getLicenseNumber())) {
-            throw new RuntimeException("Driver with license number " + driverProfile.getLicenseNumber() + " already exists");
+            throw new RuntimeException(
+                    "Driver with license number " + driverProfile.getLicenseNumber() + " already exists");
         }
-        
+
         // Check if user already has a driver profile
         if (driverProfileRepository.findByUserId(driverProfile.getUserId()).isPresent()) {
             throw new RuntimeException("Driver profile for user ID " + driverProfile.getUserId() + " already exists");
         }
-        
+
         return driverProfileRepository.save(driverProfile);
     }
 
@@ -90,10 +91,10 @@ public class DriverProfileService {
 
     public DriverProfile updateDriverProfile(Long driverId, DriverProfile updatedProfile) {
         log.info("Updating driver profile with ID: {}", driverId);
-        
+
         DriverProfile existingProfile = driverProfileRepository.findById(driverId)
                 .orElseThrow(() -> new RuntimeException("Driver profile not found with ID: " + driverId));
-        
+
         // Update fields
         if (updatedProfile.getLicenseNumber() != null) {
             existingProfile.setLicenseNumber(updatedProfile.getLicenseNumber());
@@ -110,17 +111,17 @@ public class DriverProfileService {
         if (updatedProfile.getEmergencyContact() != null) {
             existingProfile.setEmergencyContact(updatedProfile.getEmergencyContact());
         }
-        
+
         return driverProfileRepository.save(existingProfile);
     }
 
     public void deleteDriverProfile(Long driverId) {
         log.info("Deleting driver profile with ID: {}", driverId);
-        
+
         if (!driverProfileRepository.existsById(driverId)) {
             throw new RuntimeException("Driver profile not found with ID: " + driverId);
         }
-        
+
         driverProfileRepository.deleteById(driverId);
     }
 }

@@ -94,7 +94,7 @@ public class UserServiceImpl implements UserService {
             String role = "USER"; // Default role
             if (user.getRoles() != null && !user.getRoles().isEmpty()) {
                 // Priority order: ADMIN > MANAGER > Store Keeper > USER
-                String[] rolePriority = { "ADMIN", "MANAGER", "Store Keeper", "USER" };
+                String[] rolePriority = { "ADMIN", "MANAGER", "Store Keeper", "Driver", "USER" };
 
                 for (String priorityRole : rolePriority) {
                     boolean hasRole = user.getRoles().stream()
@@ -141,8 +141,8 @@ public class UserServiceImpl implements UserService {
             // Get user roles and determine the highest priority role
             String role = "USER"; // Default role
             if (user.getRoles() != null && !user.getRoles().isEmpty()) {
-                // Priority order: ADMIN > MANAGER > Store Keeper > USER
-                String[] rolePriority = { "ADMIN", "MANAGER", "Store Keeper", "USER" };
+                // Priority order: ADMIN > MANAGER > Store Keeper > DRIVER > USER
+                String[] rolePriority = { "ADMIN", "MANAGER", "Store Keeper", "DRIVER", "USER" };
 
                 for (String priorityRole : rolePriority) {
                     boolean hasRole = user.getRoles().stream()
@@ -221,7 +221,7 @@ public class UserServiceImpl implements UserService {
         String role = "USER"; // Default role
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             // Priority order: ADMIN > MANAGER > Store Keeper > USER
-            String[] rolePriority = { "ADMIN", "MANAGER", "Store Keeper", "USER" };
+            String[] rolePriority = { "ADMIN", "MANAGER", "Store Keeper", "Driver", "USER" };
 
             for (String priorityRole : rolePriority) {
                 boolean hasRole = user.getRoles().stream()
