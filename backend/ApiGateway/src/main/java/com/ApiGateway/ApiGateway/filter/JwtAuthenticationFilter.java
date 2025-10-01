@@ -178,14 +178,15 @@ public class JwtAuthenticationFilter implements GatewayFilter {
             return has.test("STORE KEEPER") || has.test("STOREKEEPER") || has.test("MANAGER") || has.test("ADMIN");
         }
 
-        // Resource service - Driver/Vehicle management - MANAGER, ADMIN only
+        // Resource service - Driver/Vehicle management - MANAGER, ADMIN, DRIVER
         if (path.startsWith("/api/resources")) {
-            System.out.println("🔍 /api/resources - Checking authorization for MANAGER/ADMIN");
+            System.out.println("🔍 /api/resources - Checking authorization for MANAGER/ADMIN/DRIVER");
             boolean hasManager = has.test("MANAGER");
             boolean hasAdmin = has.test("ADMIN");
-            boolean result = hasManager || hasAdmin;
+            boolean hasDriver = has.test("DRIVER");
+            boolean result = hasManager || hasAdmin || hasDriver;
             System.out.println("🔍 /api/resources check - hasManager: " + hasManager + ", hasAdmin: " + hasAdmin
-                    + ", result: " + result);
+                    + ", hasDriver: " + hasDriver + ", result: " + result);
             return result;
         }
 
