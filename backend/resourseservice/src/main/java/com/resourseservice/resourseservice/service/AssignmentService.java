@@ -1,6 +1,8 @@
 package com.resourseservice.resourseservice.service;
 
 import com.resourseservice.resourseservice.dto.AssignmentRequest;
+import com.resourseservice.resourseservice.dto.DetailedAssignmentResponse;
+import com.resourseservice.resourseservice.dto.MinimalAssignmentResponse;
 import com.resourseservice.resourseservice.entity.Assignment;
 import com.resourseservice.resourseservice.repository.AssignmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -140,5 +143,100 @@ public class AssignmentService {
                 assignment.getDriverId(), assignment.getVehicleId());
 
         return savedAssignment;
+    }
+
+    // New optimized methods using JOINs
+    public List<MinimalAssignmentResponse> getAllAssignmentsMinimal() {
+        log.info("Fetching all assignments with minimal details using optimized query");
+        List<Object[]> results = assignmentRepository.findAllAssignmentsWithMinimalDetails();
+        return results.stream()
+                .map(this::convertObjectArrayToMinimalResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<MinimalAssignmentResponse> getActiveAssignmentsMinimal() {
+        log.info("Fetching active assignments with minimal details using optimized query");
+        List<Object[]> results = assignmentRepository.findActiveAssignmentsWithMinimalDetails();
+        return results.stream()
+                .map(this::convertObjectArrayToMinimalResponse)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<DetailedAssignmentResponse> getAssignmentDetailsById(Long assignmentId) {
+        log.info("Fetching detailed assignment by ID: {} using basic query", assignmentId);
+        Optional<Assignment> assignment = assignmentRepository.findById(assignmentId);
+        if (assignment.isPresent()) {
+            Assignment a = assignment.get();
+            DetailedAssignmentResponse response = DetailedAssignmentResponse.builder()
+                    .assignmentId(a.getAssignmentId())
+                    .driverId(a.getDriverId())
+                    .vehicleId(a.getVehicleId())
+                    .status(a.getStatus())
+                    .assignedBy(a.getAssignedBy())
+                    .assignedAt(a.getAssignedAt())
+                    .unassignedAt(a.getUnassignedAt())
+                    .unassignedBy(a.getUnassignedBy())
+                    .notes(a.getNotes())
+                    .createdAt(a.getCreatedAt())
+                    .updatedAt(a.getUpdatedAt())
+                    .driverDetails(null)
+                    .assignedByDetails(null)
+                    .unassignedByDetails(null)
+                    .vehicleDetails(null)
+                    .build();
+            return Optional.of(response);
+        }
+        return Optional.empty();
+    }
+
+    private MinimalAssignmentResponse convertObjectArrayToMinimalResponse(Object[] result) {
+        return MinimalAssignmentResponse.builder()
+                .assignmentId(((Number) result[0]).longValue())
+                .driverId(((Number) result[1]).longValue())
+                .vehicleId(((Number) result[2]).longValue())
+                .status(Assignment.AssignmentStatus.valueOf((String) result[3]))
+                .assignedAt(((java.sql.Timestamp) result[4]).toLocalDateTime())
+                .unassignedAt(result[5] != null ? ((java.sql.Timestamp) result[5]).toLocalDateTime() : null)
+                .notes((String) result[6])
+                .driverName(result[7] != null ? (String) result[7] : "Driver " + result[1])
+                .vehicleNumber(result[8] != null ? (String) result[8] : "Vehicle " + result[2])
+                .assignedByName(result[9] != null ? (String) result[9] : null)
+                .build();
+    }
+
+    private DetailedAssignmentResponse convertObjectArrayToDetailedResponse(Object[] result) {
+        // Extract assignment basic info
+        Long assignmentId = ((Number) result[0]).longValue();
+        Long driverId = ((Number) result[1]).longValue();
+        Long vehicleId = ((Number) result[2]).longValue();
+        Assignment.AssignmentStatus status = Assignment.AssignmentStatus.valueOf((String) result[3]);
+        Long assignedBy = result[4] != null ? ((Number) result[4]).longValue() : null;
+        java.time.LocalDateTime assignedAt = ((java.sql.Timestamp) result[5]).toLocalDateTime();
+        java.time.LocalDateTime unassignedAt = result[6] != null ? ((java.sql.Timestamp) result[6]).toLocalDateTime()
+                : null;
+        Long unassignedBy = result[7] != null ? ((Number) result[7]).longValue() : null;
+        String notes = (String) result[8];
+        java.time.LocalDateTime createdAt = ((java.sql.Timestamp) result[9]).toLocalDateTime();
+        java.time.LocalDateTime updatedAt = ((java.sql.Timestamp) result[10]).toLocalDateTime();
+
+        // For now, return basic assignment details without the complex joins
+        // TODO: Add separate queries to get driver, user, and vehicle details
+        return DetailedAssignmentResponse.builder()
+                .assignmentId(assignmentId)
+                .driverId(driverId)
+                .vehicleId(vehicleId)
+                .status(status)
+                .assignedBy(assignedBy)
+                .assignedAt(assignedAt)
+                .unassignedAt(unassignedAt)
+                .unassignedBy(unassignedBy)
+                .notes(notes)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .driverDetails(null) // TODO: Add separate query
+                .assignedByDetails(null) // TODO: Add separate query
+                .unassignedByDetails(null) // TODO: Add separate query
+                .vehicleDetails(null) // TODO: Add separate query
+                .build();
     }
 }

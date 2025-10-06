@@ -40,6 +40,76 @@ export interface DriverVehicleAssignment {
   notes?: string;
 }
 
+export interface MinimalAssignment {
+  assignmentId: number;
+  driverId: number;
+  vehicleId: number;
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  assignedAt: string;
+  unassignedAt?: string;
+  notes?: string;
+  driverName: string;
+  vehicleNumber: string;
+  assignedByName?: string;
+}
+
+export interface DetailedAssignment {
+  assignmentId: number;
+  driverId: number;
+  vehicleId: number;
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  assignedBy?: number;
+  assignedAt: string;
+  unassignedAt?: string;
+  unassignedBy?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  driverDetails?: {
+    driverId: number;
+    userId: number;
+    fullName: string;
+    email: string;
+    phoneNumber?: string;
+    licenseNumber: string;
+    licenseClass: string;
+    licenseExpiry: string;
+    emergencyContact?: string;
+    availabilityStatus: string;
+    formattedAddress?: string;
+  };
+  assignedByDetails?: {
+    userId: number;
+    username: string;
+    fullName: string;
+    email: string;
+    role: string;
+    phoneNumber?: string;
+    formattedAddress?: string;
+  };
+  unassignedByDetails?: {
+    userId: number;
+    username: string;
+    fullName: string;
+    email: string;
+    role: string;
+    phoneNumber?: string;
+    formattedAddress?: string;
+  };
+  vehicleDetails?: {
+    vehicleId: number;
+    vehicleNumber: string;
+    vehicleType: string;
+    capacity: number;
+    status: string;
+    make?: string;
+    model?: string;
+    year?: number;
+    lastMaintenance?: string;
+    nextMaintenance?: string;
+  };
+}
+
 export interface DriverRegistrationRequest {
   userId: number;
   licenseNumber: string;
@@ -239,6 +309,31 @@ class DriverService {
       }
     );
     return this.handleResponse<DriverVehicleAssignment[]>(response);
+  }
+
+  // New methods for minimal and detailed assignments
+  async getAllAssignmentsMinimal(): Promise<ApiResponse<MinimalAssignment[]>> {
+    const response = await fetch(`${API_BASE_URL}/api/resources/assignments/minimal`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<MinimalAssignment[]>(response);
+  }
+
+  async getActiveAssignmentsMinimal(): Promise<ApiResponse<MinimalAssignment[]>> {
+    const response = await fetch(`${API_BASE_URL}/api/resources/assignments/active/minimal`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<MinimalAssignment[]>(response);
+  }
+
+  async getAssignmentDetails(assignmentId: number): Promise<ApiResponse<DetailedAssignment>> {
+    const response = await fetch(`${API_BASE_URL}/api/resources/assignments/${assignmentId}/details`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<DetailedAssignment>(response);
   }
 
   // User Management (for driver account creation)
