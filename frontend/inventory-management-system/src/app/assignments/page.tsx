@@ -36,14 +36,15 @@ import {
   DriverProfile,
   Vehicle,
   AssignmentRequest,
+  MinimalAssignment,
 } from '@/lib/services/driverService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export default function AssignmentsPage() {
-  const [assignments, setAssignments] = useState<DriverVehicleAssignment[]>([]);
+  const [assignments, setAssignments] = useState<MinimalAssignment[]>([]);
   const [activeAssignments, setActiveAssignments] = useState<
-    DriverVehicleAssignment[]
+    MinimalAssignment[]
   >([]);
   const [availableDrivers, setAvailableDrivers] = useState<DriverProfile[]>([]);
   const [availableVehicles, setAvailableVehicles] = useState<Vehicle[]>([]);
@@ -73,8 +74,8 @@ export default function AssignmentsPage() {
         availableDriversResponse,
         availableVehiclesResponse,
       ] = await Promise.all([
-        driverService.getAllAssignments(),
-        driverService.getActiveAssignments(),
+        driverService.getAllAssignmentsMinimal(),
+        driverService.getActiveAssignmentsMinimal(),
         driverService.getAvailableDrivers(),
         driverService.getAvailableVehicles(),
       ]);
@@ -162,10 +163,15 @@ export default function AssignmentsPage() {
 
   const filteredAssignments = assignments.filter(
     assignment =>
-      assignment.driverId.toString().includes(searchTerm) ||
-      assignment.vehicleId.toString().includes(searchTerm) ||
+      assignment.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      assignment.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       assignment.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleViewAssignment = (assignmentId: number) => {
+    // Navigate to assignment details page
+    window.location.href = `/assignments/${assignmentId}`;
+  };
 
   if (loading) {
     return (
@@ -365,7 +371,7 @@ export default function AssignmentsPage() {
       <div className='flex items-center space-x-2'>
         <Search className='h-4 w-4 text-gray-400' />
         <Input
-          placeholder='Search assignments by driver ID, vehicle ID, or notes...'
+          placeholder='Search assignments by driver name, vehicle number, or notes...'
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           className='max-w-sm'
@@ -398,7 +404,8 @@ export default function AssignmentsPage() {
                 {activeAssignments.map(assignment => (
                   <div
                     key={assignment.assignmentId}
-                    className='p-4 border rounded-lg'
+                    className='p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer'
+                    onClick={() => handleViewAssignment(assignment.assignmentId)}
                   >
                     <div className='flex items-center justify-between mb-2'>
                       <div className='flex items-center space-x-2'>
@@ -414,14 +421,14 @@ export default function AssignmentsPage() {
                     <div className='space-y-1'>
                       <div className='flex items-center space-x-2'>
                         <UserCheck className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm'>
-                          Driver ID: {assignment.driverId}
+                        <span className='text-sm font-medium'>
+                          {assignment.driverName}
                         </span>
                       </div>
                       <div className='flex items-center space-x-2'>
                         <Car className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm'>
-                          Vehicle ID: {assignment.vehicleId}
+                        <span className='text-sm font-medium'>
+                          {assignment.vehicleNumber}
                         </span>
                       </div>
                       <div className='flex items-center space-x-2'>
@@ -430,6 +437,14 @@ export default function AssignmentsPage() {
                           Assigned: {formatDate(assignment.assignedAt)}
                         </span>
                       </div>
+                      {assignment.assignedByName && (
+                        <div className='flex items-center space-x-2'>
+                          <UserCheck className='h-4 w-4 text-gray-400' />
+                          <span className='text-sm text-gray-600'>
+                            Assigned by: {assignment.assignedByName}
+                          </span>
+                        </div>
+                      )}
                       {assignment.notes && (
                         <p className='text-sm text-gray-600 mt-2'>
                           Notes: {assignment.notes}
@@ -462,7 +477,8 @@ export default function AssignmentsPage() {
                 {filteredAssignments.map(assignment => (
                   <div
                     key={assignment.assignmentId}
-                    className='p-4 border rounded-lg'
+                    className='p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer'
+                    onClick={() => handleViewAssignment(assignment.assignmentId)}
                   >
                     <div className='flex items-center justify-between mb-2'>
                       <div className='flex items-center space-x-2'>
@@ -482,14 +498,14 @@ export default function AssignmentsPage() {
                     <div className='space-y-1'>
                       <div className='flex items-center space-x-2'>
                         <UserCheck className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm'>
-                          Driver ID: {assignment.driverId}
+                        <span className='text-sm font-medium'>
+                          {assignment.driverName}
                         </span>
                       </div>
                       <div className='flex items-center space-x-2'>
                         <Car className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm'>
-                          Vehicle ID: {assignment.vehicleId}
+                        <span className='text-sm font-medium'>
+                          {assignment.vehicleNumber}
                         </span>
                       </div>
                       <div className='flex items-center space-x-2'>
@@ -503,6 +519,14 @@ export default function AssignmentsPage() {
                           <Calendar className='h-4 w-4 text-gray-400' />
                           <span className='text-sm'>
                             Unassigned: {formatDate(assignment.unassignedAt)}
+                          </span>
+                        </div>
+                      )}
+                      {assignment.assignedByName && (
+                        <div className='flex items-center space-x-2'>
+                          <UserCheck className='h-4 w-4 text-gray-400' />
+                          <span className='text-sm text-gray-600'>
+                            Assigned by: {assignment.assignedByName}
                           </span>
                         </div>
                       )}

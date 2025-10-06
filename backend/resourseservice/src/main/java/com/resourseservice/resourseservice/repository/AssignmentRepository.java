@@ -50,4 +50,39 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
     // Find assignments unassigned by specific user
     List<Assignment> findByUnassignedByOrderByAssignedAtDesc(Long unassignedBy);
+
+    // Optimized query to get all assignments with minimal details using native SQL
+    @Query(value = "SELECT a.assignment_id, a.driver_id, a.vehicle_id, a.status, a.assigned_at, a.unassigned_at, a.notes, "
+            +
+            "u_driver.full_name as driverName, v.vehicle_number as vehicleNumber, u_assigned.full_name as assignedByName "
+            +
+            "FROM assignments a " +
+            "LEFT JOIN driver_profiles dp ON a.driver_id = dp.driver_id " +
+            "LEFT JOIN users u_driver ON dp.user_id = u_driver.user_id " +
+            "LEFT JOIN vehicles v ON a.vehicle_id = v.vehicle_id " +
+            "LEFT JOIN users u_assigned ON a.assigned_by = u_assigned.user_id " +
+            "ORDER BY a.assigned_at DESC", nativeQuery = true)
+    List<Object[]> findAllAssignmentsWithMinimalDetails();
+
+    // Optimized query to get active assignments with minimal details using native
+    // SQL
+    @Query(value = "SELECT a.assignment_id, a.driver_id, a.vehicle_id, a.status, a.assigned_at, a.unassigned_at, a.notes, "
+            +
+            "u_driver.full_name as driverName, v.vehicle_number as vehicleNumber, u_assigned.full_name as assignedByName "
+            +
+            "FROM assignments a " +
+            "LEFT JOIN driver_profiles dp ON a.driver_id = dp.driver_id " +
+            "LEFT JOIN users u_driver ON dp.user_id = u_driver.user_id " +
+            "LEFT JOIN vehicles v ON a.vehicle_id = v.vehicle_id " +
+            "LEFT JOIN users u_assigned ON a.assigned_by = u_assigned.user_id " +
+            "WHERE a.status = 'ACTIVE' " +
+            "ORDER BY a.assigned_at DESC", nativeQuery = true)
+    List<Object[]> findActiveAssignmentsWithMinimalDetails();
+
+    // Simplified query to get detailed assignment by ID using native SQL
+    @Query(value = "SELECT a.assignment_id, a.driver_id, a.vehicle_id, a.status, a.assigned_by, a.assigned_at, " +
+            "a.unassigned_at, a.unassigned_by, a.notes, a.created_at, a.updated_at " +
+            "FROM assignments a " +
+            "WHERE a.assignment_id = :assignmentId", nativeQuery = true)
+    Object[] findAssignmentDetailsById(@Param("assignmentId") Long assignmentId);
 }
