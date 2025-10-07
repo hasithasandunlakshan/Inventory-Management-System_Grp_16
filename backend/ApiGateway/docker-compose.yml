@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8090:8090"
+    environment:
+      # Application Configuration
+      - SPRING_APPLICATION_NAME=ApiGateway
+      - SERVER_PORT=8090
+      
+      # JWT Configuration
+      - JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning
+      - JWT_EXPIRATION=86400000
+      
+      # Service Discovery (if using Docker Compose with other services)
+      - USER_SERVICE_URL=http://userservice:8080
+      - PRODUCT_SERVICE_URL=http://productservice:8083
+      - ORDER_SERVICE_URL=http://orderservice:8084
+      - INVENTORY_SERVICE_URL=http://inventoryservice:8085
+      - SUPPLIER_SERVICE_URL=http://supplierservice:8082
+      - RESOURCE_SERVICE_URL=http://resourseservice:8086
+      
+      # JVM Options
+      - JAVA_OPTS=-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+    networks:
+      - api-gateway-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - userservice
+      - resourseservice
+      - orderservice
+
+  # Optional: Include other services for complete stack
+  userservice:
+    image: userservice:latest
+    container_name: userservice
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-38838f7f-sem5-project.f.aivencloud.com:27040/InventoryManagement?sslMode=REQUIRED&serverTimezone=UTC&tcpKeepAlive=true
+      - SPRING_DATASOURCE_USERNAME=avnadmin
+      - SPRING_DATASOURCE_PASSWORD=AVNS_Ipqzq0kuyRjWpAdm_pc
+      - JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning
+      - JWT_EXPIRATION=86400000
+    networks:
+      - api-gateway-network
+    restart: unless-stopped
+
+  resourseservice:
+    image: resourseservice:latest
+    container_name: resourseservice
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-38838f7f-sem5-project.f.aivencloud.com:27040/InventoryManagement?sslMode=REQUIRED&serverTimezone=UTC&tcpKeepAlive=true
+      - SPRING_DATASOURCE_USERNAME=avnadmin
+      - SPRING_DATASOURCE_PASSWORD=AVNS_Ipqzq0kuyRjWpAdm_pc
+    networks:
+      - api-gateway-network
+    restart: unless-stopped
+
+  orderservice:
+    image: orderservice:latest
+    container_name: orderservice
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-38838f7f-sem5-project.f.aivencloud.com:27040/InventoryManagement?sslMode=REQUIRED&serverTimezone=UTC&tcpKeepAlive=true
+      - SPRING_DATASOURCE_USERNAME=avnadmin
+      - SPRING_DATASOURCE_PASSWORD=AVNS_Ipqzq0kuyRjWpAdm_pc
+    networks:
+      - api-gateway-network
+    restart: unless-stopped
+
+networks:
+  api-gateway-network:
+    driver: bridge
