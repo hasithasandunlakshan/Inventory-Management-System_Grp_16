@@ -1,15 +1,16 @@
 import {
-  Home,
-  Users,
-  Package,
   BarChart3,
-  Settings,
-  Truck,
-  ShoppingCart,
-  FileText,
-  UserCheck,
   Car,
+  FileText,
+  Home,
+  Package,
   Route,
+  Settings,
+  ShoppingCart,
+  TrendingUp,
+  Truck,
+  UserCheck,
+  Users,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -69,6 +70,12 @@ export const NAV_ITEMS: NavItem[] = [
         label: 'Inventory',
         href: '/operations/inventory',
         icon: Package,
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Sale Forecast',
+        href: '/operations/sale-forecast',
+        icon: TrendingUp,
         roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
       },
       {
