@@ -1,0 +1,78 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  PROJECT_ID: api-gateway-474511
+  SERVICE_NAME: api-gateway
+  REGION: us-central1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Java 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+
+    - name: Run tests
+      run: ./mvnw test
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Configure Docker to use gcloud as credential helper
+      run: gcloud auth configure-docker
+
+    - name: Build and push Docker image
+      run: |
+        gcloud builds submit \
+          --config cloudbuild.yaml \
+          --substitutions _IMAGE_NAME=gcr.io/$PROJECT_ID/$SERVICE_NAME \
+          .
+
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy $SERVICE_NAME \
+          --image gcr.io/$PROJECT_ID/$SERVICE_NAME \
+          --platform managed \
+          --region $REGION \
+          --allow-unauthenticated \
+          --set-env-vars "SPRING_PROFILES_ACTIVE=cloudrun" \
+          --set-env-vars "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+          --memory "1Gi" \
+          --cpu "1" \
+          --concurrency "80" \
+          --timeout "300" \
+          --max-instances "10" \
+          --min-instances "0"
+
+    - name: Show service URL
+      run: |
+        SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --region=$REGION --format="value(status.url)")
+        echo "Service deployed at: $SERVICE_URL"
+        echo "Health check: $SERVICE_URL/actuator/health"

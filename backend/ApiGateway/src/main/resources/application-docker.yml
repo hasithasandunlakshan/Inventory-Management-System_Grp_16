@@ -1,0 +1,58 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers
+
+# JWT Configuration - Using environment variables
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning}
+  expiration: 86400000 # 24 hours
+
+# Service URLs - Using environment variables for Docker deployment
+user:
+  service:
+    url: ${USER_SERVICE_URL:http://localhost:8080}
+
+product:
+  service:
+    url: ${PRODUCT_SERVICE_URL:http://localhost:8081}
+
+order:
+  service:
+    url: ${ORDER_SERVICE_URL:http://localhost:8084}
+
+supplier:
+  service:
+    url: ${SUPPLIER_SERVICE_URL:http://localhost:8082}
+
+inventory:
+  service:
+    url: ${INVENTORY_SERVICE_URL:http://localhost:8085}
+
+resource:
+  service:
+    url: ${RESOURCE_SERVICE_URL:http://localhost:8086}
+
+# Actuator endpoints for health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    com.ApiGateway.ApiGateway: INFO
+    org.springframework.cloud.gateway: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

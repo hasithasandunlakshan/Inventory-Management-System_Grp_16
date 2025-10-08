@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-gateway-service
+    ports:
+      - "8090:8090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning
+      - USER_SERVICE_URL=http://user-service:8080
+      - PRODUCT_SERVICE_URL=http://product-service:8081
+      - ORDER_SERVICE_URL=http://order-service:8084
+      - SUPPLIER_SERVICE_URL=http://supplier-service:8082
+      - INVENTORY_SERVICE_URL=http://inventory-service:8085
+      - RESOURCE_SERVICE_URL=http://resource-service:8086
+    networks:
+      - inventory-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  inventory-network:
+    external: true

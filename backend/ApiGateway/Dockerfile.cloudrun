@@ -1,0 +1,36 @@
+# Use OpenJDK 17 as base image - optimized for Cloud Run
+FROM openjdk:17-jdk-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy Maven wrapper and pom.xml first (for better caching)
+COPY mvnw .
+COPY mvnw.cmd .
+COPY .mvn .mvn
+COPY pom.xml .
+
+# Give execute permission to Maven wrapper
+RUN chmod +x ./mvnw
+
+# Download dependencies (this layer will be cached if pom.xml doesn't change)
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code
+COPY src ./src
+
+# Build the application
+RUN ./mvnw clean package -DskipTests
+
+# Cloud Run expects the service to listen on the PORT environment variable
+ENV PORT=8080
+
+# Expose the port Cloud Run will use
+EXPOSE 8080
+
+# Create a non-root user for security
+RUN addgroup --system spring && adduser --system spring --ingroup spring
+USER spring:spring
+
+# Run the jar file with Cloud Run optimizations
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-Dserver.port=${PORT}", "-jar", "/app/target/ApiGateway-0.0.1-SNAPSHOT.jar"]

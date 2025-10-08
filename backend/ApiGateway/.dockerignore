@@ -1,0 +1,32 @@
+# Docker ignore file for API Gateway
+target/
+!target/ApiGateway-*.jar
+*.jar
+!target/ApiGateway-*.jar.original
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar

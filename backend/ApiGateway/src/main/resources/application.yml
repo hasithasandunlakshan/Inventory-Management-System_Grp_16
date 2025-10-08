@@ -14,30 +14,15 @@ jwt:
   secret: mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning # Same as your User Service
   expiration: 86400000 # 24 hours
 
-# Service URLs
-user:
-  service:
-    url: http://localhost:8080
-
-product:
-  service:
-    url: http://localhost:8081
-
-order:
-  service:
-    url: http://localhost:8084
-
-supplier:
-  service:
-    url: http://localhost:8082
-
-inventory:
-  service:
-    url: http://localhost:8085
-
-resource:
-  service:
-    url: http://localhost:8086
+# Service URLs - Environment Variables
+services:
+  user-service-url: ${USER_SERVICE_URL:http://localhost:8080}
+  product-service-url: ${PRODUCT_SERVICE_URL:http://localhost:8083}
+  order-service-url: ${ORDER_SERVICE_URL:http://localhost:8084}
+  supplier-service-url: ${SUPPLIER_SERVICE_URL:http://localhost:8082}
+  inventory-service-url: ${INVENTORY_SERVICE_URL:http://localhost:8085}
+  resource-service-url: ${RESOURCE_SERVICE_URL:http://localhost:8086}
+  health-service-url: ${HEALTH_SERVICE_URL:http://localhost:8090}
 
 # Logging
 logging:

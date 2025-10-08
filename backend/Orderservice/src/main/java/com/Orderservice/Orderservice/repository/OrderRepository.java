@@ -49,5 +49,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            countQuery = "SELECT COUNT(DISTINCT o) FROM Order o WHERE o.status = :status")
     Page<Order> findByStatusWithOrderItemsOptimized(@Param("status") OrderStatus status, Pageable pageable);
     
+    // Method to get confirmed orders without JOIN FETCH (for counting/comparison purposes)
+    @Query("SELECT o FROM Order o WHERE o.status = 'CONFIRMED'")
+    List<Order> findAllConfirmedOrdersOnly();
 
 }

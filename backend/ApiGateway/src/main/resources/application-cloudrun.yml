@@ -1,0 +1,44 @@
+server:
+  port: ${PORT:8080}  # Cloud Run uses PORT environment variable
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers
+
+# JWT Configuration - Using environment variables
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning}
+  expiration: 86400000 # 24 hours
+
+# Service URLs - Cloud Run Environment Variables
+services:
+  user-service-url: ${USER_SERVICE_URL:https://user-service-337812374841.us-central1.run.app}
+  product-service-url: ${PRODUCT_SERVICE_URL:https://product-service-337812374841.us-central1.run.app}
+  order-service-url: ${ORDER_SERVICE_URL:https://order-service-337812374841.us-central1.run.app}
+  supplier-service-url: ${SUPPLIER_SERVICE_URL:https://supplier-service-337812374841.us-central1.run.app}
+  inventory-service-url: ${INVENTORY_SERVICE_URL:https://inventory-service-337812374841.us-central1.run.app}
+  resource-service-url: ${RESOURCE_SERVICE_URL:https://resource-service-337812374841.us-central1.run.app}
+  health-service-url: ${HEALTH_SERVICE_URL:https://api-gateway-337812374841.us-central1.run.app}
+
+# Actuator endpoints for health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging optimized for Cloud Run
+logging:
+  level:
+    com.ApiGateway.ApiGateway: INFO
+    org.springframework.cloud.gateway: INFO
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
