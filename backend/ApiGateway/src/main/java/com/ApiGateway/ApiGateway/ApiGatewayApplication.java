@@ -27,7 +27,7 @@ public class ApiGatewayApplication {
                                 .route("user-service-auth-protected", r -> r
                                                 .path("/api/auth/users")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("http://localhost:8080"))
+                                                .uri("https://userservice-337812374841.us-central1.run.app"))
                                 // User Service - Public auth endpoints (login/signup)
 
                                 // User Service - Public endpoints
@@ -35,20 +35,20 @@ public class ApiGatewayApplication {
                                 .route("user-service-auth-public", r -> r
                                                 .path("/api/auth/login", "/api/auth/signup")
                                                 .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
-                                                .uri("http://localhost:8080"))
+                                                .uri("https://userservice-337812374841.us-central1.run.app"))
                                 // User Service - Secured endpoints (everything else under /api/auth/**)
                                 .route("user-service-auth-secure", r -> r
                                                 .path("/api/auth/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("http://localhost:8080"))
+                                                .uri("https://userservice-337812374841.us-central1.run.app"))
                                 .route("user-service-admin", r -> r
                                                 .path("/api/admin/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("http://localhost:8080"))
+                                                .uri("https://userservice-337812374841.us-central1.run.app"))
                                 .route("user-service-secure", r -> r
                                                 .path("/api/secure/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("http://localhost:8080"))
+                                                .uri("https://userservice-337812374841.us-central1.run.app"))
 
                                 // Product Service - Public access
                                 .route("product-service", r -> r

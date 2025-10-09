@@ -1,7 +1,7 @@
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 import { userService, UserInfo } from './userService';
 
-const API_BASE_URL = 'http://localhost:8090/api/orders'; // Through API Gateway
+const API_BASE_URL = 'https://api-gateway-q42ns563da-uc.a.run.app/api/orders'; // Through API Gateway
 
 export interface OrderItem {
   orderItemId: number;

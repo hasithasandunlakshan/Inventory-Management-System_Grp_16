@@ -1,0 +1,34 @@
+# Git files
+.git
+.gitignore
+
+# Build artifacts
+target/
+!target/*.jar
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+hs_err_pid*.log
+
+# Local development files
+docker-compose.yml
+README-Docker.md
+
+# Test files
+src/test/
+
+# Maven wrapper (optional, can be included if needed)
+.mvn/
+mvnw
+mvnw.cmd
