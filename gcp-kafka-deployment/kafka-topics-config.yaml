@@ -1,0 +1,83 @@
+# Kafka Topics Configuration for Inventory Management System
+# This file contains all the topics used across your microservices
+
+# Topic definitions with their specific configurations
+topics:
+  # Order Service Topics
+  - name: "inventory-reservation-request"
+    description: "Order service publishes inventory reservation requests"
+    partitions: 3
+    replication_factor: 1
+    producer: "Order Service"
+    consumer: "Product Service"
+    
+  - name: "inventory-reservation-response"
+    description: "Product service publishes inventory reservation responses"
+    partitions: 3
+    replication_factor: 1
+    producer: "Product Service"
+    consumer: "Order Service"
+    
+  - name: "order-notifications"
+    description: "Order service publishes order status notifications"
+    partitions: 3
+    replication_factor: 1
+    producer: "Order Service"
+    consumer: "Notification Service"
+    
+  # Resource Service Topics
+  - name: "driver-profile-created-events"
+    description: "Resource service publishes driver profile creation events"
+    partitions: 2
+    replication_factor: 1
+    producer: "Resource Service"
+    consumer: "User Service"
+    
+  # Notification Service Topics
+  - name: "inventory-notifications"
+    description: "Inventory-related notifications"
+    partitions: 2
+    replication_factor: 1
+    producer: "Product Service"
+    consumer: "Notification Service"
+    
+  - name: "payment-notifications"
+    description: "Payment-related notifications"
+    partitions: 2
+    replication_factor: 1
+    producer: "Order Service"
+    consumer: "Notification Service"
+    
+  # Additional Topics (for future use)
+  - name: "user-events"
+    description: "User service events"
+    partitions: 2
+    replication_factor: 1
+    
+  - name: "product-stock-updates"
+    description: "Product stock level updates"
+    partitions: 3
+    replication_factor: 1
+    
+  - name: "order-status-updates"
+    description: "Real-time order status updates"
+    partitions: 3
+    replication_factor: 1
+
+# Consumer Groups Configuration
+consumer_groups:
+  - name: "order-service-group"
+    service: "Order Service"
+    topics: ["inventory-reservation-response"]
+    
+  - name: "product-service-group"
+    service: "Product Service"
+    topics: ["inventory-reservation-request"]
+    
+  - name: "notification-service-group"
+    service: "Notification Service"
+    topics: ["order-notifications", "inventory-notifications", "payment-notifications"]
+    
+  - name: "userservice-group"
+    service: "User Service"
+    topics: ["driver-profile-created-events"]

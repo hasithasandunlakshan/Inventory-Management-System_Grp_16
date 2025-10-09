@@ -33,8 +33,8 @@ services:
       - JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning
       - JWT_EXPIRATION=86400000
       
-      # Kafka Configuration (if needed)
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+      # Kafka Configuration (Cloud Deployment)
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=34.16.102.169:9092
       - SPRING_KAFKA_CONSUMER_GROUP_ID=userservice-group
       - SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET=earliest
       
