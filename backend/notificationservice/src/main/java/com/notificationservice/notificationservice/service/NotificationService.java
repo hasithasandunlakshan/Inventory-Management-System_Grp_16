@@ -1,20 +1,22 @@
 package com.notificationservice.notificationservice.service;
 
-import com.notificationservice.notificationservice.dto.NotificationDto;
-import com.notificationservice.notificationservice.model.Notification;
-import com.notificationservice.notificationservice.repository.NotificationRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+
+import com.notificationservice.notificationservice.config.ReactNativeWebSocketConfig;
+import com.notificationservice.notificationservice.dto.NotificationDto;
+import com.notificationservice.notificationservice.model.Notification;
+import com.notificationservice.notificationservice.repository.NotificationRepository;
 
 @Service
 public class NotificationService {
@@ -26,6 +28,9 @@ public class NotificationService {
     
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+    
+    @Autowired
+    private ReactNativeWebSocketConfig.ReactNativeWebSocketHandler reactNativeWebSocketHandler;
     
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
@@ -45,13 +50,27 @@ public class NotificationService {
             NotificationDto notificationDto = convertToDto(savedNotification);
             logger.info("Converted to DTO: {}", notificationDto.getMessage());
             
-            // Send notification via WebSocket to specific user
+            // Send notification via WebSocket to specific user (STOMP)
             messagingTemplate.convertAndSendToUser(
                 userId, 
                 "/queue/notifications", 
                 notificationDto
             );
-            logger.info("WebSocket message sent to user {} at destination /user/{}/queue/notifications", userId, userId);
+            logger.info("STOMP WebSocket message sent to user {} at destination /user/{}/queue/notifications", userId, userId);
+            
+            // Send notification via React Native WebSocket
+            Map<String, Object> rnNotification = Map.of(
+                "type", "notification",
+                "id", savedNotification.getId(),
+                "userId", userId,
+                "message", message,
+                "notificationType", type,
+                "metadata", metadata != null ? metadata : "{}",
+                "timestamp", savedNotification.getCreatedAt().toString(),
+                "isRead", false
+            );
+            reactNativeWebSocketHandler.sendNotificationToUser(userId, rnNotification);
+            logger.info("React Native WebSocket message sent to user {}", userId);
             
             // Also try sending to topic for testing
             messagingTemplate.convertAndSend("/topic/notifications", notificationDto);

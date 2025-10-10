@@ -1,0 +1,41 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/ml-forecast-service:$COMMIT_SHA', '.']
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/ml-forecast-service:$COMMIT_SHA']
+  
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'ml-forecast-service'
+    - '--image'
+    - 'gcr.io/$PROJECT_ID/ml-forecast-service:$COMMIT_SHA'
+    - '--region'
+    - 'us-central1'
+    - '--platform'
+    - 'managed'
+    - '--allow-unauthenticated'
+    - '--memory'
+    - '4Gi'
+    - '--cpu'
+    - '2'
+    - '--max-instances'
+    - '10'
+    - '--timeout'
+    - '300'
+    - '--set-env-vars'
+    - 'REDIS_URL=redis://default:gQTgc94xp1OT2hILBizHmNmzI5a8Np3d@redis-18634.c321.us-east-1-2.ec2.redns.redis-cloud.com:18634'
+
+images:
+  - 'gcr.io/$PROJECT_ID/ml-forecast-service:$COMMIT_SHA'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '1200s'
