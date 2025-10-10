@@ -26,7 +26,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public final class Category {
+public class Category {
     /**
      * The category ID.
      */
@@ -46,5 +46,6 @@ public final class Category {
      */
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
-    private Set<com.example.productservice.models.ProductCategory> productCategories;
+    @Builder.Default
+    private Set<ProductCategory> productCategories = new java.util.HashSet<>();
 }

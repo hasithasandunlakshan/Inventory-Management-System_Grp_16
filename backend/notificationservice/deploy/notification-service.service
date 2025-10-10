@@ -1,0 +1,30 @@
+[Unit]
+Description=Notification Service
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+Group=nogroup
+WorkingDirectory=/opt/notification-service
+ExecStart=/usr/bin/java -jar /opt/notification-service/app.jar
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=notification-service
+
+# Environment Variables
+Environment=JAVA_OPTS="-Xmx512m -Xms256m"
+Environment=SERVER_PORT=8087
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/notification-service
+
+[Install]
+WantedBy=multi-user.target
