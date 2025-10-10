@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Native WebSocket Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .message { background-color: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .connect-btn { background-color: #007bff; color: white; }
+        .disconnect-btn { background-color: #dc3545; color: white; }
+        .test-btn { background-color: #28a745; color: white; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 3px; }
+        #messages { max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>React Native WebSocket Test</h1>
+        <p><strong>Service URL:</strong> http://34.136.119.127:8087</p>
+        
+        <div id="status" class="status disconnected">
+            Status: Disconnected
+        </div>
+        
+        <div class="controls">
+            <input type="text" id="userId" placeholder="Enter User ID" value="user123">
+            <button id="connectBtn" class="connect-btn" onclick="connect()">Connect</button>
+            <button id="disconnectBtn" class="disconnect-btn" onclick="disconnect()">Disconnect</button>
+            <button class="test-btn" onclick="subscribe()">Subscribe</button>
+            <button class="test-btn" onclick="sendPing()">Send Ping</button>
+        </div>
+        
+        <h3>WebSocket Endpoints Available:</h3>
+        <ul>
+            <li><strong>/rn-notifications</strong> - React Native compatible endpoint (Pure WebSocket)</li>
+            <li><strong>/notifications</strong> - STOMP over WebSocket with SockJS fallback</li>
+            <li><strong>/ws</strong> - STOMP over WebSocket with SockJS</li>
+            <li><strong>/websocket</strong> - Pure STOMP over WebSocket</li>
+        </ul>
+        
+        <h3>Connection Details:</h3>
+        <p><strong>React Native URL:</strong> <code>http://34.136.119.127:8087/rn-notifications</code></p>
+        <p><strong>Message Format:</strong> JSON with type field</p>
+        
+        <h3>Messages:</h3>
+        <div id="messages"></div>
+        
+        <h3>Usage for React Native:</h3>
+        <pre><code>// React Native WebSocket Connection
+const ws = new WebSocket('http://34.136.119.127:8087/rn-notifications');
+
+ws.onopen = () => {
+    console.log('Connected to notification service');
+    
+    // Subscribe to notifications
+    ws.send(JSON.stringify({
+        type: 'subscribe',
+        userId: 'your-user-id'
+    }));
+};
+
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log('Received:', data);
+    
+    if (data.type === 'notification') {
+        // Handle notification
+        showNotification(data.message);
+    }
+};
+
+ws.onerror = (error) => {
+    console.error('WebSocket error:', error);
+};
+
+ws.onclose = () => {
+    console.log('Connection closed');
+};</code></pre>
+    </div>
+
+    <script>
+        let ws = null;
+        let isConnected = false;
+
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('status');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            isConnected = connected;
+            
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = 'Status: Connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = 'Status: Disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+
+        function addMessage(message, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                addMessage('Already connected!', 'warning');
+                return;
+            }
+
+            // React Native compatible WebSocket URL
+            const url = 'ws://34.136.119.127:8087/rn-notifications';
+            addMessage(`Connecting to: ${url}`, 'info');
+            
+            ws = new WebSocket(url);
+
+            ws.onopen = function(event) {
+                addMessage('✅ Connected successfully!', 'success');
+                updateStatus(true);
+            };
+
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    addMessage(`📨 Received: ${JSON.stringify(data, null, 2)}`, 'info');
+                } catch (e) {
+                    addMessage(`📨 Received (raw): ${event.data}`, 'info');
+                }
+            };
+
+            ws.onerror = function(error) {
+                addMessage(`❌ WebSocket error: ${error}`, 'error');
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = function(event) {
+                addMessage(`🔌 Connection closed. Code: ${event.code}, Reason: ${event.reason}`, 'warning');
+                updateStatus(false);
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                updateStatus(false);
+                addMessage('Disconnected manually', 'info');
+            }
+        }
+
+        function subscribe() {
+            if (!isConnected) {
+                addMessage('❌ Not connected! Connect first.', 'error');
+                return;
+            }
+
+            const userId = document.getElementById('userId').value || 'user123';
+            const message = {
+                type: 'subscribe',
+                userId: userId
+            };
+
+            ws.send(JSON.stringify(message));
+            addMessage(`📤 Sent subscribe request for user: ${userId}`, 'info');
+        }
+
+        function sendPing() {
+            if (!isConnected) {
+                addMessage('❌ Not connected! Connect first.', 'error');
+                return;
+            }
+
+            const message = {
+                type: 'ping',
+                timestamp: Date.now()
+            };
+
+            ws.send(JSON.stringify(message));
+            addMessage('📤 Sent ping', 'info');
+        }
+
+        // Initialize
+        updateStatus(false);
+    </script>
+</body>
+</html>

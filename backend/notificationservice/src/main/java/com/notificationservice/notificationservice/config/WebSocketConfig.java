@@ -33,5 +33,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // Alternative endpoint without SockJS
         registry.addEndpoint("/websocket")
                 .setAllowedOriginPatterns("*");
+                
+        // React Native compatible endpoint - supports WebSocket upgrade from HTTP
+        registry.addEndpoint("/notifications")
+                .setAllowedOriginPatterns("*")
+                .withSockJS()
+                .setClientLibraryUrl("//cdn.jsdelivr.net/sockjs/1.0.0/sockjs.min.js");
+                
+        // Pure WebSocket endpoint without STOMP for React Native
+        registry.addEndpoint("/native-ws")
+                .setAllowedOriginPatterns("*");
     }
 }
