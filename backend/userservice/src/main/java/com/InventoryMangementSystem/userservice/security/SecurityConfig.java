@@ -22,6 +22,7 @@ public class SecurityConfig {
                                                                        // filter
                         .requestMatchers("/api/admin/**").permitAll() // Allow admin endpoints (auth handled by API
                                                                       // Gateway)
+                        .requestMatchers("/actuator/**").permitAll() // Allow actuator endpoints for health checks
                         .anyRequest().authenticated());
         return http.build();
     }

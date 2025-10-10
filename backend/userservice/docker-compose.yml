@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  userservice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: userservice
+    ports:
+      - "8080:8080"
+    environment:
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-38838f7f-sem5-project.f.aivencloud.com:27040/InventoryManagement?sslMode=REQUIRED&serverTimezone=UTC&tcpKeepAlive=true
+      - SPRING_DATASOURCE_USERNAME=avnadmin
+      - SPRING_DATASOURCE_PASSWORD=AVNS_Ipqzq0kuyRjWpAdm_pc
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      
+      # JPA Configuration
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
+      
+      # HikariCP Configuration
+      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
+      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=5
+      - SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=60000
+      - SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT=600000
+      - SPRING_DATASOURCE_HIKARI_MAX_LIFETIME=1500000
+      - SPRING_DATASOURCE_HIKARI_KEEPALIVE_TIME=120000
+      - SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT=5000
+      
+      # JWT Configuration
+      - JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning
+      - JWT_EXPIRATION=86400000
+      
+      # Kafka Configuration (Cloud Deployment)
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=34.16.102.169:9092
+      - SPRING_KAFKA_CONSUMER_GROUP_ID=userservice-group
+      - SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET=earliest
+      
+      # Application Configuration
+      - SPRING_APPLICATION_NAME=userservice
+      - SERVER_PORT=8080
+      
+      # JVM Options
+      - JAVA_OPTS=-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+    networks:
+      - userservice-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  userservice-network:
+    driver: bridge

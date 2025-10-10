@@ -1,0 +1,13 @@
+{
+  "amount": 5999,
+  "currency": "usd",
+  "customerId": 1,
+  "orderItems": [
+    {
+      "barcode": "PRD-20250812015746-hasitha",
+      "productId": 1,
+      "quantity": 2,
+      "unitPrice": 29.99
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 // Authentication service for JWT token management
-const API_BASE_URL = 'http://localhost:8090';
+const API_BASE_URL = 'https://api-gateway-337812374841.us-central1.run.app';
 
 export interface LoginRequest {
   username: string;

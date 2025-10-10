@@ -1,6 +1,7 @@
 import { authService } from '../lib/services/authService';
 
-const ORDER_API_BASE_URL = 'http://localhost:8090/api/orders';
+const ORDER_API_BASE_URL =
+  'https://api-gateway-q42ns563da-uc.a.run.app/api/orders';
 
 export interface OrderItem {
   orderItemId: number;
