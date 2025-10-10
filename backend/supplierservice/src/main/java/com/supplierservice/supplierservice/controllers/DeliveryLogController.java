@@ -7,6 +7,7 @@ import com.supplierservice.supplierservice.services.DeliveryLogService;
 
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,8 +28,9 @@ public class DeliveryLogController {
 
             DeliveryLog deliveryLog = deliveryLogService.logDelivery(dto);
 
-            return ResponseEntity.ok(
-                    DeliveryLogResponse.success(
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(DeliveryLogResponse.success(
                             "Delivery logged successfully for Purchase Order "
                                     + deliveryLog.getPurchaseOrder().getPoId(),
                             deliveryLog));
@@ -36,6 +38,7 @@ public class DeliveryLogController {
             System.err.println("Error logging delivery: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.badRequest()
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(DeliveryLogResponse.error(
                             "Failed to log delivery: " + e.getMessage()));
         }
