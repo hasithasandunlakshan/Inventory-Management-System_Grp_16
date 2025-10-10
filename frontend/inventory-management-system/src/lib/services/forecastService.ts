@@ -1,6 +1,7 @@
 import { ForecastResponse, LegacyForecastData } from '../types/forecast';
 
-const FORECAST_API_BASE_URL = 'http://localhost:8000';
+const FORECAST_API_BASE_URL =
+  'https://ml-forecast-service-337812374841.us-central1.run.app';
 
 // In-memory cache for forecast data
 interface CacheEntry {
