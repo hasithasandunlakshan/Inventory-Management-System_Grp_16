@@ -27,7 +27,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Builder
 @IdClass(ProductCategoryId.class)
-public final class ProductCategory {
+public class ProductCategory {
     /**
      * The product ID.
      */
@@ -64,7 +64,7 @@ public final class ProductCategory {
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-final class ProductCategoryId implements Serializable {
+class ProductCategoryId implements Serializable {
 
     /**
      * The product ID.

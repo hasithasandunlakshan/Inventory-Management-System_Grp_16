@@ -1,5 +1,5 @@
 // Notification Service for API calls
-const API_BASE_URL = 'http://localhost:8085/api'; // Notification service URL
+const API_BASE_URL = 'http://34.136.119.127:8087/api'; // Notification service URL
 
 export const notificationService = {
   /**

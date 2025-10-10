@@ -1,0 +1,61 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: userservice
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/execution-environment: gen2
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/maxScale: "10"
+        autoscaling.knative.dev/minScale: "0"
+    spec:
+      containerConcurrency: 100
+      timeoutSeconds: 300
+      containers:
+      - image: gcr.io/api-gateway-474511/userservice:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: SERVER_PORT
+          value: "8080"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mysql://mysql-38838f7f-sem5-project.f.aivencloud.com:27040/InventoryManagement?sslMode=REQUIRED&serverTimezone=UTC&tcpKeepAlive=true"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "avnadmin"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "AVNS_Ipqzq0kuyRjWpAdm_pc"
+        - name: JWT_SECRET
+          value: "mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning"
+        - name: JWT_EXPIRATION
+          value: "86400000"
+        # Note: Kafka configuration will need to be updated for cloud deployment
+        - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          value: "localhost:9092"  # This needs to be updated with your cloud Kafka instance
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "0.5"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5

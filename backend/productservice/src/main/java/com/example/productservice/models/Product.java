@@ -25,7 +25,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public final class Product {
+public class Product {
     /**
      * The product ID.
      */
