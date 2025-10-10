@@ -3,6 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes import forecast_routes
 from app.services.cache_service import cache_service
 import logging
+import os
+
+# Configure logging for Cloud Run
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 app = FastAPI(
     title="Inventory Forecasting Service",
