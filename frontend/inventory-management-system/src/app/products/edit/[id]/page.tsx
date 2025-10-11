@@ -90,9 +90,14 @@ export default function EditProductPage() {
   };
 
   const uploadImageToCloudinary = async (file: File) => {
-    const sigRes = await axios.get(
-      'http://localhost:8083/api/cloudinary/signature'
+    const productServiceUrl =
+      process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL ||
+      'http://localhost:8083/api/products';
+    const cloudinaryUrl = productServiceUrl.replace(
+      '/api/products',
+      '/api/cloudinary/signature'
     );
+    const sigRes = await axios.get(cloudinaryUrl);
     const { timestamp, signature, apiKey, cloudName } = sigRes.data;
 
     const formData = new FormData();
