@@ -74,6 +74,7 @@ export default function PromotionsPage() {
 
   useEffect(() => {
     fetchDiscounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   const fetchDiscounts = async () => {
@@ -82,9 +83,7 @@ export default function PromotionsPage() {
       setError(null);
       const response: DiscountsResponse = await discountService.getAllDiscounts(
         currentPage,
-        pageSize,
-        'createdAt',
-        'DESC'
+        pageSize
       );
       setDiscounts(response.content || []);
       setTotalPages(response.totalPages || 0);

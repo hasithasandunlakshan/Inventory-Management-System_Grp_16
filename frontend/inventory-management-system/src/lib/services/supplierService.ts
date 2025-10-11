@@ -1,9 +1,10 @@
 import { Supplier, SupplierCreateRequest } from '../types/supplier';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-// Use API Gateway URL instead of direct service
-const API_BASE_URL = 'http://localhost:8090/api/suppliers'; // Through API Gateway
-const DIRECT_API_BASE_URL = 'http://localhost:8082/api/suppliers'; // Direct to Supplier Service
+// Use Choreo Supplier Service URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL}/api/suppliers`
+  : 'http://localhost:8090/api/suppliers'; // Fallback to API Gateway
 
 export const supplierService = {
   /**
@@ -75,25 +76,7 @@ export const supplierService = {
         return response.json();
       }
 
-      // If API Gateway fails, try direct access for development
-      console.log(
-        'API Gateway failed for create, trying direct access to supplier service...'
-      );
-      const directResponse = await fetch(DIRECT_API_BASE_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(supplierDTO),
-      });
-
-      if (directResponse.ok) {
-        return directResponse.json();
-      }
-
-      throw new Error(
-        `Failed to create supplier: API Gateway: ${response.status}, Direct: ${directResponse.status}`
-      );
+      throw new Error(`Failed to create supplier: ${response.status}`);
     } catch (error) {
       console.error('Failed to create supplier:', error);
       throw new Error('Failed to create supplier - backend not available');

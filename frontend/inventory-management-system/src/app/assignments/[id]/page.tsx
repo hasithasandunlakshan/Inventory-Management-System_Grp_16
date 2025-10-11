@@ -18,7 +18,12 @@ import {
   Wrench,
   AlertCircle,
 } from 'lucide-react';
-import { driverService, DetailedAssignment } from '@/lib/services/driverService';
+import {
+  driverService,
+  DetailedAssignment,
+  DriverProfile,
+  Vehicle,
+} from '@/lib/services/driverService';
 import { userService, UserInfo } from '@/lib/services/userService';
 import { toast } from 'sonner';
 
@@ -27,11 +32,18 @@ export default function AssignmentDetailPage() {
   const router = useRouter();
 
   const [assignment, setAssignment] = useState<DetailedAssignment | null>(null);
-  const [driverDetails, setDriverDetails] = useState<any>(null);
-  const [driverUserDetails, setDriverUserDetails] = useState<UserInfo | null>(null);
-  const [vehicleDetails, setVehicleDetails] = useState<any>(null);
-  const [assignedByDetails, setAssignedByDetails] = useState<UserInfo | null>(null);
-  const [unassignedByDetails, setUnassignedByDetails] = useState<UserInfo | null>(null);
+  const [driverDetails, setDriverDetails] = useState<DriverProfile | null>(
+    null
+  );
+  const [driverUserDetails, setDriverUserDetails] = useState<UserInfo | null>(
+    null
+  );
+  const [vehicleDetails, setVehicleDetails] = useState<Vehicle | null>(null);
+  const [assignedByDetails, setAssignedByDetails] = useState<UserInfo | null>(
+    null
+  );
+  const [unassignedByDetails, setUnassignedByDetails] =
+    useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   const assignmentId = params.id as string;
@@ -40,27 +52,34 @@ export default function AssignmentDetailPage() {
     if (assignmentId) {
       loadAssignmentDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assignmentId]);
 
   const loadAssignmentDetails = async () => {
     try {
       setLoading(true);
-      const response = await driverService.getAssignmentDetails(parseInt(assignmentId));
-      
+      const response = await driverService.getAssignmentDetails(
+        parseInt(assignmentId)
+      );
+
       if (response.success && response.data) {
         const assignment = response.data;
         setAssignment(assignment);
-        
+
         // Load driver details
         if (assignment.driverId) {
           try {
-            const driverResponse = await driverService.getDriverById(assignment.driverId);
+            const driverResponse = await driverService.getDriverById(
+              assignment.driverId
+            );
             if (driverResponse.success && driverResponse.data) {
               setDriverDetails(driverResponse.data);
-              
+
               // Load driver user details
               try {
-                const userResponse = await userService.getUserById(driverResponse.data.userId);
+                const userResponse = await userService.getUserById(
+                  driverResponse.data.userId
+                );
                 if (userResponse) {
                   setDriverUserDetails(userResponse);
                 }
@@ -72,13 +91,15 @@ export default function AssignmentDetailPage() {
             console.error('Failed to load driver details:', error);
           }
         }
-        
+
         // Load vehicle details
         if (assignment.vehicleId) {
           try {
             const vehiclesResponse = await driverService.getAllVehicles();
             if (vehiclesResponse.success && vehiclesResponse.data) {
-              const vehicle = vehiclesResponse.data.find(v => v.vehicleId === assignment.vehicleId);
+              const vehicle = vehiclesResponse.data.find(
+                v => v.vehicleId === assignment.vehicleId
+              );
               if (vehicle) {
                 setVehicleDetails(vehicle);
               }
@@ -87,11 +108,13 @@ export default function AssignmentDetailPage() {
             console.error('Failed to load vehicle details:', error);
           }
         }
-        
+
         // Load assigned by user details
         if (assignment.assignedBy) {
           try {
-            const userResponse = await userService.getUserById(assignment.assignedBy);
+            const userResponse = await userService.getUserById(
+              assignment.assignedBy
+            );
             if (userResponse) {
               setAssignedByDetails(userResponse);
             }
@@ -99,11 +122,13 @@ export default function AssignmentDetailPage() {
             console.error('Failed to load assigned by details:', error);
           }
         }
-        
+
         // Load unassigned by user details
         if (assignment.unassignedBy) {
           try {
-            const userResponse = await userService.getUserById(assignment.unassignedBy);
+            const userResponse = await userService.getUserById(
+              assignment.unassignedBy
+            );
             if (userResponse) {
               setUnassignedByDetails(userResponse);
             }
@@ -211,7 +236,9 @@ export default function AssignmentDetailPage() {
           </Button>
           <div>
             <h1 className='text-3xl font-bold'>Assignment Details</h1>
-            <p className='text-gray-600'>Assignment #{assignment.assignmentId}</p>
+            <p className='text-gray-600'>
+              Assignment #{assignment.assignmentId}
+            </p>
           </div>
         </div>
         <div className='flex items-center space-x-2'>
@@ -233,32 +260,38 @@ export default function AssignmentDetailPage() {
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div className='space-y-4'>
               <div>
-                <h3 className='font-medium text-gray-900 mb-2'>Assignment Information</h3>
+                <h3 className='font-medium text-gray-900 mb-2'>
+                  Assignment Information
+                </h3>
                 <div className='space-y-2'>
                   <div className='flex items-center space-x-2'>
                     <Calendar className='h-4 w-4 text-gray-400' />
                     <span className='text-sm'>
-                      <strong>Assigned:</strong> {formatDate(assignment.assignedAt)}
+                      <strong>Assigned:</strong>{' '}
+                      {formatDate(assignment.assignedAt)}
                     </span>
                   </div>
                   {assignment.unassignedAt && (
                     <div className='flex items-center space-x-2'>
                       <Calendar className='h-4 w-4 text-gray-400' />
                       <span className='text-sm'>
-                        <strong>Unassigned:</strong> {formatDate(assignment.unassignedAt)}
+                        <strong>Unassigned:</strong>{' '}
+                        {formatDate(assignment.unassignedAt)}
                       </span>
                     </div>
                   )}
                   <div className='flex items-center space-x-2'>
                     <Calendar className='h-4 w-4 text-gray-400' />
                     <span className='text-sm'>
-                      <strong>Created:</strong> {formatDate(assignment.createdAt)}
+                      <strong>Created:</strong>{' '}
+                      {formatDate(assignment.createdAt)}
                     </span>
                   </div>
                   <div className='flex items-center space-x-2'>
                     <Calendar className='h-4 w-4 text-gray-400' />
                     <span className='text-sm'>
-                      <strong>Last Updated:</strong> {formatDate(assignment.updatedAt)}
+                      <strong>Last Updated:</strong>{' '}
+                      {formatDate(assignment.updatedAt)}
                     </span>
                   </div>
                 </div>
@@ -291,7 +324,9 @@ export default function AssignmentDetailPage() {
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <div className='space-y-4'>
                 <div>
-                  <h3 className='font-medium text-gray-900 mb-2'>Personal Information</h3>
+                  <h3 className='font-medium text-gray-900 mb-2'>
+                    Personal Information
+                  </h3>
                   <div className='space-y-2'>
                     {driverUserDetails ? (
                       <>
@@ -311,7 +346,8 @@ export default function AssignmentDetailPage() {
                           <div className='flex items-center space-x-2'>
                             <Phone className='h-4 w-4 text-gray-400' />
                             <span className='text-sm'>
-                              <strong>Phone:</strong> {driverUserDetails.phoneNumber}
+                              <strong>Phone:</strong>{' '}
+                              {driverUserDetails.phoneNumber}
                             </span>
                           </div>
                         )}
@@ -319,7 +355,8 @@ export default function AssignmentDetailPage() {
                           <div className='flex items-center space-x-2'>
                             <MapPin className='h-4 w-4 text-gray-400' />
                             <span className='text-sm'>
-                              <strong>Address:</strong> {driverUserDetails.formattedAddress}
+                              <strong>Address:</strong>{' '}
+                              {driverUserDetails.formattedAddress}
                             </span>
                           </div>
                         )}
@@ -354,36 +391,46 @@ export default function AssignmentDetailPage() {
               </div>
               <div className='space-y-4'>
                 <div>
-                  <h3 className='font-medium text-gray-900 mb-2'>License Information</h3>
+                  <h3 className='font-medium text-gray-900 mb-2'>
+                    License Information
+                  </h3>
                   <div className='space-y-2'>
                     <div className='flex items-center space-x-2'>
                       <Shield className='h-4 w-4 text-gray-400' />
                       <span className='text-sm'>
-                        <strong>License Number:</strong> {driverDetails.licenseNumber}
+                        <strong>License Number:</strong>{' '}
+                        {driverDetails.licenseNumber}
                       </span>
                     </div>
                     <div className='flex items-center space-x-2'>
                       <Shield className='h-4 w-4 text-gray-400' />
                       <span className='text-sm'>
-                        <strong>License Class:</strong> {driverDetails.licenseClass}
+                        <strong>License Class:</strong>{' '}
+                        {driverDetails.licenseClass}
                       </span>
                     </div>
                     <div className='flex items-center space-x-2'>
                       <Calendar className='h-4 w-4 text-gray-400' />
                       <span className='text-sm'>
-                        <strong>License Expiry:</strong> {driverDetails.licenseExpiry}
+                        <strong>License Expiry:</strong>{' '}
+                        {driverDetails.licenseExpiry}
                       </span>
                     </div>
                     {driverDetails.emergencyContact && (
                       <div className='flex items-center space-x-2'>
                         <Phone className='h-4 w-4 text-gray-400' />
                         <span className='text-sm'>
-                          <strong>Emergency Contact:</strong> {driverDetails.emergencyContact}
+                          <strong>Emergency Contact:</strong>{' '}
+                          {driverDetails.emergencyContact}
                         </span>
                       </div>
                     )}
                     <div className='flex items-center space-x-2'>
-                      <Badge variant={getAvailabilityBadgeVariant(driverDetails.availabilityStatus)}>
+                      <Badge
+                        variant={getAvailabilityBadgeVariant(
+                          driverDetails.availabilityStatus
+                        )}
+                      >
                         {driverDetails.availabilityStatus}
                       </Badge>
                     </div>
@@ -408,12 +455,15 @@ export default function AssignmentDetailPage() {
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <div className='space-y-4'>
                 <div>
-                  <h3 className='font-medium text-gray-900 mb-2'>Vehicle Information</h3>
+                  <h3 className='font-medium text-gray-900 mb-2'>
+                    Vehicle Information
+                  </h3>
                   <div className='space-y-2'>
                     <div className='flex items-center space-x-2'>
                       <Car className='h-4 w-4 text-gray-400' />
                       <span className='text-sm'>
-                        <strong>Vehicle Number:</strong> {vehicleDetails.vehicleNumber}
+                        <strong>Vehicle Number:</strong>{' '}
+                        {vehicleDetails.vehicleNumber}
                       </span>
                     </div>
                     <div className='flex items-center space-x-2'>
@@ -429,7 +479,11 @@ export default function AssignmentDetailPage() {
                       </span>
                     </div>
                     <div className='flex items-center space-x-2'>
-                      <Badge variant={getVehicleStatusBadgeVariant(vehicleDetails.status)}>
+                      <Badge
+                        variant={getVehicleStatusBadgeVariant(
+                          vehicleDetails.status
+                        )}
+                      >
                         {vehicleDetails.status}
                       </Badge>
                     </div>
@@ -438,7 +492,9 @@ export default function AssignmentDetailPage() {
               </div>
               <div className='space-y-4'>
                 <div>
-                  <h3 className='font-medium text-gray-900 mb-2'>Vehicle Specifications</h3>
+                  <h3 className='font-medium text-gray-900 mb-2'>
+                    Vehicle Specifications
+                  </h3>
                   <div className='space-y-2'>
                     {vehicleDetails.make && (
                       <div className='flex items-center space-x-2'>
@@ -468,7 +524,8 @@ export default function AssignmentDetailPage() {
                       <div className='flex items-center space-x-2'>
                         <Wrench className='h-4 w-4 text-gray-400' />
                         <span className='text-sm'>
-                          <strong>Last Maintenance:</strong> {vehicleDetails.lastMaintenance}
+                          <strong>Last Maintenance:</strong>{' '}
+                          {vehicleDetails.lastMaintenance}
                         </span>
                       </div>
                     )}
@@ -476,7 +533,8 @@ export default function AssignmentDetailPage() {
                       <div className='flex items-center space-x-2'>
                         <Wrench className='h-4 w-4 text-gray-400' />
                         <span className='text-sm'>
-                          <strong>Next Maintenance:</strong> {vehicleDetails.nextMaintenance}
+                          <strong>Next Maintenance:</strong>{' '}
+                          {vehicleDetails.nextMaintenance}
                         </span>
                       </div>
                     )}

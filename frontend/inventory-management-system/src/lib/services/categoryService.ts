@@ -1,7 +1,7 @@
 import { Category, CreateCategoryRequest } from '../types/product';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-const API_BASE_URL = 'http://localhost:8090/api/categories';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090'}/api/categories`;
 
 export const categoryService = {
   async getAllCategories(): Promise<Category[]> {

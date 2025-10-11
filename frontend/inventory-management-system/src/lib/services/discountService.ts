@@ -12,9 +12,13 @@ import {
 } from '../types/discount';
 
 // Updated API URLs based on your provided endpoints
-const ADMIN_API_BASE_URL = 'http://localhost:8084/api/admin/discounts';
-const PUBLIC_API_BASE_URL = 'http://localhost:8084/api/discounts';
-const PRODUCTS_API_URL = 'http://localhost:8083/api/products';
+const ORDER_SERVICE_BASE =
+  process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084';
+const ADMIN_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/admin/discounts`;
+const PUBLIC_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/discounts`;
+const PRODUCTS_API_URL =
+  process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL ||
+  'http://localhost:8083/api/products';
 
 export const discountService = {
   /**
@@ -57,9 +61,7 @@ export const discountService = {
    */
   async getAllDiscounts(
     page: number = 0,
-    size: number = 10,
-    sortBy: string = 'createdAt',
-    sortDir: string = 'DESC'
+    size: number = 10
   ): Promise<DiscountsResponse> {
     try {
       const params = new URLSearchParams({
@@ -370,9 +372,7 @@ export const discountService = {
    * Get discount usage analytics (Admin) - Uses individual discount endpoint
    */
   async getDiscountUsageAnalytics(
-    discountId: number,
-    startDate?: string,
-    endDate?: string
+    discountId: number
   ): Promise<DiscountUsageAnalytics> {
     try {
       const requestOptions = {
