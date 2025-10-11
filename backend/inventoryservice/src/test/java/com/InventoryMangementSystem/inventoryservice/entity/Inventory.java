@@ -1,6 +1,5 @@
 package com.InventoryMangementSystem.inventoryservice.entity;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -8,7 +7,7 @@ import jakarta.persistence.ManyToOne;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
+// Removed entity annotation to avoid conflicts
 @Data
 @NoArgsConstructor
 public class Inventory {
