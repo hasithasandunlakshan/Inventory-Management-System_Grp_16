@@ -18,7 +18,9 @@ import javax.sql.DataSource;
  */
 @TestConfiguration
 @EntityScan(basePackages = "com.InventoryMangementSystem.inventoryservice.models")
-@EnableJpaRepositories(basePackages = "com.InventoryMangementSystem.inventoryservice.repository")
+@EnableJpaRepositories(basePackages = {
+        "com.InventoryMangementSystem.inventoryservice.repository"
+})
 public class IntegrationTestConfig {
 
     @Bean
