@@ -1,23 +1,24 @@
 package com.Orderservice.Orderservice.service;
 
-import com.Orderservice.Orderservice.entity.Discount;
-import com.Orderservice.Orderservice.entity.DiscountProduct;
-import com.Orderservice.Orderservice.entity.UserDiscount;
-import com.Orderservice.Orderservice.enums.DiscountStatus;
-import com.Orderservice.Orderservice.enums.DiscountType;
-import com.Orderservice.Orderservice.repository.DiscountRepository;
-import com.Orderservice.Orderservice.repository.DiscountProductRepository;
-import com.Orderservice.Orderservice.repository.UserDiscountRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.Orderservice.Orderservice.entity.Discount;
+import com.Orderservice.Orderservice.entity.DiscountProduct;
+import com.Orderservice.Orderservice.entity.UserDiscount;
+import com.Orderservice.Orderservice.enums.DiscountStatus;
+import com.Orderservice.Orderservice.enums.DiscountType;
+import com.Orderservice.Orderservice.repository.DiscountProductRepository;
+import com.Orderservice.Orderservice.repository.DiscountRepository;
+import com.Orderservice.Orderservice.repository.UserDiscountRepository;
 
 @Service
 @Transactional
@@ -330,7 +331,7 @@ public class DiscountService {
     }
     
     /**
-     * Apply discount to order and record usage
+     * Apply discount and record usage (orderId is optional - can be null)
      */
     public UserDiscount applyDiscountToOrder(Long discountId, Long userId, Long orderId, Double originalAmount, Double discountAmount) {
         try {
@@ -346,11 +347,11 @@ public class DiscountService {
                 throw new RuntimeException("User cannot use this discount");
             }
             
-            // Record discount usage
+            // Record discount usage (orderId can be null)
             UserDiscount userDiscount = new UserDiscount();
             userDiscount.setDiscount(discount);
             userDiscount.setCustomerId(userId);
-            userDiscount.setOrderId(orderId);
+            userDiscount.setOrderId(orderId); // Can be null for validation-only mode
             userDiscount.setOriginalAmount(BigDecimal.valueOf(originalAmount));
             userDiscount.setDiscountAmount(BigDecimal.valueOf(discountAmount));
             userDiscount.setFinalAmount(BigDecimal.valueOf(originalAmount - discountAmount));
@@ -362,12 +363,17 @@ public class DiscountService {
             discount.setLastUsedAt(LocalDateTime.now());
             discountRepository.save(discount);
             
-            logger.info("Applied discount {} to order {} for user {}. Discount amount: {}", 
-                       discountId, orderId, userId, discountAmount);
+            if (orderId != null) {
+                logger.info("Applied discount {} to order {} for user {}. Discount amount: {}", 
+                           discountId, orderId, userId, discountAmount);
+            } else {
+                logger.info("Recorded discount usage {} for user {} (no order ID - validation mode). Discount amount: {}", 
+                           discountId, userId, discountAmount);
+            }
             
             return savedUserDiscount;
         } catch (Exception e) {
-            logger.error("Error applying discount to order: {}", e.getMessage());
+            logger.error("Error applying discount: {}", e.getMessage());
             throw new RuntimeException("Failed to apply discount: " + e.getMessage());
         }
     }
