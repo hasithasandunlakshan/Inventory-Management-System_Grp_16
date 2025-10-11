@@ -1,6 +1,6 @@
 import { Product, CreateProductRequest } from '../types/product';
 
-const API_BASE_URL = 'http://localhost:8083/api/products';
+const API_BASE_URL = process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083/api/products';
 
 export const productService = {
   async getAllProducts(): Promise<Product[]> {

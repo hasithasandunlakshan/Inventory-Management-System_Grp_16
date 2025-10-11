@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:8090';
+// Use Choreo Resource Service URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8090';
 
 export interface DriverProfile {
   driverId: number;
