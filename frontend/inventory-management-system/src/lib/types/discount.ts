@@ -119,3 +119,25 @@ export interface ProductsResponse {
   products?: Product[];
   data?: Product[];
 }
+
+export interface DiscountProduct {
+  id: number;
+  productId: number;
+  productBarcode: string | null;
+  productName: string;
+  price: number | null;
+  imageUrl: string | null;
+  description: string | null;
+  category: number | null;
+  addedAt: string;
+}
+
+export interface DiscountProductsResponse {
+  discountId: number;
+  discountName: string;
+  discountCode: string;
+  discountType: string;
+  totalProducts: number;
+  message: string;
+  products: DiscountProduct[];
+}

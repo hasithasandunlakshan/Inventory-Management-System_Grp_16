@@ -2,6 +2,7 @@ import {
   AddProductsToDiscountRequest,
   CreateDiscountRequest,
   Discount,
+  DiscountProductsResponse,
   DiscountsResponse,
   DiscountUsageAnalytics,
   Product,
@@ -326,6 +327,41 @@ export const discountService = {
       }
     } catch (error) {
       console.error('Error removing products from discount:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get products associated with a discount (Admin)
+   */
+  async getDiscountProducts(
+    discountId: number
+  ): Promise<DiscountProductsResponse> {
+    try {
+      const requestOptions = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Admin-User-Id': 'test.admin@company.com',
+        },
+      };
+
+      const response = await fetch(
+        `${ADMIN_API_BASE_URL}/${discountId}/products`,
+        requestOptions
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to fetch discount products: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data: DiscountProductsResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching discount products:', error);
       throw error;
     }
   },
