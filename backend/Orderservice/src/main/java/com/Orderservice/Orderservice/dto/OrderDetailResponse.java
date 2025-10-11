@@ -19,6 +19,13 @@ public class OrderDetailResponse {
     private LocalDateTime orderDate;
     private String status;
     private BigDecimal totalAmount;
+    
+    // Discount information
+    private BigDecimal originalAmount;
+    private BigDecimal discountAmount;
+    private String discountCode;
+    private Long discountId;
+    
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String refundReason;

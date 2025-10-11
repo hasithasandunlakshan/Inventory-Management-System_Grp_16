@@ -48,6 +48,19 @@ public class Order {
     @Column(name = "total_amount", precision = 10, scale = 2)
     private BigDecimal totalAmount;
     
+    // Discount-related fields
+    @Column(name = "original_amount", precision = 10, scale = 2)
+    private BigDecimal originalAmount;
+    
+    @Column(name = "discount_amount", precision = 10, scale = 2)
+    private BigDecimal discountAmount;
+    
+    @Column(name = "discount_code", length = 50)
+    private String discountCode;
+    
+    @Column(name = "discount_id")
+    private Long discountId;
+    
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
