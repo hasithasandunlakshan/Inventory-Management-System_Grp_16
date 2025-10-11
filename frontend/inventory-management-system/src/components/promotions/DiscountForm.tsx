@@ -162,6 +162,44 @@ export default function DiscountForm({
     }
   }, [watchType]);
 
+  // Load existing products when editing a product discount
+  useEffect(() => {
+    if (discount && discount.id && discount.type === 'PRODUCT_DISCOUNT') {
+      loadExistingDiscountProducts();
+    }
+  }, [discount]);
+
+  const loadExistingDiscountProducts = async () => {
+    if (!discount?.id) return;
+
+    try {
+      const discountProducts = await discountService.getDiscountProducts(
+        discount.id
+      );
+      // Convert DiscountProduct[] to Product[] format for the form
+      const convertedProducts = discountProducts.products
+        .filter(dp => dp.productName !== 'Product not found') // Filter out invalid products
+        .map(dp => ({
+          productId: dp.productId,
+          name: dp.productName,
+          description: dp.description || '',
+          imageUrl: dp.imageUrl || '',
+          price: dp.price || 0,
+          stock: 0,
+          reserved: 0,
+          availableStock: 0,
+          barcode: dp.productBarcode || '',
+          categoryId: dp.category || undefined,
+          categoryName: undefined,
+        }));
+
+      setSelectedProducts(convertedProducts);
+    } catch (error) {
+      console.error('Error loading existing discount products:', error);
+      toast.error('Failed to load associated products.');
+    }
+  };
+
   const loadProducts = async () => {
     try {
       setLoadingProducts(true);
