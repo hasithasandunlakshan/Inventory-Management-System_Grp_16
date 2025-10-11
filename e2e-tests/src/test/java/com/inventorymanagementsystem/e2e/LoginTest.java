@@ -28,7 +28,7 @@ public class LoginTest extends BaseTest {
         LoginPage loginPage = new LoginPage(driver);
         loginPage.navigateToLoginPage();
 
-        loginPage.enterEmail("invalid@example.com");
+        loginPage.enterUsername("invalid");
         loginPage.enterPassword("wrongpassword");
         loginPage.clickLoginButton();
 

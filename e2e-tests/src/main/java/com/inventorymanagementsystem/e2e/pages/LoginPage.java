@@ -6,15 +6,14 @@ import org.openqa.selenium.support.FindBy;
 
 public class LoginPage extends BasePage {
 
-    @FindBy(id = "email")
+    @FindBy(id = "username")
     private WebElement emailInput;
 
     @FindBy(id = "password")
     private WebElement passwordInput;
 
-    @FindBy(xpath = "//button[contains(text(), 'Login') or contains(text(), 'Sign In')]")
+    @FindBy(css = "button[type='submit'], .login-button")
     private WebElement loginButton;
-
     @FindBy(css = ".error-message")
     private WebElement errorMessage;
 
@@ -23,11 +22,11 @@ public class LoginPage extends BasePage {
     }
 
     public void navigateToLoginPage() {
-        driver.get(super.driver.getCurrentUrl() + "/login");
+        driver.get("http://localhost:3000/login");
     }
 
-    public void enterEmail(String email) {
-        typeText(emailInput, email);
+    public void enterUsername(String username) {
+        typeText(emailInput, username);
     }
 
     public void enterPassword(String password) {
@@ -46,8 +45,8 @@ public class LoginPage extends BasePage {
         return getElementText(errorMessage);
     }
 
-    public DashboardPage loginSuccessfully(String email, String password) {
-        enterEmail(email);
+    public DashboardPage loginSuccessfully(String username, String password) {
+        enterUsername(username);
         enterPassword(password);
         clickLoginButton();
         return new DashboardPage(driver);
