@@ -2,6 +2,7 @@
 
 import DiscountAnalytics from '@/components/promotions/DiscountAnalytics';
 import DiscountForm from '@/components/promotions/DiscountForm';
+import DiscountProductsList from '@/components/promotions/DiscountProductsList';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +46,7 @@ import {
   BarChart3,
   Edit,
   Filter,
+  Package,
   Plus,
   Search,
   Trash2,
@@ -65,12 +67,14 @@ export default function PromotionsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAnalyticsDialogOpen, setIsAnalyticsDialogOpen] = useState(false);
+  const [isProductsDialogOpen, setIsProductsDialogOpen] = useState(false);
   const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>(
     null
   );
 
   useEffect(() => {
     fetchDiscounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   const fetchDiscounts = async () => {
@@ -79,9 +83,7 @@ export default function PromotionsPage() {
       setError(null);
       const response: DiscountsResponse = await discountService.getAllDiscounts(
         currentPage,
-        pageSize,
-        'createdAt',
-        'DESC'
+        pageSize
       );
       setDiscounts(response.content || []);
       setTotalPages(response.totalPages || 0);
@@ -121,6 +123,11 @@ export default function PromotionsPage() {
   const handleViewAnalytics = (discount: Discount) => {
     setSelectedDiscount(discount);
     setIsAnalyticsDialogOpen(true);
+  };
+
+  const handleViewProducts = (discount: Discount) => {
+    setSelectedDiscount(discount);
+    setIsProductsDialogOpen(true);
   };
 
   const handleDiscountSaved = () => {
@@ -394,6 +401,16 @@ export default function PromotionsPage() {
                           >
                             <BarChart3 className='h-4 w-4' />
                           </Button>
+                          {discount.type === 'PRODUCT_DISCOUNT' && (
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              title='View Products'
+                              onClick={() => handleViewProducts(discount)}
+                            >
+                              <Package className='h-4 w-4' />
+                            </Button>
+                          )}
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
@@ -525,6 +542,28 @@ export default function PromotionsPage() {
             <DiscountAnalytics
               discount={selectedDiscount}
               onClose={() => setIsAnalyticsDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Products Dialog */}
+      <Dialog
+        open={isProductsDialogOpen}
+        onOpenChange={setIsProductsDialogOpen}
+      >
+        <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle>Associated Products</DialogTitle>
+            <DialogDescription>
+              Products included in this discount campaign:{' '}
+              {selectedDiscount?.discountName}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedDiscount && (
+            <DiscountProductsList
+              discountId={selectedDiscount.id!}
+              onClose={() => setIsProductsDialogOpen(false)}
             />
           )}
         </DialogContent>

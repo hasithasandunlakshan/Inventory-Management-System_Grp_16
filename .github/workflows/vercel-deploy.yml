@@ -1,0 +1,127 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/inventory-management-system/**'
+      - '.github/workflows/vercel-deploy.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'frontend/inventory-management-system/**'
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  deploy:
+    name: Build, Test & Deploy to Vercel
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./frontend/inventory-management-system
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './frontend/inventory-management-system/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Test build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_GATEWAY_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/apigateway/v1.0
+          NEXT_PUBLIC_PRODUCT_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/productservice-gw/v1.0/api/products
+          NEXT_PUBLIC_RESOURCE_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0
+          NEXT_PUBLIC_SUPPLIER_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0
+          NEXT_PUBLIC_USER_SERVICE_URL: https://userservice-337812374841.us-central1.run.app
+          NEXT_PUBLIC_ORDER_SERVICE_URL: https://orderservice-337812374841.us-central1.run.app
+          NEXT_PUBLIC_INVENTORY_SERVICE_URL: http://localhost:8085
+
+      - name: Verify build output
+        run: |
+          if [ -d ".next" ]; then
+            echo "✅ Build successful - .next directory created"
+            ls -la .next
+          else
+            echo "❌ Build failed - .next directory not found"
+            exit 1
+          fi
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=${{ github.event_name == 'push' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project with Vercel
+        run: vercel build ${{ github.event_name == 'push' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NEXT_PUBLIC_API_GATEWAY_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/apigateway/v1.0
+          NEXT_PUBLIC_PRODUCT_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/productservice-gw/v1.0/api/products
+          NEXT_PUBLIC_RESOURCE_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0
+          NEXT_PUBLIC_SUPPLIER_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0
+          NEXT_PUBLIC_USER_SERVICE_URL: https://userservice-337812374841.us-central1.run.app
+          NEXT_PUBLIC_ORDER_SERVICE_URL: https://orderservice-337812374841.us-central1.run.app
+          NEXT_PUBLIC_INVENTORY_SERVICE_URL: http://localhost:8085
+
+      - name: Deploy to Vercel (Production)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: deploy-production
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> $GITHUB_OUTPUT
+          echo "### ✅ Deployed to Production" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **URL:** $url" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy to Vercel (Preview)
+        if: github.event_name == 'pull_request'
+        id: deploy-preview
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> $GITHUB_OUTPUT
+          echo "### 🔍 Preview Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **URL:** $url" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment PR with Preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### 🚀 Vercel Preview Deployment
+              
+              ✅ Your application has been deployed to Vercel!
+              
+              🌐 **Preview URL:** ${{ steps.deploy-preview.outputs.url }}
+              
+              📝 **Commit:** ${{ github.event.pull_request.head.sha }}
+              👤 **Author:** @${{ github.event.pull_request.user.login }}
+              
+              ---
+              *Deployed via GitHub Actions*`
+            })
+

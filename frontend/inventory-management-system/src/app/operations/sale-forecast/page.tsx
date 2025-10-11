@@ -190,7 +190,29 @@ export default function SaleForecastPage() {
   })();
 
   // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{
+      payload: {
+        month: string;
+        sales: number;
+        forecast: number;
+        stockOut: number;
+        lowerBound?: number;
+        upperBound?: number;
+        trend?: number;
+        daily?: number;
+        weekly?: number;
+        stockOutDate?: string;
+        reorderQuantity?: number;
+      };
+    }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const stockInfo = getStockOutInfo();
@@ -209,7 +231,7 @@ export default function SaleForecastPage() {
             </p>
 
             {/* Show trend/seasonal data only for legacy format */}
-            {legacyForecastData.length > 0 && (
+            {legacyForecastData.length > 0 && data.trend !== undefined && (
               <>
                 <p className='text-green-600'>
                   <span className='font-medium'>Trend:</span>{' '}
@@ -228,12 +250,16 @@ export default function SaleForecastPage() {
             )}
 
             <hr className='my-2' />
-            <p className='text-red-600 font-medium'>
-              Stock Out: {formatDate(data.stockOutDate)}
-            </p>
-            <p className='text-indigo-600 font-medium'>
-              Reorder Qty: {data.reorderQuantity} units
-            </p>
+            {data.stockOutDate && (
+              <p className='text-red-600 font-medium'>
+                Stock Out: {formatDate(data.stockOutDate)}
+              </p>
+            )}
+            {data.reorderQuantity !== undefined && (
+              <p className='text-indigo-600 font-medium'>
+                Reorder Qty: {data.reorderQuantity} units
+              </p>
+            )}
 
             {/* Show additional metrics for new format */}
             {forecastResponse && stockInfo && (
