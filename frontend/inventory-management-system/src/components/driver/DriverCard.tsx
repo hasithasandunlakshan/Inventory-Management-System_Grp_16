@@ -19,7 +19,9 @@ export default function DriverCard({
   onViewDetails,
   showVehicleInfo = false,
 }: DriverCardProps) {
-  const [driverUserDetails, setDriverUserDetails] = useState<UserInfo | null>(null);
+  const [driverUserDetails, setDriverUserDetails] = useState<UserInfo | null>(
+    null
+  );
   const [loadingUserDetails, setLoadingUserDetails] = useState(false);
 
   useEffect(() => {
@@ -58,29 +60,41 @@ export default function DriverCard({
           </div>
           <div className='flex items-center space-x-2'>
             <Mail className='h-4 w-4 text-gray-400' />
-            <span className='text-sm text-gray-600'>{driverUserDetails.email}</span>
+            <span className='text-sm text-gray-600'>
+              {driverUserDetails.email}
+            </span>
           </div>
           {driverUserDetails.phoneNumber && (
             <div className='flex items-center space-x-2'>
               <Phone className='h-4 w-4 text-gray-400' />
-              <span className='text-sm text-gray-600'>{driverUserDetails.phoneNumber}</span>
+              <span className='text-sm text-gray-600'>
+                {driverUserDetails.phoneNumber}
+              </span>
             </div>
           )}
           {driverUserDetails.formattedAddress && (
             <div className='flex items-center space-x-2'>
               <MapPin className='h-4 w-4 text-gray-400' />
-              <span className='text-sm text-gray-600'>{driverUserDetails.formattedAddress}</span>
+              <span className='text-sm text-gray-600'>
+                {driverUserDetails.formattedAddress}
+              </span>
             </div>
           )}
         </div>
       );
     }
-    
+
     if (loadingUserDetails) {
-      return <div className='text-sm text-gray-500'>Loading driver information...</div>;
+      return (
+        <div className='text-sm text-gray-500'>
+          Loading driver information...
+        </div>
+      );
     }
-    
-    return <div className='text-sm text-gray-500'>Driver ID: {driver.driverId}</div>;
+
+    return (
+      <div className='text-sm text-gray-500'>Driver ID: {driver.driverId}</div>
+    );
   };
 
   return (
@@ -88,16 +102,15 @@ export default function DriverCard({
       <div className='flex items-center space-x-4'>
         <div className='flex-1'>
           {/* Personal Information */}
-          <div className='mb-3'>
-            {renderPersonalInformation()}
-          </div>
+          <div className='mb-3'>{renderPersonalInformation()}</div>
 
           {/* License Information */}
           <div className='space-y-1'>
             <div className='flex items-center space-x-2'>
               <Shield className='h-4 w-4 text-gray-400' />
               <span className='text-sm text-gray-600'>
-                <strong>License:</strong> {driver.licenseNumber} ({driver.licenseClass})
+                <strong>License:</strong> {driver.licenseNumber} (
+                {driver.licenseClass})
               </span>
             </div>
             <div className='text-sm text-gray-500'>

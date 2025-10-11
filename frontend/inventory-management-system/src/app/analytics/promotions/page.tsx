@@ -71,6 +71,7 @@ export default function PromotionsPage() {
 
   useEffect(() => {
     fetchDiscounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   const fetchDiscounts = async () => {

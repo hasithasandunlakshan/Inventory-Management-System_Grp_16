@@ -32,7 +32,6 @@ import {
 } from 'lucide-react';
 import {
   driverService,
-  DriverVehicleAssignment,
   DriverProfile,
   Vehicle,
   AssignmentRequest,
@@ -164,7 +163,9 @@ export default function AssignmentsPage() {
   const filteredAssignments = assignments.filter(
     assignment =>
       assignment.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assignment.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      assignment.vehicleNumber
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       assignment.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -405,7 +406,9 @@ export default function AssignmentsPage() {
                   <div
                     key={assignment.assignmentId}
                     className='p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer'
-                    onClick={() => handleViewAssignment(assignment.assignmentId)}
+                    onClick={() =>
+                      handleViewAssignment(assignment.assignmentId)
+                    }
                   >
                     <div className='flex items-center justify-between mb-2'>
                       <div className='flex items-center space-x-2'>
@@ -478,7 +481,9 @@ export default function AssignmentsPage() {
                   <div
                     key={assignment.assignmentId}
                     className='p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer'
-                    onClick={() => handleViewAssignment(assignment.assignmentId)}
+                    onClick={() =>
+                      handleViewAssignment(assignment.assignmentId)
+                    }
                   >
                     <div className='flex items-center justify-between mb-2'>
                       <div className='flex items-center space-x-2'>

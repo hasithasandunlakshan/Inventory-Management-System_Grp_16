@@ -1,6 +1,6 @@
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-const API_BASE_URL = 'http://localhost:8090/api/stock-alerts';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090'}/api/stock-alerts`;
 
 export interface StockAlert {
   alertId: number;

@@ -5,7 +5,7 @@ const FORECAST_API_BASE_URL =
 
 // In-memory cache for forecast data
 interface CacheEntry {
-  data: any;
+  data: ForecastResponse | LegacyForecastData[];
   timestamp: number;
   ttl: number;
 }
@@ -25,7 +25,7 @@ export const forecastService = {
     const cached = forecastCache.get(cacheKey);
     if (cached && now - cached.timestamp < cached.ttl) {
       console.log(
-        `🎯 Cache hit for product ${productId} (cached: ${cached.data.cached || 'unknown'})`
+        `🎯 Cache hit for product ${productId} (cached: ${'cached' in cached.data ? cached.data.cached : 'unknown'})`
       );
       return cached.data;
     }

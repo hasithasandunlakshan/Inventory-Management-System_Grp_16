@@ -70,6 +70,7 @@ export default function DiscountAnalytics({
     if (discount.id) {
       fetchAnalytics();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discount.id, startDate, endDate]);
 
   const fetchAnalytics = async () => {

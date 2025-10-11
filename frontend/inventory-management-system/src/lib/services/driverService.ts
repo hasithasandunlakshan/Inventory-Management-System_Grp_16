@@ -1,5 +1,6 @@
 // Use Choreo Resource Service URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8090';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8090';
 
 export interface DriverProfile {
   driverId: number;
@@ -314,26 +315,39 @@ class DriverService {
 
   // New methods for minimal and detailed assignments
   async getAllAssignmentsMinimal(): Promise<ApiResponse<MinimalAssignment[]>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/assignments/minimal`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/assignments/minimal`,
+      {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      }
+    );
     return this.handleResponse<MinimalAssignment[]>(response);
   }
 
-  async getActiveAssignmentsMinimal(): Promise<ApiResponse<MinimalAssignment[]>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/assignments/active/minimal`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+  async getActiveAssignmentsMinimal(): Promise<
+    ApiResponse<MinimalAssignment[]>
+  > {
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/assignments/active/minimal`,
+      {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      }
+    );
     return this.handleResponse<MinimalAssignment[]>(response);
   }
 
-  async getAssignmentDetails(assignmentId: number): Promise<ApiResponse<DetailedAssignment>> {
-    const response = await fetch(`${API_BASE_URL}/api/resources/assignments/${assignmentId}/details`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
+  async getAssignmentDetails(
+    assignmentId: number
+  ): Promise<ApiResponse<DetailedAssignment>> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/assignments/${assignmentId}/details`,
+      {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      }
+    );
     return this.handleResponse<DetailedAssignment>(response);
   }
 
