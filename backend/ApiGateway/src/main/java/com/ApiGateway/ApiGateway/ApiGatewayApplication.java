@@ -50,17 +50,17 @@ public class ApiGatewayApplication {
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("https://userservice-337812374841.us-central1.run.app"))
 
-                                // Product Service - Public access
+                                // Product Service - Public access (Choreo)
                                 .route("product-service", r -> r
                                                 .path("/api/products/**")
                                                 .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
-                                                .uri("http://localhost:8083"))
+                                                .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/productservice-gw/v1.0"))
 
-                                // Categories Service (part of Product Service) - Public access
+                                // Categories Service (part of Product Service) - Public access (Choreo)
                                 .route("categories-service", r -> r
                                                 .path("/api/categories/**")
                                                 .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
-                                                .uri("http://localhost:8083"))
+                                                .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/productservice-gw/v1.0"))
 
                                 // Order Service (STOREKEEPER, MANAGER)
                                 .route("order-service-payments", r -> r
@@ -90,44 +90,45 @@ public class ApiGatewayApplication {
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("http://localhost:8085"))
 
-                                // Supplier Service (MANAGER, STOREKEEPER)
+                                // Supplier Service (MANAGER, STOREKEEPER) - Choreo
                                 .route("supplier-service", r -> r
                                                 .path("/api/delivery-logs/**", "/api/suppliers/**",
                                                                 "/api/purchase-orders/**",
                                                                 "/api/supplier-categories/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("http://localhost:8082"))
+                                                .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0"))
 
-                                // Resource Service - Driver Management (Public GET operations)
+                                // Resource Service - Driver Management (Public GET operations) - Choreo
                                 .route("resource-service-drivers-public", r -> r
                                                 .method("GET")
                                                 .and()
                                                 .path("/api/resources/drivers", "/api/resources/drivers/available")
                                                 .filters(f -> f.addRequestHeader("X-Gateway", "API-Gateway"))
-                                                .uri("http://localhost:8086"))
+                                                .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0"))
 
-                                // Resource Service - Driver Management (Secured operations)
+                                // Resource Service - Driver Management (Secured operations) - Choreo
                                 .route("resource-service-drivers", r -> r
                                                 .path("/api/resources/drivers/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("http://localhost:8086"))
+                                                .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0"))
 
-                                // Resource Service - Vehicle Management (Secured operations)
+                                // Resource Service - Vehicle Management (Secured operations) - Choreo
                                 .route("resource-service-vehicles", r -> r
                                                 .path("/api/resources/vehicles/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("http://localhost:8086"))
+                                                .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0"))
 
-                                // Resource Service - Assignment Management (Secured operations)
+                                // Resource Service - Assignment Management (Secured operations) - Choreo
                                 .route("resource-service-assignments", r -> r
                                                 .path("/api/resources/assignments/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("http://localhost:8086"))
+                                                .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0"))
 
-                                // Health Check
+                                // Health Check - Simple response (no external service)
                                 .route("health-check", r -> r
                                                 .path("/health")
-                                                .uri("http://localhost:8090"))
+                                                .filters(f -> f.setStatus(200))
+                                                .uri("no://op"))
 
                                 .build();
         }
