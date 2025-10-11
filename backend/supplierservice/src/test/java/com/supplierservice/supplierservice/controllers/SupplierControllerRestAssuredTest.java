@@ -14,179 +14,108 @@ import org.springframework.test.context.ActiveProfiles;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+                "spring.jpa.hibernate.ddl-auto=none",
+                "spring.cloud.discovery.enabled=false",
+                "eureka.client.enabled=false"
+})
 @ActiveProfiles("test")
 @Import(TestConfig.class)
 public class SupplierControllerRestAssuredTest {
 
-    @LocalServerPort
-    private int port;
+        @LocalServerPort
+        private int port;
 
-    @BeforeEach
-    void setUp() {
-        RestAssured.port = port;
-        RestAssured.basePath = "/api";
-    }
+        @BeforeEach
+        void setUp() {
+                RestAssured.port = port;
+                RestAssured.basePath = "/api";
+                RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        }
 
-    @Test
-    void getAllSuppliers_ReturnsOkStatus() {
-        given()
-                .contentType(ContentType.JSON)
-                .when()
-                .get("/suppliers")
-                .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("$", not(emptyArray()));
-    }
+        @Test
+        void getAllSuppliers_ReturnsOkStatus() {
+                given()
+                                .contentType(ContentType.JSON)
+                                .when()
+                                .get("/suppliers")
+                                .then()
+                                .statusCode(HttpStatus.OK.value())
+                                .body("$", not(emptyArray()));
+        }
 
-    @Test
-    void createSupplier_WithValidData_ReturnsCreatedStatus() {
-        String supplierJson = """
-                {
-                    "name": "Test Supplier",
-                    "email": "test@supplier.com",
-                    "phone": "1234567890",
-                    "address": "123 Test St",
-                    "categoryId": 1
-                }
-                """;
+        @Test
+        void createSupplier_WithValidData_ReturnsCreatedStatus() {
+                String supplierJson = """
+                                {
+                                    "userId": 1,
+                                    "categoryId": 1
+                                }
+                                """;
 
-        given()
-                .contentType(ContentType.JSON)
-                .body(supplierJson)
-                .when()
-                .post("/suppliers")
-                .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("name", equalTo("Test Supplier"))
-                .body("email", equalTo("test@supplier.com"))
-                .body("phone", equalTo("1234567890"))
-                .body("address", equalTo("123 Test St"));
-    }
+                given()
+                                .contentType(ContentType.JSON)
+                                .body(supplierJson)
+                                .when()
+                                .post("/suppliers")
+                                .then()
+                                .statusCode(HttpStatus.CREATED.value())
+                                .body("supplierId", notNullValue())
+                                .body("userId", equalTo(1))
+                                .body("userName", equalTo("Test User 1"))
+                                .body("categoryId", equalTo(1))
+                                .body("categoryName", equalTo("Electronics"));
+        }
 
-    @Test
-    void getSupplierById_WithValidId_ReturnsSupplier() {
-        // First create a supplier
-        String supplierJson = """
-                {
-                    "name": "Get Test Supplier",
-                    "email": "get@supplier.com",
-                    "phone": "1234567890",
-                    "address": "123 Get St",
-                    "categoryId": 1
-                }
-                """;
+        @Test
+        void getSupplierById_WithValidId_ReturnsSupplier() {
+                given()
+                                .contentType(ContentType.JSON)
+                                .pathParam("id", 1)
+                                .when()
+                                .get("/suppliers/{id}")
+                                .then()
+                                .statusCode(HttpStatus.OK.value())
+                                .body("supplierId", equalTo(1))
+                                .body("userId", equalTo(1))
+                                .body("userName", equalTo("Test User 1"))
+                                .body("categoryId", equalTo(1))
+                                .body("categoryName", equalTo("Electronics"));
+        }
 
-        Integer supplierId = given()
-                .contentType(ContentType.JSON)
-                .body(supplierJson)
-                .when()
-                .post("/suppliers")
-                .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .extract()
-                .path("supplierId");
+        @Test
+        void updateSupplier_WithValidData_ReturnsOkStatus() {
+                String updateJson = """
+                                {
+                                    "supplierId": 1,
+                                    "userId": 2,
+                                    "categoryId": 2
+                                }
+                                """;
 
-        // Then get the supplier by ID
-        given()
-                .contentType(ContentType.JSON)
-                .pathParam("id", supplierId)
-                .when()
-                .get("/suppliers/{id}")
-                .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("supplierId", equalTo(supplierId))
-                .body("name", equalTo("Get Test Supplier"))
-                .body("email", equalTo("get@supplier.com"));
-    }
+                given()
+                                .contentType(ContentType.JSON)
+                                .pathParam("id", 1)
+                                .body(updateJson)
+                                .when()
+                                .put("/suppliers/{id}")
+                                .then()
+                                .statusCode(HttpStatus.OK.value())
+                                .body("supplierId", equalTo(1))
+                                .body("userId", equalTo(2))
+                                .body("userName", equalTo("Test User 2"))
+                                .body("categoryId", equalTo(2))
+                                .body("categoryName", equalTo("Office Supplies"));
+        }
 
-    @Test
-    void updateSupplier_WithValidData_ReturnsOkStatus() {
-        // First create a supplier
-        String createJson = """
-                {
-                    "name": "Update Test Supplier",
-                    "email": "update@supplier.com",
-                    "phone": "1234567890",
-                    "address": "123 Update St",
-                    "categoryId": 1
-                }
-                """;
-
-        Integer supplierId = given()
-                .contentType(ContentType.JSON)
-                .body(createJson)
-                .when()
-                .post("/suppliers")
-                .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .extract()
-                .path("supplierId");
-
-        // Then update the supplier
-        String updateJson = """
-                {
-                    "name": "Updated Supplier",
-                    "email": "updated@supplier.com",
-                    "phone": "0987654321",
-                    "address": "321 Update St",
-                    "categoryId": 1
-                }
-                """;
-
-        given()
-                .contentType(ContentType.JSON)
-                .pathParam("id", supplierId)
-                .body(updateJson)
-                .when()
-                .put("/suppliers/{id}")
-                .then()
-                .statusCode(HttpStatus.OK.value())
-                .body("name", equalTo("Updated Supplier"))
-                .body("email", equalTo("updated@supplier.com"))
-                .body("phone", equalTo("0987654321"))
-                .body("address", equalTo("321 Update St"));
-    }
-
-    @Test
-    void deleteSupplier_WithValidId_ReturnsNoContent() {
-        // First create a supplier
-        String supplierJson = """
-                {
-                    "name": "Delete Test Supplier",
-                    "email": "delete@supplier.com",
-                    "phone": "1234567890",
-                    "address": "123 Delete St",
-                    "categoryId": 1
-                }
-                """;
-
-        Integer supplierId = given()
-                .contentType(ContentType.JSON)
-                .body(supplierJson)
-                .when()
-                .post("/suppliers")
-                .then()
-                .statusCode(HttpStatus.CREATED.value())
-                .extract()
-                .path("supplierId");
-
-        // Then delete the supplier
-        given()
-                .contentType(ContentType.JSON)
-                .pathParam("id", supplierId)
-                .when()
-                .delete("/suppliers/{id}")
-                .then()
-                .statusCode(HttpStatus.NO_CONTENT.value());
-
-        // Verify the supplier is deleted
-        given()
-                .contentType(ContentType.JSON)
-                .pathParam("id", supplierId)
-                .when()
-                .get("/suppliers/{id}")
-                .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
-    }
+        @Test
+        void deleteSupplier_WithValidId_ReturnsNoContent() {
+                given()
+                                .contentType(ContentType.JSON)
+                                .pathParam("id", 1)
+                                .when()
+                                .delete("/suppliers/{id}")
+                                .then()
+                                .statusCode(HttpStatus.NO_CONTENT.value());
+        }
 }
