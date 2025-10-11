@@ -23,16 +23,13 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.InventoryMangementSystem.inventoryservice.config.IntegrationTestConfig;
-// Using the correct entity classes
-import com.InventoryMangementSystem.inventoryservice.entity.Inventory;
-import com.InventoryMangementSystem.inventoryservice.entity.Product;
+import com.InventoryMangementSystem.inventoryservice.models.Inventory;
 import com.InventoryMangementSystem.inventoryservice.repository.InventoryRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Integration test for the Inventory Service
- * Tests interactions between the inventory controller, service, and repository
- * layers
+ * Tests interactions between the inventory controller, service, and repository layers
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -57,33 +54,24 @@ public class InventoryServiceIntegrationTest {
     void setUp() {
         // Clean up the database
         inventoryRepository.deleteAll();
-
+        
         // Create inventory for the product
         testInventory = new Inventory();
-        // Need to create a Product entity
-        Product testProduct = new Product();
-        testProduct.setId(testProductId);
-        testProduct.setName("Test Product");
-        testProduct.setDescription("Test Description");
-
-        testInventory.setProduct(testProduct);
-        testInventory.setQuantity(100);
-        testInventory.setReservedQuantity(0);
-
-        // Cannot save directly due to model differences - will need to mock repository
-        // or adjust tests
+        testInventory.setProductId(testProductId);
+        testInventory.setStock(100);
+        testInventory.setReserved(0);
+        testInventory.setAvailableStock(100);
+        testInventory.setMinThreshold(10);
+        testInventory = inventoryRepository.save(testInventory);
     }
 
     @Test
     public void testGetInventoryByProductId() throws Exception {
-        // Assuming the API returns a JSON structure with these fields regardless of the
-        // internal entity structure
         mockMvc.perform(get("/api/inventory/{productId}", testProductId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.stock").exists())
-                .andExpect(jsonPath("$.reserved").exists());
-        // Remove specific value checks as we're not setting up real data due to entity
-        // mismatch
+                .andExpect(jsonPath("$.stock").value(100))
+                .andExpect(jsonPath("$.reserved").value(0))
+                .andExpect(jsonPath("$.availableStock").value(100));
     }
 
     @Test
@@ -91,9 +79,11 @@ public class InventoryServiceIntegrationTest {
         mockMvc.perform(post("/api/inventory/{productId}/adjust", testProductId)
                 .param("delta", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.stock").exists());
+                .andExpect(jsonPath("$.stock").value(120));
 
-        // Skip the verification since we have entity mismatch issues
+        Optional<Inventory> updatedInventory = inventoryRepository.findByProductId(testProductId);
+        assertTrue(updatedInventory.isPresent());
+        assertEquals(120, updatedInventory.get().getStock());
     }
 
     @Test
@@ -101,9 +91,12 @@ public class InventoryServiceIntegrationTest {
         mockMvc.perform(post("/api/inventory/{productId}/reserve", testProductId)
                 .param("quantity", "30"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.reserved").exists());
+                .andExpect(jsonPath("$.reserved").value(30));
 
-        // Skip the verification since we have entity mismatch issues
+        Optional<Inventory> updatedInventory = inventoryRepository.findByProductId(testProductId);
+        assertTrue(updatedInventory.isPresent());
+        assertEquals(30, updatedInventory.get().getReserved());
+        assertEquals(70, updatedInventory.get().getAvailableStock());
     }
 
     @Test
@@ -111,9 +104,11 @@ public class InventoryServiceIntegrationTest {
         mockMvc.perform(post("/api/inventory/{productId}/threshold", testProductId)
                 .param("value", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.minThreshold").exists());
+                .andExpect(jsonPath("$.minThreshold").value(20));
 
-        // Skip the verification since we have entity mismatch issues
+        Optional<Inventory> updatedInventory = inventoryRepository.findByProductId(testProductId);
+        assertTrue(updatedInventory.isPresent());
+        assertEquals(20, updatedInventory.get().getMinThreshold());
     }
 
     @Test
@@ -146,8 +141,11 @@ public class InventoryServiceIntegrationTest {
 
     @Test
     public void testConfirmReservation() throws Exception {
-        // Skip setting up the reservation since we have entity mismatch issues
-
+        // First create a reservation
+        testInventory.setReserved(20);
+        testInventory.setAvailableStock(80);
+        inventoryRepository.save(testInventory);
+        
         Map<String, Object> requestMap = new HashMap<>();
         requestMap.put("productId", testProductId);
         requestMap.put("quantity", 20);
@@ -159,11 +157,14 @@ public class InventoryServiceIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Inventory confirmed successfully"));
     }
-
+    
     @Test
     public void testCancelReservation() throws Exception {
-        // Skip setting up the reservation since we have entity mismatch issues
-
+        // First create a reservation
+        testInventory.setReserved(20);
+        testInventory.setAvailableStock(80);
+        inventoryRepository.save(testInventory);
+        
         Map<String, Object> requestMap = new HashMap<>();
         requestMap.put("productId", testProductId);
         requestMap.put("quantity", 20);
