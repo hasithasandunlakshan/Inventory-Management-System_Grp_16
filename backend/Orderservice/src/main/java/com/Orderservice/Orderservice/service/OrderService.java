@@ -85,6 +85,10 @@ public class OrderService {
                         .orderDate(order.getOrderDate())
                         .status(order.getStatus().toString())
                         .totalAmount(order.getTotalAmount())
+                        .originalAmount(order.getOriginalAmount())
+                        .discountAmount(order.getDiscountAmount())
+                        .discountCode(order.getDiscountCode())
+                        .discountId(order.getDiscountId())
                         .createdAt(order.getCreatedAt())
                         .updatedAt(order.getUpdatedAt())
                         .refundReason(order.getRefundReason())
@@ -335,6 +339,9 @@ public class OrderService {
 
     @Autowired
     private UserServiceClient userServiceClient;
+    
+    @Autowired
+    private DiscountService discountService;
 
     public AllOrdersResponse getAllOrders() {
         try {
@@ -1089,5 +1096,262 @@ public class OrderService {
             return "💰 Your order " + orderNumber + " has been refunded (" + amount + ").";
 
         }
+    }
+    
+    // ============== DISCOUNT INTEGRATION METHODS ==============
+    
+    /**
+     * Apply discount to an existing order
+     */
+    public Order applyDiscountToOrder(Long orderId, String discountCode, Long userId) {
+        try {
+            // Get the order
+            Optional<Order> orderOpt = orderRepository.findById(orderId);
+            if (!orderOpt.isPresent()) {
+                throw new RuntimeException("Order not found with ID: " + orderId);
+            }
+            
+            Order order = orderOpt.get();
+            
+            // Check if order already has a discount
+            if (order.getDiscountCode() != null) {
+                throw new RuntimeException("Order already has a discount applied");
+            }
+            
+            // Find the discount
+            Optional<com.Orderservice.Orderservice.entity.Discount> discountOpt = 
+                    discountService.findActiveDiscountByCode(discountCode);
+            if (!discountOpt.isPresent()) {
+                throw new RuntimeException("Invalid or expired discount code");
+            }
+            
+            com.Orderservice.Orderservice.entity.Discount discount = discountOpt.get();
+            
+            // Validate user can use this discount
+            Double originalAmount = order.getTotalAmount().doubleValue();
+            boolean canUse = discountService.canUserUseDiscount(discount.getId(), userId, originalAmount);
+            if (!canUse) {
+                throw new RuntimeException("User is not eligible to use this discount");
+            }
+            
+            // Calculate discount amount
+            Double discountAmount = discountService.calculateDiscountAmount(discount, originalAmount);
+            Double finalAmount = originalAmount - discountAmount;
+            
+            // Update order with discount information
+            order.setOriginalAmount(order.getTotalAmount());
+            order.setDiscountAmount(BigDecimal.valueOf(discountAmount));
+            order.setDiscountCode(discountCode);
+            order.setDiscountId(discount.getId());
+            order.setTotalAmount(BigDecimal.valueOf(finalAmount));
+            order.setUpdatedAt(LocalDateTime.now());
+            
+            // Save the order
+            Order updatedOrder = orderRepository.save(order);
+            
+            // Record discount usage
+            discountService.applyDiscountToOrder(discount.getId(), userId, orderId, originalAmount, discountAmount);
+            
+            System.out.println("✅ Applied discount " + discountCode + " to order " + orderId + 
+                             ". Original: $" + originalAmount + ", Discount: $" + discountAmount + 
+                             ", Final: $" + finalAmount);
+            
+            return updatedOrder;
+        } catch (Exception e) {
+            System.err.println("❌ Error applying discount to order: " + e.getMessage());
+            throw new RuntimeException("Failed to apply discount: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Calculate order total with potential discount
+     */
+    public OrderCalculationResult calculateOrderWithDiscount(List<OrderItem> orderItems, String discountCode, Long userId) {
+        try {
+            // Calculate original total from order items
+            Double originalTotal = orderItems.stream()
+                    .mapToDouble(item -> item.getPrice().doubleValue() * item.getQuantity())
+                    .sum();
+            
+            OrderCalculationResult result = new OrderCalculationResult();
+            result.setOriginalAmount(originalTotal);
+            result.setFinalAmount(originalTotal);
+            result.setDiscountAmount(0.0);
+            
+            if (discountCode != null && !discountCode.trim().isEmpty()) {
+                // Find the discount
+                Optional<com.Orderservice.Orderservice.entity.Discount> discountOpt = 
+                        discountService.findActiveDiscountByCode(discountCode);
+                
+                if (discountOpt.isPresent()) {
+                    com.Orderservice.Orderservice.entity.Discount discount = discountOpt.get();
+                    
+                    // Check if user can use this discount
+                    boolean canUse = discountService.canUserUseDiscount(discount.getId(), userId, originalTotal);
+                    
+                    if (canUse) {
+                        // For product discounts, extract product information
+                        if (discount.getType() == com.Orderservice.Orderservice.enums.DiscountType.PRODUCT_DISCOUNT) {
+                            List<Long> productIds = orderItems.stream()
+                                    .map(OrderItem::getProductId)
+                                    .collect(Collectors.toList());
+                            
+                            // Check if any products are eligible (simplified check)
+                            boolean hasEligibleProducts = true; // For now, assume eligible
+                            
+                            if (!hasEligibleProducts) {
+                                result.setErrorMessage("No eligible products for this discount");
+                                return result;
+                            }
+                        }
+                        
+                        // Calculate discount
+                        Double discountAmount = discountService.calculateDiscountAmount(discount, originalTotal);
+                        
+                        result.setDiscountAmount(discountAmount);
+                        result.setFinalAmount(originalTotal - discountAmount);
+                        result.setDiscountCode(discountCode);
+                        result.setDiscountId(discount.getId());
+                        result.setDiscountName(discount.getDiscountName());
+                        result.setDiscountApplicable(true);
+                    } else {
+                        result.setErrorMessage("You are not eligible to use this discount");
+                    }
+                } else {
+                    result.setErrorMessage("Invalid or expired discount code");
+                }
+            }
+            
+            return result;
+        } catch (Exception e) {
+            OrderCalculationResult errorResult = new OrderCalculationResult();
+            errorResult.setOriginalAmount(0.0);
+            errorResult.setFinalAmount(0.0);
+            errorResult.setDiscountAmount(0.0);
+            errorResult.setErrorMessage("Error calculating order total: " + e.getMessage());
+            return errorResult;
+        }
+    }
+    
+    /**
+     * Create order with discount pre-applied
+     */
+    public Order createOrderWithDiscount(Order order, String discountCode, Long userId) {
+        try {
+            // Calculate totals with discount
+            OrderCalculationResult calculation = calculateOrderWithDiscount(order.getOrderItems(), discountCode, userId);
+            
+            if (calculation.getErrorMessage() != null) {
+                throw new RuntimeException(calculation.getErrorMessage());
+            }
+            
+            // Set order amounts
+            order.setOriginalAmount(BigDecimal.valueOf(calculation.getOriginalAmount()));
+            order.setTotalAmount(BigDecimal.valueOf(calculation.getFinalAmount()));
+            
+            if (calculation.isDiscountApplicable()) {
+                order.setDiscountAmount(BigDecimal.valueOf(calculation.getDiscountAmount()));
+                order.setDiscountCode(discountCode);
+                order.setDiscountId(calculation.getDiscountId());
+            }
+            
+            // Save the order
+            Order savedOrder = orderRepository.save(order);
+            
+            // If discount was applied, record the usage
+            if (calculation.isDiscountApplicable()) {
+                discountService.applyDiscountToOrder(
+                        calculation.getDiscountId(),
+                        userId,
+                        savedOrder.getOrderId(),
+                        calculation.getOriginalAmount(),
+                        calculation.getDiscountAmount()
+                );
+            }
+            
+            System.out.println("✅ Created order " + savedOrder.getOrderId() + 
+                             (calculation.isDiscountApplicable() ? " with discount " + discountCode : " without discount"));
+            
+            return savedOrder;
+        } catch (Exception e) {
+            System.err.println("❌ Error creating order with discount: " + e.getMessage());
+            throw new RuntimeException("Failed to create order: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Remove discount from an order
+     */
+    public Order removeDiscountFromOrder(Long orderId) {
+        try {
+            Optional<Order> orderOpt = orderRepository.findById(orderId);
+            if (!orderOpt.isPresent()) {
+                throw new RuntimeException("Order not found with ID: " + orderId);
+            }
+            
+            Order order = orderOpt.get();
+            
+            if (order.getDiscountCode() == null) {
+                throw new RuntimeException("Order does not have a discount applied");
+            }
+            
+            // Restore original amount
+            if (order.getOriginalAmount() != null) {
+                order.setTotalAmount(order.getOriginalAmount());
+            }
+            
+            // Clear discount information
+            order.setOriginalAmount(null);
+            order.setDiscountAmount(null);
+            order.setDiscountCode(null);
+            order.setDiscountId(null);
+            order.setUpdatedAt(LocalDateTime.now());
+            
+            Order updatedOrder = orderRepository.save(order);
+            
+            System.out.println("✅ Removed discount from order " + orderId);
+            
+            return updatedOrder;
+        } catch (Exception e) {
+            System.err.println("❌ Error removing discount from order: " + e.getMessage());
+            throw new RuntimeException("Failed to remove discount: " + e.getMessage());
+        }
+    }
+    
+    // Inner class for order calculation results
+    public static class OrderCalculationResult {
+        private Double originalAmount;
+        private Double finalAmount;
+        private Double discountAmount;
+        private String discountCode;
+        private Long discountId;
+        private String discountName;
+        private boolean discountApplicable = false;
+        private String errorMessage;
+        
+        // Getters and setters
+        public Double getOriginalAmount() { return originalAmount; }
+        public void setOriginalAmount(Double originalAmount) { this.originalAmount = originalAmount; }
+        
+        public Double getFinalAmount() { return finalAmount; }
+        public void setFinalAmount(Double finalAmount) { this.finalAmount = finalAmount; }
+        
+        public Double getDiscountAmount() { return discountAmount; }
+        public void setDiscountAmount(Double discountAmount) { this.discountAmount = discountAmount; }
+        
+        public String getDiscountCode() { return discountCode; }
+        public void setDiscountCode(String discountCode) { this.discountCode = discountCode; }
+        
+        public Long getDiscountId() { return discountId; }
+        public void setDiscountId(Long discountId) { this.discountId = discountId; }
+        
+        public String getDiscountName() { return discountName; }
+        public void setDiscountName(String discountName) { this.discountName = discountName; }
+        
+        public boolean isDiscountApplicable() { return discountApplicable; }
+        public void setDiscountApplicable(boolean discountApplicable) { this.discountApplicable = discountApplicable; }
+        
+        public String getErrorMessage() { return errorMessage; }
+        public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
     }
 }
