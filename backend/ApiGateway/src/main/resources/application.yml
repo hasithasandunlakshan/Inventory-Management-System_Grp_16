@@ -6,6 +6,27 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders: "*"
+            allowCredentials: true
+            exposedHeaders:
+              - Authorization
+              - Content-Type
+              - X-Gateway
+              - X-User-Id
+              - X-Username
+              - X-User-Roles
+            maxAge: 3600
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers
 
@@ -21,7 +42,7 @@ user:
 
 product:
   service:
-    url: http://localhost:8081
+    url: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/productservice-gw/v1.0
 
 order:
   service:
@@ -29,7 +50,7 @@ order:
 
 supplier:
   service:
-    url: http://localhost:8082
+    url: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0
 
 inventory:
   service:
@@ -37,7 +58,7 @@ inventory:
 
 resource:
   service:
-    url: http://localhost:8086
+    url: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0
 
 # Logging
 logging:

@@ -124,10 +124,11 @@ public class ApiGatewayApplication {
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0"))
 
-                                // Health Check
+                                // Health Check - Simple response (no external service)
                                 .route("health-check", r -> r
                                                 .path("/health")
-                                                .uri("http://localhost:8090"))
+                                                .filters(f -> f.setStatus(200))
+                                                .uri("no://op"))
 
                                 .build();
         }
