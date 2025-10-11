@@ -6,7 +6,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Repository interface for testing
+ */
 @Repository
-public interface InventoryRepository extends JpaRepository<Inventory, Long> {
+public interface TestInventoryRepository extends JpaRepository<Inventory, Long> {
     Optional<Inventory> findByProductId(Long productId);
 }
