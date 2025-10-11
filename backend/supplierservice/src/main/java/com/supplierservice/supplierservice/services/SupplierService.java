@@ -121,9 +121,12 @@ public class SupplierService {
             existingSupplier.setCategory(category);
         }
 
-        // Note: User updates should be handled through a separate user management
-        // service
-        // For now, we'll keep the existing user relationship
+        // Update user if provided
+        if (dto.getUserId() != null) {
+            User user = userRepository.findById(dto.getUserId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID"));
+            existingSupplier.setUser(user);
+        }
 
         Supplier saved = supplierRepository.save(existingSupplier);
 
