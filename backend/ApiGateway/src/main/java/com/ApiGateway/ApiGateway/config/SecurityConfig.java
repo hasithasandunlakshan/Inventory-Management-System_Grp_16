@@ -34,8 +34,14 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(Arrays.asList(
-                                "http://localhost:3000"));
+                // Allow all origins for Vercel deployments and local development
+                configuration.setAllowedOriginPatterns(Arrays.asList(
+                                "http://localhost:3000",
+                                "http://localhost:3001",
+                                "https://*.vercel.app",
+                                "https://*.choreoapis.dev",
+                                "*"  // Allow all origins (for development/testing)
+                ));
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                 configuration.setAllowedHeaders(Arrays.asList("*"));
                 configuration.setAllowCredentials(true);

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -236,9 +237,11 @@ export default function ProductManagement({
                     onClick={() => handleProductToggle(product)}
                   >
                     {product.imageUrl && (
-                      <img
+                      <Image
                         src={product.imageUrl}
                         alt={product.name}
+                        width={200}
+                        height={96}
                         className='w-full h-24 object-cover rounded-md mb-3'
                       />
                     )}

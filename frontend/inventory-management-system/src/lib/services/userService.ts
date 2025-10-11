@@ -1,7 +1,9 @@
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-const API_BASE_URL = 'http://localhost:8090/api/secure'; // Through API Gateway
-const ADMIN_API_BASE_URL = 'http://localhost:8090/api/admin'; // Admin endpoints through API Gateway
+const GATEWAY_URL =
+  process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090';
+const API_BASE_URL = `${GATEWAY_URL}/api/secure`; // Through API Gateway
+const ADMIN_API_BASE_URL = `${GATEWAY_URL}/api/admin`; // Admin endpoints through API Gateway
 
 export interface UserInfo {
   id: string;
