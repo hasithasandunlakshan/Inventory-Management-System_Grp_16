@@ -1,0 +1,8 @@
+com/inventorymanagementsystem/e2e/pages/OrdersPage.class
+com/inventorymanagementsystem/e2e/pages/InventoryPage.class
+com/inventorymanagementsystem/e2e/pages/ProductsPage.class
+com/inventorymanagementsystem/e2e/utils/DriverManager.class
+com/inventorymanagementsystem/e2e/utils/ConfigReader.class
+com/inventorymanagementsystem/e2e/pages/BasePage.class
+com/inventorymanagementsystem/e2e/pages/LoginPage.class
+com/inventorymanagementsystem/e2e/pages/DashboardPage.class
