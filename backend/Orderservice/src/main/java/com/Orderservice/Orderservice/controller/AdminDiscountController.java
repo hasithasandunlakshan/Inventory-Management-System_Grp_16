@@ -3,8 +3,10 @@ package com.Orderservice.Orderservice.controller;
 import com.Orderservice.Orderservice.dto.*;
 import com.Orderservice.Orderservice.entity.Discount;
 import com.Orderservice.Orderservice.entity.DiscountProduct;
+import com.Orderservice.Orderservice.entity.Product;
 import com.Orderservice.Orderservice.enums.DiscountStatus;
 import com.Orderservice.Orderservice.repository.DiscountProductRepository;
+import com.Orderservice.Orderservice.repository.ProductRepository;
 import com.Orderservice.Orderservice.repository.UserDiscountRepository;
 import com.Orderservice.Orderservice.service.DiscountService;
 import org.slf4j.Logger;
@@ -16,8 +18,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -35,6 +40,9 @@ public class AdminDiscountController {
     
     @Autowired
     private UserDiscountRepository userDiscountRepository;
+    
+    @Autowired
+    private ProductRepository productRepository;
     
     /**
      * Create a new discount
@@ -399,5 +407,90 @@ public class AdminDiscountController {
                 .totalDiscountGiven(totalDiscountGiven != null ? totalDiscountGiven : 0.0)
                 .associatedProducts(productInfos)
                 .build();
+    }
+
+    /**
+     * Get all products associated with a product-specific discount
+     */
+    @GetMapping("/{discountId}/products")
+    public ResponseEntity<?> getDiscountProducts(@PathVariable Long discountId,
+                                               @RequestHeader(value = "Admin-User-Id", defaultValue = "admin") String adminUserId) {
+        try {
+            logger.info("Fetching products for discount ID: {} by admin: {}", discountId, adminUserId);
+            
+            // Verify discount exists
+            Optional<Discount> discountOpt = discountService.getDiscountById(discountId);
+            if (!discountOpt.isPresent()) {
+                return ResponseEntity.badRequest().body("Discount not found with ID: " + discountId);
+            }
+            
+            Discount discount = discountOpt.get();
+            
+            // Get associated products
+            List<DiscountProduct> discountProducts = discountProductRepository.findByDiscountId(discountId);
+            
+            // Get all unique product IDs for batch fetching
+            Set<Long> productIds = discountProducts.stream()
+                    .map(DiscountProduct::getProductId)
+                    .filter(pid -> pid != null)
+                    .collect(Collectors.toSet());
+            
+            // Batch fetch product details to avoid N+1 queries
+            Map<Long, Product> productMap = productRepository.findByProductIdIn(productIds)
+                    .stream()
+                    .collect(Collectors.toMap(Product::getProductId, product -> product));
+            
+            // Build response with enhanced product details
+            List<Map<String, Object>> productResponses = discountProducts.stream()
+                    .map(dp -> {
+                        Map<String, Object> productInfo = new HashMap<>();
+                        productInfo.put("id", dp.getId());
+                        productInfo.put("productId", dp.getProductId());
+                        productInfo.put("productBarcode", dp.getProductBarcode());
+                        productInfo.put("addedAt", dp.getCreatedAt());
+                        
+                        // Add product details if available
+                        Product product = productMap.get(dp.getProductId());
+                        if (product != null) {
+                            productInfo.put("productName", product.getName());
+                            productInfo.put("imageUrl", product.getImageUrl());
+                            productInfo.put("price", product.getPrice());
+                            productInfo.put("description", product.getDescription());
+                            productInfo.put("category", product.getCategoryId());
+                        } else {
+                            // Handle case where product is not found
+                            productInfo.put("productName", "Product not found");
+                            productInfo.put("imageUrl", null);
+                            productInfo.put("price", null);
+                            productInfo.put("description", null);
+                            productInfo.put("category", null);
+                        }
+                        
+                        return productInfo;
+                    })
+                    .collect(Collectors.toList());
+            
+            // Build complete response
+            Map<String, Object> response = new HashMap<>();
+            response.put("discountId", discountId);
+            response.put("discountName", discount.getDiscountName());
+            response.put("discountCode", discount.getDiscountCode());
+            response.put("discountType", discount.getType().toString());
+            response.put("totalProducts", productResponses.size());
+            response.put("products", productResponses);
+            
+            // Add helpful message based on discount type
+            if (discount.getType().toString().equals("PRODUCT_DISCOUNT")) {
+                response.put("message", "This is a product-specific discount with " + productResponses.size() + " associated products");
+            } else {
+                response.put("message", "This is a bill-level discount that applies to entire orders, not specific products. No products are associated.");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Error fetching discount products: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error fetching discount products: " + e.getMessage());
+        }
     }
 }

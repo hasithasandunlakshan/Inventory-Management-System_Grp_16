@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -208,40 +211,32 @@ public class UserDiscountController {
             // Calculate discount amount
             Double discountAmount = discountService.calculateDiscountAmount(discount, request.getOrderAmount());
             
+            // ALWAYS record usage in database (both validation-only and apply modes)
+            UserDiscount userDiscount = discountService.applyDiscountToOrder(
+                    discount.getId(),
+                    request.getUserId(),
+                    request.getOrderId(), // Can be null for validation-only mode
+                    request.getOrderAmount(),
+                    discountAmount
+            );
+            
             if (isValidationOnly) {
-                // Validation-only mode: return calculation without recording usage
-                logger.info("Discount validation successful. Code: {}, Amount: {}, User: {}", 
-                           request.getDiscountCode(), discountAmount, request.getUserId());
-                
-                DiscountCalculationResponse response = DiscountCalculationResponse.success(
-                        request.getOrderAmount(),
-                        discountAmount,
-                        discount.getDiscountCode(),
-                        discount.getDiscountName(),
-                        discount.getId()
-                );
-                
-                return ResponseEntity.ok(response);
+                logger.info("Discount usage recorded (validation mode). Code: {}, Amount: {}, User: {}, UserDiscountId: {}", 
+                           request.getDiscountCode(), discountAmount, request.getUserId(), userDiscount.getId());
             } else {
-                // Apply mode: actually apply the discount and record usage
-                UserDiscount userDiscount = discountService.applyDiscountToOrder(
-                        discount.getId(),
-                        request.getUserId(),
-                        request.getOrderId(),
-                        request.getOrderAmount(),
-                        discountAmount
-                );
-                
-                DiscountCalculationResponse response = DiscountCalculationResponse.success(
-                        request.getOrderAmount(),
-                        discountAmount,
-                        discount.getDiscountCode(),
-                        discount.getDiscountName(),
-                        discount.getId()
-                );
-                
-                return ResponseEntity.ok(response);
+                logger.info("Discount usage recorded (apply mode). Code: {}, Amount: {}, User: {}, Order: {}, UserDiscountId: {}", 
+                           request.getDiscountCode(), discountAmount, request.getUserId(), request.getOrderId(), userDiscount.getId());
             }
+            
+            DiscountCalculationResponse response = DiscountCalculationResponse.success(
+                    request.getOrderAmount(),
+                    discountAmount,
+                    discount.getDiscountCode(),
+                    discount.getDiscountName(),
+                    discount.getId()
+            );
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Error applying discount: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -413,5 +408,58 @@ public class UserDiscountController {
         // Getters
         public Boolean getEligible() { return eligible; }
         public String getMessage() { return message; }
+    }
+
+    /**
+     * Get products eligible for a specific discount (user view)
+     */
+    @GetMapping("/{discountCode}/eligible-products")
+    public ResponseEntity<?> getEligibleProducts(@PathVariable String discountCode) {
+        try {
+            logger.info("Getting eligible products for discount code: {}", discountCode);
+            
+            // Find discount by code
+            Optional<Discount> discountOpt = discountService.findActiveDiscountByCode(discountCode);
+            if (!discountOpt.isPresent()) {
+                return ResponseEntity.badRequest().body("Invalid discount code");
+            }
+            
+            Discount discount = discountOpt.get();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("discountCode", discountCode);
+            response.put("discountName", discount.getDiscountName());
+            response.put("discountValue", discount.getDiscountValue().doubleValue());
+            response.put("isPercentage", discount.getIsPercentage());
+            
+            if (discount.getType() != DiscountType.PRODUCT_DISCOUNT) {
+                response.put("type", "BILL_DISCOUNT");
+                response.put("message", "This discount applies to your entire order");
+                response.put("eligibleProducts", new ArrayList<>());
+                return ResponseEntity.ok(response);
+            }
+            
+            // Get eligible products for product-specific discount
+            List<DiscountProduct> discountProducts = discountProductRepository.findByDiscountId(discount.getId());
+            
+            List<Map<String, Object>> eligibleProducts = discountProducts.stream()
+                    .map(dp -> {
+                        Map<String, Object> productInfo = new HashMap<>();
+                        productInfo.put("productId", dp.getProductId());
+                        productInfo.put("productBarcode", dp.getProductBarcode());
+                        return productInfo;
+                    })
+                    .collect(Collectors.toList());
+            
+            response.put("type", "PRODUCT_DISCOUNT");
+            response.put("message", String.format("This discount applies to %d specific products", eligibleProducts.size()));
+            response.put("eligibleProducts", eligibleProducts);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Error fetching eligible products: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error fetching eligible products: " + e.getMessage());
+        }
     }
 }
