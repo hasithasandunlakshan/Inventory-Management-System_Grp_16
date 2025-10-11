@@ -202,6 +202,13 @@ export default function SaleForecastPage() {
         sales: number;
         forecast: number;
         stockOut: number;
+        lowerBound?: number;
+        upperBound?: number;
+        trend?: number;
+        daily?: number;
+        weekly?: number;
+        stockOutDate?: string;
+        reorderQuantity?: number;
       };
     }>;
     label?: string;
@@ -224,7 +231,7 @@ export default function SaleForecastPage() {
             </p>
 
             {/* Show trend/seasonal data only for legacy format */}
-            {legacyForecastData.length > 0 && (
+            {legacyForecastData.length > 0 && data.trend !== undefined && (
               <>
                 <p className='text-green-600'>
                   <span className='font-medium'>Trend:</span>{' '}
@@ -243,12 +250,16 @@ export default function SaleForecastPage() {
             )}
 
             <hr className='my-2' />
-            <p className='text-red-600 font-medium'>
-              Stock Out: {formatDate(data.stockOutDate)}
-            </p>
-            <p className='text-indigo-600 font-medium'>
-              Reorder Qty: {data.reorderQuantity} units
-            </p>
+            {data.stockOutDate && (
+              <p className='text-red-600 font-medium'>
+                Stock Out: {formatDate(data.stockOutDate)}
+              </p>
+            )}
+            {data.reorderQuantity !== undefined && (
+              <p className='text-indigo-600 font-medium'>
+                Reorder Qty: {data.reorderQuantity} units
+              </p>
+            )}
 
             {/* Show additional metrics for new format */}
             {forecastResponse && stockInfo && (

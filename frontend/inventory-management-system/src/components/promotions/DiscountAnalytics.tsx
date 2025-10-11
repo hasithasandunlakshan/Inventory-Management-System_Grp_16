@@ -79,9 +79,7 @@ export default function DiscountAnalytics({
       setError(null);
 
       const data = await discountService.getDiscountUsageAnalytics(
-        discount.id!,
-        startDate,
-        endDate
+        discount.id!
       );
       setAnalytics(data);
     } catch (error) {
@@ -459,12 +457,12 @@ export default function DiscountAnalytics({
               </Label>
               <Badge
                 className={
-                  discount.isActive
+                  discount.status === 'ACTIVE'
                     ? 'bg-green-100 text-green-800'
                     : 'bg-gray-100 text-gray-800'
                 }
               >
-                {discount.isActive ? 'Active' : 'Inactive'}
+                {discount.status === 'ACTIVE' ? 'Active' : 'Inactive'}
               </Badge>
             </div>
           </div>
