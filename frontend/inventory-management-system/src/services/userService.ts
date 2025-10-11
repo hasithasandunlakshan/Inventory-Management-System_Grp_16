@@ -1,6 +1,6 @@
 import { authService } from '../lib/services/authService';
 
-const USER_API_BASE_URL = 'http://localhost:8090/api/auth';
+const USER_API_BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090'}/api/auth`;
 
 export interface UserInfo {
   id: string;

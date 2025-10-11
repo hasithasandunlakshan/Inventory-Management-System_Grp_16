@@ -74,8 +74,11 @@ export function AuthProvider({
 
           // Verify the token is still valid by making a test request
           try {
+            const apiGatewayUrl =
+              process.env.NEXT_PUBLIC_API_GATEWAY_URL ||
+              'http://localhost:8090';
             const response = await fetch(
-              'http://localhost:8090/api/secure/user/current',
+              `${apiGatewayUrl}/api/secure/user/current`,
               {
                 method: 'GET',
                 headers: {
@@ -203,8 +206,10 @@ export function AuthProvider({
 
         if (token) {
           // Verify token with backend
+          const apiGatewayUrl =
+            process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090';
           const response = await fetch(
-            'http://localhost:8090/api/secure/user/current',
+            `${apiGatewayUrl}/api/secure/user/current`,
             {
               method: 'GET',
               headers: {
