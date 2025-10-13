@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 import com.Orderservice.Orderservice.client.UserServiceClient;
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
 import com.Orderservice.Orderservice.dto.OrderDetailResponse;
-import com.Orderservice.Orderservice.dto.UserDetailsResponse;
 import com.Orderservice.Orderservice.dto.RefundResponse;
+import com.Orderservice.Orderservice.dto.UserDetailsResponse;
 import com.Orderservice.Orderservice.entity.Order;
 import com.Orderservice.Orderservice.entity.OrderItem;
 import com.Orderservice.Orderservice.entity.Payment;
@@ -573,11 +573,211 @@ public class OrderService {
         }
     }
 
+    /**
+     * HIGHLY OPTIMIZED: Get ALL orders (any status) with pagination and user details
+     * - Uses bulk fetching for products (no N+1 problem)
+     * - Uses bulk fetching for user details
+     * - Includes pagination
+     * - Fetches orders with items in one query
+     * 
+     * @param page Page number (0-based)
+     * @param size Number of items per page
+     * @return AllOrdersResponse with pagination info
+     */
+    public AllOrdersResponse getAllOrdersOptimized(int page, int size) {
+        try {
+            System.out.println("=== OPTIMIZED GET ALL ORDERS ===");
+            System.out.println("Page: " + page + ", Size: " + size);
+            
+            long startTime = System.currentTimeMillis();
+            
+            // Step 1: Fetch orders with items in ONE query using pagination
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Order> orderPage = orderRepository.findAllOrdersWithItemsPaginated(pageable);
+            
+            List<Order> orders = orderPage.getContent();
+            System.out.println("Fetched " + orders.size() + " orders with items");
+            
+            if (orders.isEmpty()) {
+                return AllOrdersResponse.builder()
+                        .success(true)
+                        .message("No orders found")
+                        .orders(new ArrayList<>())
+                        .totalOrders(0)
+                        .pagination(new AllOrdersResponse.PaginationInfo(
+                                page, size, 0, 0))
+                        .build();
+            }
+            
+            // Step 2: Collect all unique product IDs (BULK OPTIMIZATION)
+            Set<Long> productIds = orders.stream()
+                    .flatMap(order -> order.getOrderItems().stream())
+                    .map(OrderItem::getProductId)
+                    .filter(productId -> productId != null)
+                    .collect(Collectors.toSet());
+            
+            // Step 3: Fetch ALL products in ONE query
+            Map<Long, Product> productMap = new HashMap<>();
+            if (!productIds.isEmpty()) {
+                List<Product> products = productRepository.findByProductIdIn(productIds);
+                productMap = products.stream()
+                        .collect(Collectors.toMap(Product::getProductId, product -> product));
+                System.out.println("Bulk fetched " + products.size() + " products");
+            }
+            
+            // Step 4: Collect all unique customer IDs (BULK OPTIMIZATION)
+            Set<Long> customerIds = orders.stream()
+                    .map(Order::getCustomerId)
+                    .filter(customerId -> customerId != null)
+                    .collect(Collectors.toSet());
+            
+            // Step 5: Fetch ALL user details in BULK
+            System.out.println("Fetching user details for " + customerIds.size() + " unique customers...");
+            Map<Long, UserDetailsResponse.UserInfo> userMap = userServiceClient.getUsersByIds(customerIds);
+            
+            // Step 6: Build response with cached data
+            List<OrderDetailResponse> orderDetails = new ArrayList<>();
+            
+            for (Order order : orders) {
+                List<OrderDetailResponse.OrderItemDetail> itemDetails = new ArrayList<>();
+                
+                // Build order items using cached product data
+                for (OrderItem orderItem : order.getOrderItems()) {
+                    String productName = "Unknown Product";
+                    String productImageUrl = null;
+                    String barcode = null;
+                    
+                    if (orderItem.getProductId() != null) {
+                        Product product = productMap.get(orderItem.getProductId());
+                        if (product != null) {
+                            productName = product.getName();
+                            productImageUrl = product.getImageUrl();
+                            barcode = product.getBarcode();
+                        } else {
+                            productName = "Product Not Found";
+                        }
+                    } else {
+                        productName = "No Product ID";
+                    }
+                    
+                    OrderDetailResponse.OrderItemDetail itemDetail = OrderDetailResponse.OrderItemDetail.builder()
+                            .orderItemId(orderItem.getOrderItemId())
+                            .productId(orderItem.getProductId())
+                            .productName(productName)
+                            .productImageUrl(productImageUrl)
+                            .quantity(orderItem.getQuantity())
+                            .price(orderItem.getPrice())
+                            .createdAt(orderItem.getCreatedAt())
+                            .barcode(barcode)
+                            .build();
+                    
+                    itemDetails.add(itemDetail);
+                }
+                
+                // Get user details from cached map
+                UserDetailsResponse.UserInfo userInfo = userMap.get(order.getCustomerId());
+                String customerName = "Unknown Customer";
+                String customerEmail = "";
+                String customerAddress = "Address not available";
+                Double customerLatitude = null;
+                Double customerLongitude = null;
+                
+                if (userInfo != null) {
+                    customerName = userInfo.getFullName() != null ? userInfo.getFullName() : 
+                                  (userInfo.getUsername() != null ? userInfo.getUsername() : "Unknown Customer");
+                    customerEmail = userInfo.getEmail() != null ? userInfo.getEmail() : "";
+                    customerAddress = userInfo.getFormattedAddress() != null ? userInfo.getFormattedAddress() : "Address not available";
+                    customerLatitude = userInfo.getLatitude();
+                    customerLongitude = userInfo.getLongitude();
+                }
+                
+                OrderDetailResponse orderDetail = OrderDetailResponse.builder()
+                        .orderId(order.getOrderId())
+                        .customerId(order.getCustomerId())
+                        .customerName(customerName)
+                        .customerEmail(customerEmail)
+                        .customerAddress(customerAddress)
+                        .customerLatitude(customerLatitude)
+                        .customerLongitude(customerLongitude)
+                        .orderDate(order.getOrderDate())
+                        .status(order.getStatus().toString())
+                        .totalAmount(order.getTotalAmount())
+                        .originalAmount(order.getOriginalAmount())
+                        .discountAmount(order.getDiscountAmount())
+                        .discountCode(order.getDiscountCode())
+                        .discountId(order.getDiscountId())
+                        .createdAt(order.getCreatedAt())
+                        .updatedAt(order.getUpdatedAt())
+                        .refundReason(order.getRefundReason())
+                        .refundProcessedAt(order.getRefundProcessedAt())
+                        .orderItems(itemDetails)
+                        .build();
+                
+                orderDetails.add(orderDetail);
+            }
+            
+            long endTime = System.currentTimeMillis();
+            System.out.println("=== OPTIMIZATION COMPLETE ===");
+            System.out.println("Total time: " + (endTime - startTime) + "ms");
+            System.out.println("Database queries: 3 (orders+items, products IN bulk, count)");
+            System.out.println("User service calls: " + userMap.size());
+            
+            return AllOrdersResponse.builder()
+                    .success(true)
+                    .message("All orders retrieved successfully")
+                    .orders(orderDetails)
+                    .totalOrders((int) orderPage.getTotalElements())
+                    .pagination(new AllOrdersResponse.PaginationInfo(
+                            page,
+                            size,
+                            orderPage.getTotalPages(),
+                            orderPage.getTotalElements()))
+                    .build();
+            
+        } catch (Exception e) {
+            System.err.println("Error in getAllOrdersOptimized: " + e.getMessage());
+            e.printStackTrace();
+            return AllOrdersResponse.builder()
+                    .success(false)
+                    .message("Error retrieving orders: " + e.getMessage())
+                    .orders(new ArrayList<>())
+                    .totalOrders(0)
+                    .build();
+        }
+    }
+
     public AllOrdersResponse getOrdersByCustomerId(Long customerId) {
         try {
+            // Fetch all orders for the customer with order items in a single query
             List<Order> orders = orderRepository.findByCustomerIdWithOrderItems(customerId);
-            List<OrderDetailResponse> orderDetails = new ArrayList<>();
+            
+            if (orders.isEmpty()) {
+                return AllOrdersResponse.builder()
+                        .success(true)
+                        .message("No orders found for customer")
+                        .orders(new ArrayList<>())
+                        .totalOrders(0)
+                        .build();
+            }
 
+            // Collect all product IDs to fetch in bulk (OPTIMIZATION: avoid N+1 query problem)
+            Set<Long> productIds = orders.stream()
+                    .flatMap(order -> order.getOrderItems().stream())
+                    .map(OrderItem::getProductId)
+                    .filter(productId -> productId != null)
+                    .collect(Collectors.toSet());
+
+            // Fetch all products in a single query
+            Map<Long, Product> productMap = new HashMap<>();
+            if (!productIds.isEmpty()) {
+                List<Product> products = productRepository.findByProductIdIn(productIds);
+                productMap = products.stream()
+                        .collect(Collectors.toMap(Product::getProductId, product -> product));
+            }
+
+            // Build response with cached product data
+            List<OrderDetailResponse> orderDetails = new ArrayList<>();
+            
             for (Order order : orders) {
                 List<OrderDetailResponse.OrderItemDetail> itemDetails = new ArrayList<>();
 
@@ -587,22 +787,16 @@ public class OrderService {
                     String productImageUrl = null;
                     String barcode = null;
 
-                    // Check if productId is not null before querying
+                    // Check if productId is not null and exists in the map
                     if (orderItem.getProductId() != null) {
-                        try {
-                            Optional<Product> productOpt = productRepository.findById(orderItem.getProductId());
-                            if (productOpt.isPresent()) {
-                                Product product = productOpt.get();
-                                productName = product.getName();
-                                productImageUrl = product.getImageUrl();
-                                barcode = product.getBarcode();
-                            } else {
-                                productName = "Product Not Found";
-                            }
-                        } catch (Exception e) {
-                            System.err.println("Error fetching product with ID: " + orderItem.getProductId() + " - "
-                                    + e.getMessage());
-                            productName = "Error Loading Product";
+                        Product product = productMap.get(orderItem.getProductId());
+                        if (product != null) {
+                            productName = product.getName();
+                            productImageUrl = product.getImageUrl();
+                            barcode = product.getBarcode();
+                        } else {
+                            productName = "Product Not Found";
+                            System.err.println("Product not found for ID: " + orderItem.getProductId());
                         }
                     } else {
                         System.err.println("OrderItem " + orderItem.getOrderItemId() + " has null productId");

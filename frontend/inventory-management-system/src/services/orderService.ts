@@ -1,7 +1,6 @@
 import { authService } from '../lib/services/authService';
 
-const ORDER_API_BASE_URL =
-  'https://api-gateway-q42ns563da-uc.a.run.app/api/orders';
+const ORDER_API_BASE_URL = 'http://localhost:8084/api/orders';
 
 export interface OrderItem {
   orderItemId: number;
@@ -17,12 +16,34 @@ export interface OrderItem {
 export interface Order {
   orderId: number;
   customerId: number;
+  customerName: string;
+  customerEmail: string;
+  customerAddress: string;
+  customerLatitude: number;
+  customerLongitude: number;
   orderDate: string;
   status: string;
   totalAmount: number;
+  originalAmount: number | null;
+  discountAmount: number | null;
+  discountCode: string | null;
+  discountId: number | null;
   createdAt: string;
   updatedAt: string;
+  refundReason: string | null;
+  refundProcessedAt: string | null;
   orderItems: OrderItem[];
+}
+
+export interface Pagination {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalElements: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  last: boolean;
+  first: boolean;
 }
 
 export interface OrdersResponse {
@@ -30,6 +51,7 @@ export interface OrdersResponse {
   message: string;
   orders: Order[];
   totalOrders: number;
+  pagination: Pagination;
 }
 
 export interface RefundRequest {
@@ -57,11 +79,19 @@ class OrderService {
     };
   }
 
-  async getAllOrders(): Promise<OrdersResponse> {
+  async getAllOrders(
+    page: number = 0,
+    size: number = 10
+  ): Promise<OrdersResponse> {
     try {
       const headers = await this.getAuthHeaders();
 
-      const response = await fetch(`${ORDER_API_BASE_URL}/all`, {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+      });
+
+      const response = await fetch(`${ORDER_API_BASE_URL}/all?${params}`, {
         method: 'GET',
         headers,
       });

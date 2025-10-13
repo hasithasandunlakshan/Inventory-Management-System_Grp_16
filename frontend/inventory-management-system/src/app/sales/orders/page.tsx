@@ -1,21 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  DollarSign,
-  Package,
-  Eye,
-  TrendingUp,
-  ShoppingCart,
-  Users,
-  CheckCircle,
-} from 'lucide-react';
-import { orderService, Order, OrdersResponse } from '@/services/orderService';
 import OrderDetailsModal from '@/components/orders/OrderDetailsModal';
 import OrderFilters from '@/components/orders/OrderFilters';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Order, orderService, OrdersResponse } from '@/services/orderService';
+import {
+  CheckCircle,
+  DollarSign,
+  Eye,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -24,6 +24,10 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalOrders, setTotalOrders] = useState(0);
   const [stats, setStats] = useState({
     totalOrders: 0,
     confirmedOrders: 0,
@@ -34,21 +38,29 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [currentPage]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response: OrdersResponse = await orderService.getAllOrders();
+      const response: OrdersResponse = await orderService.getAllOrders(
+        currentPage,
+        pageSize
+      );
 
       if (response.success) {
         setOrders(response.orders);
         setFilteredOrders(response.orders);
+        setTotalOrders(response.totalOrders);
+        setTotalPages(response.pagination.totalPages);
 
         // Calculate stats
         const orderStats = orderService.getOrderStats(response.orders);
-        setStats(orderStats);
+        setStats({
+          ...orderStats,
+          totalOrders: response.totalOrders, // Use total from API instead of current page
+        });
       } else {
         setError(response.message || 'Failed to fetch orders');
       }
@@ -307,6 +319,65 @@ export default function OrdersPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {!loading && !error && totalPages > 1 && (
+            <div className='mt-6 flex items-center justify-between border-t pt-4'>
+              <div className='text-sm text-gray-600'>
+                Showing page {currentPage + 1} of {totalPages} ({totalOrders}{' '}
+                total orders)
+              </div>
+              <div className='flex gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                  disabled={currentPage === 0 || loading}
+                >
+                  Previous
+                </Button>
+                <div className='flex items-center gap-1'>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i;
+                    } else if (currentPage < 3) {
+                      pageNum = i;
+                    } else if (currentPage >= totalPages - 3) {
+                      pageNum = totalPages - 5 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={
+                          currentPage === pageNum ? 'default' : 'outline'
+                        }
+                        size='sm'
+                        onClick={() => setCurrentPage(pageNum)}
+                        disabled={loading}
+                        className='w-10'
+                      >
+                        {pageNum + 1}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))
+                  }
+                  disabled={currentPage >= totalPages - 1 || loading}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

@@ -73,20 +73,49 @@ public class OrderController {
     }
 
     /**
-     * Get all orders (existing functionality)
+     * OPTIMIZED: Get all orders (any status) with pagination and user details
+     * - Includes pagination support
+     * - Fetches user details (name, email, address, location)
+     * - Uses bulk fetching to minimize database queries
+     * - Returns orders sorted by date (newest first)
      * 
-     * @return AllOrdersResponse containing all confirmed orders
+     * @param page Page number (0-based, optional, default: 0)
+     * @param size Number of items per page (optional, default: 20)
+     * @return AllOrdersResponse containing all orders with pagination info
      */
     @GetMapping("/all")
-    public ResponseEntity<AllOrdersResponse> getAllOrders() {
+    public ResponseEntity<AllOrdersResponse> getAllOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            System.out.println("=== FETCHING ALL ORDERS ===");
+            System.out.println("=== FETCHING ALL ORDERS (OPTIMIZED) ===");
+            System.out.println("Page: " + page + ", Size: " + size);
             System.out.println("Timestamp: " + LocalDateTime.now());
 
-            AllOrdersResponse response = orderService.getAllOrders();
+            // Validate pagination parameters
+            if (page < 0) {
+                return ResponseEntity.badRequest().body(AllOrdersResponse.builder()
+                        .success(false)
+                        .message("Page number cannot be negative")
+                        .orders(null)
+                        .totalOrders(0)
+                        .build());
+            }
+            
+            if (size < 1 || size > 100) {
+                return ResponseEntity.badRequest().body(AllOrdersResponse.builder()
+                        .success(false)
+                        .message("Page size must be between 1 and 100")
+                        .orders(null)
+                        .totalOrders(0)
+                        .build());
+            }
+
+            AllOrdersResponse response = orderService.getAllOrdersOptimized(page, size);
 
             if (response.isSuccess()) {
-                System.out.println("Orders fetched successfully: " + response.getTotalOrders() + " orders");
+                System.out.println("Orders fetched successfully: " + response.getTotalOrders() + " total orders");
+                System.out.println("Returned: " + response.getOrders().size() + " orders on this page");
 
                 // Add cache-control headers to prevent caching
                 return ResponseEntity.ok()
