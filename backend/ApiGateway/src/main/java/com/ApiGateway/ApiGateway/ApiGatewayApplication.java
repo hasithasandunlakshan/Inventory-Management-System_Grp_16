@@ -1,6 +1,7 @@
 package com.ApiGateway.ApiGateway;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.gateway.route.RouteLocator;
@@ -20,7 +21,9 @@ public class ApiGatewayApplication {
         }
 
         @Bean
-        public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+        public RouteLocator customRouteLocator(RouteLocatorBuilder builder,
+                        @Value("${supplier.service.url:http://localhost:8082}") String supplierServiceUrl,
+                        @Value("${ml.service.url:https://supplier-model.onrender.com}") String mlServiceUrl) {
                 return builder.routes()
 
                                 // User Service - Protected auth endpoints (require authentication)
@@ -96,13 +99,13 @@ public class ApiGatewayApplication {
                                                                 "/api/purchase-orders/**",
                                                                 "/api/supplier-categories/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("${supplier.service.url:http://localhost:8082}"))
+                                                .uri(supplierServiceUrl))
 
                                 // ML Service - for Supplier Prediction and Analytics
                                 .route("ml-service", r -> r
                                                 .path("/api/ml/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("${ml.service.url:https://supplier-model.onrender.com}"))
+                                                .uri(mlServiceUrl))
 
                                 // Resource Service - Driver Management (Public GET operations) - Choreo
                                 .route("resource-service-drivers-public", r -> r

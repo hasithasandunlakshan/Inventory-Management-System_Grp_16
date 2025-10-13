@@ -1,10 +1,11 @@
 package com.supplierservice.supplierservice.services.ml;
 
-import com.supplierservice.supplierservice.models.ml.PredictionResult;
 import com.supplierservice.supplierservice.models.ml.SupplierDailyFeatures;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -26,20 +27,21 @@ class MLServiceException extends RuntimeException {
 }
 
 /**
- * Client for interacting with the ML service for supplier scoring and PO risk
- * prediction
+ * Advanced client for interacting with the ML service for supplier scoring and
+ * PO risk
+ * prediction with enhanced error handling and response type management
  */
 @Service
 @Slf4j
-public class MLServiceClient {
+public class AdvancedMLServiceClient {
 
     private final RestTemplate restTemplate;
     private final String mlServiceBaseUrl;
 
-    public MLServiceClient(RestTemplate restTemplate, @Value("${ml.service.url}") String mlServiceUrl) {
+    public AdvancedMLServiceClient(RestTemplate restTemplate, @Value("${ml.service.url}") String mlServiceUrl) {
         this.restTemplate = restTemplate;
         this.mlServiceBaseUrl = mlServiceUrl;
-        log.info("ML service client initialized with base URL: {}", mlServiceUrl);
+        log.info("Advanced ML service client initialized with base URL: {}", mlServiceUrl);
     }
 
     /**
@@ -60,8 +62,10 @@ public class MLServiceClient {
         log.debug("Request body: {}", requestBody);
 
         try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
-                    url, requestBody, new ParameterizedTypeReference<Map<String, Object>>() {
+            // Use exchange instead of postForEntity to work with ParameterizedTypeReference
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    url, HttpMethod.POST, requestEntity, new ParameterizedTypeReference<Map<String, Object>>() {
                     });
 
             log.info("Received response from ML service: {}", response.getStatusCode());
