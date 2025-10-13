@@ -40,9 +40,6 @@ public class MLServiceClient {
             // Extract score
             Object scoreObj = rawResponse.get("performance_score");
 
-            if (response == null)
-                return 0.0;
-
             if (scoreObj instanceof Number) {
                 return ((Number) scoreObj).doubleValue();
             }
@@ -59,6 +56,57 @@ public class MLServiceClient {
         } catch (Exception e) {
             log.error("Failed to get prediction from ML service for supplier {}", supplierId, e);
             return 0.0; // Default score on failure
+        }
+    }
+
+    /**
+     * Call the hosted Render model to predict PO success probability and label.
+     * The Render endpoint for PO predictions is /predict-po-risk
+     */
+    public PredictionResult predictPoRisk(Map<String, Object> requestBody) {
+        try {
+            String url = mlServiceUrl;
+            if (!url.endsWith("/"))
+                url += "/";
+            url += "predict-po-risk";
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> rawResponse = restTemplate.postForObject(url, requestBody, Map.class);
+            PredictionResult r = new PredictionResult();
+            if (rawResponse == null)
+                return r;
+
+            Object prob = rawResponse.get("probability");
+            if (prob instanceof Number)
+                r.setProbability(((Number) prob).doubleValue());
+            else if (prob instanceof String) {
+                try {
+                    r.setProbability(Double.parseDouble((String) prob));
+                } catch (Exception ignored) {
+                }
+            }
+
+            Object label = rawResponse.get("label");
+            if (label instanceof Number)
+                r.setLabel(((Number) label).intValue());
+            else if (label instanceof String) {
+                try {
+                    r.setLabel(Integer.parseInt((String) label));
+                } catch (Exception ignored) {
+                }
+            }
+
+            Object featuresUsed = rawResponse.get("features_used");
+            if (featuresUsed instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> fu = (Map<String, Object>) featuresUsed;
+                r.setFeaturesUsed(fu);
+            }
+
+            return r;
+        } catch (Exception e) {
+            log.error("PO risk prediction failed", e);
+            return new PredictionResult();
         }
     }
 }
