@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Slf4j
 public class SupplierMetricsService {
     private final SupplierRepository supplierRepository;
-    private final SupplierModelService modelService;
+    private final MLServiceClient mlServiceClient;
 
     @Transactional
     public void computeDailyScores(LocalDate asOf, boolean dryRun) {
@@ -28,14 +28,14 @@ public class SupplierMetricsService {
         supplierRepository.findAll().forEach(supplier -> {
             try {
                 // 1. Compute features
-                SupplierDailyFeatures features = computeSupplierFeatures(supplier.getId(), asOf);
+                SupplierDailyFeatures features = computeSupplierFeatures(supplier.getSupplierId(), asOf);
 
-                // 2. Get model prediction
-                double predictionScore = modelService.predictSupplierPerformance(features);
+                // 2. Get model prediction via external Render-hosted model
+                double predictionScore = mlServiceClient.getSupplierPrediction(supplier.getSupplierId(), features);
 
                 // 3. Create and save daily score
                 SupplierScoreDaily score = SupplierScoreDaily.builder()
-                        .supplierId(supplier.getId())
+                        .supplierId(supplier.getSupplierId())
                         .scoreDate(asOf)
                         .onTimeRate30d(features.getOtif30d())
                         .inFullRate30d(features.getDefectRate180d())
@@ -47,10 +47,10 @@ public class SupplierMetricsService {
                         .build();
 
                 // TODO: Save score to database
-                log.info("Computed score for supplier {}: {}", supplier.getId(), predictionScore);
+                log.info("Computed score for supplier {}: {}", supplier.getSupplierId(), predictionScore);
 
             } catch (Exception e) {
-                log.error("Failed to compute score for supplier {}", supplier.getId(), e);
+                log.error("Failed to compute score for supplier {}", supplier.getSupplierId(), e);
             }
         });
     }
