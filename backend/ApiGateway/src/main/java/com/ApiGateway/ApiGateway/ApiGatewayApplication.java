@@ -90,13 +90,19 @@ public class ApiGatewayApplication {
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("http://localhost:8085"))
 
-                                // Supplier Service (MANAGER, STOREKEEPER) - Choreo
+                                // Supplier Service (MANAGER, STOREKEEPER) - Local or Choreo
                                 .route("supplier-service", r -> r
                                                 .path("/api/delivery-logs/**", "/api/suppliers/**",
                                                                 "/api/purchase-orders/**",
                                                                 "/api/supplier-categories/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0"))
+                                                .uri("${supplier.service.url:http://localhost:8082}"))
+
+                                // ML Service - for Supplier Prediction and Analytics
+                                .route("ml-service", r -> r
+                                                .path("/api/ml/**")
+                                                .filters(f -> f.filter(jwtAuthenticationFilter))
+                                                .uri("${ml.service.url:https://supplier-model.onrender.com}"))
 
                                 // Resource Service - Driver Management (Public GET operations) - Choreo
                                 .route("resource-service-drivers-public", r -> r
