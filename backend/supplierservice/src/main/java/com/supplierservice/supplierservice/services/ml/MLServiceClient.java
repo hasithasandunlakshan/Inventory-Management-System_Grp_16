@@ -21,18 +21,40 @@ public class MLServiceClient {
 
     public double getSupplierPrediction(Long supplierId, SupplierDailyFeatures features) {
         try {
-            String url = mlServiceUrl + "/supplier/predict/" + supplierId;
+            // Build target URL. By default we POST to {ml.service.url}/predict
+            String url = mlServiceUrl;
+            if (!url.endsWith("/"))
+                url += "/";
+            url += "predict"; // configurable if you change the endpoint on Render
 
-            // Convert features to map for API request
-            Map<String, Object> featureMap = features.toMap();
+            // Build payload using mapper utility
+            Map<String, Object> featureMap = SupplierFeatureMapper.toFeatureMap(supplierId, features);
 
-            // Call ML service
-            Map<String, Object> response = restTemplate.postForObject(
-                    url,
-                    featureMap,
-                    Map.class);
+            // Call ML service. RestTemplate returns a raw Map; cast to Map<String,Object>.
+            @SuppressWarnings("unchecked")
+            Map<String, Object> rawResponse = restTemplate.postForObject(url, featureMap, Map.class);
 
-            return response != null ? (double) response.get("performance_score") : 0.0;
+            if (rawResponse == null)
+                return 0.0;
+
+            // Extract score
+            Object scoreObj = rawResponse.get("performance_score");
+
+            if (response == null)
+                return 0.0;
+
+            if (scoreObj instanceof Number) {
+                return ((Number) scoreObj).doubleValue();
+            }
+            // If API returns string numeric
+            if (scoreObj instanceof String) {
+                try {
+                    return Double.parseDouble((String) scoreObj);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            // Fallback to 0.0 if missing/unparseable
+            return 0.0;
 
         } catch (Exception e) {
             log.error("Failed to get prediction from ML service for supplier {}", supplierId, e);
