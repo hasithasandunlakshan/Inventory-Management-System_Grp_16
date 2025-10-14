@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,8 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -19,24 +18,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PaymentData, paymentService } from '@/services/paymentService';
 import {
-  CreditCard,
-  DollarSign,
-  TrendingUp,
   Activity,
-  RefreshCw,
-  Download,
-  Search,
-  Filter,
-  Eye,
-  CheckCircle,
-  Clock,
-  XCircle,
   AlertCircle,
   Calendar,
+  CheckCircle,
+  Clock,
+  CreditCard,
+  DollarSign,
+  Download,
+  Filter,
+  RefreshCw,
+  Search,
+  TrendingUp,
   User,
+  XCircle,
 } from 'lucide-react';
-import { paymentService, PaymentData } from '@/services/paymentService';
+import { useEffect, useMemo, useState } from 'react';
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<PaymentData[]>([]);
@@ -45,19 +44,28 @@ export default function PaymentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [methodFilter, setMethodFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalPayments, setTotalPayments] = useState(0);
 
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [currentPage]);
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await paymentService.getAllPayments();
+      const response = await paymentService.getAllPayments(
+        currentPage,
+        pageSize
+      );
 
       if (response.success) {
         setPayments(response.payments);
+        setTotalPayments(response.totalPayments);
+        setTotalPages(response.pagination.totalPages);
       } else {
         setError(response.message);
       }
@@ -70,6 +78,11 @@ export default function PaymentsPage() {
   };
 
   const filteredPayments = useMemo(() => {
+    // Only filter on current page data for better performance
+    if (!searchQuery && statusFilter === 'all' && methodFilter === 'all') {
+      return payments; // Return directly if no filters
+    }
+
     return payments.filter(payment => {
       const matchesSearch =
         searchQuery === '' ||
@@ -103,7 +116,26 @@ export default function PaymentsPage() {
         recentAmount: 0,
       };
     }
-    return paymentService.calculatePaymentStats(payments);
+
+    // Calculate stats only for current page (more efficient with pagination)
+    const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+    const statusGroups: Record<string, number> = {};
+    const methodGroups: Record<string, number> = {};
+
+    payments.forEach(p => {
+      statusGroups[p.status] = (statusGroups[p.status] || 0) + 1;
+      methodGroups[p.method] = (methodGroups[p.method] || 0) + 1;
+    });
+
+    return {
+      totalPayments: payments.length,
+      totalAmount,
+      averagePayment: totalAmount / payments.length,
+      statusGroups,
+      methodGroups,
+      recentPayments: payments.length,
+      recentAmount: totalAmount,
+    };
   }, [payments]);
 
   const getStatusIcon = (status: string) => {
@@ -210,9 +242,9 @@ export default function PaymentsPage() {
             <CreditCard className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{stats.totalPayments}</div>
+            <div className='text-2xl font-bold'>{totalPayments}</div>
             <p className='text-xs text-muted-foreground'>
-              {stats.recentPayments} in last 30 days
+              {payments.length} on current page
             </p>
           </CardContent>
         </Card>
@@ -353,7 +385,16 @@ export default function PaymentsPage() {
         </CardHeader>
         <CardContent>
           <div className='space-y-4'>
-            {filteredPayments.length === 0 ? (
+            {loading ? (
+              <div className='space-y-3'>
+                <div className='flex items-center justify-center py-8'>
+                  <RefreshCw className='h-8 w-8 animate-spin text-muted-foreground' />
+                </div>
+                <p className='text-center text-sm text-muted-foreground'>
+                  Loading payments...
+                </p>
+              </div>
+            ) : filteredPayments.length === 0 ? (
               <div className='text-center py-8'>
                 <CreditCard className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
                 <p className='text-muted-foreground'>No payments found</p>
@@ -382,9 +423,6 @@ export default function PaymentsPage() {
                         Status
                       </th>
                       <th className='text-left py-3 px-4 font-medium'>Date</th>
-                      <th className='text-left py-3 px-4 font-medium'>
-                        Actions
-                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -436,15 +474,71 @@ export default function PaymentsPage() {
                             </span>
                           </div>
                         </td>
-                        <td className='py-3 px-4'>
-                          <Button variant='ghost' size='sm'>
-                            <Eye className='h-4 w-4' />
-                          </Button>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {!loading && !error && totalPages > 1 && (
+              <div className='mt-6 flex items-center justify-between border-t pt-4'>
+                <div className='text-sm text-gray-600'>
+                  Showing page {currentPage + 1} of {totalPages} (
+                  {totalPayments} total payments)
+                </div>
+                <div className='flex gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      setCurrentPage(prev => Math.max(0, prev - 1))
+                    }
+                    disabled={currentPage === 0 || loading}
+                  >
+                    Previous
+                  </Button>
+                  <div className='flex items-center gap-1'>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i;
+                      } else if (currentPage < 3) {
+                        pageNum = i;
+                      } else if (currentPage >= totalPages - 3) {
+                        pageNum = totalPages - 5 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={
+                            currentPage === pageNum ? 'default' : 'outline'
+                          }
+                          size='sm'
+                          onClick={() => setCurrentPage(pageNum)}
+                          disabled={loading}
+                          className='w-10'
+                        >
+                          {pageNum + 1}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))
+                    }
+                    disabled={currentPage >= totalPages - 1 || loading}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </div>
