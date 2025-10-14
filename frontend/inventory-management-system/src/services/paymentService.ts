@@ -1,7 +1,6 @@
 import { authService } from '../lib/services/authService';
 
-const PAYMENT_API_BASE_URL =
-  'https://orderservice-337812374841.us-central1.run.app/api/payments';
+const PAYMENT_API_BASE_URL = 'http://localhost:8084/api/payments';
 
 export interface PaymentData {
   paymentId: number;
@@ -26,6 +25,16 @@ export interface PaymentsResponse {
   message: string;
   payments: PaymentData[];
   totalPayments: number;
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    totalElements: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+    last: boolean;
+    first: boolean;
+  };
 }
 
 class PaymentService {
@@ -37,11 +46,19 @@ class PaymentService {
     };
   }
 
-  async getAllPayments(): Promise<PaymentsResponse> {
+  async getAllPayments(
+    page: number = 0,
+    size: number = 10
+  ): Promise<PaymentsResponse> {
     try {
       const headers = await this.getAuthHeaders();
 
-      const response = await fetch(`${PAYMENT_API_BASE_URL}/all`, {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+      });
+
+      const response = await fetch(`${PAYMENT_API_BASE_URL}/all?${params}`, {
         method: 'GET',
         headers,
       });
@@ -51,8 +68,6 @@ class PaymentService {
       }
 
       const data = await response.json();
-
-      console.log('Payments retrieved:', data);
       return data;
     } catch (error) {
       console.error('Error fetching payments:', error);

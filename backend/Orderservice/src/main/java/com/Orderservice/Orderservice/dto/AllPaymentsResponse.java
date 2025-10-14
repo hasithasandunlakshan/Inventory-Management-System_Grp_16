@@ -16,4 +16,30 @@ public class AllPaymentsResponse {
     private String message;
     private List<PaymentResponse> payments;
     private int totalPayments;
+    private PaginationInfo pagination;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PaginationInfo {
+        private int currentPage;
+        private int pageSize;
+        private int totalPages;
+        private long totalElements;
+        private boolean hasNext;
+        private boolean hasPrevious;
+        private boolean last;
+        private boolean first;
+
+        public PaginationInfo(int currentPage, int pageSize, int totalPages, long totalElements) {
+            this.currentPage = currentPage;
+            this.pageSize = pageSize;
+            this.totalPages = totalPages;
+            this.totalElements = totalElements;
+            this.hasNext = currentPage < totalPages - 1;
+            this.hasPrevious = currentPage > 0;
+            this.first = currentPage == 0;
+            this.last = currentPage == totalPages - 1;
+        }
+    }
 }
