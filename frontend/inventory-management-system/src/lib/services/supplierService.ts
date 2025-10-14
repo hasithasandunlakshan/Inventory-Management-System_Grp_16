@@ -4,7 +4,7 @@ import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 // Use Choreo Supplier Service URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL
   ? `${process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL}/api/suppliers`
-  : 'http://localhost:8090/api/suppliers'; // Fallback to API Gateway
+  : 'http://localhost:8082/api/suppliers'; // Fallback to API Gateway
 
 export const supplierService = {
   /**

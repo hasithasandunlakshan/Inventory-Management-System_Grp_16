@@ -4,7 +4,7 @@ import {
 } from '../types/supplier';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090'}/api/supplier-categories`; // Through API Gateway
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8082'}/api/supplier-categories`; // Through API Gateway
 
 export const supplierCategoryService = {
   /**
