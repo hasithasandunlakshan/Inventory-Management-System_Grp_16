@@ -429,46 +429,10 @@ public class OrderService {
                     itemDetails.add(itemDetail);
                 }
 
-                // Fetch customer details using UserServiceClient
-                String customerName = "Unknown Customer";
-                String customerEmail = "";
-                String customerAddress = "Address not available";
-                Double customerLatitude = null;
-                Double customerLongitude = null;
-
-                if (order.getCustomerId() != null) {
-                    try {
-                        UserDetailsResponse.UserInfo userInfo = userServiceClient.getUserById(order.getCustomerId());
-                        if (userInfo != null) {
-                            customerName = userInfo.getFullName() != null ? userInfo.getFullName()
-                                    : userInfo.getUsername();
-                            customerEmail = userInfo.getEmail();
-                            customerAddress = userInfo.getFormattedAddress() != null ? userInfo.getFormattedAddress()
-                                    : "Address not provided";
-                            customerLatitude = userInfo.getLatitude();
-                            customerLongitude = userInfo.getLongitude();
-
-                            System.out.println("Successfully fetched customer details for ID " + order.getCustomerId());
-                            System.out.println("Customer name: " + customerName);
-                            System.out.println("Customer address: " + customerAddress);
-                        } else {
-                            System.out.println("No user found for customer ID: " + order.getCustomerId());
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Error fetching customer details for ID " + order.getCustomerId() + ": "
-                                + e.getMessage());
-                        e.printStackTrace();
-                    }
-                }
-
+                // Build order detail with only customerId
                 OrderDetailResponse orderDetail = OrderDetailResponse.builder()
                         .orderId(order.getOrderId())
                         .customerId(order.getCustomerId())
-                        .customerName(customerName)
-                        .customerEmail(customerEmail)
-                        .customerAddress(customerAddress)
-                        .customerLatitude(customerLatitude)
-                        .customerLongitude(customerLongitude)
                         .orderDate(order.getOrderDate())
                         .status(order.getStatus().toString())
                         .totalAmount(order.getTotalAmount())
@@ -625,17 +589,7 @@ public class OrderService {
                 System.out.println("Bulk fetched " + products.size() + " products");
             }
             
-            // Step 4: Collect all unique customer IDs (BULK OPTIMIZATION)
-            Set<Long> customerIds = orders.stream()
-                    .map(Order::getCustomerId)
-                    .filter(customerId -> customerId != null)
-                    .collect(Collectors.toSet());
-            
-            // Step 5: Fetch ALL user details in BULK
-            System.out.println("Fetching user details for " + customerIds.size() + " unique customers...");
-            Map<Long, UserDetailsResponse.UserInfo> userMap = userServiceClient.getUsersByIds(customerIds);
-            
-            // Step 6: Build response with cached data
+            // Step 4: Build response with cached data (no user service calls needed)
             List<OrderDetailResponse> orderDetails = new ArrayList<>();
             
             for (Order order : orders) {
@@ -674,31 +628,10 @@ public class OrderService {
                     itemDetails.add(itemDetail);
                 }
                 
-                // Get user details from cached map
-                UserDetailsResponse.UserInfo userInfo = userMap.get(order.getCustomerId());
-                String customerName = "Unknown Customer";
-                String customerEmail = "";
-                String customerAddress = "Address not available";
-                Double customerLatitude = null;
-                Double customerLongitude = null;
-                
-                if (userInfo != null) {
-                    customerName = userInfo.getFullName() != null ? userInfo.getFullName() : 
-                                  (userInfo.getUsername() != null ? userInfo.getUsername() : "Unknown Customer");
-                    customerEmail = userInfo.getEmail() != null ? userInfo.getEmail() : "";
-                    customerAddress = userInfo.getFormattedAddress() != null ? userInfo.getFormattedAddress() : "Address not available";
-                    customerLatitude = userInfo.getLatitude();
-                    customerLongitude = userInfo.getLongitude();
-                }
-                
+                // Only include customerId, no user details needed
                 OrderDetailResponse orderDetail = OrderDetailResponse.builder()
                         .orderId(order.getOrderId())
                         .customerId(order.getCustomerId())
-                        .customerName(customerName)
-                        .customerEmail(customerEmail)
-                        .customerAddress(customerAddress)
-                        .customerLatitude(customerLatitude)
-                        .customerLongitude(customerLongitude)
                         .orderDate(order.getOrderDate())
                         .status(order.getStatus().toString())
                         .totalAmount(order.getTotalAmount())
@@ -720,7 +653,7 @@ public class OrderService {
             System.out.println("=== OPTIMIZATION COMPLETE ===");
             System.out.println("Total time: " + (endTime - startTime) + "ms");
             System.out.println("Database queries: 3 (orders+items, products IN bulk, count)");
-            System.out.println("User service calls: " + userMap.size());
+            System.out.println("No user service calls - only customerId returned");
             
             return AllOrdersResponse.builder()
                     .success(true)
@@ -944,27 +877,7 @@ public class OrderService {
                     itemDetails.add(itemDetail);
                 }
 
-                // Try to get customer details from user service
-                String customerName = null;
-                String customerEmail = null;
-                String customerAddress = null;
-                Double customerLatitude = null;
-                Double customerLongitude = null;
-
-                try {
-                    UserDetailsResponse.UserInfo userResponse = userServiceClient.getUserById(order.getCustomerId());
-                    if (userResponse != null) {
-                        customerName = userResponse.getFullName();
-                        customerEmail = userResponse.getEmail();
-                        customerAddress = userResponse.getFormattedAddress();
-                        customerLatitude = userResponse.getLatitude();
-                        customerLongitude = userResponse.getLongitude();
-                    }
-                } catch (Exception e) {
-                    System.err.println("Error fetching customer details for customer ID: "
-                            + order.getCustomerId() + " - " + e.getMessage());
-                }
-
+                // Build order detail with only customerId
                 OrderDetailResponse orderDetail = OrderDetailResponse.builder()
                         .orderId(order.getOrderId())
                         .customerId(order.getCustomerId())
@@ -974,11 +887,6 @@ public class OrderService {
                         .createdAt(order.getCreatedAt())
                         .updatedAt(order.getUpdatedAt())
                         .orderItems(itemDetails)
-                        .customerName(customerName)
-                        .customerEmail(customerEmail)
-                        .customerAddress(customerAddress)
-                        .customerLatitude(customerLatitude)
-                        .customerLongitude(customerLongitude)
                         .build();
 
                 orderDetails.add(orderDetail);
