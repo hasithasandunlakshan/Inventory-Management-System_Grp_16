@@ -8,7 +8,7 @@ spring:
     gateway:
       globalcors:
         cors-configurations:
-          '[/**]':
+          "[/**]":
             allowedOriginPatterns: "*"
             allowedMethods:
               - GET
@@ -29,6 +29,12 @@ spring:
             maxAge: 3600
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers
+      httpclient:
+        connect-timeout: 30000 # 30 seconds
+        response-timeout: 90s # 90 seconds for slow Choreo responses
+        pool:
+          max-connections: 100
+          max-idle-time: 60s
 
 # JWT Configuration (SAME SECRET AS USER SERVICE)
 jwt:
@@ -51,6 +57,10 @@ order:
 supplier:
   service:
     url: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0
+
+ml:
+  service:
+    url: https://supplier-model.onrender.com
 
 inventory:
   service:
