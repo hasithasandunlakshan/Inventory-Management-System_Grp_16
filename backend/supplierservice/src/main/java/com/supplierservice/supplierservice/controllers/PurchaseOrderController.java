@@ -14,6 +14,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = { "http://localhost:3000", "http://127.0.0.1:3000", "https://*.vercel.app",
+        "https://*.choreoapis.dev" }, allowCredentials = "true")
 @RequestMapping("/api/purchase-orders")
 public class PurchaseOrderController {
 
