@@ -43,6 +43,7 @@ export const enhancedSupplierService = {
             const userDetails = await userService.getUserById(supplier.userId);
             return {
               ...supplier,
+              categoryId: supplier.categoryId ?? null,
               userDetails: {
                 email: userDetails.email,
                 fullName: userDetails.fullName,
@@ -56,6 +57,7 @@ export const enhancedSupplierService = {
             // Return supplier without user details if user fetch fails
             return {
               ...supplier,
+              categoryId: supplier.categoryId ?? null,
               userDetails: undefined,
             };
           }
@@ -83,13 +85,14 @@ export const enhancedSupplierService = {
     supplierId: string
   ): Promise<EnhancedSupplier> {
     try {
-      const supplier = await supplierService.getSupplierById(supplierId);
+      const supplier = await supplierService.getSupplierById(parseInt(supplierId));
 
       try {
         const userDetails = await userService.getUserById(supplier.userId);
 
         return {
           ...supplier,
+          categoryId: supplier.categoryId ?? null,
           userDetails: {
             email: userDetails.email,
             fullName: userDetails.fullName,
@@ -103,6 +106,7 @@ export const enhancedSupplierService = {
         // Return supplier without user details if user fetch fails
         return {
           ...supplier,
+          categoryId: supplier.categoryId ?? null,
           userDetails: undefined,
         };
       }

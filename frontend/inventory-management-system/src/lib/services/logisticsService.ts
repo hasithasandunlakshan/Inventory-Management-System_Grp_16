@@ -114,11 +114,10 @@ class LogisticsService {
       return [
         {
           id: 1,
-          purchaseOrder: { id: 1, orderNumber: 'PO-001' },
-          item: { id: 1, name: 'Sample Item' },
+          purchaseOrder: { poId: 1, supplierName: 'Mock Supplier' },
+          itemId: 1,
           receivedQuantity: 10,
-          receivedDate: new Date().toISOString(),
-          notes: 'Mock delivery data'
+          receivedDate: new Date().toISOString()
         }
       ];
     }
