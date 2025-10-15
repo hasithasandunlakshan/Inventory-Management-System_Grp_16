@@ -87,8 +87,9 @@ export const productService = {
         );
       }
       return response.json();
-    } catch {
-      throw new Error('Failed to fetch product - backend not available');
+    } catch (error) {
+      // Re-throw original error to preserve 404 and other specific errors
+      throw error;
     }
   },
 
