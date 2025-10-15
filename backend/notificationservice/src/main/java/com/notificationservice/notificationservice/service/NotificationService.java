@@ -72,9 +72,9 @@ public class NotificationService {
             reactNativeWebSocketHandler.sendNotificationToUser(userId, rnNotification);
             logger.info("React Native WebSocket message sent to user {}", userId);
             
-            // Also try sending to topic for testing
-            messagingTemplate.convertAndSend("/topic/notifications", notificationDto);
-            logger.info("Also sent to broadcast topic for testing");
+            // REMOVED: Broadcasting to topic - this was sending to ALL users
+            // messagingTemplate.convertAndSend("/topic/notifications", notificationDto);
+            // logger.info("Also sent to broadcast topic for testing");
             
             logger.info("Notification sent to user {}: {}", userId, message);
             return savedNotification;
