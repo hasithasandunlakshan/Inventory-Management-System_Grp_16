@@ -93,7 +93,6 @@ export default function ProductsClient({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-
   // Ensure we always have arrays, even if props are undefined
   const [products, setProducts] = useState<Product[]>(
     Array.isArray(initialProducts) ? initialProducts : []
@@ -181,7 +180,6 @@ export default function ProductsClient({
           sortDir
         );
 
-
         // Ensure we have valid data before updating state
         if (response && Array.isArray(response.content)) {
           setProducts(response.content);
@@ -202,7 +200,6 @@ export default function ProductsClient({
         setProducts([]);
         setTotalElements(0);
         setTotalPages(0);
-
       } finally {
         setLoading(false);
       }
