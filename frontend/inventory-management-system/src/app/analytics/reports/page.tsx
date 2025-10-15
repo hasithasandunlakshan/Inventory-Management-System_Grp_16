@@ -23,7 +23,7 @@ import { inventoryService, type InventoryRow } from '@/lib/services/inventorySer
 import { stockAlertService, type StockAlert } from '@/lib/services/stockAlertService';
 import { orderService } from '@/lib/services/orderService';
 import { revenueService } from '@/services/revenueService';
-import { logisticsService, type LogisticsMetrics } from '@/lib/services/logisticsService';
+import { logisticsService, type LogisticsMetrics, type DriverProfile, type Vehicle, type Assignment } from '@/lib/services/logisticsService';
 import { costService, type InventoryCostResponse, type PurchaseOrderStats, type CostAnalysisMetrics } from '@/lib/services/costService';
 import { profitabilityService, type GrossProfitAnalysis, type DiscountImpactAnalysis, type OrderProfitability, type LogisticsCostAnalysis, type OperationalEfficiencyMetrics } from '@/lib/services/profitabilityService';
 import { supplierService, type PurchaseOrderStats as SupplierPurchaseOrderStats } from '@/lib/services/supplierService';
@@ -543,24 +543,33 @@ export default function ReportsPage() {
   const [purchaseStats, setPurchaseStats] = useState<PurchaseOrderStats | null>(null);
   const [costMetrics, setCostMetrics] = useState<CostAnalysisMetrics | null>(null);
   const [costLoading, setCostLoading] = useState(false);
-  // const [costError, setCostError] = useState<string | null>(null);
+  const [costError, setCostError] = useState<string | null>(null);
 
   // Profitability Analysis state
   const [grossProfitAnalysis, setGrossProfitAnalysis] = useState<GrossProfitAnalysis | null>(null);
   const [discountImpactAnalysis, setDiscountImpactAnalysis] = useState<DiscountImpactAnalysis | null>(null);
   const [orderProfitability, setOrderProfitability] = useState<OrderProfitability | null>(null);
   const [profitabilityLoading, setProfitabilityLoading] = useState(false);
-  // const [profitabilityError, setProfitabilityError] = useState<string | null>(null);
+  const [profitabilityError, setProfitabilityError] = useState<string | null>(null);
 
   // Operational Cost Analysis state
   const [logisticsCostAnalysis, setLogisticsCostAnalysis] = useState<LogisticsCostAnalysis | null>(null);
   const [operationalEfficiencyMetrics, setOperationalEfficiencyMetrics] = useState<OperationalEfficiencyMetrics | null>(null);
   const [operationalLoading, setOperationalLoading] = useState(false);
-  // const [operationalError, setOperationalError] = useState<string | null>(null);
-  const [fleetUtilization, setFleetUtilization] = useState<Record<string, unknown> | null>(null);
-  // const [drivers, setDrivers] = useState<DriverProfile[]>([]);
-  // const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  // const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [operationalError, setOperationalError] = useState<string | null>(null);
+  const [fleetUtilization, setFleetUtilization] = useState<{
+    totalDrivers: number;
+    activeDrivers: number;
+    totalVehicles: number;
+    assignedVehicles: number;
+    totalAssignments: number;
+    activeAssignments: number;
+    driverUtilization: number;
+    vehicleUtilization: number;
+  } | null>(null);
+  const [drivers, setDrivers] = useState<DriverProfile[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
 
   // Supplier Analytics state
   const [supplierAnalytics, setSupplierAnalytics] = useState<SupplierPurchaseOrderStats | null>(null);
