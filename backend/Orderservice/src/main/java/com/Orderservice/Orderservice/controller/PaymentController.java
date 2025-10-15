@@ -25,6 +25,7 @@ import com.Orderservice.Orderservice.service.PaymentService;
 
 @RestController
 @RequestMapping("/api/payments")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class PaymentController {
     @PostMapping("/update-order-status")
     public ResponseEntity<String> updateOrderStatus(@RequestBody UpdateOrderStatusRequest request) {
@@ -115,9 +116,10 @@ public class PaymentController {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     /**
      * Get all payments with pagination and order details
+     * 
      * @param page Page number (default 0)
      * @param size Page size (default 20, max 100)
      * @return AllPaymentsResponse containing all payments
@@ -131,49 +133,48 @@ public class PaymentController {
             // Validate pagination parameters
             if (page < 0) {
                 return ResponseEntity.badRequest().body(
-                    AllPaymentsResponse.builder()
-                        .success(false)
-                        .message("Page number cannot be negative")
-                        .payments(new java.util.ArrayList<>())
-                        .totalPayments(0)
-                        .build()
-                );
+                        AllPaymentsResponse.builder()
+                                .success(false)
+                                .message("Page number cannot be negative")
+                                .payments(new java.util.ArrayList<>())
+                                .totalPayments(0)
+                                .build());
             }
-            
+
             if (size < 1 || size > 100) {
                 return ResponseEntity.badRequest().body(
-                    AllPaymentsResponse.builder()
-                        .success(false)
-                        .message("Page size must be between 1 and 100")
-                        .payments(new java.util.ArrayList<>())
-                        .totalPayments(0)
-                        .build()
-                );
+                        AllPaymentsResponse.builder()
+                                .success(false)
+                                .message("Page size must be between 1 and 100")
+                                .payments(new java.util.ArrayList<>())
+                                .totalPayments(0)
+                                .build());
             }
-            
+
             System.out.println("=== GETTING ALL PAYMENTS (page=" + page + ", size=" + size + ") ===");
-            
+
             AllPaymentsResponse response = paymentService.getAllPayments(page, size);
-            
+
             if (response.isSuccess()) {
-                System.out.println("✅ Successfully retrieved " + response.getPayments().size() + " payments (Total: " + response.getTotalPayments() + ")");
+                System.out.println("✅ Successfully retrieved " + response.getPayments().size() + " payments (Total: "
+                        + response.getTotalPayments() + ")");
                 return ResponseEntity.ok(response);
             } else {
                 System.err.println("❌ Failed to retrieve payments: " + response.getMessage());
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
         } catch (Exception e) {
             System.err.println("❌ Error in getAllPayments endpoint: " + e.getMessage());
             e.printStackTrace();
-            
+
             AllPaymentsResponse errorResponse = AllPaymentsResponse.builder()
-                .success(false)
-                .message("Internal server error: " + e.getMessage())
-                .payments(new java.util.ArrayList<>())
-                .totalPayments(0)
-                .build();
-                
+                    .success(false)
+                    .message("Internal server error: " + e.getMessage())
+                    .payments(new java.util.ArrayList<>())
+                    .totalPayments(0)
+                    .build();
+
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }

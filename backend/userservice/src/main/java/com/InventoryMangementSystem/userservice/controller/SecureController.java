@@ -2,6 +2,7 @@ package com.InventoryMangementSystem.userservice.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,7 @@ import com.InventoryMangementSystem.userservice.service.UserService;
 
 @RestController
 @RequestMapping("/api/secure")
+@CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 public class SecureController {
 

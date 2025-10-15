@@ -88,7 +88,7 @@ export default function PromotionsPage() {
       setDiscounts(response.content || []);
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
-    } catch (error) {
+    } catch {
       setError(
         'Failed to fetch discounts. Please check your connection and try again.'
       );
@@ -103,7 +103,7 @@ export default function PromotionsPage() {
       await discountService.deleteDiscount(discountId);
       toast.success('Discount deleted successfully.');
       fetchDiscounts();
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete discount. Please try again.');
     }
   };

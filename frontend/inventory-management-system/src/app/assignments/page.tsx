@@ -94,7 +94,7 @@ export default function AssignmentsPage() {
       if (availableVehiclesResponse.success && availableVehiclesResponse.data) {
         setAvailableVehicles(availableVehiclesResponse.data);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load assignment data');
     } finally {
       setLoading(false);
@@ -130,7 +130,7 @@ export default function AssignmentsPage() {
       } else {
         toast.error(response.message || 'Failed to create assignment');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to create assignment');
     }
   };
