@@ -38,25 +38,57 @@ export default async function ProductsPage({
   let categoriesData;
 
   try {
+    if (!productsResponse.ok) {
+      throw new Error(`HTTP error! status: ${productsResponse.status}`);
+    }
     productsData = await productsResponse.json();
+    // Ensure productsData has the expected structure
+    if (!productsData.content || !Array.isArray(productsData.content)) {
+      console.error('Invalid products data structure:', productsData);
+      productsData = {
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+        size: 0,
+        number: 0,
+        first: true,
+        last: true,
+      };
+    }
   } catch (error) {
     console.error('Failed to fetch products:', error);
-    productsData = { content: [], totalElements: 0, totalPages: 0 };
+    productsData = {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: 0,
+      number: 0,
+      first: true,
+      last: true,
+    };
   }
 
   try {
+    if (!categoriesResponse.ok) {
+      throw new Error(`HTTP error! status: ${categoriesResponse.status}`);
+    }
     categoriesData = await categoriesResponse.json();
+    // Ensure categoriesData is an array
+    if (!Array.isArray(categoriesData)) {
+      console.error('Invalid categories data structure:', categoriesData);
+      categoriesData = [];
+    }
   } catch (error) {
     console.error('Failed to fetch categories:', error);
     categoriesData = [];
   }
 
   // Filter products by category if specified
-  let filteredProducts = productsData.content;
-  let filteredTotalElements = productsData.totalElements;
-  let filteredTotalPages = productsData.totalPages;
+  let filteredProducts = productsData.content || [];
+  let filteredTotalElements = productsData.totalElements || 0;
+  let filteredTotalPages = productsData.totalPages || 0;
 
-  if (selectedCategory) {
+  if (selectedCategory && Array.isArray(productsData.content)) {
     // Filter products by category on the server side
     filteredProducts = productsData.content.filter(
       (product: Product) =>

@@ -93,8 +93,13 @@ export default function ProductsClient({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [categories] = useState<Category[]>(initialCategories);
+  // Ensure we always have arrays, even if props are undefined
+  const [products, setProducts] = useState<Product[]>(
+    Array.isArray(initialProducts) ? initialProducts : []
+  );
+  const [categories] = useState<Category[]>(
+    Array.isArray(initialCategories) ? initialCategories : []
+  );
   const [selectedCategory, setSelectedCategory] = useState<number | null>(
     initialSelectedCategory
   );
@@ -174,11 +179,26 @@ export default function ProductsClient({
           sortDir
         );
 
-        setProducts(response.content);
-        setTotalElements(response.totalElements);
-        setTotalPages(response.totalPages);
+        // Ensure we have valid data before updating state
+        if (response && Array.isArray(response.content)) {
+          setProducts(response.content);
+          setTotalElements(response.totalElements || 0);
+          setTotalPages(response.totalPages || 0);
+        } else {
+          console.error(
+            'Invalid response structure from getAllProductsWithCategories:',
+            response
+          );
+          setProducts([]);
+          setTotalElements(0);
+          setTotalPages(0);
+        }
       } catch (error) {
         console.error('Failed to fetch products', error);
+        // Set empty arrays on error to prevent map errors
+        setProducts([]);
+        setTotalElements(0);
+        setTotalPages(0);
       } finally {
         setLoading(false);
       }
