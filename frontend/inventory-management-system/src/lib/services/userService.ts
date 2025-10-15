@@ -56,7 +56,7 @@ export const userService = {
           }
 
           throw new Error(`Admin endpoint failed: ${adminResponse.status}`);
-        } catch (adminError) {
+        } catch {
           throw new Error('Failed to fetch user details - access denied');
         }
       }
@@ -95,7 +95,7 @@ export const userService = {
           localStorage.removeItem('inventory_user_info');
           throw new Error('Authentication token expired - please login again');
         }
-      } catch (tokenError) {
+      } catch {
         localStorage.removeItem('inventory_auth_token');
         localStorage.removeItem('inventory_user_info');
         throw new Error('Invalid authentication token - please login again');
