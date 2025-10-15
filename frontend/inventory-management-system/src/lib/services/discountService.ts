@@ -13,7 +13,8 @@ import {
 
 // Updated API URLs based on your provided endpoints
 const ORDER_SERVICE_BASE =
-  process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084';
+  process.env.NEXT_PUBLIC_ORDER_SERVICE_URL ||
+  'https://order.shopmindnotification.app';
 const ADMIN_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/admin/discounts`;
 const PUBLIC_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/discounts`;
 const PRODUCTS_API_URL =
@@ -453,15 +454,20 @@ export const discountService = {
         );
       }
 
-      // Handle both direct array response and wrapped response
+      // Handle paginated response from the new API
       const data = await response.json();
 
-      // If it's a direct array, return it
+      // If it's a direct array, return it (legacy support)
       if (Array.isArray(data)) {
         return data as Product[];
       }
 
-      // If it's wrapped in a response object, extract the products
+      // If it's a paginated response, extract the content
+      if (data.content && Array.isArray(data.content)) {
+        return data.content as Product[];
+      }
+
+      // If it's wrapped in a response object, extract the products (legacy support)
       const productsResponse = data as ProductsResponse;
       return productsResponse.products || productsResponse.data || [];
     } catch (error) {

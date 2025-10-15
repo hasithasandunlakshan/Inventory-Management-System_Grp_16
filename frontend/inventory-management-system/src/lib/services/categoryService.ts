@@ -1,7 +1,7 @@
 import { Category, CreateCategoryRequest } from '../types/product';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090'}/api/categories`;
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083'}/api/categories`;
 
 export const categoryService = {
   async getAllCategories(): Promise<Category[]> {
@@ -16,8 +16,7 @@ export const categoryService = {
         );
       }
       return response.json();
-    } catch (error) {
-      console.error('Failed to fetch categories from backend:', error);
+    } catch {
       throw new Error('Failed to fetch categories - backend not available');
     }
   },
@@ -36,7 +35,6 @@ export const categoryService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch category from backend:', error);
       throw error;
     }
   },
@@ -55,8 +53,7 @@ export const categoryService = {
         throw new Error('Failed to create category');
       }
       return response.json();
-    } catch (error) {
-      console.error('Failed to create category:', error);
+    } catch {
       throw new Error('Failed to create category - backend not available');
     }
   },
@@ -78,8 +75,7 @@ export const categoryService = {
         throw new Error('Failed to update category');
       }
       return response.json();
-    } catch (error) {
-      console.error('Failed to update category:', error);
+    } catch {
       throw new Error('Failed to update category - backend not available');
     }
   },
@@ -93,8 +89,7 @@ export const categoryService = {
       if (!response.ok) {
         throw new Error('Failed to delete category');
       }
-    } catch (error) {
-      console.error('Failed to delete category:', error);
+    } catch {
       throw new Error('Failed to delete category - backend not available');
     }
   },

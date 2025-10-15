@@ -52,8 +52,7 @@ product:
 
 order:
   service:
-    url: https://orderservice-337812374841.us-central1.run.app
-
+    url: https://order.shopmindnotification.app
 supplier:
   service:
     url: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0

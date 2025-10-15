@@ -1,5 +1,5 @@
 // Notification Service for API calls
-const API_BASE_URL = 'http://34.136.119.127:8087/api'; // Notification service URL
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL || 'http://34.136.119.127:8087'}/api`;
 
 export const notificationService = {
   /**
@@ -28,7 +28,6 @@ export const notificationService = {
       const notifications = await response.json();
       return notifications;
     } catch (error) {
-      console.error('Error fetching user notifications:', error);
       throw error;
     }
   },
@@ -57,7 +56,6 @@ export const notificationService = {
       const updatedNotification = await response.json();
       return updatedNotification;
     } catch (error) {
-      console.error('Error marking notification as read:', error);
       throw error;
     }
   },
@@ -82,7 +80,6 @@ export const notificationService = {
       const notifications = await response.json();
       return notifications;
     } catch (error) {
-      console.error('Error fetching all notifications:', error);
       throw error;
     }
   },

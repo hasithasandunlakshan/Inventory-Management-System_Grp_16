@@ -38,7 +38,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, [currentPage]);
+  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchOrders = async () => {
     try {
@@ -66,7 +66,6 @@ export default function OrdersPage() {
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to fetch orders');
-      console.error('Error fetching orders:', err);
     } finally {
       setLoading(false);
     }
