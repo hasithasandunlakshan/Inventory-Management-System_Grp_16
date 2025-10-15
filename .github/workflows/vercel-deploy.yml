@@ -75,14 +75,7 @@ jobs:
 
       - name: Build Project with Vercel
         run: vercel build ${{ github.event_name == 'push' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          NEXT_PUBLIC_API_GATEWAY_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/apigateway/v1.0
-          NEXT_PUBLIC_PRODUCT_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/productservice-gw/v1.0/api/products
-          NEXT_PUBLIC_RESOURCE_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0
-          NEXT_PUBLIC_SUPPLIER_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0
-          NEXT_PUBLIC_USER_SERVICE_URL: https://userservice-337812374841.us-central1.run.app
-          NEXT_PUBLIC_ORDER_SERVICE_URL: https://orderservice-337812374841.us-central1.run.app
-          NEXT_PUBLIC_INVENTORY_SERVICE_URL: http://localhost:8085
+        # Environment variables are automatically loaded from Vercel (pulled in previous step)
 
       - name: Deploy to Vercel (Production)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
