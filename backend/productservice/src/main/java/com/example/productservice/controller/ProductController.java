@@ -83,20 +83,7 @@ public final class ProductController {
         // Create Pageable object
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        // Debug logging
-        System.out.println("=== PAGINATION DEBUG ===");
-        System.out.println("Page: " + page);
-        System.out.println("Size: " + size);
-        System.out.println("Sort By: " + sortBy);
-        System.out.println("Sort Direction: " + sortDir);
-        System.out.println("========================");
-
         final Page<ProductWithCategoryDTO> products = service.getAllProductsWithCategories(pageable);
-
-        System.out.println("Total Elements: " + products.getTotalElements());
-        System.out.println("Total Pages: " + products.getTotalPages());
-        System.out.println("Current Page Size: " + products.getNumberOfElements());
-        System.out.println("========================");
 
         return ResponseEntity.ok(products);
     }

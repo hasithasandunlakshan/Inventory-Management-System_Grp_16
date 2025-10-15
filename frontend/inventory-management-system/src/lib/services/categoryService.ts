@@ -17,7 +17,6 @@ export const categoryService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch categories from backend:', error);
       throw new Error('Failed to fetch categories - backend not available');
     }
   },
@@ -36,7 +35,6 @@ export const categoryService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch category from backend:', error);
       throw error;
     }
   },
@@ -56,7 +54,6 @@ export const categoryService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to create category:', error);
       throw new Error('Failed to create category - backend not available');
     }
   },
@@ -79,7 +76,6 @@ export const categoryService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to update category:', error);
       throw new Error('Failed to update category - backend not available');
     }
   },
@@ -94,7 +90,6 @@ export const categoryService = {
         throw new Error('Failed to delete category');
       }
     } catch (error) {
-      console.error('Failed to delete category:', error);
       throw new Error('Failed to delete category - backend not available');
     }
   },
