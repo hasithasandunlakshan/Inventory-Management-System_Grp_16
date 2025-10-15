@@ -4,8 +4,28 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+interface ApiTestResults {
+  apiUrl: string;
+  timestamp: string;
+  products?: {
+    status: number;
+    ok: boolean;
+    data: unknown;
+    totalElements: number;
+    contentLength: number;
+  };
+  categories?: {
+    status: number;
+    ok: boolean;
+    data: unknown;
+    length: number;
+  };
+  error?: string;
+  stack?: string;
+}
+
 export default function DebugApiPage() {
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<ApiTestResults | null>(null);
   const [loading, setLoading] = useState(false);
 
   const testApiConnection = async () => {

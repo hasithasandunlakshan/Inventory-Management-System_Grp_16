@@ -42,6 +42,7 @@ export default function DiscountProductsList({
 
   useEffect(() => {
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discountId]);
 
   const fetchProducts = async () => {

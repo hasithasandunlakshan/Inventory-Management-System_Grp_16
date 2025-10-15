@@ -167,6 +167,7 @@ export default function DiscountForm({
     if (discount && discount.id && discount.type === 'PRODUCT_DISCOUNT') {
       loadExistingDiscountProducts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discount]);
 
   const loadExistingDiscountProducts = async () => {
