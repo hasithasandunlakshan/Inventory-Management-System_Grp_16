@@ -1,6 +1,6 @@
 // Debug script to test the API endpoint
 const API_URL =
-  'https://orderservice-337812374841.us-central1.run.app/api/orders/all';
+  'https://order-service-337812374841.us-central1.run.app/api/orders/all';
 
 async function testAPI() {
   console.log('🔍 Testing API endpoint:', API_URL);

@@ -17,8 +17,7 @@ export const productUtils = {
       if (onSuccessCallback) {
         onSuccessCallback();
       }
-    } catch (error) {
-      console.error('Failed to delete product', error);
+    } catch {
       toast.error('Failed to delete product');
     }
   },

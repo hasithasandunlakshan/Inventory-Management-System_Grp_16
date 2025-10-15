@@ -1,70 +1,111 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import ProductsPage from '@/app/products/page';
 
-jest.mock('@/lib/services/productService', () => ({
-  productService: {
-    getAllProducts: jest.fn(),
-    getAllProductsWithCategories: jest.fn(),
-  },
-}));
+// Mock fetch globally
+global.fetch = jest.fn();
 
-jest.mock('@/lib/services/categoryService', () => ({
-  categoryService: {
-    getAllCategories: jest.fn(),
-  },
-}));
+// Mock the ProductsClient component
+jest.mock('@/app/products/ProductsClient', () => {
+  return function MockProductsClient({
+    initialProducts,
+    initialCategories,
+  }: any) {
+    return (
+      <div>
+        {initialProducts.length === 0 ? (
+          <div>No products available</div>
+        ) : (
+          initialProducts.map((product: any) => (
+            <div key={product.productId} data-testid='product-card'>
+              {product.name}
+            </div>
+          ))
+        )}
+      </div>
+    );
+  };
+});
 
-jest.mock('@/components/ui/loading', () => () => (
-  <div data-testid='loading'>Loading...</div>
-));
-jest.mock('@/components/product/ProductCard', () => (props: any) => (
-  <div data-testid='product-card'>{props.name}</div>
-));
-
-const { productService } = jest.requireMock('@/lib/services/productService');
-const { categoryService } = jest.requireMock('@/lib/services/categoryService');
+const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
 describe('ProductsPage', () => {
-  it('shows loader then renders products', async () => {
-    (
-      productService.getAllProductsWithCategories as jest.Mock
-    ).mockResolvedValueOnce([
-      { productId: 1, name: 'Item A', description: 'A', price: 100, stock: 5 },
-    ]);
-    (categoryService.getAllCategories as jest.Mock).mockResolvedValueOnce([
-      { id: 1, categoryName: 'Category A' },
-    ]);
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-    render(<ProductsPage />);
+  it('renders products successfully', async () => {
+    // Mock successful API responses
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          content: [
+            {
+              productId: 1,
+              name: 'Item A',
+              description: 'A',
+              price: 100,
+              stock: 5,
+            },
+          ],
+          totalElements: 1,
+          totalPages: 1,
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ id: 1, categoryName: 'Category A' }],
+      } as Response);
 
-    // Wait for the products to load and check that loading is gone
-    await waitFor(() => {
-      expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
-    });
+    const searchParams = Promise.resolve({});
+    render(await ProductsPage({ searchParams }));
 
-    expect(await screen.findAllByTestId('product-card')).toHaveLength(1);
+    expect(await screen.findByTestId('product-card')).toBeInTheDocument();
+    expect(screen.getByText('Item A')).toBeInTheDocument();
   });
 
   it('renders empty state on no data', async () => {
-    (
-      productService.getAllProductsWithCategories as jest.Mock
-    ).mockResolvedValueOnce([]);
-    (categoryService.getAllCategories as jest.Mock).mockResolvedValueOnce([]);
-    render(<ProductsPage />);
+    // Mock empty API responses
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      } as Response);
+
+    const searchParams = Promise.resolve({});
+    render(await ProductsPage({ searchParams }));
+
     expect(
       await screen.findByText(/No products available/i)
     ).toBeInTheDocument();
   });
 
   it('handles fetch failure gracefully', async () => {
-    (
-      productService.getAllProductsWithCategories as jest.Mock
-    ).mockRejectedValueOnce(new Error('fail'));
-    (categoryService.getAllCategories as jest.Mock).mockResolvedValueOnce([]);
-    render(<ProductsPage />);
-    await waitFor(() =>
-      expect(screen.queryByTestId('loading')).not.toBeInTheDocument()
-    );
-    expect(screen.getByText(/No products available/i)).toBeInTheDocument();
+    // Mock failed API responses
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      } as Response);
+
+    const searchParams = Promise.resolve({});
+    render(await ProductsPage({ searchParams }));
+
+    expect(
+      await screen.findByText(/No products available/i)
+    ).toBeInTheDocument();
   });
 });

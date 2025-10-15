@@ -123,11 +123,17 @@ ws.onclose = () => {
                 return;
             }
 
-            // React Native compatible WebSocket URL
+            // Use ws:// for browser WebSocket connection
             const url = 'ws://34.136.119.127:8087/rn-notifications';
             addMessage(`Connecting to: ${url}`, 'info');
             
-            ws = new WebSocket(url);
+            try {
+                ws = new WebSocket(url);
+            } catch (error) {
+                addMessage(`❌ Failed to create WebSocket: ${error.message}`, 'error');
+                console.error('WebSocket creation error:', error);
+                return;
+            }
 
             ws.onopen = function(event) {
                 addMessage('✅ Connected successfully!', 'success');
@@ -144,7 +150,9 @@ ws.onclose = () => {
             };
 
             ws.onerror = function(error) {
-                addMessage(`❌ WebSocket error: ${error}`, 'error');
+                addMessage(`❌ WebSocket error occurred`, 'error');
+                addMessage(`   - Make sure the server is running at 34.136.119.127:8087`, 'error');
+                addMessage(`   - Check if the endpoint /rn-notifications is accessible`, 'error');
                 console.error('WebSocket error:', error);
             };
 

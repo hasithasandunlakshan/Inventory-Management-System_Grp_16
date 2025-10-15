@@ -1,40 +1,73 @@
 import { Product, CreateProductRequest } from '../types/product';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL ||
-  'http://localhost:8083/api/products';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083'}/api/products`;
 
 export const productService = {
-  async getAllProducts(): Promise<Product[]> {
+  async getAllProducts(
+    page = 0,
+    size = 20,
+    sortBy = 'id',
+    sortDir = 'asc'
+  ): Promise<{
+    content: Product[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+  }> {
     try {
-      const response = await fetch(API_BASE_URL);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+        sortBy,
+        sortDir,
+      });
+
+      const response = await fetch(`${API_BASE_URL}?${params}`);
       if (!response.ok) {
         throw new Error(
           `Failed to fetch products: ${response.status} ${response.statusText}`
         );
       }
       return response.json();
-    } catch (error) {
-      console.error('Failed to fetch products from backend:', error);
+    } catch {
       throw new Error('Failed to fetch products - backend not available');
     }
   },
 
-  async getAllProductsWithCategories(): Promise<Product[]> {
+  async getAllProductsWithCategories(
+    page = 0,
+    size = 20,
+    sortBy = 'id',
+    sortDir = 'asc'
+  ): Promise<{
+    content: Product[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+  }> {
     try {
       // The backend /api/products endpoint already returns products with categories
-      const response = await fetch(API_BASE_URL);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+        sortBy,
+        sortDir,
+      });
+
+      const response = await fetch(`${API_BASE_URL}?${params}`);
       if (!response.ok) {
         throw new Error(
           `Failed to fetch products with categories: ${response.status} ${response.statusText}`
         );
       }
       return response.json();
-    } catch (error) {
-      console.error(
-        'Failed to fetch products with categories from backend:',
-        error
-      );
+    } catch {
       throw new Error(
         'Failed to fetch products with categories - backend not available'
       );
@@ -55,7 +88,7 @@ export const productService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch product from backend:', error);
+      // Re-throw original error to preserve 404 and other specific errors
       throw error;
     }
   },
@@ -70,12 +103,10 @@ export const productService = {
         );
       }
       return response.json();
-    } catch (error) {
-      console.error(
-        'Failed to fetch products by category from backend:',
-        error
+    } catch {
+      throw new Error(
+        'Failed to fetch products by category - backend not available'
       );
-      throw error;
     }
   },
 
@@ -93,8 +124,7 @@ export const productService = {
         throw new Error('Failed to add product');
       }
       return response.json();
-    } catch (error) {
-      console.error('Failed to add product:', error);
+    } catch {
       throw new Error('Failed to add product - backend not available');
     }
   },
@@ -108,8 +138,7 @@ export const productService = {
       if (!response.ok) {
         throw new Error('Failed to delete product');
       }
-    } catch (error) {
-      console.error('Failed to delete product:', error);
+    } catch {
       throw new Error('Failed to delete product - backend not available');
     }
   },
@@ -131,8 +160,7 @@ export const productService = {
         throw new Error('Failed to update product');
       }
       return response.json();
-    } catch (error) {
-      console.error('Failed to update product:', error);
+    } catch {
       throw new Error('Failed to update product - backend not available');
     }
   },

@@ -81,21 +81,11 @@ function validateToken(token: string): {
       return { valid: false, expired: true };
     }
 
-    // Debug: Log the payload to see what's in the token
-    console.log('🔐 Middleware: JWT payload:', {
-      userId: payload.userId,
-      email: payload.email,
-      role: payload.role,
-      exp: payload.exp,
-      iat: payload.iat,
-    });
-
     return {
       valid: true,
       role: payload.role || 'USER',
     };
-  } catch (error) {
-    console.error('🔐 Middleware: Token validation error:', error);
+  } catch {
     return { valid: false };
   }
 }
@@ -123,16 +113,9 @@ export function middleware(request: NextRequest) {
 
   // Get token from cookies
   const token = request.cookies.get('inventory_auth_token')?.value;
-  console.log(
-    '🔐 Middleware: Processing request for',
-    pathname,
-    'with token:',
-    !!token
-  );
 
   // If no token, redirect to login
   if (!token) {
-    console.log('🔐 Middleware: No token found, redirecting to login');
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
@@ -140,10 +123,8 @@ export function middleware(request: NextRequest) {
 
   // Validate token
   const tokenValidation = validateToken(token);
-  console.log('🔐 Middleware: Token validation result:', tokenValidation);
 
   if (!tokenValidation.valid) {
-    console.log('🔐 Middleware: Token invalid, redirecting to login');
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     if (tokenValidation.expired) {
@@ -153,7 +134,6 @@ export function middleware(request: NextRequest) {
   }
 
   const userRole = tokenValidation.role!;
-  console.log('🔐 Middleware: User role extracted:', userRole);
 
   // Check route permissions
   const requiredRoles = findRoutePermission(pathname);

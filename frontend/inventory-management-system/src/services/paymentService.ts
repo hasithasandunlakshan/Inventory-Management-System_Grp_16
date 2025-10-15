@@ -1,6 +1,6 @@
 import { authService } from '../lib/services/authService';
 
-const PAYMENT_API_BASE_URL = 'http://localhost:8084/api/payments';
+const PAYMENT_API_BASE_URL = `${process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084'}/api/payments`;
 
 export interface PaymentData {
   paymentId: number;
@@ -70,7 +70,6 @@ class PaymentService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching payments:', error);
       throw error;
     }
   }

@@ -1,200 +1,256 @@
 'use client';
 
-import { orderService } from '@/lib/services/orderService';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function APIDebugPage() {
-  const [result, setResult] = useState<string>('');
+interface EndpointTestResult {
+  status: number;
+  ok: boolean;
+  data: unknown;
+  dataCount?: number;
+  error?: string;
+}
+
+interface ApiTestResults {
+  timestamp: string;
+  endpoints: {
+    [key: string]: {
+      url: string;
+      result: EndpointTestResult;
+    };
+  };
+  error?: string;
+  stack?: string;
+}
+
+export default function DebugApiPage() {
+  const [results, setResults] = useState<ApiTestResults | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const testAPI = async () => {
+  const testApiConnection = async () => {
     setLoading(true);
-    setResult('Testing API...\n');
+    setResults(null);
+
+    const productServiceUrl =
+      process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
+    const orderServiceUrl =
+      process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084';
+    const userServiceUrl =
+      process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8081';
+    const supplierServiceUrl =
+      process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL || 'http://localhost:8085';
+
+    const endpoints = {
+      // Product Service
+      'Products (GET /api/products)': `${productServiceUrl}/api/products?page=0&size=5`,
+      'Categories (GET /api/categories)': `${productServiceUrl}/api/categories`,
+      'Single Product (GET /api/products/1)': `${productServiceUrl}/api/products/1`,
+
+      // Order Service
+      'Orders (GET /api/orders/all)': `${orderServiceUrl}/api/orders/all?page=0&size=5`,
+      'Order Count Confirmed (GET /api/orders/count/confirmed)': `${orderServiceUrl}/api/orders/count/confirmed`,
+      'Order Status Counts (GET /api/orders/debug/status-counts)': `${orderServiceUrl}/api/orders/debug/status-counts`,
+
+      // User Service (Auth endpoints - no auth required for testing)
+      'Users with USER role (GET /api/auth/users)': `${userServiceUrl}/api/auth/users`,
+      'Users by role (GET /api/auth/users/by-role?role=USER)': `${userServiceUrl}/api/auth/users/by-role?role=USER`,
+
+      // Supplier Service
+      'Supplier Service Health (GET /actuator/health)': `${supplierServiceUrl}/actuator/health`,
+      'Suppliers (GET /api/suppliers)': `${supplierServiceUrl}/api/suppliers`,
+      'Purchase Orders (GET /api/purchase-orders)': `${supplierServiceUrl}/api/purchase-orders`,
+    };
+
+    const testResults: {
+      [key: string]: { url: string; result: EndpointTestResult };
+    } = {};
 
     try {
-      // Test the orderService method
-      console.log('🔍 Testing orderService.getAllOrders()');
-      setResult(prev => prev + '🔍 Testing orderService.getAllOrders()\n');
+      // Test all endpoints
+      for (const [name, url] of Object.entries(endpoints)) {
+        try {
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
 
-      const response = await orderService.getAllOrders();
+          let data;
+          let dataCount;
+          try {
+            data = await response.json();
+            // Count data items
+            if (Array.isArray(data)) {
+              dataCount = data.length;
+            } else if (data.content && Array.isArray(data.content)) {
+              dataCount = data.content.length;
+            } else if (data.totalElements !== undefined) {
+              dataCount = data.totalElements;
+            }
+          } catch {
+            data = await response.text();
+          }
 
-      setResult(
-        prev =>
-          prev + `✅ Success! Got ${response.orders?.length || 0} orders\n`
-      );
-      setResult(
-        prev => prev + `📊 Response: ${JSON.stringify(response, null, 2)}\n`
-      );
-    } catch (error) {
-      console.error('❌ Error:', error);
-      setResult(
-        prev =>
-          prev +
-          `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}\n`
-      );
-
-      // Additional debugging info
-      const token = localStorage.getItem('inventory_auth_token');
-      setResult(prev => prev + `🔑 Has token: ${!!token}\n`);
-      setResult(prev => prev + `🔑 Token length: ${token?.length || 0}\n`);
-    }
-
-    setLoading(false);
-  };
-
-  const testDirectFetch = async () => {
-    setLoading(true);
-    setResult('Testing direct fetch...\n');
-
-    const API_URL =
-      'https://orderservice-337812374841.us-central1.run.app/api/orders/all';
-    const token = localStorage.getItem('inventory_auth_token');
-
-    try {
-      // Test 1: Without auth
-      setResult(prev => prev + '1️⃣ Testing without authentication...\n');
-
-      let response = await fetch(API_URL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      setResult(
-        prev => prev + `Status: ${response.status} ${response.statusText}\n`
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setResult(
-          prev =>
-            prev + `✅ Success without auth: ${JSON.stringify(data, null, 2)}\n`
-        );
-      } else {
-        const errorText = await response.text();
-        setResult(prev => prev + `❌ Error without auth: ${errorText}\n`);
-      }
-
-      // Test 2: With auth
-      if (token) {
-        setResult(prev => prev + '\n2️⃣ Testing with authentication...\n');
-
-        response = await fetch(API_URL, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            Pragma: 'no-cache',
-            Expires: '0',
-          },
-        });
-
-        setResult(
-          prev => prev + `Status: ${response.status} ${response.statusText}\n`
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setResult(
-            prev =>
-              prev + `✅ Success with auth: ${JSON.stringify(data, null, 2)}\n`
-          );
-        } else {
-          const errorText = await response.text();
-          setResult(prev => prev + `❌ Error with auth: ${errorText}\n`);
+          testResults[name] = {
+            url,
+            result: {
+              status: response.status,
+              ok: response.ok,
+              data,
+              dataCount,
+            },
+          };
+        } catch (error) {
+          testResults[name] = {
+            url,
+            result: {
+              status: 0,
+              ok: false,
+              data: null,
+              error:
+                error instanceof Error ? error.message : 'Connection failed',
+            },
+          };
         }
-      } else {
-        setResult(prev => prev + '\n2️⃣ No auth token found\n');
       }
+
+      setResults({
+        timestamp: new Date().toISOString(),
+        endpoints: testResults,
+      });
     } catch (error) {
-      setResult(
-        prev =>
-          prev +
-          `❌ Network error: ${error instanceof Error ? error.message : 'Unknown error'}\n`
-      );
+      setResults({
+        timestamp: new Date().toISOString(),
+        endpoints: {},
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  };
-
-  const clearLocalStorage = () => {
-    localStorage.clear();
-    setResult('Local storage cleared\n');
-  };
-
-  const showTokenInfo = () => {
-    const token = localStorage.getItem('inventory_auth_token');
-    const user = localStorage.getItem('inventory_user_info');
-
-    setResult(`🔑 Token info:\n`);
-    setResult(prev => prev + `Has token: ${!!token}\n`);
-    setResult(prev => prev + `Token length: ${token?.length || 0}\n`);
-    if (token) {
-      setResult(prev => prev + `Token start: ${token.substring(0, 50)}...\n`);
-    }
-    setResult(prev => prev + `\n👤 User info:\n${user || 'No user info'}\n`);
   };
 
   return (
-    <div className='p-6 max-w-4xl mx-auto'>
-      <h1 className='text-2xl font-bold mb-6'>API Debug Tool</h1>
+    <div className='container mx-auto p-6'>
+      <Card>
+        <CardHeader>
+          <CardTitle>API Connection Debug</CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <div className='space-y-2'>
+            <div>
+              <p className='text-sm text-gray-600 mb-1'>
+                <strong>NEXT_PUBLIC_PRODUCT_SERVICE_URL:</strong>
+              </p>
+              <p className='text-xs font-mono bg-gray-100 p-2 rounded'>
+                {process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL ||
+                  'Not set (using localhost:8083)'}
+              </p>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600 mb-1'>
+                <strong>NEXT_PUBLIC_ORDER_SERVICE_URL:</strong>
+              </p>
+              <p className='text-xs font-mono bg-gray-100 p-2 rounded'>
+                {process.env.NEXT_PUBLIC_ORDER_SERVICE_URL ||
+                  'Not set (using localhost:8084)'}
+              </p>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600 mb-1'>
+                <strong>NEXT_PUBLIC_USER_SERVICE_URL:</strong>
+              </p>
+              <p className='text-xs font-mono bg-gray-100 p-2 rounded'>
+                {process.env.NEXT_PUBLIC_USER_SERVICE_URL ||
+                  'Not set (using localhost:8081)'}
+              </p>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600 mb-1'>
+                <strong>NEXT_PUBLIC_SUPPLIER_SERVICE_URL:</strong>
+              </p>
+              <p className='text-xs font-mono bg-gray-100 p-2 rounded'>
+                {process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL ||
+                  'Not set (using localhost:8085)'}
+              </p>
+            </div>
+          </div>
 
-      <div className='space-y-4 mb-6'>
-        <button
-          onClick={testAPI}
-          disabled={loading}
-          className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50'
-        >
-          {loading ? 'Testing...' : 'Test OrderService.getAllOrders()'}
-        </button>
+          <Button
+            onClick={testApiConnection}
+            disabled={loading}
+            className='w-full'
+          >
+            {loading ? 'Testing All Endpoints...' : 'Test All API Endpoints'}
+          </Button>
 
-        <button
-          onClick={testDirectFetch}
-          disabled={loading}
-          className='bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50 ml-2'
-        >
-          {loading ? 'Testing...' : 'Test Direct Fetch'}
-        </button>
+          {results && (
+            <div className='mt-6 space-y-4'>
+              <h3 className='text-lg font-semibold'>Test Results</h3>
+              <p className='text-sm text-gray-600'>
+                Tested at: {new Date(results.timestamp).toLocaleString()}
+              </p>
 
-        <button
-          onClick={showTokenInfo}
-          className='bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 ml-2'
-        >
-          Show Token Info
-        </button>
+              {results.error && (
+                <div className='bg-red-50 border border-red-200 p-4 rounded-lg'>
+                  <p className='text-red-800 font-semibold'>Error:</p>
+                  <p className='text-red-600 text-sm'>{results.error}</p>
+                </div>
+              )}
 
-        <button
-          onClick={clearLocalStorage}
-          className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ml-2'
-        >
-          Clear Local Storage
-        </button>
-      </div>
-
-      <div className='bg-gray-100 p-4 rounded-lg'>
-        <h2 className='font-bold mb-2'>Results:</h2>
-        <pre className='whitespace-pre-wrap text-sm overflow-auto max-h-96'>
-          {result || 'Click a button to test the API'}
-        </pre>
-      </div>
-
-      <div className='mt-6 bg-blue-50 p-4 rounded-lg'>
-        <h3 className='font-bold mb-2'>Debug Info:</h3>
-        <p>
-          <strong>API URL:</strong>{' '}
-          https://orderservice-337812374841.us-central1.run.app/api/orders/all
-        </p>
-        <p>
-          <strong>Current Origin:</strong>{' '}
-          {typeof window !== 'undefined' ? window.location.origin : 'N/A'}
-        </p>
-        <p>
-          <strong>User Agent:</strong>{' '}
-          {typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'}
-        </p>
-      </div>
+              <div className='space-y-3'>
+                {Object.entries(results.endpoints).map(([name, endpoint]) => (
+                  <div
+                    key={name}
+                    className={`border rounded-lg p-4 ${
+                      endpoint.result.ok
+                        ? 'border-green-200 bg-green-50'
+                        : 'border-red-200 bg-red-50'
+                    }`}
+                  >
+                    <div className='flex items-start justify-between mb-2'>
+                      <h4 className='font-semibold text-sm'>{name}</h4>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-mono ${
+                          endpoint.result.ok
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {endpoint.result.status || 'FAIL'}
+                      </span>
+                    </div>
+                    <p className='text-xs font-mono text-gray-600 mb-2 break-all'>
+                      {endpoint.url}
+                    </p>
+                    {endpoint.result.dataCount !== undefined && (
+                      <p className='text-sm text-gray-700 mb-2'>
+                        📊 Data Count:{' '}
+                        <strong>{endpoint.result.dataCount}</strong>
+                      </p>
+                    )}
+                    {endpoint.result.error && (
+                      <p className='text-sm text-red-600 mb-2'>
+                        ❌ Error: {endpoint.result.error}
+                      </p>
+                    )}
+                    <details className='mt-2'>
+                      <summary className='text-xs text-gray-600 cursor-pointer hover:text-gray-800'>
+                        View Response Data
+                      </summary>
+                      <pre className='bg-white p-3 rounded mt-2 overflow-auto text-xs border'>
+                        {JSON.stringify(endpoint.result.data, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
