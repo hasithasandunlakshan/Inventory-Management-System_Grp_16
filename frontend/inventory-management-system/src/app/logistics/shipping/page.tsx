@@ -30,6 +30,83 @@ type ClusteredOrder = ShippingOrder & {
   cluster: number;
 };
 
+// Traveling Salesman Problem solver using nearest neighbor heuristic
+function solveTSP(waypoints: { lat: number; lng: number }[]): number[] {
+  if (waypoints.length <= 1) return [0];
+  
+  const n = waypoints.length;
+  const visited = new Array(n).fill(false);
+  const route = [0]; // Start from first point
+  visited[0] = true;
+  
+  for (let i = 1; i < n; i++) {
+    let nearestIndex = -1;
+    let minDistance = Infinity;
+    
+    for (let j = 0; j < n; j++) {
+      if (!visited[j]) {
+        const distance = calculateDistance(
+          waypoints[route[route.length - 1]],
+          waypoints[j]
+        );
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestIndex = j;
+        }
+      }
+    }
+    
+    if (nearestIndex !== -1) {
+      route.push(nearestIndex);
+      visited[nearestIndex] = true;
+    }
+  }
+  
+  return route;
+}
+
+// Calculate distance between two points using Haversine formula
+function calculateDistance(point1: { lat: number; lng: number }, point2: { lat: number; lng: number }): number {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (point2.lat - point1.lat) * Math.PI / 180;
+  const dLng = (point2.lng - point1.lng) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(point1.lat * Math.PI / 180) * Math.cos(point2.lat * Math.PI / 180) * 
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Calculate total route distance and estimated time
+function calculateRouteMetrics(waypoints: { lat: number; lng: number }[], optimizedOrder: number[]): {
+  totalDistance: number;
+  estimatedTime: number;
+  waypointOrder: { lat: number; lng: number }[];
+} {
+  let totalDistance = 0;
+  const waypointOrder: { lat: number; lng: number }[] = [];
+  
+  // Add optimized waypoints in order
+  for (const index of optimizedOrder) {
+    waypointOrder.push(waypoints[index]);
+  }
+  
+  // Calculate distances between consecutive points
+  for (let i = 0; i < waypointOrder.length - 1; i++) {
+    totalDistance += calculateDistance(waypointOrder[i], waypointOrder[i + 1]);
+  }
+  
+  // Estimate time (assuming average speed of 30 km/h in urban areas)
+  const estimatedTime = totalDistance / 30; // hours
+  
+  return {
+    totalDistance: Math.round(totalDistance * 100) / 100, // Round to 2 decimal places
+    estimatedTime: Math.round(estimatedTime * 100) / 100,
+    waypointOrder
+  };
+}
+
 // Improved k-means implementation with better initialization
 function kMeansCluster(points: number[][], k: number): number[] {
   if (points.length === 0 || k <= 0) return [];
@@ -208,6 +285,27 @@ function ShippingPage() {
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [usingDummyData, setUsingDummyData] = useState(false);
+  const [routeMetrics, setRouteMetrics] = useState<{
+    totalDistance: number;
+    estimatedTime: number;
+    waypointOrder: { lat: number; lng: number }[];
+  }[]>([]);
+  const [optimizedRoutes, setOptimizedRoutes] = useState<{
+    waypoints: { lat: number; lng: number }[];
+    optimizedOrder: number[];
+    metrics: {
+      totalDistance: number;
+      estimatedTime: number;
+      waypointOrder: { lat: number; lng: number }[];
+    };
+  }[]>([]);
+  const [showComparison, setShowComparison] = useState(false);
+  const [comparisonMetrics, setComparisonMetrics] = useState<{
+    originalDistance: number;
+    optimizedDistance: number;
+    savings: number;
+    savingsPercentage: number;
+  } | null>(null);
 
   // Load Google Maps API
   const { isLoaded } = useJsApiLoader({
@@ -416,6 +514,89 @@ function ShippingPage() {
     setRoutes([]); // reset routes
     setShowAllOrders(false);
     setSelectedCluster(null);
+    
+    // Calculate optimized routes for each cluster
+    calculateOptimizedRoutes(grouped);
+  };
+
+  // Calculate optimized routes for all clusters
+  const calculateOptimizedRoutes = (clusters: ClusteredOrder[][]) => {
+    const newOptimizedRoutes: {
+      waypoints: { lat: number; lng: number }[];
+      optimizedOrder: number[];
+      metrics: {
+        totalDistance: number;
+        estimatedTime: number;
+        waypointOrder: { lat: number; lng: number }[];
+      };
+    }[] = [];
+
+    const newRouteMetrics: {
+      totalDistance: number;
+      estimatedTime: number;
+      waypointOrder: { lat: number; lng: number }[];
+    }[] = [];
+
+    clusters.forEach((cluster, clusterIndex) => {
+      if (cluster.length === 0) return;
+
+      // Create waypoints from cluster orders
+      const waypoints = cluster.map(order => ({
+        lat: order.lat,
+        lng: order.lng
+      }));
+
+      // Solve TSP to get optimized order
+      const optimizedOrder = solveTSP(waypoints);
+      
+      // Calculate route metrics
+      const metrics = calculateRouteMetrics(waypoints, optimizedOrder);
+      
+      newOptimizedRoutes.push({
+        waypoints,
+        optimizedOrder,
+        metrics
+      });
+
+      newRouteMetrics.push(metrics);
+    });
+
+    setOptimizedRoutes(newOptimizedRoutes);
+    setRouteMetrics(newRouteMetrics);
+    
+    // Calculate comparison metrics
+    calculateComparisonMetrics(clusters, newRouteMetrics);
+  };
+
+  // Calculate comparison between original and optimized routes
+  const calculateComparisonMetrics = (clusters: ClusteredOrder[][], optimizedMetrics: typeof routeMetrics) => {
+    let originalTotalDistance = 0;
+    let optimizedTotalDistance = 0;
+
+    clusters.forEach((cluster, idx) => {
+      if (cluster.length === 0) return;
+
+      // Calculate original route distance (sequential order)
+      const originalWaypoints = cluster.map(order => ({ lat: order.lat, lng: order.lng }));
+      const originalOrder = Array.from({ length: originalWaypoints.length }, (_, i) => i);
+      const originalMetrics = calculateRouteMetrics(originalWaypoints, originalOrder);
+      originalTotalDistance += originalMetrics.totalDistance;
+
+      // Get optimized distance
+      if (optimizedMetrics[idx]) {
+        optimizedTotalDistance += optimizedMetrics[idx].totalDistance;
+      }
+    });
+
+    const savings = originalTotalDistance - optimizedTotalDistance;
+    const savingsPercentage = originalTotalDistance > 0 ? (savings / originalTotalDistance) * 100 : 0;
+
+    setComparisonMetrics({
+      originalDistance: Math.round(originalTotalDistance * 100) / 100,
+      optimizedDistance: Math.round(optimizedTotalDistance * 100) / 100,
+      savings: Math.round(savings * 100) / 100,
+      savingsPercentage: Math.round(savingsPercentage * 100) / 100
+    });
   };
 
   // Get Optimized Route for Specific Cluster
@@ -427,19 +608,33 @@ function ShippingPage() {
 
     const directionsService = new window.google.maps.DirectionsService();
 
-    // Create waypoints from all orders in the cluster
-    const waypoints = cluster.map(order => ({
-      location: { lat: order.lat, lng: order.lng },
-      stopover: true,
-    }));
+    // Use optimized route if available, otherwise use original cluster order
+    let waypoints;
+    if (optimizedRoutes[clusterIndex]) {
+      // Use TSP-optimized waypoint order
+      const optimizedOrder = optimizedRoutes[clusterIndex].optimizedOrder;
+      waypoints = optimizedOrder.map(index => ({
+        location: { 
+          lat: cluster[index].lat, 
+          lng: cluster[index].lng 
+        },
+        stopover: true,
+      }));
+    } else {
+      // Fallback to original order
+      waypoints = cluster.map(order => ({
+        location: { lat: order.lat, lng: order.lng },
+        stopover: true,
+      }));
+    }
 
-    // Route: Store -> All Orders -> Back to Store
+    // Route: Store -> Optimized Order -> Back to Store
     directionsService.route(
       {
         origin: { lat: storeLocation.lat, lng: storeLocation.lng },
         destination: { lat: storeLocation.lat, lng: storeLocation.lng },
         waypoints,
-        optimizeWaypoints: true,
+        optimizeWaypoints: false, // We're already optimized
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
@@ -471,6 +666,52 @@ function ShippingPage() {
     setRoutes([]);
     setShowAllOrders(true);
     setSelectedCluster(null);
+    setRouteMetrics([]);
+    setOptimizedRoutes([]);
+    setComparisonMetrics(null);
+    setShowComparison(false);
+  };
+
+  // Export route details
+  const exportRoutes = () => {
+    if (routeMetrics.length === 0) return;
+
+    const exportData = {
+      timestamp: new Date().toISOString(),
+      storeLocation: {
+        name: storeLocation.name,
+        address: storeLocation.address,
+        coordinates: { lat: storeLocation.lat, lng: storeLocation.lng }
+      },
+      totalClusters: clusters.length,
+      totalDistance: routeMetrics.reduce((sum, m) => sum + m.totalDistance, 0),
+      totalTime: routeMetrics.reduce((sum, m) => sum + m.estimatedTime, 0),
+      clusters: clusters.map((cluster, idx) => ({
+        clusterNumber: idx + 1,
+        orderCount: cluster.length,
+        assignedDriver: assignedDrivers[idx] || 'Unassigned',
+        routeMetrics: routeMetrics[idx],
+        optimizedOrder: optimizedRoutes[idx]?.optimizedOrder || [],
+        orders: cluster.map(order => ({
+          id: order.id,
+          name: order.name,
+          address: order.address,
+          status: order.status,
+          coordinates: { lat: order.lat, lng: order.lng }
+        }))
+      }))
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `delivery-routes-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // Get status color
@@ -792,6 +1033,222 @@ function ShippingPage() {
               </div>
             )}
 
+            {/* Route Optimization Summary */}
+            {routeMetrics.length > 0 && (
+              <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-100'>
+                <h2 className='text-xl font-semibold text-gray-900 mb-4 flex items-center'>
+                  <svg
+                    className='w-5 h-5 mr-2 text-green-600'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+                    />
+                  </svg>
+                  Route Optimization Summary
+                </h2>
+                
+                <div className='space-y-4'>
+                  {routeMetrics.map((metrics, idx) => (
+                    <div key={idx} className='p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200'>
+                      <div className='flex items-center justify-between mb-3'>
+                        <h3 className='font-semibold text-gray-900 flex items-center'>
+                          <div
+                            className='w-4 h-4 rounded-full mr-2'
+                            style={{
+                              backgroundColor: clusterColors[idx % clusterColors.length],
+                            }}
+                          ></div>
+                          Cluster {idx + 1} Route
+                        </h3>
+                        <span className='text-sm text-gray-500'>
+                          {clusters[idx]?.length || 0} deliveries
+                        </span>
+                      </div>
+                      
+                      <div className='grid grid-cols-2 gap-4 mb-3'>
+                        <div className='bg-white p-3 rounded-lg border border-gray-200'>
+                          <div className='text-sm text-gray-600'>Total Distance</div>
+                          <div className='text-lg font-semibold text-blue-600'>
+                            {metrics.totalDistance} km
+                          </div>
+                        </div>
+                        <div className='bg-white p-3 rounded-lg border border-gray-200'>
+                          <div className='text-sm text-gray-600'>Estimated Time</div>
+                          <div className='text-lg font-semibold text-green-600'>
+                            {metrics.estimatedTime.toFixed(1)} hrs
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className='text-sm text-gray-600'>
+                        <div className='font-medium mb-1'>Optimized Delivery Order:</div>
+                        <div className='flex flex-wrap gap-1'>
+                          {optimizedRoutes[idx]?.optimizedOrder.map((orderIndex, orderIdx) => {
+                            const order = clusters[idx]?.[orderIndex];
+                            return order ? (
+                              <span
+                                key={orderIdx}
+                                className='px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs'
+                              >
+                                {order.name}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Overall Summary */}
+                  <div className='p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200'>
+                    <h3 className='font-semibold text-gray-900 mb-3 flex items-center'>
+                      <svg
+                        className='w-5 h-5 mr-2 text-purple-600'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'
+                        />
+                      </svg>
+                      Overall Optimization
+                    </h3>
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div className='bg-white p-3 rounded-lg border border-gray-200'>
+                        <div className='text-sm text-gray-600'>Total Distance</div>
+                        <div className='text-xl font-bold text-purple-600'>
+                          {routeMetrics.reduce((sum, m) => sum + m.totalDistance, 0).toFixed(1)} km
+                        </div>
+                      </div>
+                      <div className='bg-white p-3 rounded-lg border border-gray-200'>
+                        <div className='text-sm text-gray-600'>Total Time</div>
+                        <div className='text-xl font-bold text-pink-600'>
+                          {routeMetrics.reduce((sum, m) => sum + m.estimatedTime, 0).toFixed(1)} hrs
+                        </div>
+                      </div>
+                    </div>
+                    <div className='mt-3 text-sm text-gray-600'>
+                      <div className='flex items-center mb-3'>
+                        <svg className='w-4 h-4 mr-2 text-green-500' fill='currentColor' viewBox='0 0 20 20'>
+                          <path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clipRule='evenodd' />
+                        </svg>
+                        Routes optimized using TSP algorithm for maximum efficiency
+                      </div>
+                      <Button
+                        onClick={() => exportRoutes()}
+                        className='w-full bg-purple-600 hover:bg-purple-700 text-white'
+                        size='sm'
+                      >
+                        <svg className='w-4 h-4 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                        </svg>
+                        Export Route Details
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Route Comparison */}
+            {comparisonMetrics && (
+              <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-100'>
+                <h2 className='text-xl font-semibold text-gray-900 mb-4 flex items-center'>
+                  <svg
+                    className='w-5 h-5 mr-2 text-orange-600'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
+                    />
+                  </svg>
+                  Route Optimization Comparison
+                </h2>
+                
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                  {/* Original Route */}
+                  <div className='p-4 bg-red-50 rounded-lg border border-red-200'>
+                    <h3 className='font-semibold text-gray-900 mb-3 flex items-center'>
+                      <svg className='w-5 h-5 mr-2 text-red-600' fill='currentColor' viewBox='0 0 20 20'>
+                        <path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z' clipRule='evenodd' />
+                      </svg>
+                      Original Route (Sequential)
+                    </h3>
+                    <div className='text-2xl font-bold text-red-600 mb-2'>
+                      {comparisonMetrics.originalDistance} km
+                    </div>
+                    <div className='text-sm text-red-700'>
+                      No optimization applied
+                    </div>
+                  </div>
+
+                  {/* Optimized Route */}
+                  <div className='p-4 bg-green-50 rounded-lg border border-green-200'>
+                    <h3 className='font-semibold text-gray-900 mb-3 flex items-center'>
+                      <svg className='w-5 h-5 mr-2 text-green-600' fill='currentColor' viewBox='0 0 20 20'>
+                        <path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clipRule='evenodd' />
+                      </svg>
+                      Optimized Route (TSP)
+                    </h3>
+                    <div className='text-2xl font-bold text-green-600 mb-2'>
+                      {comparisonMetrics.optimizedDistance} km
+                    </div>
+                    <div className='text-sm text-green-700'>
+                      TSP algorithm applied
+                    </div>
+                  </div>
+                </div>
+
+                {/* Savings Summary */}
+                <div className='mt-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200'>
+                  <h3 className='font-semibold text-gray-900 mb-3 flex items-center'>
+                    <svg className='w-5 h-5 mr-2 text-yellow-600' fill='currentColor' viewBox='0 0 20 20'>
+                      <path fillRule='evenodd' d='M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clipRule='evenodd' />
+                    </svg>
+                    Optimization Results
+                  </h3>
+                  <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                    <div className='text-center'>
+                      <div className='text-3xl font-bold text-yellow-600'>
+                        {comparisonMetrics.savings} km
+                      </div>
+                      <div className='text-sm text-gray-600'>Distance Saved</div>
+                    </div>
+                    <div className='text-center'>
+                      <div className='text-3xl font-bold text-orange-600'>
+                        {comparisonMetrics.savingsPercentage}%
+                      </div>
+                      <div className='text-sm text-gray-600'>Efficiency Gain</div>
+                    </div>
+                    <div className='text-center'>
+                      <div className='text-3xl font-bold text-green-600'>
+                        {Math.round(comparisonMetrics.savings * 0.5 * 100) / 100} hrs
+                      </div>
+                      <div className='text-sm text-gray-600'>Time Saved*</div>
+                    </div>
+                  </div>
+                  <div className='mt-3 text-xs text-gray-500'>
+                    * Estimated time savings based on 30 km/h average speed
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Clusters List */}
             {clusters.length > 0 && (
               <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-100'>
@@ -940,6 +1397,27 @@ function ShippingPage() {
                               </div>
                               <div>• End: Return to {storeLocation.name}</div>
                             </div>
+                            
+                            {/* Route Optimization Metrics */}
+                            {routeMetrics[idx] && (
+                              <div className='mt-3 p-2 bg-white rounded border border-blue-300'>
+                                <div className='text-xs font-medium text-blue-800 mb-2'>
+                                  🚀 Optimization Results:
+                                </div>
+                                <div className='grid grid-cols-2 gap-2 text-xs'>
+                                  <div className='text-blue-700'>
+                                    Distance: <span className='font-semibold'>{routeMetrics[idx].totalDistance} km</span>
+                                  </div>
+                                  <div className='text-blue-700'>
+                                    Time: <span className='font-semibold'>{routeMetrics[idx].estimatedTime.toFixed(1)} hrs</span>
+                                  </div>
+                                </div>
+                                <div className='text-xs text-blue-600 mt-1'>
+                                  ✓ TSP-optimized delivery sequence
+                                </div>
+                              </div>
+                            )}
+                            
                             <div className='text-sm text-blue-600 font-medium mt-2'>
                               Click cluster again to hide route
                             </div>

@@ -1,7 +1,7 @@
 import { authService } from '../lib/services/authService';
 
 const PAYMENT_API_BASE_URL =
-  'https://orderservice-337812374841.us-central1.run.app/api/payments';
+  'http://localhost:8084/api/payments';
 
 export interface PaymentData {
   paymentId: number;

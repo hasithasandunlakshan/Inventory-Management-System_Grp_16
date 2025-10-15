@@ -47,7 +47,7 @@ export default function APIDebugPage() {
     setResult('Testing direct fetch...\n');
 
     const API_URL =
-      'https://orderservice-337812374841.us-central1.run.app/api/orders/all';
+      'http://localhost:8084/api/orders/all';
     const token = localStorage.getItem('inventory_auth_token');
 
     try {
@@ -184,7 +184,7 @@ export default function APIDebugPage() {
         <h3 className='font-bold mb-2'>Debug Info:</h3>
         <p>
           <strong>API URL:</strong>{' '}
-          https://orderservice-337812374841.us-central1.run.app/api/orders/all
+          http://localhost:8084/api/orders/all
         </p>
         <p>
           <strong>Current Origin:</strong>{' '}

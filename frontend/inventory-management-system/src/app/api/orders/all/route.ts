@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL =
-  'https://orderservice-337812374841.us-central1.run.app/api/orders';
+  'http://localhost:8084/api/orders';
 
 export async function GET(request: NextRequest) {
   try {

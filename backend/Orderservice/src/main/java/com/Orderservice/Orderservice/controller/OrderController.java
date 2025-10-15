@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +26,7 @@ import com.Orderservice.Orderservice.service.OrderService;
 
 @RestController
 @RequestMapping("/api/orders")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class OrderController {
 
     @Autowired
@@ -176,10 +178,10 @@ public class OrderController {
     }
 
     /**
-
+     * 
      * @param status The order status to filter by
-     * @param page Page number (0-based, optional, default: 0)
-     * @param size Number of items per page (optional, default: 10)
+     * @param page   Page number (0-based, optional, default: 0)
+     * @param size   Number of items per page (optional, default: 10)
      * @return AllOrdersResponse containing orders with the specified status
      */
     @GetMapping("/all/{status}")
@@ -193,26 +195,26 @@ public class OrderController {
             System.out.println("Status: " + status);
             System.out.println("Page: " + page);
             System.out.println("Size: " + size);
-            
+
             // Validate pagination parameters
             if (page < 0) {
                 return ResponseEntity.badRequest().body(AllOrdersResponse.builder()
-                    .success(false)
-                    .message("Page number cannot be negative")
-                    .orders(null)
-                    .totalOrders(0)
-                    .build());
+                        .success(false)
+                        .message("Page number cannot be negative")
+                        .orders(null)
+                        .totalOrders(0)
+                        .build());
             }
-            
+
             if (size <= 0 || size > 100) {
                 return ResponseEntity.badRequest().body(AllOrdersResponse.builder()
-                    .success(false)
-                    .message("Page size must be between 1 and 100")
-                    .orders(null)
-                    .totalOrders(0)
-                    .build());
+                        .success(false)
+                        .message("Page size must be between 1 and 100")
+                        .orders(null)
+                        .totalOrders(0)
+                        .build());
             }
-            
+
             AllOrdersResponse response = orderService.getAllOrdersByStatusWithPagination(status, page, size);
 
             if (response.isSuccess()) {
@@ -230,13 +232,12 @@ public class OrderController {
 
             AllOrdersResponse errorResponse = AllOrdersResponse.builder()
 
-                .success(false)
-                .message("Internal server error: " + e.getMessage())
-                .orders(null)
-                .totalOrders(0)
-                .pagination(null)
-                .build();
-                
+                    .success(false)
+                    .message("Internal server error: " + e.getMessage())
+                    .orders(null)
+                    .totalOrders(0)
+                    .pagination(null)
+                    .build();
 
             return ResponseEntity.internalServerError().body(errorResponse);
         }
@@ -467,9 +468,10 @@ public class OrderController {
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
-    
+
     /**
      * Process a refund for an order
+     * 
      * @param refundRequest Request containing orderId and refundReason
      * @return RefundResponse indicating success or failure
      */
@@ -479,19 +481,18 @@ public class OrderController {
             System.out.println("=== PROCESSING REFUND REQUEST ===");
             System.out.println("Order ID: " + refundRequest.getOrderId());
             System.out.println("Refund Reason: " + refundRequest.getRefundReason());
-            
+
             // Validate request
             if (refundRequest.getOrderId() == null) {
                 RefundResponse errorResponse = RefundResponse.failure(null, "Order ID is required");
                 return ResponseEntity.badRequest().body(errorResponse);
             }
-            
+
             // Process the refund
             RefundResponse response = orderService.processRefund(
-                refundRequest.getOrderId(), 
-                refundRequest.getRefundReason()
-            );
-            
+                    refundRequest.getOrderId(),
+                    refundRequest.getRefundReason());
+
             if (response.isSuccess()) {
                 System.out.println("✅ Refund processed successfully for order: " + refundRequest.getOrderId());
                 return ResponseEntity.ok(response);
@@ -500,15 +501,14 @@ public class OrderController {
                 System.err.println("Reason: " + response.getMessage());
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
         } catch (Exception e) {
             System.err.println("Error processing refund request: " + e.getMessage());
             e.printStackTrace();
-            
+
             RefundResponse errorResponse = RefundResponse.failure(
-                refundRequest.getOrderId(), 
-                "Internal server error: " + e.getMessage()
-            );
+                    refundRequest.getOrderId(),
+                    "Internal server error: " + e.getMessage());
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }

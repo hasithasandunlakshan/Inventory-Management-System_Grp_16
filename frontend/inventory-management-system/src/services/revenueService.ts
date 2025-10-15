@@ -5,7 +5,7 @@ import {
 } from '@/types/revenue';
 import { authService } from '@/lib/services/authService';
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090'}/api/revenue`; // Changed to API Gateway port
+const BASE_URL = `${process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084'}/api/revenue`; // Direct to local Order Service
 
 export const revenueService = {
   getTodayRevenue: async (): Promise<TodayRevenueResponse> => {

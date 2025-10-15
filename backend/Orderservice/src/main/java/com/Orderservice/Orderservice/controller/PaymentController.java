@@ -24,6 +24,7 @@ import com.Orderservice.Orderservice.service.PaymentService;
 
 @RestController
 @RequestMapping("/api/payments")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class PaymentController {
     @PostMapping("/update-order-status")
     public ResponseEntity<String> updateOrderStatus(@RequestBody UpdateOrderStatusRequest request) {
@@ -114,19 +115,19 @@ public class PaymentController {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     /**
      * Get all payments with order details
+     * 
      * @return AllPaymentsResponse containing all payments
      */
     @GetMapping("/all")
-    @CrossOrigin(origins = "*")
     public ResponseEntity<AllPaymentsResponse> getAllPayments() {
         try {
             System.out.println("=== GETTING ALL PAYMENTS ===");
-            
+
             AllPaymentsResponse response = paymentService.getAllPayments();
-            
+
             if (response.isSuccess()) {
                 System.out.println("✅ Successfully retrieved " + response.getTotalPayments() + " payments");
                 return ResponseEntity.ok(response);
@@ -134,18 +135,18 @@ public class PaymentController {
                 System.err.println("❌ Failed to retrieve payments: " + response.getMessage());
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
         } catch (Exception e) {
             System.err.println("❌ Error in getAllPayments endpoint: " + e.getMessage());
             e.printStackTrace();
-            
+
             AllPaymentsResponse errorResponse = AllPaymentsResponse.builder()
-                .success(false)
-                .message("Internal server error: " + e.getMessage())
-                .payments(new java.util.ArrayList<>())
-                .totalPayments(0)
-                .build();
-                
+                    .success(false)
+                    .message("Internal server error: " + e.getMessage())
+                    .payments(new java.util.ArrayList<>())
+                    .totalPayments(0)
+                    .build();
+
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
