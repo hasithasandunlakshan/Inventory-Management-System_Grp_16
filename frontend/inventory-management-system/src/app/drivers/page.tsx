@@ -40,10 +40,6 @@ export default function DriversPage() {
     loadAvailableUsers();
   };
 
-  const handleViewDriverDetails = (driver: DriverProfile) => {
-    // Future implementation: Open driver details modal or navigate to details page
-  };
-
   useEffect(() => {
     if (!isAuthenticated) return;
     loadDrivers();
@@ -71,8 +67,8 @@ export default function DriversPage() {
       } else {
         setAvailableUsers([]);
       }
-    } catch (error) {
-      // Likely 403 for non-manager/admin users; log only
+    } catch {
+      // Likely 403 for non-manager/admin users
       setAvailableUsers([]);
     }
   };
@@ -92,7 +88,7 @@ export default function DriversPage() {
       if (availableDriversResponse.success && availableDriversResponse.data) {
         setAvailableDrivers(availableDriversResponse.data);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load drivers');
     } finally {
       setLoading(false);
@@ -138,7 +134,6 @@ export default function DriversPage() {
         availableDrivers={availableDrivers}
         filters={filters}
         canManageDrivers={canManageDrivers}
-        onViewDriverDetails={handleViewDriverDetails}
       />
     </div>
   );

@@ -97,7 +97,7 @@ export default async function ProductsPage({
   // Handle categories response
   if (!categoriesResponse) {
     categoriesData = [];
-  } else {
+    } else {
     try {
       if (!categoriesResponse.ok) {
         throw new Error(`HTTP error! status: ${categoriesResponse.status}`);
