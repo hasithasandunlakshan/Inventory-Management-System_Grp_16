@@ -13,7 +13,8 @@ import {
 
 // Updated API URLs based on your provided endpoints
 const ORDER_SERVICE_BASE =
-  process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084';
+  process.env.NEXT_PUBLIC_ORDER_SERVICE_URL ||
+  'https://order.shopmindnotification.app';
 const ADMIN_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/admin/discounts`;
 const PUBLIC_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/discounts`;
 const PRODUCTS_API_URL =
@@ -50,7 +51,6 @@ export const discountService = {
       const discount: Discount = await response.json();
       return discount;
     } catch (error) {
-      console.error('Error creating discount:', error);
       throw error;
     }
   },
@@ -123,7 +123,6 @@ export const discountService = {
         pageSize: discountsResponse.pageSize || size,
       };
     } catch (error) {
-      console.error('Error fetching discounts:', error);
       throw error;
     }
   },
@@ -160,7 +159,6 @@ export const discountService = {
       const discounts: Discount[] = await response.json();
       return discounts;
     } catch (error) {
-      console.error('Error fetching active discounts:', error);
       throw error;
     }
   },
@@ -193,7 +191,6 @@ export const discountService = {
       const discount: Discount = await response.json();
       return discount;
     } catch (error) {
-      console.error('Error fetching discount by ID:', error);
       throw error;
     }
   },
@@ -230,7 +227,6 @@ export const discountService = {
       const discount: Discount = await response.json();
       return discount;
     } catch (error) {
-      console.error('Error updating discount:', error);
       throw error;
     }
   },
@@ -260,7 +256,6 @@ export const discountService = {
         );
       }
     } catch (error) {
-      console.error('Error deleting discount:', error);
       throw error;
     }
   },
@@ -294,7 +289,6 @@ export const discountService = {
         );
       }
     } catch (error) {
-      console.error('Error adding products to discount:', error);
       throw error;
     }
   },
@@ -328,7 +322,6 @@ export const discountService = {
         );
       }
     } catch (error) {
-      console.error('Error removing products from discount:', error);
       throw error;
     }
   },
@@ -363,7 +356,6 @@ export const discountService = {
       const data: DiscountProductsResponse = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching discount products:', error);
       throw error;
     }
   },
@@ -427,7 +419,6 @@ export const discountService = {
 
       return analytics;
     } catch (error) {
-      console.error('Error fetching discount analytics:', error);
       throw error;
     }
   },
@@ -453,19 +444,23 @@ export const discountService = {
         );
       }
 
-      // Handle both direct array response and wrapped response
+      // Handle paginated response from the new API
       const data = await response.json();
 
-      // If it's a direct array, return it
+      // If it's a direct array, return it (legacy support)
       if (Array.isArray(data)) {
         return data as Product[];
       }
 
-      // If it's wrapped in a response object, extract the products
+      // If it's a paginated response, extract the content
+      if (data.content && Array.isArray(data.content)) {
+        return data.content as Product[];
+      }
+
+      // If it's wrapped in a response object, extract the products (legacy support)
       const productsResponse = data as ProductsResponse;
       return productsResponse.products || productsResponse.data || [];
     } catch (error) {
-      console.error('Error fetching products:', error);
       throw error;
     }
   },

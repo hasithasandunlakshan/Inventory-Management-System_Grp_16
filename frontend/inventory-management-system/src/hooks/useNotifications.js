@@ -29,7 +29,6 @@ export const useNotifications = userId => {
       setUnreadCount(unread);
     } catch (err) {
       setError(err.message || 'Failed to fetch notifications');
-      console.error('Error fetching notifications:', err);
     } finally {
       setLoading(false);
     }
@@ -52,7 +51,6 @@ export const useNotifications = userId => {
       // Update unread count
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
-      console.error('Error marking notification as read:', err);
       throw err;
     }
   };
@@ -79,7 +77,6 @@ export const useNotifications = userId => {
 
       setUnreadCount(0);
     } catch (err) {
-      console.error('Error marking all notifications as read:', err);
       throw err;
     }
   };

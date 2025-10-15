@@ -52,5 +52,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            countQuery = "SELECT COUNT(DISTINCT o) FROM Order o WHERE o.status = :status")
     Page<Order> findByStatusWithOrderItemsOptimized(@Param("status") OrderStatus status, Pageable pageable);
     
+    // Optimized query to get ALL orders (any status) with pagination
+    @Query(value = "SELECT DISTINCT o FROM Order o " +
+           "LEFT JOIN FETCH o.orderItems oi " +
+           "ORDER BY o.orderDate DESC",
+           countQuery = "SELECT COUNT(DISTINCT o) FROM Order o")
+    Page<Order> findAllOrdersWithItemsPaginated(Pageable pageable);
 
 }

@@ -48,7 +48,6 @@ export default function SalesTrendsChart() {
           else setTrend('stable');
         }
       } catch (error) {
-        console.error('Error fetching sales data:', error);
       } finally {
         setLoading(false);
       }

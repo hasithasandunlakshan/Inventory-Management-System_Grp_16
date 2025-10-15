@@ -71,21 +71,23 @@ export const analyticsService = {
   }> {
     try {
       // Fetch products data (which includes inventory information)
-      const products = await productService.getAllProducts();
+      // Get all products by using a large page size
+      const products = await productService.getAllProducts(0, 1000);
 
       // Calculate stock status
-      const lowStock = products.filter(
-        product =>
+      const lowStock = products.content.filter(
+        (product: { availableStock: number; minThreshold?: number }) =>
           product.availableStock <= (product.minThreshold || 10) &&
           product.availableStock > 0
       ).length;
-      const outOfStock = products.filter(
-        product => product.availableStock === 0
+      const outOfStock = products.content.filter(
+        (product: { availableStock: number }) => product.availableStock === 0
       ).length;
-      const inStock = products.filter(
-        product => product.availableStock > (product.minThreshold || 10)
+      const inStock = products.content.filter(
+        (product: { availableStock: number; minThreshold?: number }) =>
+          product.availableStock > (product.minThreshold || 10)
       ).length;
-      const totalProducts = products.length;
+      const totalProducts = products.content.length;
 
       const inventoryData: InventoryAnalytics = {
         lowStock,
@@ -151,12 +153,20 @@ export const analyticsService = {
       const categoryData = categories
         .map(category => {
           // Count products in this category
-          const categoryProducts = products.filter(
-            product => product.categoryId === category.id
+          const categoryProducts = products.content.filter(
+            (product: { categoryId?: number }) =>
+              product.categoryId === category.id
           );
           const count = categoryProducts.length;
           const value = categoryProducts.reduce(
-            (sum, product) =>
+            (
+              sum: number,
+              product: {
+                unitPrice?: number;
+                price: number;
+                availableStock: number;
+              }
+            ) =>
               sum +
               (product.unitPrice || product.price) * product.availableStock,
             0
@@ -176,7 +186,6 @@ export const analyticsService = {
         categoryData,
       };
     } catch (error) {
-      console.error('Error fetching inventory analytics:', error);
       throw error;
     }
   },
@@ -272,7 +281,6 @@ export const analyticsService = {
         topProducts,
       };
     } catch (error) {
-      console.error('Error fetching sales analytics:', error);
       throw error;
     }
   },
@@ -374,7 +382,6 @@ export const analyticsService = {
         deliveryTrend,
       };
     } catch (error) {
-      console.error('Error fetching supplier analytics:', error);
       throw error;
     }
   },

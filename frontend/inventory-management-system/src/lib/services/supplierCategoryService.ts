@@ -25,7 +25,6 @@ export const supplierCategoryService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch supplier categories:', error);
       throw new Error(
         'Failed to fetch supplier categories - backend not available'
       );
@@ -50,7 +49,6 @@ export const supplierCategoryService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to create supplier category:', error);
       throw new Error(
         'Failed to create supplier category - backend not available'
       );

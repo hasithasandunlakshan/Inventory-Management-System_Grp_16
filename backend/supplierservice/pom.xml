@@ -29,7 +29,21 @@
 	<properties>
 		<java.version>17</java.version>
 		<flyway.version>10.17.0</flyway.version>
+		<spring-cloud.version>2023.0.0</spring-cloud.version>
 	</properties>
+	<!-- Spring Cloud Dependency Management -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
 	<dependencies>
 		<!-- Spring Boot Dependencies -->
 		<dependency>
@@ -69,6 +83,12 @@
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
+		</dependency>
+		
+		<!-- Eureka Client for Service Discovery -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
 
 		<!-- Testing Dependencies -->

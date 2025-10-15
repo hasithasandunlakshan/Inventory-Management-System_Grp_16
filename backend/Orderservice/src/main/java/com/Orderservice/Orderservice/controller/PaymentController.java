@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Orderservice.Orderservice.dto.AllOrdersResponse;
@@ -117,19 +118,46 @@ public class PaymentController {
     }
 
     /**
-     * Get all payments with order details
+     * Get all payments with pagination and order details
      * 
+     * @param page Page number (default 0)
+     * @param size Page size (default 20, max 100)
      * @return AllPaymentsResponse containing all payments
      */
     @GetMapping("/all")
-    public ResponseEntity<AllPaymentsResponse> getAllPayments() {
+    @CrossOrigin(origins = "*")
+    public ResponseEntity<AllPaymentsResponse> getAllPayments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            System.out.println("=== GETTING ALL PAYMENTS ===");
+            // Validate pagination parameters
+            if (page < 0) {
+                return ResponseEntity.badRequest().body(
+                        AllPaymentsResponse.builder()
+                                .success(false)
+                                .message("Page number cannot be negative")
+                                .payments(new java.util.ArrayList<>())
+                                .totalPayments(0)
+                                .build());
+            }
 
-            AllPaymentsResponse response = paymentService.getAllPayments();
+            if (size < 1 || size > 100) {
+                return ResponseEntity.badRequest().body(
+                        AllPaymentsResponse.builder()
+                                .success(false)
+                                .message("Page size must be between 1 and 100")
+                                .payments(new java.util.ArrayList<>())
+                                .totalPayments(0)
+                                .build());
+            }
+
+            System.out.println("=== GETTING ALL PAYMENTS (page=" + page + ", size=" + size + ") ===");
+
+            AllPaymentsResponse response = paymentService.getAllPayments(page, size);
 
             if (response.isSuccess()) {
-                System.out.println("✅ Successfully retrieved " + response.getTotalPayments() + " payments");
+                System.out.println("✅ Successfully retrieved " + response.getPayments().size() + " payments (Total: "
+                        + response.getTotalPayments() + ")");
                 return ResponseEntity.ok(response);
             } else {
                 System.err.println("❌ Failed to retrieve payments: " + response.getMessage());

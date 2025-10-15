@@ -34,7 +34,6 @@ export default function DriverCard({
             setDriverUserDetails(userResponse);
           }
         } catch (error) {
-          console.error('Failed to load driver user details:', error);
         } finally {
           setLoadingUserDetails(false);
         }

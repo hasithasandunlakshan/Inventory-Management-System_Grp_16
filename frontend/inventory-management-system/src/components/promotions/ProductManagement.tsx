@@ -43,7 +43,6 @@ export default function ProductManagement({
       const productList = await discountService.getAllProducts();
       setProducts(productList);
     } catch (error) {
-      console.error('Error loading products:', error);
       toast.error('Failed to load products. Please try again.');
     } finally {
       setLoading(false);
@@ -71,7 +70,6 @@ export default function ProductManagement({
 
       onClose();
     } catch (error) {
-      console.error('Error saving product selection:', error);
       toast.error('Failed to add products to discount. Please try again.');
     } finally {
       setSaving(false);
@@ -92,7 +90,6 @@ export default function ProductManagement({
 
       setSelectedProducts([]);
     } catch (error) {
-      console.error('Error removing products:', error);
       toast.error('Failed to remove products from discount. Please try again.');
     } finally {
       setSaving(false);

@@ -64,7 +64,6 @@ export function AuthProvider({
           const token = authService.getToken();
 
           if (!token) {
-            console.log('No token found, clearing auth state');
             authService.logout();
             setUser(null);
             setIsAuthenticated(false);
@@ -100,10 +99,6 @@ export function AuthProvider({
               setIsAuthenticated(false);
             } else {
               // Other error, assume token might still be valid but backend issue
-              console.warn(
-                'Token validation request failed with status:',
-                response.status
-              );
               // For safety, clear authentication on persistent failures
               authService.logout();
               setUser(null);
@@ -111,10 +106,6 @@ export function AuthProvider({
             }
           } catch (error) {
             // Network error - could be temporary, but clear auth for safety
-            console.error(
-              'Token validation failed due to network error:',
-              error
-            );
             authService.logout();
             setUser(null);
             setIsAuthenticated(false);
@@ -125,7 +116,6 @@ export function AuthProvider({
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
         // Clear everything on unexpected errors
         authService.logout();
         setUser(null);
@@ -150,7 +140,6 @@ export function AuthProvider({
         return { success: false, error: response.error || 'Login failed' };
       }
     } catch (error) {
-      console.error('Login error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Login failed',
@@ -238,7 +227,6 @@ export function AuthProvider({
         setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('Auth refresh failed:', error);
       authService.logout();
       setUser(null);
       setIsAuthenticated(false);

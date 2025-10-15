@@ -1,6 +1,7 @@
 package com.ApiGateway.ApiGateway;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.gateway.route.RouteLocator;
@@ -20,7 +21,9 @@ public class ApiGatewayApplication {
         }
 
         @Bean
-        public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+        public RouteLocator customRouteLocator(RouteLocatorBuilder builder,
+                        @Value("${supplier.service.url:http://localhost:8082}") String supplierServiceUrl,
+                        @Value("${ml.service.url:https://supplier-model.onrender.com}") String mlServiceUrl) {
                 return builder.routes()
 
                                 // User Service - Protected auth endpoints (require authentication)
@@ -66,17 +69,17 @@ public class ApiGatewayApplication {
                                 .route("order-service-payments", r -> r
                                                 .path("/api/payments/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("https://orderservice-337812374841.us-central1.run.app"))
+                                                .uri("https://order.shopmindnotification.app"))
                                 .route("order-service-orders", r -> r
                                                 .path("/api/orders/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("https://orderservice-337812374841.us-central1.run.app"))
+                                                .uri("https://order.shopmindnotification.app"))
 
                                 // Revenue Service (MANAGER) - New route for revenue endpoints
                                 .route("revenue-service", r -> r
                                                 .path("/api/revenue/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("https://orderservice-337812374841.us-central1.run.app"))
+                                                .uri("https://order.shopmindnotification.app"))
 
                                 // Inventory Service (STOREKEEPER, MANAGER)
                                 .route("inventory-service", r -> r
@@ -96,7 +99,13 @@ public class ApiGatewayApplication {
                                                                 "/api/purchase-orders/**",
                                                                 "/api/supplier-categories/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0"))
+                                                .uri(supplierServiceUrl))
+
+                                // ML Service - for Supplier Prediction and Analytics
+                                .route("ml-service", r -> r
+                                                .path("/api/ml/**")
+                                                .filters(f -> f.filter(jwtAuthenticationFilter))
+                                                .uri(mlServiceUrl))
 
                                 // Resource Service - Driver Management (Public GET operations) - Choreo
                                 .route("resource-service-drivers-public", r -> r
