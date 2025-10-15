@@ -12,12 +12,15 @@ export default function DebugApiPage() {
     setLoading(true);
     setResults(null);
 
-    const apiUrl = process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
+    const apiUrl =
+      process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
     console.log('🔍 Testing API URL:', apiUrl);
 
     try {
       // Test products endpoint
-      const productsResponse = await fetch(`${apiUrl}/api/products?page=0&size=5`);
+      const productsResponse = await fetch(
+        `${apiUrl}/api/products?page=0&size=5`
+      );
       const productsData = await productsResponse.json();
 
       // Test categories endpoint
@@ -54,18 +57,19 @@ export default function DebugApiPage() {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className='container mx-auto p-6'>
       <Card>
         <CardHeader>
           <CardTitle>API Connection Debug</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className='space-y-4'>
           <div>
-            <p className="text-sm text-gray-600 mb-2">
+            <p className='text-sm text-gray-600 mb-2'>
               Environment Variable: <code>NEXT_PUBLIC_PRODUCT_SERVICE_URL</code>
             </p>
-            <p className="text-sm font-mono bg-gray-100 p-2 rounded">
-              {process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'Not set (using localhost:8083)'}
+            <p className='text-sm font-mono bg-gray-100 p-2 rounded'>
+              {process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL ||
+                'Not set (using localhost:8083)'}
             </p>
           </div>
 
@@ -74,9 +78,9 @@ export default function DebugApiPage() {
           </Button>
 
           {results && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Test Results</h3>
-              <pre className="bg-gray-100 p-4 rounded-lg overflow-auto text-sm">
+            <div className='mt-6'>
+              <h3 className='text-lg font-semibold mb-4'>Test Results</h3>
+              <pre className='bg-gray-100 p-4 rounded-lg overflow-auto text-sm'>
                 {JSON.stringify(results, null, 2)}
               </pre>
             </div>
