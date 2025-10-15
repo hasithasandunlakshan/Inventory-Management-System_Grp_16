@@ -31,3 +31,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### CI/CD & Google Cloud ###
+github-actions-key.json
+*-key.json
+*.json.key
+service-account-*.json
+gcp-*.json
+
+### Environment Variables ###
+.env
+.env.local
+.env.*.local
