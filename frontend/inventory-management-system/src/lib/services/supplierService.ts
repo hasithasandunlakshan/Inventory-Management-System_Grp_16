@@ -1,4 +1,4 @@
-import { apiClient } from '../apiClient';
+import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
 // Types for supplier data
 export interface SupplierDTO {
@@ -120,6 +120,29 @@ class SupplierService {
       return data;
     } catch (error) {
       console.error('🏭 Error fetching suppliers:', error);
+      throw error;
+    }
+  }
+
+  // Create a new supplier
+  async createSupplier(supplierData: { userId: number; categoryId: number }): Promise<SupplierDTO> {
+    try {
+      console.log('🏭 Creating supplier directly from supplier service:', `${this.baseUrl}/api/suppliers`);
+      const response = await fetch(`${this.baseUrl}/api/suppliers`, {
+        ...createAuthenticatedRequestOptions('POST', supplierData),
+        credentials: 'include',
+      });
+      console.log('🏭 Create supplier response status:', response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🏭 Create supplier error:', errorText);
+        throw new Error(`Failed to create supplier: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+      const data = await response.json();
+      console.log('🏭 Supplier created successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('🏭 Error creating supplier:', error);
       throw error;
     }
   }
@@ -293,7 +316,7 @@ class SupplierService {
       purchaseOrders.forEach(order => {
         try {
           // Validate order data
-          if (!order.supplierId || !order.supplierName || typeof order.total !== 'number') {
+          if (!order.supplierId || !order.supplierName || typeof order.totalAmount !== 'number') {
             console.warn('🏭 Invalid order data found:', order, 'Skipping...');
             return;
           }
@@ -303,7 +326,7 @@ class SupplierService {
             totalSpend: 0, 
             orderCount: 0 
           };
-          existing.totalSpend += order.total;
+          existing.totalSpend += order.totalAmount;
           existing.orderCount += 1;
           supplierSpendMap.set(order.supplierId, existing);
         } catch (error) {
@@ -328,15 +351,15 @@ class SupplierService {
       purchaseOrders.forEach(order => {
         try {
           // Use safe date parsing
-          const month = this.safeExtractMonth(order.date);
+          const month = this.safeExtractMonth(order.orderDate);
           if (!month) {
-            console.warn('🏭 Could not extract month from order date:', order.date, 'Skipping...');
+            console.warn('🏭 Could not extract month from order date:', order.orderDate, 'Skipping...');
             return; // Skip this order if date is invalid
           }
           
           const existing = monthlyMap.get(month) || { orders: 0, value: 0 };
           existing.orders += 1;
-          existing.value += order.total;
+          existing.value += order.totalAmount;
           monthlyMap.set(month, existing);
         } catch (error) {
           console.error('🏭 Error processing order date:', error, 'Order:', order);
