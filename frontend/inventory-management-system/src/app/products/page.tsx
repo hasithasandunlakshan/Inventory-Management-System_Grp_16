@@ -89,6 +89,7 @@ export default async function ProductsPage({
   let filteredTotalPages = productsData.totalPages || 0;
 
   if (selectedCategory && Array.isArray(productsData.content)) {
+
     // Filter products by category on the server side
     filteredProducts = productsData.content.filter(
       (product: Product) =>
