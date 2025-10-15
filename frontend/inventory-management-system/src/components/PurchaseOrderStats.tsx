@@ -77,7 +77,6 @@ export function PurchaseOrderStats({
         setStats(statsData);
         onStatsLoaded?.(statsData);
       } catch (error) {
-        console.error('Failed to load purchase order statistics:', error);
         setError('Failed to load statistics');
       } finally {
         setLoading(false);

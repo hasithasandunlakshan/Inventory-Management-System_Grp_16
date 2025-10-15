@@ -24,16 +24,10 @@ export const forecastService = {
     // Check cache first
     const cached = forecastCache.get(cacheKey);
     if (cached && now - cached.timestamp < cached.ttl) {
-      console.log(
-        `🎯 Cache hit for product ${productId} (cached: ${'cached' in cached.data ? cached.data.cached : 'unknown'})`
-      );
       return cached.data;
     }
 
     try {
-      console.log(
-        `🔄 Cache miss - fetching forecast for product ${productId} (may trigger model training)`
-      );
       const response = await fetch(
         `${FORECAST_API_BASE_URL}/forecast/${productId}`
       );
@@ -52,13 +46,8 @@ export const forecastService = {
         timestamp: now,
         ttl: cacheTTL,
       });
-
-      console.log(
-        `💾 Cached forecast for product ${productId} for ${cacheTTL / 1000 / 60} minutes (processing time: ${rawData.processing_time || 'unknown'}s)`
-      );
       return rawData;
     } catch (error) {
-      console.error('Failed to fetch forecast from backend:', error);
       throw new Error('Failed to fetch forecast - backend not available');
     }
   },
@@ -68,7 +57,6 @@ export const forecastService = {
     const cacheKey = `forecast_${productId}`;
     const deleted = forecastCache.delete(cacheKey);
     if (deleted) {
-      console.log(`🗑️ Cleared cache for product ${productId}`);
     }
   },
 
@@ -76,7 +64,6 @@ export const forecastService = {
   clearAllCache(): void {
     const size = forecastCache.size;
     forecastCache.clear();
-    console.log(`🗑️ Cleared all forecast cache (${size} entries)`);
   },
 
   // Get cache information for debugging

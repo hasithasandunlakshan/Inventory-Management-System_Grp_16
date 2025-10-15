@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +42,7 @@ export default function DiscountProductsList({
 
   useEffect(() => {
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discountId]);
 
   const fetchProducts = async () => {
@@ -50,7 +52,6 @@ export default function DiscountProductsList({
       const data = await discountService.getDiscountProducts(discountId);
       setProductsData(data);
     } catch (error) {
-      console.error('Error fetching discount products:', error);
       setError('Failed to load products');
       toast.error('Failed to load associated products');
     } finally {
@@ -172,9 +173,11 @@ export default function DiscountProductsList({
                   <TableCell>
                     <div className='flex items-center space-x-3'>
                       {product.imageUrl ? (
-                        <img
+                        <Image
                           src={product.imageUrl}
                           alt={product.productName}
+                          width={40}
+                          height={40}
                           className='h-10 w-10 object-cover rounded'
                         />
                       ) : (

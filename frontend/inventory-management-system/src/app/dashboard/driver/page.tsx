@@ -74,7 +74,6 @@ export default function DriverDashboard() {
         }
       }
     } catch (error) {
-      console.error('Failed to load driver data:', error);
       toast.error('Failed to load driver information');
     } finally {
       setLoading(false);

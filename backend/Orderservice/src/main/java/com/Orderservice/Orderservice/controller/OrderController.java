@@ -45,14 +45,7 @@ public class OrderController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<AllOrdersResponse> getOrdersByUserId(@PathVariable Long userId) {
         try {
-            System.out.println("=== GETTING ORDERS FOR USER ===");
-            System.out.println("User ID: " + userId);
-
             AllOrdersResponse response = orderService.getOrdersByCustomerId(userId);
-
-            System.out.println("Orders found: " + response.getTotalOrders());
-            System.out.println("Success: " + response.isSuccess());
-
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             } else {
@@ -60,9 +53,6 @@ public class OrderController {
             }
 
         } catch (Exception e) {
-            System.err.println("Error in getOrdersByUserId: " + e.getMessage());
-            e.printStackTrace();
-
             AllOrdersResponse errorResponse = AllOrdersResponse.builder()
                     .success(false)
                     .message("Internal server error: " + e.getMessage())
@@ -75,21 +65,43 @@ public class OrderController {
     }
 
     /**
-     * Get all orders (existing functionality)
+     * OPTIMIZED: Get all orders (any status) with pagination and user details
+     * - Includes pagination support
+     * - Fetches user details (name, email, address, location)
+     * - Uses bulk fetching to minimize database queries
+     * - Returns orders sorted by date (newest first)
      * 
-     * @return AllOrdersResponse containing all confirmed orders
+     * @param page Page number (0-based, optional, default: 0)
+     * @param size Number of items per page (optional, default: 20)
+     * @return AllOrdersResponse containing all orders with pagination info
      */
     @GetMapping("/all")
-    public ResponseEntity<AllOrdersResponse> getAllOrders() {
+    public ResponseEntity<AllOrdersResponse> getAllOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            System.out.println("=== FETCHING ALL ORDERS ===");
-            System.out.println("Timestamp: " + LocalDateTime.now());
+            // Validate pagination parameters
+            if (page < 0) {
+                return ResponseEntity.badRequest().body(AllOrdersResponse.builder()
+                        .success(false)
+                        .message("Page number cannot be negative")
+                        .orders(null)
+                        .totalOrders(0)
+                        .build());
+            }
 
-            AllOrdersResponse response = orderService.getAllOrders();
+            if (size < 1 || size > 100) {
+                return ResponseEntity.badRequest().body(AllOrdersResponse.builder()
+                        .success(false)
+                        .message("Page size must be between 1 and 100")
+                        .orders(null)
+                        .totalOrders(0)
+                        .build());
+            }
+
+            AllOrdersResponse response = orderService.getAllOrdersOptimized(page, size);
 
             if (response.isSuccess()) {
-                System.out.println("Orders fetched successfully: " + response.getTotalOrders() + " orders");
-
                 // Add cache-control headers to prevent caching
                 return ResponseEntity.ok()
                         .header("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -98,16 +110,12 @@ public class OrderController {
                         .header("X-Timestamp", String.valueOf(System.currentTimeMillis()))
                         .body(response);
             } else {
-                System.out.println("Failed to fetch orders: " + response.getMessage());
                 return ResponseEntity.badRequest()
                         .header("Cache-Control", "no-cache, no-store, must-revalidate")
                         .body(response);
             }
 
         } catch (Exception e) {
-            System.err.println("Error in getAllOrders: " + e.getMessage());
-            e.printStackTrace();
-
             AllOrdersResponse errorResponse = AllOrdersResponse.builder()
                     .success(false)
                     .message("Internal server error: " + e.getMessage())
@@ -127,24 +135,14 @@ public class OrderController {
     @GetMapping("/debug/raw")
     public ResponseEntity<Map<String, Object>> getDebugOrders() {
         try {
-            System.out.println("=== DEBUG: RAW DATABASE QUERY ===");
-            System.out.println("Timestamp: " + LocalDateTime.now());
-
             // Get raw orders from database
             List<Order> allOrders = orderRepository.findAll();
             List<Order> confirmedOrders = orderRepository.findAllConfirmedOrdersWithItems();
-
-            System.out.println("Total orders in database: " + allOrders.size());
-            System.out.println("Confirmed orders: " + confirmedOrders.size());
-
             // Log order details
             Map<String, Long> statusCounts = allOrders.stream()
                     .collect(java.util.stream.Collectors.groupingBy(
                             o -> o.getStatus().toString(),
                             java.util.stream.Collectors.counting()));
-
-            System.out.println("Orders by status: " + statusCounts);
-
             Map<String, Object> debugInfo = new java.util.HashMap<>();
             debugInfo.put("timestamp", LocalDateTime.now().toString());
             debugInfo.put("totalOrdersInDb", allOrders.size());
@@ -164,9 +162,6 @@ public class OrderController {
                     .body(debugInfo);
 
         } catch (Exception e) {
-            System.err.println("Error in debug endpoint: " + e.getMessage());
-            e.printStackTrace();
-
             Map<String, Object> errorInfo = new java.util.HashMap<>();
             errorInfo.put("error", e.getMessage());
             errorInfo.put("timestamp", LocalDateTime.now().toString());
@@ -190,12 +185,6 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-
-            System.out.println("=== GETTING ORDERS BY STATUS WITH PAGINATION ===");
-            System.out.println("Status: " + status);
-            System.out.println("Page: " + page);
-            System.out.println("Size: " + size);
-
             // Validate pagination parameters
             if (page < 0) {
                 return ResponseEntity.badRequest().body(AllOrdersResponse.builder()
@@ -218,18 +207,12 @@ public class OrderController {
             AllOrdersResponse response = orderService.getAllOrdersByStatusWithPagination(status, page, size);
 
             if (response.isSuccess()) {
-                System.out.println("✅ Retrieved " + response.getOrders().size() + " orders for page " + page);
-                System.out.println("Total elements: " + response.getPagination().getTotalElements());
-                System.out.println("Total pages: " + response.getPagination().getTotalPages());
                 return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.badRequest().body(response);
             }
 
         } catch (Exception e) {
-            System.err.println("Error in getAllOrdersByStatus: " + e.getMessage());
-            e.printStackTrace();
-
             AllOrdersResponse errorResponse = AllOrdersResponse.builder()
 
                     .success(false)
@@ -261,8 +244,6 @@ public class OrderController {
             }
 
         } catch (Exception e) {
-            System.err.println("Error in getOrderById: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -286,11 +267,6 @@ public class OrderController {
                         "success", false,
                         "message", "Status is required"));
             }
-
-            System.out.println("=== UPDATING ORDER STATUS ===");
-            System.out.println("Order ID: " + orderId);
-            System.out.println("New Status: " + newStatus);
-
             boolean updated = orderService.updateOrderStatus(orderId, newStatus);
 
             if (updated) {
@@ -306,9 +282,6 @@ public class OrderController {
             }
 
         } catch (Exception e) {
-            System.err.println("Error updating order status: " + e.getMessage());
-            e.printStackTrace();
-
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Internal server error: " + e.getMessage()));
@@ -323,12 +296,7 @@ public class OrderController {
     @GetMapping("/count/confirmed")
     public ResponseEntity<Map<String, Object>> getConfirmedOrdersCount() {
         try {
-            System.out.println("=== GETTING CONFIRMED ORDERS COUNT ===");
-
             long confirmedCount = orderService.getOrderCountByStatus("CONFIRMED");
-
-            System.out.println("Confirmed orders count: " + confirmedCount);
-
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Confirmed orders count retrieved successfully",
@@ -337,9 +305,6 @@ public class OrderController {
                     "retrievedAt", java.time.LocalDateTime.now().toString()));
 
         } catch (Exception e) {
-            System.err.println("Error getting confirmed orders count: " + e.getMessage());
-            e.printStackTrace();
-
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Internal server error: " + e.getMessage(),
@@ -355,12 +320,7 @@ public class OrderController {
     @GetMapping("/count/processed")
     public ResponseEntity<Map<String, Object>> getProcessedOrdersCount() {
         try {
-            System.out.println("=== GETTING PROCESSED ORDERS COUNT ===");
-
             long processedCount = orderService.getOrderCountByStatus("PROCESSED");
-
-            System.out.println("Processed orders count: " + processedCount);
-
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Processed orders count retrieved successfully",
@@ -369,9 +329,6 @@ public class OrderController {
                     "retrievedAt", java.time.LocalDateTime.now().toString()));
 
         } catch (Exception e) {
-            System.err.println("Error getting processed orders count: " + e.getMessage());
-            e.printStackTrace();
-
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Internal server error: " + e.getMessage(),
@@ -388,13 +345,7 @@ public class OrderController {
     @GetMapping("/count/status/{status}")
     public ResponseEntity<Map<String, Object>> getOrdersCountByStatus(@PathVariable String status) {
         try {
-            System.out.println("=== GETTING ORDERS COUNT BY STATUS ===");
-            System.out.println("Status: " + status.toUpperCase());
-
             long count = orderService.getOrderCountByStatus(status.toUpperCase());
-
-            System.out.println("Orders count for status " + status.toUpperCase() + ": " + count);
-
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Orders count retrieved successfully for status: " + status.toUpperCase(),
@@ -403,9 +354,6 @@ public class OrderController {
                     "retrievedAt", java.time.LocalDateTime.now().toString()));
 
         } catch (Exception e) {
-            System.err.println("Error getting orders count by status: " + e.getMessage());
-            e.printStackTrace();
-
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Internal server error: " + e.getMessage(),
@@ -422,12 +370,9 @@ public class OrderController {
     @GetMapping("/debug/status-counts")
     public ResponseEntity<Map<String, Object>> getOrderStatusCounts() {
         try {
-            System.out.println("=== DEBUG: GETTING ORDER STATUS COUNTS ===");
             Map<String, Object> response = orderService.getOrderStatusCounts();
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("Error in getOrderStatusCounts: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Internal server error: " + e.getMessage()));
@@ -442,12 +387,7 @@ public class OrderController {
     @GetMapping("/debug/all")
     public ResponseEntity<AllOrdersResponse> getAllOrdersDebug() {
         try {
-            System.out.println("=== DEBUG: GETTING ALL ORDERS REGARDLESS OF STATUS ===");
             AllOrdersResponse response = orderService.getAllOrdersDebug();
-
-            System.out.println("Total orders found: " + response.getTotalOrders());
-            System.out.println("Success: " + response.isSuccess());
-
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             } else {
@@ -455,9 +395,6 @@ public class OrderController {
             }
 
         } catch (Exception e) {
-            System.err.println("Error in getAllOrdersDebug: " + e.getMessage());
-            e.printStackTrace();
-
             AllOrdersResponse errorResponse = AllOrdersResponse.builder()
                     .success(false)
                     .message("Internal server error: " + e.getMessage())
@@ -478,10 +415,6 @@ public class OrderController {
     @PostMapping("/refund")
     public ResponseEntity<RefundResponse> processRefund(@RequestBody RefundRequest refundRequest) {
         try {
-            System.out.println("=== PROCESSING REFUND REQUEST ===");
-            System.out.println("Order ID: " + refundRequest.getOrderId());
-            System.out.println("Refund Reason: " + refundRequest.getRefundReason());
-
             // Validate request
             if (refundRequest.getOrderId() == null) {
                 RefundResponse errorResponse = RefundResponse.failure(null, "Order ID is required");
@@ -494,18 +427,12 @@ public class OrderController {
                     refundRequest.getRefundReason());
 
             if (response.isSuccess()) {
-                System.out.println("✅ Refund processed successfully for order: " + refundRequest.getOrderId());
                 return ResponseEntity.ok(response);
             } else {
-                System.err.println("❌ Refund failed for order: " + refundRequest.getOrderId());
-                System.err.println("Reason: " + response.getMessage());
                 return ResponseEntity.badRequest().body(response);
             }
 
         } catch (Exception e) {
-            System.err.println("Error processing refund request: " + e.getMessage());
-            e.printStackTrace();
-
             RefundResponse errorResponse = RefundResponse.failure(
                     refundRequest.getOrderId(),
                     "Internal server error: " + e.getMessage());

@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -340,6 +343,82 @@ public class PaymentService {
     /**
      * Get all payments with order details
      * @return AllPaymentsResponse containing all payments
+     */
+    /**
+     * OPTIMIZED: Get all payments with pagination
+     * Uses JOIN FETCH to prevent N+1 query problem
+     */
+    public AllPaymentsResponse getAllPayments(int page, int size) {
+        try {
+            long startTime = System.currentTimeMillis();
+            System.out.println("=== GETTING ALL PAYMENTS (OPTIMIZED) ===");
+            System.out.println("Page: " + page + ", Size: " + size);
+            
+            // Create pageable request
+            Pageable pageable = PageRequest.of(page, size);
+            
+            // Fetch payments with orders in a single query (JOIN FETCH)
+            Page<Payment> paymentPage = paymentRepository.findAllPaymentsWithOrders(pageable);
+            
+            List<PaymentResponse> paymentResponses = new ArrayList<>();
+            
+            for (Payment payment : paymentPage.getContent()) {
+                PaymentResponse paymentResponse = PaymentResponse.builder()
+                    .paymentId(payment.getPaymentId())
+                    .orderId(payment.getOrder() != null ? payment.getOrder().getOrderId() : null)
+                    .customerId(payment.getOrder() != null ? payment.getOrder().getCustomerId() : null)
+                    .stripePaymentIntentId(payment.getStripePaymentIntentId())
+                    .stripePaymentMethodId(payment.getStripePaymentMethodId())
+                    .amount(payment.getAmount())
+                    .currency(payment.getCurrency())
+                    .method(payment.getMethod())
+                    .status(payment.getStatus().toString())
+                    .paymentDate(payment.getPaymentDate())
+                    .createdAt(payment.getCreatedAt())
+                    .updatedAt(payment.getUpdatedAt())
+                    // Order details (already loaded via JOIN FETCH)
+                    .orderStatus(payment.getOrder() != null ? payment.getOrder().getStatus().toString() : null)
+                    .orderTotalAmount(payment.getOrder() != null ? payment.getOrder().getTotalAmount() : null)
+                    .orderDate(payment.getOrder() != null ? payment.getOrder().getOrderDate() : null)
+                    .build();
+                
+                paymentResponses.add(paymentResponse);
+            }
+            
+            long endTime = System.currentTimeMillis();
+            System.out.println("=== OPTIMIZATION COMPLETE ===");
+            System.out.println("Total time: " + (endTime - startTime) + "ms");
+            System.out.println("Retrieved " + paymentResponses.size() + " payments");
+            System.out.println("Database queries: 2 (payments+orders with JOIN FETCH, count)");
+            
+            return AllPaymentsResponse.builder()
+                .success(true)
+                .message("Payments retrieved successfully")
+                .payments(paymentResponses)
+                .totalPayments((int) paymentPage.getTotalElements())
+                .pagination(new AllPaymentsResponse.PaginationInfo(
+                        page,
+                        size,
+                        paymentPage.getTotalPages(),
+                        paymentPage.getTotalElements()))
+                .build();
+                
+        } catch (Exception e) {
+            System.err.println("❌ Error retrieving payments: " + e.getMessage());
+            e.printStackTrace();
+            
+            return AllPaymentsResponse.builder()
+                .success(false)
+                .message("Failed to retrieve payments: " + e.getMessage())
+                .payments(new ArrayList<>())
+                .totalPayments(0)
+                .build();
+        }
+    }
+
+    /**
+     * DEPRECATED: Use getAllPayments(int page, int size) instead
+     * This method loads all payments without pagination
      */
     public AllPaymentsResponse getAllPayments() {
         try {

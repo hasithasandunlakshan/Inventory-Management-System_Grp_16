@@ -28,7 +28,6 @@ export default function InventoryPerformanceChart() {
         setInventoryData(mockData);
         setTotalValue(mockData.reduce((sum, item) => sum + item.totalValue, 0));
       } catch (error) {
-        console.error('Error fetching inventory data:', error);
       } finally {
         setLoading(false);
       }

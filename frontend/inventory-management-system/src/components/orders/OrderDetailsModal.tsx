@@ -105,7 +105,6 @@ export default function OrderDetailsModal({
         toast.error(response.message || 'Failed to process refund');
       }
     } catch (error) {
-      console.error('Error processing refund:', error);
       toast.error('Failed to process refund. Please try again.');
     } finally {
       setIsProcessingRefund(false);

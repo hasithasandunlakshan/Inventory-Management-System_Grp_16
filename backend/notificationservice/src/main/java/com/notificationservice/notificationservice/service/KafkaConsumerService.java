@@ -1,7 +1,7 @@
 package com.notificationservice.notificationservice.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.notificationservice.notificationservice.dto.OrderEventDto;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +10,9 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.notificationservice.notificationservice.dto.OrderEventDto;
 
 @Service
 public class KafkaConsumerService {
@@ -176,25 +179,87 @@ public class KafkaConsumerService {
      * Process inventory events (placeholder implementation)
      */
     private void processInventoryEvent(String inventoryEventMessage) {
-        // Parse and process inventory events
-        // This is a placeholder - implement based on your inventory event structure
-        logger.info("Processing inventory event: {}", inventoryEventMessage);
-        
-        // Example: Send broadcast notification for low stock
-        notificationService.sendBroadcastNotification(
-            "Inventory update received", 
-            "INVENTORY"
-        );
+        try {
+            // Parse the inventory event JSON
+            logger.info("Processing inventory event: {}", inventoryEventMessage);
+            
+            // Parse the message to extract user-specific information
+            Map<String, Object> inventoryData = objectMapper.readValue(inventoryEventMessage, Map.class);
+            
+            // Extract the target userId (e.g., storekeeper, admin)
+            // This should be part of your inventory event message
+            String targetUserId = inventoryData.get("userId") != null 
+                ? inventoryData.get("userId").toString() 
+                : null;
+            
+            String eventType = inventoryData.get("eventType") != null 
+                ? inventoryData.get("eventType").toString() 
+                : "INVENTORY_UPDATE";
+            
+            String message = inventoryData.get("message") != null 
+                ? inventoryData.get("message").toString() 
+                : "Inventory update received";
+            
+            // Only send to specific user if userId is provided
+            if (targetUserId != null && !targetUserId.isEmpty()) {
+                notificationService.createAndSendNotification(
+                    targetUserId,
+                    message,
+                    "INVENTORY",
+                    inventoryEventMessage
+                );
+                logger.info("Inventory notification sent to user: {}", targetUserId);
+            } else {
+                logger.warn("Inventory event does not contain userId. Event: {}", inventoryEventMessage);
+                // If no userId, this might be a system-wide notification
+                // Only use broadcast for true system announcements
+                // notificationService.sendBroadcastNotification(message, "INVENTORY");
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error processing inventory event: {}", e.getMessage(), e);
+        }
     }
     
     /**
      * Process payment events (placeholder implementation)
      */
     private void processPaymentEvent(String paymentEventMessage) {
-        // Parse and process payment events
-        // This is a placeholder - implement based on your payment event structure
-        logger.info("Processing payment event: {}", paymentEventMessage);
-        
-        // Example implementation would parse the payment event and send notifications
+        try {
+            // Parse the payment event JSON
+            logger.info("Processing payment event: {}", paymentEventMessage);
+            
+            // Parse the message to extract user-specific information
+            Map<String, Object> paymentData = objectMapper.readValue(paymentEventMessage, Map.class);
+            
+            // Extract the userId who made the payment
+            String userId = paymentData.get("userId") != null 
+                ? paymentData.get("userId").toString() 
+                : null;
+            
+            String eventType = paymentData.get("eventType") != null 
+                ? paymentData.get("eventType").toString() 
+                : "PAYMENT_UPDATE";
+            
+            String message = paymentData.get("message") != null 
+                ? paymentData.get("message").toString() 
+                : "Payment status updated";
+            
+            // Send notification only to the user who made the payment
+            if (userId != null && !userId.isEmpty()) {
+                notificationService.createAndSendNotification(
+                    userId,
+                    message,
+                    "PAYMENT",
+                    paymentEventMessage
+                );
+                logger.info("Payment notification sent to user: {}", userId);
+            } else {
+                logger.warn("Payment event does not contain userId. Event: {}", paymentEventMessage);
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error processing payment event: {}", e.getMessage(), e);
+        }
     }
 }

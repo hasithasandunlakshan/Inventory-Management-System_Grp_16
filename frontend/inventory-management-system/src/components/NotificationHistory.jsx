@@ -18,7 +18,6 @@ const NotificationHistory = ({ userId }) => {
       setError(null);
     } catch (err) {
       setError('Failed to load notification history');
-      console.error('Error fetching notifications:', err);
     } finally {
       setLoading(false);
     }
@@ -35,9 +34,7 @@ const NotificationHistory = ({ userId }) => {
             : notification
         )
       );
-    } catch (err) {
-      console.error('Error marking as read:', err);
-    }
+    } catch (err) {}
   };
 
   const formatTimestamp = timestamp => {

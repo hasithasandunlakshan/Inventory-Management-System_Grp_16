@@ -43,7 +43,6 @@ export default function SalesTrendsChart() {
         setSalesData(analytics.dailyData);
         setTopProducts(analytics.topProducts);
       } catch (error) {
-        console.error('Error fetching sales data:', error);
       } finally {
         setLoading(false);
       }

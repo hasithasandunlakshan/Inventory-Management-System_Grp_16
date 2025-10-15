@@ -46,7 +46,6 @@ export function SupplierPageStats({ refreshTrigger }: SupplierPageStatsProps) {
       setGeneralStats(generalData);
       setSupplierCount(suppliers.length);
     } catch (error) {
-      console.error('Failed to load supplier page statistics:', error);
       setError('Failed to load statistics');
     } finally {
       setLoading(false);

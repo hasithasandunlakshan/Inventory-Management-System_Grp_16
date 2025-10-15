@@ -11,11 +11,6 @@ import java.util.List;
 public class OrderDetailResponse {
     private Long orderId;
     private Long customerId;
-    private String customerName;
-    private String customerEmail;
-    private String customerAddress;
-    private Double customerLatitude;
-    private Double customerLongitude;
     private LocalDateTime orderDate;
     private String status;
     private BigDecimal totalAmount;
