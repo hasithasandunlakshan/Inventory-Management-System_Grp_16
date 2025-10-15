@@ -10,6 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/stock-alerts")
+@CrossOrigin(origins = "http://localhost:3000")
 public class StockAlertController {
 
     private final StockAlertRepository stockAlertRepository;

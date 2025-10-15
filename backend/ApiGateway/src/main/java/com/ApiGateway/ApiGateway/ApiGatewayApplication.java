@@ -93,7 +93,7 @@ public class ApiGatewayApplication {
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
                                                 .uri("http://localhost:8085"))
 
-                                // Supplier Service (MANAGER, STOREKEEPER) - Local or Choreo
+                                // Supplier Service (MANAGER, STOREKEEPER) - Cloud
                                 .route("supplier-service", r -> r
                                                 .path("/api/delivery-logs/**", "/api/suppliers/**",
                                                                 "/api/purchase-orders/**",

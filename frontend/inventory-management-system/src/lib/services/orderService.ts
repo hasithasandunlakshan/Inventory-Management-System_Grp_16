@@ -208,4 +208,27 @@ export const orderService = {
       throw new Error('Failed to fetch orders count - backend not available');
     }
   },
+
+  /**
+   * Get all orders status counts (for analytics)
+   */
+  async getAllStatusCounts(): Promise<{
+    statusBreakdown: Record<string, number>;
+  }> {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/debug/status-counts`,
+        createAuthenticatedRequestOptions()
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch status counts: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch status counts:', error);
+      throw new Error('Failed to fetch status counts - backend not available');
+    }
+  },
 };

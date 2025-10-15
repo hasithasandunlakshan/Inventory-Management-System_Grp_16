@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = { "http://localhost:3000", "http://127.0.0.1:3000", "https://*.vercel.app",
+        "https://*.choreoapis.dev" }, allowCredentials = "true")
 // Support both the new and old base paths
 @RequestMapping({ "/api/suppliers", "/supplier" })
 public class SupplierController {

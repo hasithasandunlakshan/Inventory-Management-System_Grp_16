@@ -30,25 +30,23 @@ public interface PurchaseOrderRepository
                         """)
         Optional<PurchaseOrder> findByIdWithItems(Long id);
 
-        // Find recent purchase orders for a supplier
-        @Query("SELECT po FROM PurchaseOrder po WHERE po.supplier.supplierId = :supplierId " +
-                        "AND po.date >= :startDate")
-        List<PurchaseOrder> findBySupplierIdAndDateAfter(
-                        @Param("supplierId") Long supplierId,
-                        @Param("startDate") LocalDate startDate);
+        // ===== Metrics helpers =====
+        long countBySupplier_SupplierIdAndDateBetween(Long supplierId, LocalDate start, LocalDate end);
 
-        // Count open purchase orders for a supplier
-        @Query("SELECT COUNT(po) FROM PurchaseOrder po WHERE po.supplier.supplierId = :supplierId " +
-                        "AND po.status IN ('SENT', 'PENDING')")
-        Integer countOpenPurchaseOrdersBySupplier(@Param("supplierId") Long supplierId);
+        @Query("""
+                        select count(po) from PurchaseOrder po
+                        where po.supplier.supplierId = :supplierId
+                          and po.date between :start and :end
+                          and po.status = :status
+                        """)
+        long countBySupplierAndStatusInRange(@Param("supplierId") Long supplierId,
+                        @Param("start") LocalDate start,
+                        @Param("end") LocalDate end,
+                        @Param("status") PurchaseOrderStatus status);
 
-        // Get total spend for a supplier within date range
-        @Query("SELECT SUM(poi.unitPrice * poi.quantity) FROM PurchaseOrder po " +
-                        "JOIN po.items poi WHERE po.supplier.supplierId = :supplierId " +
-                        "AND po.date >= :startDate AND po.date <= :endDate " +
-                        "AND po.status <> 'CANCELLED'")
-        Double calculateTotalSpendBySupplier(
-                        @Param("supplierId") Long supplierId,
-                        @Param("startDate") LocalDate startDate,
-                        @Param("endDate") LocalDate endDate);
+        @Query("""
+                        select max(po.date) from PurchaseOrder po
+                        where po.supplier.supplierId = :supplierId
+                        """)
+        LocalDate findLastOrderDate(@Param("supplierId") Long supplierId);
 }

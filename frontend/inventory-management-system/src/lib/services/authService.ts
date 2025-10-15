@@ -1,7 +1,6 @@
 // Authentication service for JWT token management
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL ||
-  'https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/apigateway/v1.0';
+  process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
 
 export interface LoginRequest {
   username: string;

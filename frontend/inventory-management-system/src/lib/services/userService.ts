@@ -1,9 +1,9 @@
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-const GATEWAY_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090';
-const API_BASE_URL = `${GATEWAY_URL}/api/secure`; // Through API Gateway
-const ADMIN_API_BASE_URL = `${GATEWAY_URL}/api/admin`; // Admin endpoints through API Gateway
+const USER_SERVICE_URL =
+  process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+const API_BASE_URL = `${USER_SERVICE_URL}/api/secure`; // Direct to User Service
+const ADMIN_API_BASE_URL = `${USER_SERVICE_URL}/api/admin`; // Admin endpoints direct to User Service
 
 export interface UserInfo {
   id: string;
@@ -57,7 +57,7 @@ export const userService = {
           }
 
           throw new Error(`Admin endpoint failed: ${adminResponse.status}`);
-        } catch (adminError) {
+        } catch {
           throw new Error('Failed to fetch user details - access denied');
         }
       }
@@ -96,7 +96,7 @@ export const userService = {
           localStorage.removeItem('inventory_user_info');
           throw new Error('Authentication token expired - please login again');
         }
-      } catch (tokenError) {
+      } catch {
         localStorage.removeItem('inventory_auth_token');
         localStorage.removeItem('inventory_user_info');
         throw new Error('Invalid authentication token - please login again');

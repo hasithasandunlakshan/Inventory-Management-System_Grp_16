@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +21,7 @@ import com.stripe.param.ChargeListParams;
 
 @RestController
 @RequestMapping("/api/revenue")
+@CrossOrigin(origins = "http://localhost:3000")
 public class RevenueController {
 
     public RevenueController(@Value("${stripe.api.key}") String stripeApiKey) {
@@ -31,13 +33,14 @@ public class RevenueController {
         LocalDate today = LocalDate.now();
         long start = today.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
         long end = today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
-        
+
         ChargeListParams params = ChargeListParams.builder()
                 .setCreated(ChargeListParams.Created.builder().setGte(start).setLt(end).build())
                 .setLimit(100L)
                 .build();
         ChargeCollection charges = Charge.list(params);
-        double total = charges.getData().stream().filter(c -> "succeeded".equals(c.getStatus())).mapToDouble(c -> c.getAmount() / 100.0).sum();
+        double total = charges.getData().stream().filter(c -> "succeeded".equals(c.getStatus()))
+                .mapToDouble(c -> c.getAmount() / 100.0).sum();
         Map<String, Object> result = new HashMap<>();
         result.put("date", today);
         result.put("revenue", total);
@@ -59,7 +62,8 @@ public class RevenueController {
                     .setLimit(100L)
                     .build();
             ChargeCollection charges = Charge.list(params);
-            double total = charges.getData().stream().filter(c -> "succeeded".equals(c.getStatus())).mapToDouble(c -> c.getAmount() / 100.0).sum();
+            double total = charges.getData().stream().filter(c -> "succeeded".equals(c.getStatus()))
+                    .mapToDouble(c -> c.getAmount() / 100.0).sum();
             Map<String, Object> result = new HashMap<>();
             result.put("month", startDate.getMonth().toString());
             result.put("revenue", total);
@@ -74,7 +78,8 @@ public class RevenueController {
     public Map<String, Object> getStripeStats() throws Exception {
         ChargeListParams params = ChargeListParams.builder().setLimit(100L).build();
         ChargeCollection charges = Charge.list(params);
-        double total = charges.getData().stream().filter(c -> "succeeded".equals(c.getStatus())).mapToDouble(c -> c.getAmount() / 100.0).sum();
+        double total = charges.getData().stream().filter(c -> "succeeded".equals(c.getStatus()))
+                .mapToDouble(c -> c.getAmount() / 100.0).sum();
         long refunds = charges.getData().stream().filter(c -> c.getRefunded()).count();
         Map<String, Object> result = new HashMap<>();
         result.put("total_revenue", total);

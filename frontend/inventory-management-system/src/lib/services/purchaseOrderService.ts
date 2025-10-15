@@ -41,7 +41,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to create purchase order - backend not available'
       );
@@ -63,7 +63,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to fetch purchase orders - backend not available'
       );
@@ -101,8 +101,10 @@ export const purchaseOrderService = {
       } else {
         return { total: 0 };
       }
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 
@@ -124,8 +126,10 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 
@@ -157,8 +161,10 @@ export const purchaseOrderService = {
 
       const result = await response.json();
       return result;
-    } catch (error) {
-      throw error; // Re-throw the original error instead of wrapping it
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      ); // Re-throw the original error instead of wrapping it
     }
   },
 
@@ -184,7 +190,7 @@ export const purchaseOrderService = {
       if (!response.ok) {
         throw new Error('Failed to delete purchase order');
       }
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to delete purchase order - backend not available'
       );
@@ -209,7 +215,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to update purchase order status - backend not available'
       );
@@ -234,7 +240,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to mark purchase order as received - backend not available'
       );
@@ -269,7 +275,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to search purchase orders - backend not available'
       );
@@ -309,7 +315,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to fetch purchase order statistics - backend not available'
       );
@@ -388,7 +394,7 @@ export const purchaseOrderService = {
         },
       };
       return result;
-    } catch (error) {
+    } catch {
       // Return default values if API fails
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
@@ -449,7 +455,7 @@ export const purchaseOrderService = {
       }
 
       return response.blob();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to export purchase orders - backend not available'
       );
@@ -475,7 +481,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to fetch purchase order items - backend not available'
       );
@@ -500,7 +506,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to add purchase order items - backend not available'
       );
@@ -526,7 +532,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to update purchase order item - backend not available'
       );
@@ -549,7 +555,7 @@ export const purchaseOrderService = {
       if (!response.ok) {
         throw new Error('Failed to delete purchase order item');
       }
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to delete purchase order item - backend not available'
       );
@@ -576,7 +582,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       return []; // Return empty array on error
     }
   },
@@ -603,7 +609,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       return []; // Return empty array on error
     }
   },
@@ -628,7 +634,7 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       return []; // Return empty array on error
     }
   },
@@ -650,8 +656,10 @@ export const purchaseOrderService = {
       if (!response.ok) {
         throw new Error('Failed to update item quantity');
       }
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 
@@ -673,8 +681,10 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 
@@ -699,8 +709,10 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 
@@ -722,8 +734,10 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 
@@ -757,8 +771,10 @@ export const purchaseOrderService = {
       }
 
       return response.json();
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 
@@ -802,8 +818,10 @@ export const purchaseOrderService = {
 
       // Clean up
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 
@@ -833,8 +851,10 @@ export const purchaseOrderService = {
       const result = await response.json();
       // Return the backend ImportReportDTO directly
       return result;
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 
@@ -853,8 +873,10 @@ export const purchaseOrderService = {
       }
 
       return response.blob();
-    } catch (error) {
-      throw error;
+    } catch {
+      throw new Error(
+        'Failed to fetch purchase orders - backend not available'
+      );
     }
   },
 };

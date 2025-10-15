@@ -73,7 +73,7 @@ export default function DriverDashboard() {
           }
         }
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load driver information');
     } finally {
       setLoading(false);
