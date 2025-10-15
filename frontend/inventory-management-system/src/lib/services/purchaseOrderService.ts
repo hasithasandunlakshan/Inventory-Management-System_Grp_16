@@ -19,7 +19,9 @@ import {
 } from '../types/supplier';
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090'}/api/purchase-orders`; // Through API Gateway
+const API_BASE_URL = process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL}/api/purchase-orders`
+  : 'http://localhost:8090/api/purchase-orders'; // Fallback to API Gateway for local development
 
 export const purchaseOrderService = {
   /**
