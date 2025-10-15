@@ -250,6 +250,8 @@ function ShippingPage() {
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [usingDummyData, setUsingDummyData] = useState(false);
+  const [drivers, setDrivers] = useState<DriverWithVehicle[]>([]);
+  const [isLoadingDrivers, setIsLoadingDrivers] = useState(true);
   const [routeMetrics, setRouteMetrics] = useState<
     {
       totalDistance: number;

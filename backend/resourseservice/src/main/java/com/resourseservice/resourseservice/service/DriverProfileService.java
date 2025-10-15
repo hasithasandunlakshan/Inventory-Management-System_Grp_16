@@ -155,10 +155,10 @@ public class DriverProfileService {
         List<Object[]> results = driverProfileRepository.findAvailableDriversWithVehicles();
 
         return results.stream()
-                .map(row -> DriverWithVehicleResponse.builder()
+                .<DriverWithVehicleResponse>map(row -> DriverWithVehicleResponse.builder()
                         .assignmentId(((Number) row[0]).longValue())
                         .userId(((Number) row[1]).longValue())
-                        .driverName((String) row[2]) // Username from users table
+                        .driverName((String) row[2])
                         .vehicleType((String) row[3])
                         .build())
                 .collect(Collectors.toList());
