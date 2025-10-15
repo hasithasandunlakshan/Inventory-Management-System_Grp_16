@@ -70,7 +70,6 @@ export default function PaymentsPage() {
         setError(response.message);
       }
     } catch (err) {
-      console.error('Error fetching payments:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch payments');
     } finally {
       setLoading(false);

@@ -186,16 +186,11 @@ export default function ProductsClient({
           setTotalElements(response.totalElements || 0);
           setTotalPages(response.totalPages || 0);
         } else {
-          console.error(
-            'Invalid response structure from getAllProductsWithCategories:',
-            response
-          );
           setProducts([]);
           setTotalElements(0);
           setTotalPages(0);
         }
       } catch (error) {
-        console.error('Failed to fetch products', error);
         // Set empty arrays on error to prevent map errors
         setProducts([]);
         setTotalElements(0);

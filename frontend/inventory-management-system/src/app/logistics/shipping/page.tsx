@@ -306,14 +306,7 @@ function ShippingPage() {
 
       // Check if user is authenticated
       const token = localStorage.getItem('inventory_auth_token');
-      console.log('🔐 Authentication status:', {
-        hasToken: !!token,
-        tokenLength: token?.length || 0,
-        timestamp: new Date().toISOString(),
-      });
-
       if (!token) {
-        console.warn('❌ No authentication token found. User needs to log in.');
         setOrdersError('Please log in to view orders.');
         setRealOrders(dummyOrders);
         setUsingDummyData(true);
@@ -321,48 +314,19 @@ function ShippingPage() {
       }
 
       // Add cache-busting parameter to ensure fresh data
-      console.log(
-        '🚀 Fetching fresh orders from backend... (timestamp: ' +
-          Date.now() +
-          ')'
-      );
       const response = await orderService.getAllOrders();
-
-      console.log('📡 Order service response:', {
-        success: response.success,
-        message: response.message,
-        ordersCount: response.orders?.length || 0,
-        totalOrders: response.totalOrders,
-        timestamp: new Date().toISOString(),
-      });
-
       if (response.success && response.orders.length > 0) {
         const shippingOrders = convertToShippingOrders(response.orders);
 
         // Force state update with a new array reference
         setRealOrders([...shippingOrders]);
         setUsingDummyData(false);
-
-        console.log(
-          `✅ Successfully loaded ${response.orders.length} fresh orders from database`
-        );
-        console.log('📦 First few orders:', response.orders.slice(0, 3));
-        console.log(
-          '🚢 Converted shipping orders:',
-          shippingOrders.slice(0, 3)
-        );
-        console.log('🔄 State updated at:', new Date().toISOString());
       } else {
-        console.warn(
-          '⚠️ No orders found or failed to fetch orders:',
-          response.message
-        );
         setOrdersError(response.message || 'No orders found in database.');
         setRealOrders(dummyOrders);
         setUsingDummyData(true);
       }
     } catch (error) {
-      console.error('💥 Failed to fetch orders:', error);
       setOrdersError(
         `Failed to load orders: ${error instanceof Error ? error.message : String(error)}`
       );
@@ -382,7 +346,6 @@ function ShippingPage() {
 
     // Auto-refresh every 2 minutes (reduced frequency)
     const intervalId = setInterval(() => {
-      console.log('🔄 Auto-refreshing orders every 2 minutes...');
       fetchOrders(false); // Don't show loading state for auto-refresh
     }, 120000); // 2 minutes = 120,000ms
 

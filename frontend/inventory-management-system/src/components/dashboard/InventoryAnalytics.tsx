@@ -56,7 +56,6 @@ export default function InventoryAnalytics() {
         setStockMovement(analytics.stockMovement);
         setCategoryData(analytics.categoryData);
       } catch (error) {
-        console.error('Error fetching inventory data:', error);
       } finally {
         setLoading(false);
       }

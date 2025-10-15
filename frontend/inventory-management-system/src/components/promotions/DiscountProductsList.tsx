@@ -52,7 +52,6 @@ export default function DiscountProductsList({
       const data = await discountService.getDiscountProducts(discountId);
       setProductsData(data);
     } catch (error) {
-      console.error('Error fetching discount products:', error);
       setError('Failed to load products');
       toast.error('Failed to load associated products');
     } finally {

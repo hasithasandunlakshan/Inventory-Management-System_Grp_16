@@ -386,12 +386,6 @@ class DriverService {
   // Get users by role for driver selection dropdown
   async getUsersByRole(role: string = 'USER'): Promise<UserInfo[]> {
     const headers = this.getAuthHeaders();
-    console.log('🔍 getUsersByRole - Headers:', headers);
-    console.log(
-      '🔍 getUsersByRole - URL:',
-      `${API_BASE_URL}/api/auth/users?role=${role}`
-    );
-
     const response = await fetch(
       `${API_BASE_URL}/api/auth/users?role=${role}`,
       {
@@ -399,27 +393,16 @@ class DriverService {
         headers: headers,
       }
     );
-
-    console.log('🔍 getUsersByRole - Response status:', response.status);
-    console.log(
-      '🔍 getUsersByRole - Response headers:',
-      Object.fromEntries(response.headers.entries())
-    );
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('🔍 getUsersByRole - Error response:', errorText);
       throw new Error('Failed to fetch users');
     }
 
     const data = await response.json();
-    console.log('🔍 getUsersByRole - Success data:', data);
-
     // Extract users array from the response
     if (data.success && Array.isArray(data.users)) {
       return data.users;
     } else {
-      console.error('🔍 getUsersByRole - Invalid response structure:', data);
       return [];
     }
   }

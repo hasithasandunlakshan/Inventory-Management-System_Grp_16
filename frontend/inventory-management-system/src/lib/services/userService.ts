@@ -40,9 +40,6 @@ export const userService = {
 
       // If secure endpoint fails with 403, try admin endpoint
       if (response.status === 403) {
-        console.log(
-          `Secure endpoint returned 403 for user ${userId}, trying admin endpoint...`
-        );
         try {
           const adminResponse = await fetch(
             `${ADMIN_API_BASE_URL}/user/${userId}`,
@@ -61,7 +58,6 @@ export const userService = {
 
           throw new Error(`Admin endpoint failed: ${adminResponse.status}`);
         } catch (adminError) {
-          console.error('Admin endpoint also failed:', adminError);
           throw new Error('Failed to fetch user details - access denied');
         }
       }
@@ -72,7 +68,6 @@ export const userService = {
 
       throw new Error(`Failed to fetch user details: ${response.status}`);
     } catch (error) {
-      console.error('Failed to fetch user details:', error);
       if (error instanceof Error && error.message.includes('access denied')) {
         throw error; // Re-throw access denied errors as-is
       }
@@ -102,7 +97,6 @@ export const userService = {
           throw new Error('Authentication token expired - please login again');
         }
       } catch (tokenError) {
-        console.error('Invalid token format:', tokenError);
         localStorage.removeItem('inventory_auth_token');
         localStorage.removeItem('inventory_user_info');
         throw new Error('Invalid authentication token - please login again');
@@ -128,7 +122,6 @@ export const userService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch current user details:', error);
       // Re-throw authentication errors as-is
       if (
         error instanceof Error &&
@@ -149,10 +142,7 @@ export const userService = {
    */
   async searchUsers(query: string): Promise<UserInfo[]> {
     try {
-      console.log('🔍 Searching users with query:', query);
-
       if (!query.trim()) {
-        console.log('Empty query, returning empty array');
         return [];
       }
 
@@ -172,10 +162,8 @@ export const userService = {
       }
 
       const users = await response.json();
-      console.log('🔍 Search returned', users.length, 'users');
       return users;
     } catch (error) {
-      console.error('Failed to search users:', error);
       if (
         error instanceof Error &&
         (error.message.includes('Access denied') ||
@@ -192,8 +180,6 @@ export const userService = {
    */
   async getAllUsers(): Promise<UserInfo[]> {
     try {
-      console.log('👥 Fetching all users');
-
       const response = await fetch(
         `${API_BASE_URL}/users`,
         createAuthenticatedRequestOptions()
@@ -210,10 +196,8 @@ export const userService = {
       }
 
       const users = await response.json();
-      console.log('👥 Retrieved', users.length, 'total users');
       return users;
     } catch (error) {
-      console.error('Failed to fetch all users:', error);
       if (
         error instanceof Error &&
         (error.message.includes('Access denied') ||

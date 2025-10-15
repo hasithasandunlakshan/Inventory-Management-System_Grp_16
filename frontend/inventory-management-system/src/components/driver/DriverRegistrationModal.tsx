@@ -97,8 +97,6 @@ export default function DriverRegistrationModal({
         toast.error(response.message || 'Failed to create driver profile');
       }
     } catch (error: unknown) {
-      console.error('Registration failed:', error);
-
       // Handle specific error messages
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';

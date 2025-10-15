@@ -12,16 +12,11 @@ export default function ApiTestComponent() {
 
   useEffect(() => {
     const testApi = async () => {
-      console.log('ApiTestComponent: Starting API test...');
       try {
-        console.log('Testing today revenue...');
         const todayData = await revenueService.getTodayRevenue();
-        console.log('Today data received:', todayData);
-
         setTestData(todayData as unknown as Record<string, unknown>);
         setError(null);
       } catch (err) {
-        console.error('API Test Error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);

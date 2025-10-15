@@ -42,7 +42,6 @@ export default function DriversPage() {
 
   const handleViewDriverDetails = (driver: DriverProfile) => {
     // Future implementation: Open driver details modal or navigate to details page
-    console.log('View driver details:', driver);
   };
 
   useEffect(() => {
@@ -62,8 +61,6 @@ export default function DriversPage() {
       if (!token) return; // wait until token exists
 
       const users = await driverService.getUsersByRole('USER');
-      console.log('🔍 loadAvailableUsers - Raw users:', users);
-
       if (Array.isArray(users)) {
         setAvailableUsers(
           users.map(user => ({
@@ -72,12 +69,10 @@ export default function DriversPage() {
           }))
         );
       } else {
-        console.error('🔍 loadAvailableUsers - Users is not an array:', users);
         setAvailableUsers([]);
       }
     } catch (error) {
       // Likely 403 for non-manager/admin users; log only
-      console.error('Failed to load available users:', error);
       setAvailableUsers([]);
     }
   };
@@ -98,7 +93,6 @@ export default function DriversPage() {
         setAvailableDrivers(availableDriversResponse.data);
       }
     } catch (error) {
-      console.error('Failed to load drivers:', error);
       toast.error('Failed to load drivers');
     } finally {
       setLoading(false);
