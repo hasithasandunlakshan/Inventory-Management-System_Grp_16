@@ -1,50 +1,63 @@
 # Dependencies
 node_modules
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.pnp
+.pnp.js
 
 # Testing
 coverage
 .nyc_output
-**/__tests__/**
-**/*.test.ts
-**/*.test.tsx
-**/*.spec.ts
-**/*.spec.tsx
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
 jest.config.ts
 jest.setup.ts
+test-results
 
-# Local environment
+# Build outputs
+.next
+out
+build
+dist
+target
+
+# Misc
+.DS_Store
+*.pem
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Development
-.DS_Store
-*.pem
-.vscode
-.idea
-
 # Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files
+.env*.local
 
 # Vercel
 .vercel
 
-# Git
-.git
-.gitignore
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
 
-# Documentation
-README.md
-PRETTIER_SETUP.md
-TECHNICAL_DOCS.md
+# Cypress
+cypress/videos
+cypress/screenshots
+cypress/downloads
 
-# Scripts
-debug-api.js
-test-proxy.js
+# Playwright
+playwright-report
+test-results
 
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
