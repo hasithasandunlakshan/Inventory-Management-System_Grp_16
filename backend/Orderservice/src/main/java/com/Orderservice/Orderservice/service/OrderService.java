@@ -366,7 +366,7 @@ public class OrderService {
             System.out.println("📊 Confirmed orders (without JOIN FETCH): " + confirmedOrdersOnly.size());
 
             List<Order> orders = orderRepository.findAllConfirmedOrdersWithItems();
-            System.out.println("📊 Confirmed orders (with JOIN FETCH): " + orders.size());
+            System.out.println("📊 getting Confirmed orders (with JOIN FETCH): " + orders.size());
 
             // Check if the difference is due to orders without items
             if (confirmedOrdersOnly.size() != orders.size()) {
