@@ -74,18 +74,19 @@ export const analyticsService = {
       const products = await productService.getAllProducts();
 
       // Calculate stock status
-      const lowStock = products.filter(
-        product =>
+      const lowStock = products.content.filter(
+        (product: { availableStock: number; minThreshold?: number }) =>
           product.availableStock <= (product.minThreshold || 10) &&
           product.availableStock > 0
       ).length;
-      const outOfStock = products.filter(
-        product => product.availableStock === 0
+      const outOfStock = products.content.filter(
+        (product: { availableStock: number }) => product.availableStock === 0
       ).length;
-      const inStock = products.filter(
-        product => product.availableStock > (product.minThreshold || 10)
+      const inStock = products.content.filter(
+        (product: { availableStock: number; minThreshold?: number }) =>
+          product.availableStock > (product.minThreshold || 10)
       ).length;
-      const totalProducts = products.length;
+      const totalProducts = products.content.length;
 
       const inventoryData: InventoryAnalytics = {
         lowStock,
@@ -151,12 +152,20 @@ export const analyticsService = {
       const categoryData = categories
         .map(category => {
           // Count products in this category
-          const categoryProducts = products.filter(
-            product => product.categoryId === category.id
+          const categoryProducts = products.content.filter(
+            (product: { categoryId?: number }) =>
+              product.categoryId === category.id
           );
           const count = categoryProducts.length;
           const value = categoryProducts.reduce(
-            (sum, product) =>
+            (
+              sum: number,
+              product: {
+                unitPrice?: number;
+                price: number;
+                availableStock: number;
+              }
+            ) =>
               sum +
               (product.unitPrice || product.price) * product.availableStock,
             0
