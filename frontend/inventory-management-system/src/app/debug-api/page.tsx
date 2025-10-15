@@ -50,13 +50,14 @@ export default function DebugApiPage() {
       // Order Service
       'Orders (GET /api/orders/all)': `${orderServiceUrl}/api/orders/all?page=0&size=5`,
       'Order Count Confirmed (GET /api/orders/count/confirmed)': `${orderServiceUrl}/api/orders/count/confirmed`,
-      'Discounts (GET /api/admin/discounts/all)': `${orderServiceUrl}/api/admin/discounts/all?page=0&size=5`,
+      'Order Status Counts (GET /api/orders/debug/status-counts)': `${orderServiceUrl}/api/orders/debug/status-counts`,
 
-      // User Service
-      'Users (GET /api/users)': `${userServiceUrl}/api/users`,
-      'Current User (GET /api/users/me)': `${userServiceUrl}/api/users/me`,
+      // User Service (Auth endpoints - no auth required for testing)
+      'Users with USER role (GET /api/auth/users)': `${userServiceUrl}/api/auth/users`,
+      'Users by role (GET /api/auth/users/by-role?role=USER)': `${userServiceUrl}/api/auth/users/by-role?role=USER`,
 
       // Supplier Service
+      'Supplier Service Health (GET /actuator/health)': `${supplierServiceUrl}/actuator/health`,
       'Suppliers (GET /api/suppliers)': `${supplierServiceUrl}/api/suppliers`,
       'Purchase Orders (GET /api/purchase-orders)': `${supplierServiceUrl}/api/purchase-orders`,
     };
