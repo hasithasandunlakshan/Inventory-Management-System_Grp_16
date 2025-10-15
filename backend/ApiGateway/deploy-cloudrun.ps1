@@ -55,7 +55,7 @@ gcloud run deploy $SERVICE_NAME `
     --set-env-vars "JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidationThatIsAtLeast512BitsLongToMeetHS512AlgorithmRequirementsForSecureTokenSigning" `
     --set-env-vars "USER_SERVICE_URL=https://userservice-337812374841.us-central1.run.app" `
     --set-env-vars "PRODUCT_SERVICE_URL=https://product-service-337812374841.us-central1.run.app" `
-    --set-env-vars "ORDER_SERVICE_URL=https://orderservice-337812374841.us-central1.run.app" `
+    --set-env-vars "ORDER_SERVICE_URL=https://order.shopmindnotification.app" `
     --set-env-vars "SUPPLIER_SERVICE_URL=https://supplier-service-337812374841.us-central1.run.app" `
     --set-env-vars "INVENTORY_SERVICE_URL=https://inventory-service-337812374841.us-central1.run.app" `
     --set-env-vars "RESOURCE_SERVICE_URL=https://resource-service-337812374841.us-central1.run.app" `

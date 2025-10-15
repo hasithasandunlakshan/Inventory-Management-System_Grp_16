@@ -1,6 +1,6 @@
 import { authService } from '../lib/services/authService';
 
-const ORDER_API_BASE_URL = 'http://localhost:8084/api/orders';
+const ORDER_API_BASE_URL = `${process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084'}/api/orders`;
 
 export interface OrderItem {
   orderItemId: number;
@@ -103,7 +103,6 @@ class OrderService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching orders:', error);
       throw error;
     }
   }
@@ -124,7 +123,6 @@ class OrderService {
       const data = await response.json();
       return data.order;
     } catch (error) {
-      console.error('Error fetching order:', error);
       throw error;
     }
   }
@@ -241,10 +239,8 @@ class OrderService {
 
       const refundResponse = await response.json();
 
-      console.log('Refund processed:', refundResponse);
       return refundResponse;
     } catch (error) {
-      console.error('Error processing refund:', error);
       throw error;
     }
   }

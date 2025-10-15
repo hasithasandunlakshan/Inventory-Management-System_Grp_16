@@ -69,17 +69,17 @@ public class ApiGatewayApplication {
                                 .route("order-service-payments", r -> r
                                                 .path("/api/payments/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("https://orderservice-337812374841.us-central1.run.app"))
+                                                .uri("https://order.shopmindnotification.app"))
                                 .route("order-service-orders", r -> r
                                                 .path("/api/orders/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("https://orderservice-337812374841.us-central1.run.app"))
+                                                .uri("https://order.shopmindnotification.app"))
 
                                 // Revenue Service (MANAGER) - New route for revenue endpoints
                                 .route("revenue-service", r -> r
                                                 .path("/api/revenue/**")
                                                 .filters(f -> f.filter(jwtAuthenticationFilter))
-                                                .uri("https://orderservice-337812374841.us-central1.run.app"))
+                                                .uri("https://order.shopmindnotification.app"))
 
                                 // Inventory Service (STOREKEEPER, MANAGER)
                                 .route("inventory-service", r -> r
