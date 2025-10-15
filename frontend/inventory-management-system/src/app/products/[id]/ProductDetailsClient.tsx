@@ -19,4 +19,3 @@ export default function ProductDetailsClient({
 
   return <ProductDetails product={initialProduct} onBack={handleBack} />;
 }
-

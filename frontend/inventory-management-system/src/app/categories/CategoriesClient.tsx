@@ -34,7 +34,9 @@ interface CategoriesClientProps {
   initialCategories: Category[];
 }
 
-export default function CategoriesClient({ initialCategories }: CategoriesClientProps) {
+export default function CategoriesClient({
+  initialCategories,
+}: CategoriesClientProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -230,4 +232,3 @@ export default function CategoriesClient({ initialCategories }: CategoriesClient
     </div>
   );
 }
-

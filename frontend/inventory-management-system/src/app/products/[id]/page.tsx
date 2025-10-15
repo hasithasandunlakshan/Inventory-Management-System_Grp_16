@@ -1,5 +1,5 @@
 import { Product } from '@/lib/types/product';
-import ProductDetailsClient from './ProductDetailsClient'
+import ProductDetailsClient from './ProductDetailsClient';
 import { notFound } from 'next/navigation';
 
 // SSG with ISR - Revalidate every 5 minutes
@@ -10,14 +10,11 @@ export async function generateStaticParams() {
   try {
     const apiUrl =
       process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
-    
+
     // Fetch all products (use large page size to get all)
-    const response = await fetch(
-      `${apiUrl}/api/products?page=0&size=1000`,
-      {
-        next: { revalidate: 300 },
-      }
-    ).catch(() => null);
+    const response = await fetch(`${apiUrl}/api/products?page=0&size=1000`, {
+      next: { revalidate: 300 },
+    }).catch(() => null);
 
     if (!response?.ok) {
       return []; // Return empty array if fetch fails
