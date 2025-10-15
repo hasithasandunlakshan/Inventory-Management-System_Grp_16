@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test - Simple</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .endpoint-section {
+            border: 2px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .status { 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
+            font-weight: bold;
+        }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .message { 
+            background-color: #f8f9fa; 
+            padding: 10px; 
+            margin: 5px 0; 
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .message.success { border-left-color: #28a745; }
+        .message.error { border-left-color: #dc3545; }
+        .message.warning { border-left-color: #ffc107; }
+        button { 
+            padding: 10px 15px; 
+            margin: 5px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .connect-btn { background-color: #007bff; color: white; }
+        .connect-btn:hover { background-color: #0056b3; }
+        .disconnect-btn { background-color: #dc3545; color: white; }
+        .disconnect-btn:hover { background-color: #c82333; }
+        .test-btn { background-color: #28a745; color: white; }
+        .test-btn:hover { background-color: #218838; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        input { 
+            padding: 8px; 
+            margin: 5px; 
+            border: 1px solid #ccc; 
+            border-radius: 3px;
+            width: 200px;
+        }
+        #messages { 
+            max-height: 400px; 
+            overflow-y: auto; 
+            border: 1px solid #ccc; 
+            padding: 10px;
+            background: #fff;
+            border-radius: 5px;
+        }
+        h3 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+        code { 
+            background: #f4f4f4; 
+            padding: 2px 6px; 
+            border-radius: 3px;
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 WebSocket Connection Test</h1>
+        <p><strong>Server:</strong> http://34.136.119.127:8087</p>
+        
+        <!-- Pure WebSocket Section -->
+        <div class="endpoint-section">
+            <h3>1️⃣ Pure WebSocket (React Native Compatible)</h3>
+            <p><strong>Endpoint:</strong> <code>ws://34.136.119.127:8087/rn-notifications</code></p>
+            
+            <div id="status-ws" class="status disconnected">
+                Status: Disconnected
+            </div>
+            
+            <div class="controls">
+                <input type="text" id="userId-ws" placeholder="Enter User ID" value="user123">
+                <button id="connectBtn-ws" class="connect-btn" onclick="connectPureWebSocket()">Connect</button>
+                <button id="disconnectBtn-ws" class="disconnect-btn" onclick="disconnectPureWebSocket()">Disconnect</button>
+                <button class="test-btn" onclick="subscribePure()">Subscribe</button>
+                <button class="test-btn" onclick="sendPingPure()">Ping</button>
+            </div>
+        </div>
+
+        <!-- STOMP WebSocket Section -->
+        <div class="endpoint-section">
+            <h3>2️⃣ STOMP WebSocket (with SockJS)</h3>
+            <p><strong>Endpoint:</strong> <code>http://34.136.119.127:8087/ws</code></p>
+            
+            <div id="status-stomp" class="status disconnected">
+                Status: Disconnected
+            </div>
+            
+            <div class="controls">
+                <input type="text" id="userId-stomp" placeholder="Enter User ID" value="user456">
+                <button id="connectBtn-stomp" class="connect-btn" onclick="connectSTOMP()">Connect</button>
+                <button id="disconnectBtn-stomp" class="disconnect-btn" onclick="disconnectSTOMP()">Disconnect</button>
+                <button class="test-btn" onclick="subscribeSTOMP()">Subscribe</button>
+            </div>
+        </div>
+        
+        <h3>📨 Messages Log:</h3>
+        <div id="messages"></div>
+        
+        <h3>📚 Quick Reference:</h3>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <h4>React Native Usage:</h4>
+            <pre><code>const ws = new WebSocket('http://34.136.119.127:8087/rn-notifications');
+ws.onopen = () => ws.send(JSON.stringify({ type: 'subscribe', userId: 'user123' }));
+ws.onmessage = (e) => console.log(JSON.parse(e.data));</code></pre>
+
+            <h4>Message Types:</h4>
+            <ul>
+                <li><code>subscribe</code> - Subscribe to notifications for a user</li>
+                <li><code>ping</code> - Test connection</li>
+                <li><code>markRead</code> - Mark notification as read</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let stompClient = null;
+        let isPureConnected = false;
+        let isStompConnected = false;
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function addMessage(message, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            const time = new Date().toLocaleTimeString();
+            messageDiv.innerHTML = `<strong>[${time}]</strong> ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updatePureStatus(connected) {
+            const statusDiv = document.getElementById('status-ws');
+            const connectBtn = document.getElementById('connectBtn-ws');
+            const disconnectBtn = document.getElementById('disconnectBtn-ws');
+            
+            isPureConnected = connected;
+            statusDiv.className = connected ? 'status connected' : 'status disconnected';
+            statusDiv.textContent = connected ? 'Status: Connected ✅' : 'Status: Disconnected ❌';
+            connectBtn.disabled = connected;
+            disconnectBtn.disabled = !connected;
+        }
+
+        function updateStompStatus(connected) {
+            const statusDiv = document.getElementById('status-stomp');
+            const connectBtn = document.getElementById('connectBtn-stomp');
+            const disconnectBtn = document.getElementById('disconnectBtn-stomp');
+            
+            isStompConnected = connected;
+            statusDiv.className = connected ? 'status connected' : 'status disconnected';
+            statusDiv.textContent = connected ? 'Status: Connected ✅' : 'Status: Disconnected ❌';
+            connectBtn.disabled = connected;
+            disconnectBtn.disabled = !connected;
+        }
+
+        // ==================== PURE WEBSOCKET ====================
+        function connectPureWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                addMessage('⚠️ Already connected!', 'warning');
+                return;
+            }
+
+            const url = 'ws://34.136.119.127:8087/rn-notifications';
+            addMessage(`🔌 Connecting to: ${url}`, 'info');
+            
+            try {
+                ws = new WebSocket(url);
+                
+                ws.onopen = function() {
+                    addMessage('✅ Pure WebSocket connected successfully!', 'success');
+                    updatePureStatus(true);
+                };
+
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        addMessage(`📨 [Pure WS] Received: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                    } catch (e) {
+                        addMessage(`📨 [Pure WS] Received (raw): ${event.data}`, 'info');
+                    }
+                };
+
+                ws.onerror = function(error) {
+                    addMessage('❌ [Pure WS] WebSocket error occurred', 'error');
+                    addMessage('   💡 Make sure server is running at 34.136.119.127:8087', 'error');
+                    console.error('WebSocket error:', error);
+                };
+
+                ws.onclose = function(event) {
+                    addMessage(`🔌 [Pure WS] Connection closed (Code: ${event.code})`, 'warning');
+                    updatePureStatus(false);
+                };
+            } catch (error) {
+                addMessage(`❌ Failed to create WebSocket: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnectPureWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                addMessage('🔌 [Pure WS] Disconnected manually', 'info');
+                updatePureStatus(false);
+            }
+        }
+
+        function subscribePure() {
+            if (!isPureConnected) {
+                addMessage('❌ Not connected! Connect first.', 'error');
+                return;
+            }
+
+            const userId = document.getElementById('userId-ws').value || 'user123';
+            const message = { type: 'subscribe', userId: userId };
+            ws.send(JSON.stringify(message));
+            addMessage(`📤 [Pure WS] Sent subscribe for user: ${userId}`, 'info');
+        }
+
+        function sendPingPure() {
+            if (!isPureConnected) {
+                addMessage('❌ Not connected! Connect first.', 'error');
+                return;
+            }
+
+            const message = { type: 'ping', timestamp: Date.now() };
+            ws.send(JSON.stringify(message));
+            addMessage('📤 [Pure WS] Sent ping', 'info');
+        }
+
+        // ==================== STOMP WEBSOCKET ====================
+        function connectSTOMP() {
+            if (stompClient && stompClient.connected) {
+                addMessage('⚠️ STOMP already connected!', 'warning');
+                return;
+            }
+
+            const url = 'http://34.136.119.127:8087/ws';
+            addMessage(`🔌 Connecting to STOMP: ${url}`, 'info');
+
+            try {
+                const socket = new SockJS(url);
+                stompClient = StompJs.Stomp.over(socket);
+                
+                stompClient.connect({}, function(frame) {
+                    addMessage('✅ STOMP connected successfully!', 'success');
+                    updateStompStatus(true);
+                    addMessage(`📋 Frame: ${frame}`, 'info');
+                }, function(error) {
+                    addMessage(`❌ [STOMP] Connection error: ${error}`, 'error');
+                    updateStompStatus(false);
+                });
+            } catch (error) {
+                addMessage(`❌ Failed to create STOMP connection: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnectSTOMP() {
+            if (stompClient) {
+                stompClient.disconnect();
+                stompClient = null;
+                addMessage('🔌 [STOMP] Disconnected manually', 'info');
+                updateStompStatus(false);
+            }
+        }
+
+        function subscribeSTOMP() {
+            if (!isStompConnected) {
+                addMessage('❌ STOMP not connected! Connect first.', 'error');
+                return;
+            }
+
+            const userId = document.getElementById('userId-stomp').value || 'user456';
+            
+            // Subscribe to user-specific queue
+            stompClient.subscribe('/user/queue/notifications', function(message) {
+                try {
+                    const data = JSON.parse(message.body);
+                    addMessage(`📨 [STOMP] Notification: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                } catch (e) {
+                    addMessage(`📨 [STOMP] Received: ${message.body}`, 'info');
+                }
+            });
+
+            // Send subscription message
+            stompClient.send("/app/subscribe", {}, JSON.stringify({ userId: userId }));
+            addMessage(`📤 [STOMP] Subscribed user: ${userId} to /user/queue/notifications`, 'info');
+        }
+
+        // Initialize
+        updatePureStatus(false);
+        updateStompStatus(false);
+        addMessage('🚀 Test page loaded. Ready to connect!', 'info');
+    </script>
+</body>
+</html>
