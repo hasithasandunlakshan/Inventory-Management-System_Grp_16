@@ -12,6 +12,11 @@ const customJestConfig = {
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).(ts|tsx)'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/playwrighttests/', // Exclude Playwright tests from Jest
+    '/.next/',
+  ],
 };
 
 export default createJestConfig(customJestConfig);

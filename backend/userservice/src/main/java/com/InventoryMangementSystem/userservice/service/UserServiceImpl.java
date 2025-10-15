@@ -21,7 +21,6 @@ import com.InventoryMangementSystem.userservice.repository.UserRepository;
 import com.InventoryMangementSystem.userservice.repository.UserRoleRepository;
 import com.InventoryMangementSystem.userservice.security.JwtTokenUtil;
 
-
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -265,14 +264,15 @@ public class UserServiceImpl implements UserService {
     public List<UserDropdownDto> getUsersForDropdown(String role) {
         try {
             System.out.println("🔍 UserService.getUsersForDropdown - Role: " + role);
-            List<Object[]> results = userRepository.findUsersForDropdownByRole(role.toUpperCase());
-            System.out.println("🔍 UserService.getUsersForDropdown - Found " + results.size() + " users");
+            List<User> users = userRepository.findByRoleName(role.toUpperCase());
+            System.out.println("🔍 UserService.getUsersForDropdown - Found " + users.size() + " users");
 
-            return results.stream()
-                    .map(row -> new UserDropdownDto(((Number) row[0]).longValue(), (String) row[1]))
+            return users.stream()
+                    .map(user -> new UserDropdownDto(user.getUserId(), user.getUsername()))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             System.err.println("ERROR getting users for dropdown: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Failed to get users for dropdown: " + e.getMessage());
         }
     }
