@@ -40,15 +40,9 @@ export default function AddProductPage() {
 
   const fetchCategories = async () => {
     try {
-      console.log(
-        '🔍 Fetching categories from:',
-        process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083'
-      );
       const fetchedCategories = await categoryService.getAllCategories();
-      console.log('✅ Categories fetched:', fetchedCategories.length, 'items');
       setCategories(fetchedCategories);
     } catch (error) {
-      console.error('❌ Failed to fetch categories:', error);
       setError(
         `Failed to load categories: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

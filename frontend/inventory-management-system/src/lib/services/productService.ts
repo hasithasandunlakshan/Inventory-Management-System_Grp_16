@@ -33,7 +33,6 @@ export const productService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch products from backend:', error);
       throw new Error('Failed to fetch products - backend not available');
     }
   },
@@ -69,10 +68,6 @@ export const productService = {
       }
       return response.json();
     } catch (error) {
-      console.error(
-        'Failed to fetch products with categories from backend:',
-        error
-      );
       throw new Error(
         'Failed to fetch products with categories - backend not available'
       );
@@ -93,7 +88,6 @@ export const productService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch product from backend:', error);
       throw error;
     }
   },
@@ -109,10 +103,6 @@ export const productService = {
       }
       return response.json();
     } catch (error) {
-      console.error(
-        'Failed to fetch products by category from backend:',
-        error
-      );
       throw error;
     }
   },
@@ -132,7 +122,6 @@ export const productService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to add product:', error);
       throw new Error('Failed to add product - backend not available');
     }
   },
@@ -147,7 +136,6 @@ export const productService = {
         throw new Error('Failed to delete product');
       }
     } catch (error) {
-      console.error('Failed to delete product:', error);
       throw new Error('Failed to delete product - backend not available');
     }
   },
@@ -170,7 +158,6 @@ export const productService = {
       }
       return response.json();
     } catch (error) {
-      console.error('Failed to update product:', error);
       throw new Error('Failed to update product - backend not available');
     }
   },

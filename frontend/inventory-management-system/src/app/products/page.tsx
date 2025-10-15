@@ -28,12 +28,6 @@ export default async function ProductsPage({
 
   const apiUrl =
     process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
-  console.log('🔍 Fetching from API:', apiUrl);
-  console.log('🔍 Environment check:', {
-    NODE_ENV: process.env.NODE_ENV,
-    API_URL: apiUrl,
-    hasEnvVar: !!process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL,
-  });
 
   // Fetch products data with ISR caching
   // next.revalidate: Cache for 5 minutes, then revalidate in background
@@ -60,7 +54,6 @@ export default async function ProductsPage({
 
   // Handle products response
   if (!productsResponse) {
-    console.error('❌ Failed to connect to products API');
     productsData = {
       content: [],
       totalElements: 0,
@@ -73,16 +66,11 @@ export default async function ProductsPage({
   } else {
     try {
       if (!productsResponse.ok) {
-        console.error(
-          `Products API error: ${productsResponse.status} ${productsResponse.statusText}`
-        );
         throw new Error(`HTTP error! status: ${productsResponse.status}`);
       }
       productsData = await productsResponse.json();
-      console.log('✅ Products fetched:', productsData.totalElements, 'items');
       // Ensure productsData has the expected structure
       if (!productsData.content || !Array.isArray(productsData.content)) {
-        console.error('Invalid products data structure:', productsData);
         productsData = {
           content: [],
           totalElements: 0,
@@ -94,7 +82,6 @@ export default async function ProductsPage({
         };
       }
     } catch (error) {
-      console.error('Failed to parse products response:', error);
       productsData = {
         content: [],
         totalElements: 0,
@@ -109,25 +96,18 @@ export default async function ProductsPage({
 
   // Handle categories response
   if (!categoriesResponse) {
-    console.error('❌ Failed to connect to categories API');
     categoriesData = [];
   } else {
     try {
       if (!categoriesResponse.ok) {
-        console.error(
-          `Categories API error: ${categoriesResponse.status} ${categoriesResponse.statusText}`
-        );
         throw new Error(`HTTP error! status: ${categoriesResponse.status}`);
       }
       categoriesData = await categoriesResponse.json();
-      console.log('✅ Categories fetched:', categoriesData.length, 'items');
       // Ensure categoriesData is an array
       if (!Array.isArray(categoriesData)) {
-        console.error('Invalid categories data structure:', categoriesData);
         categoriesData = [];
       }
     } catch (error) {
-      console.error('Failed to parse categories response:', error);
       categoriesData = [];
     }
   }
