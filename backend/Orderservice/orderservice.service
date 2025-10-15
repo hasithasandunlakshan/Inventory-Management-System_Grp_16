@@ -1,0 +1,28 @@
+[Unit]
+Description=Order Service
+After=network.target
+
+[Service]
+Type=simple
+User=orderservice
+WorkingDirectory=/opt/orderservice
+ExecStart=/usr/bin/java -jar /opt/orderservice/orderservice.jar
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables
+Environment="SERVER_PORT=8084"
+Environment="SPRING_PROFILES_ACTIVE=cloud"
+Environment="SPRING_DATASOURCE_URL=jdbc:mysql://avnadmin:AVNS_Ipqzq0kuyRjWpAdm_pc@mysql-38838f7f-sem5-project.f.aivencloud.com:27040/InventoryManagement?ssl-mode=REQUIRED"
+Environment="SPRING_DATASOURCE_USERNAME=avnadmin"
+Environment="SPRING_DATASOURCE_PASSWORD=AVNS_Ipqzq0kuyRjWpAdm_pc"
+Environment="SPRING_KAFKA_BOOTSTRAP_SERVERS=34.16.102.169:9092"
+Environment="SPRING_KAFKA_CONSUMER_GROUP_ID=order-service-group"
+Environment="USER_SERVICE_URL=https://userservice-337812374841.us-central1.run.app"
+Environment="STRIPE_SECRET_KEY=sk_test_51RruEkCMSVvAbN0Rd6H8EBCbzMQ7E3RXK7Icea1YwqlZncUXhCN1paovgMSTIFdnKiE3MwEWiA6cIRbcRXB2uTiE00JAGGuoSR"
+Environment="STRIPE_API_KEY=sk_test_51RruEkCMSVvAbN0Rd6H8EBCbzMQ7E3RXK7Icea1YwqlZncUXhCN1paovgMSTIFdnKiE3MwEWiA6cIRbcRXB2uTiE00JAGGuoSR"
+
+[Install]
+WantedBy=multi-user.target

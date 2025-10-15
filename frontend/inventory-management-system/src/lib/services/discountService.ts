@@ -13,7 +13,8 @@ import {
 
 // Updated API URLs based on your provided endpoints
 const ORDER_SERVICE_BASE =
-  process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084';
+  process.env.NEXT_PUBLIC_ORDER_SERVICE_URL ||
+  'https://order.shopmindnotification.app';
 const ADMIN_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/admin/discounts`;
 const PUBLIC_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/discounts`;
 const PRODUCTS_API_URL =
