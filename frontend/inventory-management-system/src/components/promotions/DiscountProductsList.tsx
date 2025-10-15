@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -172,9 +173,11 @@ export default function DiscountProductsList({
                   <TableCell>
                     <div className='flex items-center space-x-3'>
                       {product.imageUrl ? (
-                        <img
+                        <Image
                           src={product.imageUrl}
                           alt={product.productName}
+                          width={40}
+                          height={40}
                           className='h-10 w-10 object-cover rounded'
                         />
                       ) : (
