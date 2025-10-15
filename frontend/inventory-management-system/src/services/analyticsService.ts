@@ -71,7 +71,8 @@ export const analyticsService = {
   }> {
     try {
       // Fetch products data (which includes inventory information)
-      const products = await productService.getAllProducts();
+      // Get all products by using a large page size
+      const products = await productService.getAllProducts(0, 1000);
 
       // Calculate stock status
       const lowStock = products.content.filter(
