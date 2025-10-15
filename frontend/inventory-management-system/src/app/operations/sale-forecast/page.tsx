@@ -57,7 +57,7 @@ export default function SaleForecastPage() {
       try {
         setProductsLoading(true);
         const productsData = await productService.getAllProducts();
-        setProducts(productsData);
+        setProducts(productsData.content);
       } catch (err) {
         setError('Failed to load products');
         console.error('Error loading products:', err);

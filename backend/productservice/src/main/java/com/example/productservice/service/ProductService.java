@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,6 +102,17 @@ public class ProductService {
                 .toList();
     }
 
+    /**
+     * Retrieves all products with categories with pagination support.
+     * 
+     * @param pageable pagination parameters
+     * @return paginated list of products with categories
+     */
+    public Page<ProductWithCategoryDTO> getAllProductsWithCategories(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(this::convertToProductWithCategoryDTO);
+    }
+
     public Optional<Product> getProductById(Long id) {
         return repository.findById(id);
     }
@@ -124,7 +138,6 @@ public class ProductService {
         existingProduct.setDescription(dto.getDescription());
         existingProduct.setPrice(dto.getPrice());
         existingProduct.setImageUrl(dto.getImageUrl());
-    
 
         // If stock is being updated, recalculate available stock
         if (dto.getStock() != existingProduct.getStock()) {
