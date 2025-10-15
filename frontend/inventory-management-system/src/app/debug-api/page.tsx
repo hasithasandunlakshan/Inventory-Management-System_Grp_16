@@ -185,7 +185,11 @@ export default function DebugApiPage() {
             </div>
           </div>
 
-          <Button onClick={testApiConnection} disabled={loading} className='w-full'>
+          <Button
+            onClick={testApiConnection}
+            disabled={loading}
+            className='w-full'
+          >
             {loading ? 'Testing All Endpoints...' : 'Test All API Endpoints'}
           </Button>
 
@@ -230,7 +234,8 @@ export default function DebugApiPage() {
                     </p>
                     {endpoint.result.dataCount !== undefined && (
                       <p className='text-sm text-gray-700 mb-2'>
-                        📊 Data Count: <strong>{endpoint.result.dataCount}</strong>
+                        📊 Data Count:{' '}
+                        <strong>{endpoint.result.dataCount}</strong>
                       </p>
                     )}
                     {endpoint.result.error && (
