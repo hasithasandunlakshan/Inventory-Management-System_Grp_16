@@ -85,7 +85,9 @@ export const enhancedSupplierService = {
     supplierId: string
   ): Promise<EnhancedSupplier> {
     try {
-      const supplier = await supplierService.getSupplierById(parseInt(supplierId));
+      const supplier = await supplierService.getSupplierById(
+        parseInt(supplierId)
+      );
 
       try {
         const userDetails = await userService.getUserById(supplier.userId);

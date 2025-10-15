@@ -1,9 +1,12 @@
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
 // Cost Analysis Service
-const API_GATEWAY_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090';
-const PRODUCT_SERVICE_URL = process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
-const SUPPLIER_SERVICE_URL = process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL || 'http://localhost:8082';
+const API_GATEWAY_URL =
+  process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090';
+const PRODUCT_SERVICE_URL =
+  process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
+const SUPPLIER_SERVICE_URL =
+  process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL || 'http://localhost:8082';
 
 export interface InventoryCostResponse {
   success: boolean;
@@ -54,26 +57,26 @@ export const costService = {
         {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch inventory cost: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Error fetching inventory cost:', error);
       // Return fallback data instead of throwing error
       return {
         success: true,
-        message: "Inventory cost calculated successfully (fallback data)",
+        message: 'Inventory cost calculated successfully (fallback data)',
         totalAvailableInventoryCost: 75000,
         totalProductsWithStock: 150,
-        currency: "USD",
-        calculatedAt: new Date().toISOString()
+        currency: 'USD',
+        calculatedAt: new Date().toISOString(),
       };
     }
   },
@@ -87,15 +90,17 @@ export const costService = {
         {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         }
       );
-      
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch purchase order stats: ${response.status}`);
+        throw new Error(
+          `Failed to fetch purchase order stats: ${response.status}`
+        );
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Error fetching purchase order stats:', error);
@@ -105,16 +110,20 @@ export const costService = {
         totalValue: 150000,
         averageOrderValue: 6000,
         ordersByStatus: {
-          'PENDING': 5,
-          'APPROVED': 15,
-          'DELIVERED': 3,
-          'CANCELLED': 2
+          PENDING: 5,
+          APPROVED: 15,
+          DELIVERED: 3,
+          CANCELLED: 2,
         },
         topSuppliers: [
           { supplierName: 'ABC Supplies', totalSpent: 50000, orderCount: 8 },
           { supplierName: 'XYZ Corp', totalSpent: 40000, orderCount: 6 },
-          { supplierName: 'Global Materials', totalSpent: 30000, orderCount: 5 }
-        ]
+          {
+            supplierName: 'Global Materials',
+            totalSpent: 30000,
+            orderCount: 5,
+          },
+        ],
       };
     }
   },
@@ -128,15 +137,15 @@ export const costService = {
         {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch purchase orders: ${response.status}`);
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Error fetching purchase orders:', error);
@@ -144,31 +153,31 @@ export const costService = {
       return [
         {
           id: 1,
-          orderNumber: "PO-001",
-          supplierName: "ABC Supplies",
+          orderNumber: 'PO-001',
+          supplierName: 'ABC Supplies',
           totalAmount: 15000,
-          status: "APPROVED",
-          orderDate: "2024-01-15",
-          expectedDeliveryDate: "2024-01-25"
+          status: 'APPROVED',
+          orderDate: '2024-01-15',
+          expectedDeliveryDate: '2024-01-25',
         },
         {
           id: 2,
-          orderNumber: "PO-002",
-          supplierName: "XYZ Corp",
+          orderNumber: 'PO-002',
+          supplierName: 'XYZ Corp',
           totalAmount: 12000,
-          status: "PENDING",
-          orderDate: "2024-01-16",
-          expectedDeliveryDate: "2024-01-26"
+          status: 'PENDING',
+          orderDate: '2024-01-16',
+          expectedDeliveryDate: '2024-01-26',
         },
         {
           id: 3,
-          orderNumber: "PO-003",
-          supplierName: "Global Materials",
+          orderNumber: 'PO-003',
+          supplierName: 'Global Materials',
           totalAmount: 8000,
-          status: "DELIVERED",
-          orderDate: "2024-01-10",
-          expectedDeliveryDate: "2024-01-20"
-        }
+          status: 'DELIVERED',
+          orderDate: '2024-01-10',
+          expectedDeliveryDate: '2024-01-20',
+        },
       ];
     }
   },
@@ -178,26 +187,30 @@ export const costService = {
     try {
       const [inventoryCost, purchaseStats] = await Promise.all([
         this.getInventoryCost(),
-        this.getPurchaseOrderStats()
+        this.getPurchaseOrderStats(),
       ]);
 
-      const totalCosts = inventoryCost.totalAvailableInventoryCost + purchaseStats.totalValue;
-      const costPerProduct = inventoryCost.totalProductsWithStock > 0 
-        ? totalCosts / inventoryCost.totalProductsWithStock 
-        : 0;
+      const totalCosts =
+        inventoryCost.totalAvailableInventoryCost + purchaseStats.totalValue;
+      const costPerProduct =
+        inventoryCost.totalProductsWithStock > 0
+          ? totalCosts / inventoryCost.totalProductsWithStock
+          : 0;
 
       return {
         inventoryCost: inventoryCost.totalAvailableInventoryCost,
         purchaseCosts: purchaseStats.totalValue,
         totalCosts,
         costPerProduct,
-        inventoryTurnover: purchaseStats.totalValue > 0 
-          ? inventoryCost.totalAvailableInventoryCost / purchaseStats.totalValue 
-          : 0
+        inventoryTurnover:
+          purchaseStats.totalValue > 0
+            ? inventoryCost.totalAvailableInventoryCost /
+              purchaseStats.totalValue
+            : 0,
       };
     } catch (error) {
       console.error('Error calculating cost metrics:', error);
       throw error;
     }
-  }
+  },
 };
