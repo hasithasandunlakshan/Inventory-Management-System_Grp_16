@@ -1,6 +1,6 @@
 import { authService } from '../lib/services/authService';
 
-const ORDER_API_BASE_URL = 'http://localhost:8084/api/orders';
+const ORDER_API_BASE_URL = 'https://order.shopmindnotification.app/api/orders';
 
 export interface OrderItem {
   orderItemId: number;
