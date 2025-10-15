@@ -19,15 +19,46 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { inventoryService, type InventoryRow } from '@/lib/services/inventoryService';
-import { stockAlertService, type StockAlert } from '@/lib/services/stockAlertService';
+import {
+  inventoryService,
+  type InventoryRow,
+} from '@/lib/services/inventoryService';
+import {
+  stockAlertService,
+  type StockAlert,
+} from '@/lib/services/stockAlertService';
 import { orderService } from '@/lib/services/orderService';
 import { revenueService } from '@/services/revenueService';
-import { logisticsService, type LogisticsMetrics, type DriverProfile, type Vehicle, type Assignment } from '@/lib/services/logisticsService';
-import { costService, type InventoryCostResponse, type PurchaseOrderStats, type CostAnalysisMetrics } from '@/lib/services/costService';
-import { profitabilityService, type GrossProfitAnalysis, type DiscountImpactAnalysis, type OrderProfitability, type LogisticsCostAnalysis, type OperationalEfficiencyMetrics } from '@/lib/services/profitabilityService';
-import { supplierService, type PurchaseOrderStats as SupplierPurchaseOrderStats } from '@/lib/services/supplierService';
-import type { TodayRevenueResponse, MonthlyRevenueResponse, StripeStatsResponse } from '@/types/revenue';
+import {
+  logisticsService,
+  type LogisticsMetrics,
+  type DriverProfile,
+  type Vehicle,
+  type Assignment,
+} from '@/lib/services/logisticsService';
+import {
+  costService,
+  type InventoryCostResponse,
+  type PurchaseOrderStats,
+  type CostAnalysisMetrics,
+} from '@/lib/services/costService';
+import {
+  profitabilityService,
+  type GrossProfitAnalysis,
+  type DiscountImpactAnalysis,
+  type OrderProfitability,
+  type LogisticsCostAnalysis,
+  type OperationalEfficiencyMetrics,
+} from '@/lib/services/profitabilityService';
+import {
+  supplierService,
+  type PurchaseOrderStats as SupplierPurchaseOrderStats,
+} from '@/lib/services/supplierService';
+import type {
+  TodayRevenueResponse,
+  MonthlyRevenueResponse,
+  StripeStatsResponse,
+} from '@/types/revenue';
 
 // Beautiful Icon Components
 const Icons = {
@@ -508,8 +539,7 @@ const salesData: SalesReport[] = [
 
 export default function ReportsPage() {
   //console.log('🚀 ReportsPage component is rendering');
-  
-  
+
   const [activeReport, setActiveReport] = useState<ReportType>('inventory');
   const [timeRange, setTimeRange] = useState<TimeRange>('monthly');
   const [dateFrom, setDateFrom] = useState('2025-01-01');
@@ -524,37 +554,60 @@ export default function ReportsPage() {
   // Sales state
   const [salesLoading, setSalesLoading] = useState<boolean>(true);
   const [salesError, setSalesError] = useState<string | null>(null);
-  const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(null);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse>([]);
-  const [stripeStats, setStripeStats] = useState<StripeStatsResponse | null>(null);
+  const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(
+    null
+  );
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse>(
+    []
+  );
+  const [stripeStats, setStripeStats] = useState<StripeStatsResponse | null>(
+    null
+  );
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
-  const [recentOrders, setRecentOrders] = useState<import('@/lib/services/orderService').Order[]>([]);
+  const [recentOrders, setRecentOrders] = useState<
+    import('@/lib/services/orderService').Order[]
+  >([]);
   const [selectedStatus, setSelectedStatus] = useState<string>('CONFIRMED');
-  const [ordersByStatus, setOrdersByStatus] = useState<import('@/lib/services/orderService').Order[]>([]);
+  const [ordersByStatus, setOrdersByStatus] = useState<
+    import('@/lib/services/orderService').Order[]
+  >([]);
 
   // Logistics state
   const [logisticsLoading, setLogisticsLoading] = useState<boolean>(true);
   const [logisticsError, setLogisticsError] = useState<string | null>(null);
   const [logisticsData, setLogisticsData] = useState<LogisticsReport[]>([]);
-  const [logisticsMetrics, setLogisticsMetrics] = useState<LogisticsMetrics | null>(null);
+  const [logisticsMetrics, setLogisticsMetrics] =
+    useState<LogisticsMetrics | null>(null);
 
   // Cost Analysis state
-  const [inventoryCost, setInventoryCost] = useState<InventoryCostResponse | null>(null);
-  const [purchaseStats, setPurchaseStats] = useState<PurchaseOrderStats | null>(null);
-  const [costMetrics, setCostMetrics] = useState<CostAnalysisMetrics | null>(null);
+  const [inventoryCost, setInventoryCost] =
+    useState<InventoryCostResponse | null>(null);
+  const [purchaseStats, setPurchaseStats] = useState<PurchaseOrderStats | null>(
+    null
+  );
+  const [costMetrics, setCostMetrics] = useState<CostAnalysisMetrics | null>(
+    null
+  );
   const [costLoading, setCostLoading] = useState(false);
   const [costError, setCostError] = useState<string | null>(null);
 
   // Profitability Analysis state
-  const [grossProfitAnalysis, setGrossProfitAnalysis] = useState<GrossProfitAnalysis | null>(null);
-  const [discountImpactAnalysis, setDiscountImpactAnalysis] = useState<DiscountImpactAnalysis | null>(null);
-  const [orderProfitability, setOrderProfitability] = useState<OrderProfitability | null>(null);
+  const [grossProfitAnalysis, setGrossProfitAnalysis] =
+    useState<GrossProfitAnalysis | null>(null);
+  const [discountImpactAnalysis, setDiscountImpactAnalysis] =
+    useState<DiscountImpactAnalysis | null>(null);
+  const [orderProfitability, setOrderProfitability] =
+    useState<OrderProfitability | null>(null);
   const [profitabilityLoading, setProfitabilityLoading] = useState(false);
-  const [profitabilityError, setProfitabilityError] = useState<string | null>(null);
+  const [profitabilityError, setProfitabilityError] = useState<string | null>(
+    null
+  );
 
   // Operational Cost Analysis state
-  const [logisticsCostAnalysis, setLogisticsCostAnalysis] = useState<LogisticsCostAnalysis | null>(null);
-  const [operationalEfficiencyMetrics, setOperationalEfficiencyMetrics] = useState<OperationalEfficiencyMetrics | null>(null);
+  const [logisticsCostAnalysis, setLogisticsCostAnalysis] =
+    useState<LogisticsCostAnalysis | null>(null);
+  const [operationalEfficiencyMetrics, setOperationalEfficiencyMetrics] =
+    useState<OperationalEfficiencyMetrics | null>(null);
   const [operationalLoading, setOperationalLoading] = useState(false);
   const [operationalError, setOperationalError] = useState<string | null>(null);
   const [fleetUtilization, setFleetUtilization] = useState<{
@@ -572,7 +625,8 @@ export default function ReportsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
 
   // Supplier Analytics state
-  const [supplierAnalytics, setSupplierAnalytics] = useState<SupplierPurchaseOrderStats | null>(null);
+  const [supplierAnalytics, setSupplierAnalytics] =
+    useState<SupplierPurchaseOrderStats | null>(null);
   const [supplierLoading, setSupplierLoading] = useState<boolean>(true);
   const [supplierError, setSupplierError] = useState<string | null>(null);
 
@@ -589,7 +643,9 @@ export default function ReportsPage() {
       setOpenAlerts(alerts);
       setAlertHistory(history);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to load analytics data');
+      setError(
+        e instanceof Error ? e.message : 'Failed to load analytics data'
+      );
     } finally {
       setLoading(false);
     }
@@ -613,7 +669,8 @@ export default function ReportsPage() {
           revenueService.getStripeStats(),
         ]);
         if (todayRes.status === 'fulfilled') setTodayRevenue(todayRes.value);
-        if (monthlyRes.status === 'fulfilled') setMonthlyRevenue(monthlyRes.value);
+        if (monthlyRes.status === 'fulfilled')
+          setMonthlyRevenue(monthlyRes.value);
         if (stripeRes.status === 'fulfilled') setStripeStats(stripeRes.value);
 
         // Fetch all status counts at once
@@ -637,7 +694,9 @@ export default function ReportsPage() {
           setOrdersByStatus(byStatusRes.value.orders || []);
         }
       } catch (e: unknown) {
-        setSalesError(e instanceof Error ? e.message : 'Failed to load sales data');
+        setSalesError(
+          e instanceof Error ? e.message : 'Failed to load sales data'
+        );
       } finally {
         setSalesLoading(false);
       }
@@ -652,7 +711,7 @@ export default function ReportsPage() {
       setLogisticsError(null);
       try {
         console.log('🚚 Loading logistics data from backend...');
-        
+
         // Load all logistics data in parallel
         const [
           deliveryPerformance,
@@ -660,20 +719,24 @@ export default function ReportsPage() {
           fleetData,
           driversData,
           vehiclesData,
-          assignmentsData
+          assignmentsData,
         ] = await Promise.allSettled([
           logisticsService.getDeliveryPerformanceReport(),
           logisticsService.getLogisticsMetrics(),
           logisticsService.getFleetUtilizationReport(),
           logisticsService.getAllDrivers(),
           logisticsService.getAllVehicles(),
-          logisticsService.getAllAssignments()
+          logisticsService.getAllAssignments(),
         ]);
 
         // Set delivery performance data
         if (deliveryPerformance.status === 'fulfilled') {
           setLogisticsData(deliveryPerformance.value);
-          console.log('✅ Delivery performance data loaded:', deliveryPerformance.value.length, 'records');
+          console.log(
+            '✅ Delivery performance data loaded:',
+            deliveryPerformance.value.length,
+            'records'
+          );
         }
 
         // Set logistics metrics
@@ -691,25 +754,39 @@ export default function ReportsPage() {
         // Set drivers data
         if (driversData.status === 'fulfilled') {
           setDrivers(driversData.value);
-          console.log('✅ Drivers data loaded:', driversData.value.length, 'drivers');
+          console.log(
+            '✅ Drivers data loaded:',
+            driversData.value.length,
+            'drivers'
+          );
         }
 
         // Set vehicles data
         if (vehiclesData.status === 'fulfilled') {
           setVehicles(vehiclesData.value);
-          console.log('✅ Vehicles data loaded:', vehiclesData.value.length, 'vehicles');
+          console.log(
+            '✅ Vehicles data loaded:',
+            vehiclesData.value.length,
+            'vehicles'
+          );
         }
 
         // Set assignments data
         if (assignmentsData.status === 'fulfilled') {
           setAssignments(assignmentsData.value);
-          console.log('✅ Assignments data loaded:', assignmentsData.value.length, 'assignments');
+          console.log(
+            '✅ Assignments data loaded:',
+            assignmentsData.value.length,
+            'assignments'
+          );
         }
 
         console.log('🚚 Logistics data loading completed');
       } catch (e: unknown) {
         console.error('❌ Failed to load logistics data:', e);
-        setLogisticsError(e instanceof Error ? e.message : 'Failed to load logistics data');
+        setLogisticsError(
+          e instanceof Error ? e.message : 'Failed to load logistics data'
+        );
       } finally {
         setLogisticsLoading(false);
       }
@@ -724,12 +801,13 @@ export default function ReportsPage() {
       setCostError(null);
       try {
         console.log('💰 Loading cost analysis data from backend...');
-        
-        const [inventoryCostRes, purchaseStatsRes, costMetricsRes] = await Promise.allSettled([
-          costService.getInventoryCost(),
-          costService.getPurchaseOrderStats(),
-          costService.getCostAnalysisMetrics(),
-        ]);
+
+        const [inventoryCostRes, purchaseStatsRes, costMetricsRes] =
+          await Promise.allSettled([
+            costService.getInventoryCost(),
+            costService.getPurchaseOrderStats(),
+            costService.getCostAnalysisMetrics(),
+          ]);
 
         if (inventoryCostRes.status === 'fulfilled') {
           setInventoryCost(inventoryCostRes.value);
@@ -743,10 +821,13 @@ export default function ReportsPage() {
           setCostMetrics(costMetricsRes.value);
           console.log('✅ Cost metrics data loaded:', costMetricsRes.value);
         }
-
       } catch (error) {
         console.error('❌ Error loading cost analysis data:', error);
-        setCostError(error instanceof Error ? error.message : 'Failed to load cost analysis data');
+        setCostError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load cost analysis data'
+        );
       } finally {
         setCostLoading(false);
       }
@@ -761,12 +842,13 @@ export default function ReportsPage() {
       setProfitabilityError(null);
       try {
         console.log('💰 Loading profitability analysis data from backend...');
-        
-        const [grossProfitRes, discountImpactRes, orderProfitRes] = await Promise.allSettled([
-          profitabilityService.getGrossProfitAnalysis(),
-          profitabilityService.getDiscountImpactAnalysis(),
-          profitabilityService.getOrderProfitability(),
-        ]);
+
+        const [grossProfitRes, discountImpactRes, orderProfitRes] =
+          await Promise.allSettled([
+            profitabilityService.getGrossProfitAnalysis(),
+            profitabilityService.getDiscountImpactAnalysis(),
+            profitabilityService.getOrderProfitability(),
+          ]);
 
         if (grossProfitRes.status === 'fulfilled') {
           setGrossProfitAnalysis(grossProfitRes.value);
@@ -774,16 +856,22 @@ export default function ReportsPage() {
         }
         if (discountImpactRes.status === 'fulfilled') {
           setDiscountImpactAnalysis(discountImpactRes.value);
-          console.log('✅ Discount impact analysis loaded:', discountImpactRes.value);
+          console.log(
+            '✅ Discount impact analysis loaded:',
+            discountImpactRes.value
+          );
         }
         if (orderProfitRes.status === 'fulfilled') {
           setOrderProfitability(orderProfitRes.value);
           console.log('✅ Order profitability loaded:', orderProfitRes.value);
         }
-
       } catch (error) {
         console.error('❌ Error loading profitability analysis data:', error);
-        setProfitabilityError(error instanceof Error ? error.message : 'Failed to load profitability analysis data');
+        setProfitabilityError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load profitability analysis data'
+        );
       } finally {
         setProfitabilityLoading(false);
       }
@@ -797,8 +885,10 @@ export default function ReportsPage() {
       setOperationalLoading(true);
       setOperationalError(null);
       try {
-        console.log('🚚 Loading operational cost analysis data from backend...');
-        
+        console.log(
+          '🚚 Loading operational cost analysis data from backend...'
+        );
+
         const [logisticsCostRes, efficiencyRes] = await Promise.allSettled([
           profitabilityService.getLogisticsCostAnalysis(),
           profitabilityService.getOperationalEfficiencyMetrics(),
@@ -806,16 +896,28 @@ export default function ReportsPage() {
 
         if (logisticsCostRes.status === 'fulfilled') {
           setLogisticsCostAnalysis(logisticsCostRes.value);
-          console.log('✅ Logistics cost analysis loaded:', logisticsCostRes.value);
+          console.log(
+            '✅ Logistics cost analysis loaded:',
+            logisticsCostRes.value
+          );
         }
         if (efficiencyRes.status === 'fulfilled') {
           setOperationalEfficiencyMetrics(efficiencyRes.value);
-          console.log('✅ Operational efficiency metrics loaded:', efficiencyRes.value);
+          console.log(
+            '✅ Operational efficiency metrics loaded:',
+            efficiencyRes.value
+          );
         }
-
       } catch (error) {
-        console.error('❌ Error loading operational cost analysis data:', error);
-        setOperationalError(error instanceof Error ? error.message : 'Failed to load operational cost analysis data');
+        console.error(
+          '❌ Error loading operational cost analysis data:',
+          error
+        );
+        setOperationalError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load operational cost analysis data'
+        );
       } finally {
         setOperationalLoading(false);
       }
@@ -830,14 +932,21 @@ export default function ReportsPage() {
       setSupplierError(null);
       try {
         console.log('🏭 Loading supplier analytics data from backend...');
-        
-        const analytics = await supplierService.getSupplierAnalytics(dateFrom, dateTo);
+
+        const analytics = await supplierService.getSupplierAnalytics(
+          dateFrom,
+          dateTo
+        );
         setSupplierAnalytics(analytics);
-        
+
         console.log('✅ Supplier analytics data loaded:', analytics);
       } catch (error) {
         console.error('❌ Error loading supplier analytics data:', error);
-        setSupplierError(error instanceof Error ? error.message : 'Failed to load supplier analytics data');
+        setSupplierError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load supplier analytics data'
+        );
       } finally {
         setSupplierLoading(false);
       }
@@ -846,12 +955,16 @@ export default function ReportsPage() {
   }, [dateFrom, dateTo]);
 
   const salesKpis = useMemo(() => {
-    const totalOrders = Object.values(statusCounts).reduce((a, b) => a + (b || 0), 0);
+    const totalOrders = Object.values(statusCounts).reduce(
+      (a, b) => a + (b || 0),
+      0
+    );
     const confirmed = statusCounts['CONFIRMED'] || 0;
     const processed = statusCounts['PROCESSED'] || 0;
     const refunds = stripeStats?.total_refunds ?? 0;
     const todaysRevenue = todayRevenue?.revenue ?? 0;
-    const aov = confirmed > 0 ? Math.round((todaysRevenue / confirmed) * 100) / 100 : 0;
+    const aov =
+      confirmed > 0 ? Math.round((todaysRevenue / confirmed) * 100) / 100 : 0;
     return { totalOrders, confirmed, processed, refunds, todaysRevenue, aov };
   }, [statusCounts, stripeStats, todayRevenue]);
 
@@ -882,16 +995,24 @@ export default function ReportsPage() {
       statusCounts,
       statusMax,
       todayRevenue,
-      stripeStats
+      stripeStats,
     });
-    
+
     // Add a simple alert to verify the component is working
     if (monthlyRevenue.length > 0) {
       console.log('✅ Monthly revenue data loaded:', monthlyRevenue);
     } else {
       console.log('❌ No monthly revenue data');
     }
-  }, [salesLoading, monthlyRevenue, monthlyMaxRevenue, statusCounts, statusMax, todayRevenue, stripeStats]);
+  }, [
+    salesLoading,
+    monthlyRevenue,
+    monthlyMaxRevenue,
+    statusCounts,
+    statusMax,
+    todayRevenue,
+    stripeStats,
+  ]);
 
   // Debug chart rendering
   useEffect(() => {
@@ -900,9 +1021,15 @@ export default function ReportsPage() {
       monthlyRevenue: monthlyRevenue?.length,
       monthlyMaxRevenue,
       statusCounts: Object.keys(statusCounts).length,
-      statusMax
+      statusMax,
     });
-  }, [salesLoading, monthlyRevenue, monthlyMaxRevenue, statusCounts, statusMax]);
+  }, [
+    salesLoading,
+    monthlyRevenue,
+    monthlyMaxRevenue,
+    statusCounts,
+    statusMax,
+  ]);
 
   // Report navigation items
   const reportTypes = [
@@ -983,21 +1110,31 @@ export default function ReportsPage() {
   // Calculate summary statistics (Inventory KPIs)
   const inventoryKpis = useMemo(() => {
     const totalSkus = inventory.length;
-    const totalOnHand = inventory.reduce((sum, row) => sum + (row.stock || 0), 0);
+    const totalOnHand = inventory.reduce(
+      (sum, row) => sum + (row.stock || 0),
+      0
+    );
     const totalReserved = inventory.reduce(
       (sum, row) => sum + (row.reserved || 0),
       0
     );
     const totalAvailable = inventory.reduce(
-      (sum, row) => sum + (row.availableStock || Math.max((row.stock || 0) - (row.reserved || 0), 0)),
+      (sum, row) =>
+        sum +
+        (row.availableStock ||
+          Math.max((row.stock || 0) - (row.reserved || 0), 0)),
       0
     );
     const belowThreshold = inventory.filter(
       row => (row.stock || 0) <= (row.minThreshold || 0)
     ).length;
-    const stockoutRate = totalSkus === 0
-      ? 0
-      : Math.round((inventory.filter(r => (r.stock || 0) === 0).length / totalSkus) * 100);
+    const stockoutRate =
+      totalSkus === 0
+        ? 0
+        : Math.round(
+            (inventory.filter(r => (r.stock || 0) === 0).length / totalSkus) *
+              100
+          );
     return {
       totalSkus,
       totalOnHand,
@@ -1018,7 +1155,10 @@ export default function ReportsPage() {
     const to = new Date(dateTo).getTime();
     return alertHistory.filter(a => {
       const t = new Date(a.createdAt).getTime();
-      return (!Number.isNaN(from) ? t >= from : true) && (!Number.isNaN(to) ? t <= to : true);
+      return (
+        (!Number.isNaN(from) ? t >= from : true) &&
+        (!Number.isNaN(to) ? t <= to : true)
+      );
     });
   }, [alertHistory, dateFrom, dateTo]);
 
@@ -1034,7 +1174,7 @@ export default function ReportsPage() {
   return (
     <div className='min-h-screen'>
       {/* Debug indicator */}
-      <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+      <div className='bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4'>
         🚀 ReportsPage is rendering - Check console for debug logs
       </div>
       {/* Header */}
@@ -1073,27 +1213,21 @@ export default function ReportsPage() {
       </div>
 
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        {error && (
-          <div className='mb-4 text-sm text-red-600'>
-            {error}
-          </div>
-        )}
+        {error && <div className='mb-4 text-sm text-red-600'>{error}</div>}
         {salesError && (
-          <div className='mb-4 text-sm text-red-600'>
-            {salesError}
-          </div>
+          <div className='mb-4 text-sm text-red-600'>{salesError}</div>
         )}
         {/* Quick Stats */}
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Total SKUs
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Total SKUs</CardTitle>
               <Icons.Package />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>{loading ? '—' : inventoryKpis.totalSkus}</div>
+              <div className='text-2xl font-bold'>
+                {loading ? '—' : inventoryKpis.totalSkus}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -1130,7 +1264,9 @@ export default function ReportsPage() {
               <Icons.Building />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>{loading ? '—' : inventoryKpis.belowThreshold}</div>
+              <div className='text-2xl font-bold'>
+                {loading ? '—' : inventoryKpis.belowThreshold}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -1232,7 +1368,9 @@ export default function ReportsPage() {
                   <div className='p-6'>
                     <div className='grid grid-cols-1 gap-8'>
                       <div>
-                        <div className='mb-3 text-sm font-semibold'>Low-Stock Items</div>
+                        <div className='mb-3 text-sm font-semibold'>
+                          Low-Stock Items
+                        </div>
                         <div className='overflow-x-auto'>
                           <table className='min-w-full divide-y divide-gray-200'>
                             <thead className='bg-muted/50'>
@@ -1256,7 +1394,10 @@ export default function ReportsPage() {
                             </thead>
                             <tbody className='bg-white divide-y divide-gray-200'>
                               {(loading ? [] : lowStockItems).map(item => (
-                                <tr key={item.inventoryId} className='hover:bg-muted/30'>
+                                <tr
+                                  key={item.inventoryId}
+                                  className='hover:bg-muted/30'
+                                >
                                   <td className='px-6 py-4 text-sm font-medium'>
                                     {item.productId}
                                   </td>
@@ -1276,7 +1417,12 @@ export default function ReportsPage() {
                               ))}
                               {!loading && lowStockItems.length === 0 && (
                                 <tr>
-                                  <td className='px-6 py-6 text-sm text-muted-foreground' colSpan={5}>No low-stock items</td>
+                                  <td
+                                    className='px-6 py-6 text-sm text-muted-foreground'
+                                    colSpan={5}
+                                  >
+                                    No low-stock items
+                                  </td>
                                 </tr>
                               )}
                             </tbody>
@@ -1286,7 +1432,9 @@ export default function ReportsPage() {
 
                       <div>
                         <div className='mb-3 flex items-center justify-between'>
-                          <div className='text-sm font-semibold'>Open Stock Alerts</div>
+                          <div className='text-sm font-semibold'>
+                            Open Stock Alerts
+                          </div>
                           <Button variant='outline' onClick={reloadData}>
                             <Icons.Refresh />
                             <span className='ml-2'>Refresh</span>
@@ -1318,24 +1466,45 @@ export default function ReportsPage() {
                             </thead>
                             <tbody className='bg-white divide-y divide-gray-200'>
                               {(loading ? [] : openAlerts).map(alert => (
-                                <tr key={alert.alertId} className='hover:bg-muted/30'>
+                                <tr
+                                  key={alert.alertId}
+                                  className='hover:bg-muted/30'
+                                >
                                   <td className='px-6 py-4 text-sm font-medium'>
                                     {alert.alertId}
                                   </td>
-                                  <td className='px-6 py-4 text-sm'>{alert.productId}</td>
-                                  <td className='px-6 py-4 text-sm'>{alert.alertType}</td>
-                                  <td className='px-6 py-4 text-sm'>{alert.message}</td>
+                                  <td className='px-6 py-4 text-sm'>
+                                    {alert.productId}
+                                  </td>
+                                  <td className='px-6 py-4 text-sm'>
+                                    {alert.alertType}
+                                  </td>
+                                  <td className='px-6 py-4 text-sm'>
+                                    {alert.message}
+                                  </td>
                                   <td className='px-6 py-4 text-sm'>
                                     {new Date(alert.createdAt).toLocaleString()}
                                   </td>
                                   <td className='px-6 py-4 text-sm'>
-                                    <Button size='sm' onClick={() => handleResolveAlert(alert.alertId)}>Resolve</Button>
+                                    <Button
+                                      size='sm'
+                                      onClick={() =>
+                                        handleResolveAlert(alert.alertId)
+                                      }
+                                    >
+                                      Resolve
+                                    </Button>
                                   </td>
                                 </tr>
                               ))}
                               {!loading && openAlerts.length === 0 && (
                                 <tr>
-                                  <td className='px-6 py-6 text-sm text-muted-foreground' colSpan={6}>No open alerts</td>
+                                  <td
+                                    className='px-6 py-6 text-sm text-muted-foreground'
+                                    colSpan={6}
+                                  >
+                                    No open alerts
+                                  </td>
                                 </tr>
                               )}
                             </tbody>
@@ -1344,7 +1513,9 @@ export default function ReportsPage() {
                       </div>
 
                       <div>
-                        <div className='mb-3 text-sm font-semibold'>Alert History</div>
+                        <div className='mb-3 text-sm font-semibold'>
+                          Alert History
+                        </div>
                         <div className='overflow-x-auto'>
                           <table className='min-w-full divide-y divide-gray-200'>
                             <thead className='bg-muted/50'>
@@ -1368,17 +1539,35 @@ export default function ReportsPage() {
                             </thead>
                             <tbody className='bg-white divide-y divide-gray-200'>
                               {(loading ? [] : filteredHistory).map(alert => (
-                                <tr key={alert.alertId} className='hover:bg-muted/30'>
-                                  <td className='px-6 py-4 text-sm font-medium'>{alert.alertId}</td>
-                                  <td className='px-6 py-4 text-sm'>{alert.productId}</td>
-                                  <td className='px-6 py-4 text-sm'>{alert.alertType}</td>
-                                  <td className='px-6 py-4 text-sm'>{alert.message}</td>
-                                  <td className='px-6 py-4 text-sm'>{new Date(alert.createdAt).toLocaleString()}</td>
+                                <tr
+                                  key={alert.alertId}
+                                  className='hover:bg-muted/30'
+                                >
+                                  <td className='px-6 py-4 text-sm font-medium'>
+                                    {alert.alertId}
+                                  </td>
+                                  <td className='px-6 py-4 text-sm'>
+                                    {alert.productId}
+                                  </td>
+                                  <td className='px-6 py-4 text-sm'>
+                                    {alert.alertType}
+                                  </td>
+                                  <td className='px-6 py-4 text-sm'>
+                                    {alert.message}
+                                  </td>
+                                  <td className='px-6 py-4 text-sm'>
+                                    {new Date(alert.createdAt).toLocaleString()}
+                                  </td>
                                 </tr>
                               ))}
                               {!loading && filteredHistory.length === 0 && (
                                 <tr>
-                                  <td className='px-6 py-6 text-sm text-muted-foreground' colSpan={5}>No alerts in selected range</td>
+                                  <td
+                                    className='px-6 py-6 text-sm text-muted-foreground'
+                                    colSpan={5}
+                                  >
+                                    No alerts in selected range
+                                  </td>
                                 </tr>
                               )}
                             </tbody>
@@ -1408,56 +1597,84 @@ export default function ReportsPage() {
                     <div className='grid grid-cols-1 md:grid-cols-6 gap-4 mb-6'>
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Total Orders</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Total Orders
+                          </CardTitle>
                           <Icons.ShoppingCart />
                         </CardHeader>
                         <CardContent>
-                          <div className='text-2xl font-bold'>{salesLoading ? '—' : salesKpis.totalOrders}</div>
+                          <div className='text-2xl font-bold'>
+                            {salesLoading ? '—' : salesKpis.totalOrders}
+                          </div>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Confirmed</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Confirmed
+                          </CardTitle>
                           <Icons.CheckCircle />
                         </CardHeader>
                         <CardContent>
-                          <div className='text-2xl font-bold'>{salesLoading ? '—' : salesKpis.confirmed}</div>
+                          <div className='text-2xl font-bold'>
+                            {salesLoading ? '—' : salesKpis.confirmed}
+                          </div>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Processed</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Processed
+                          </CardTitle>
                           <Icons.DocumentReport />
                         </CardHeader>
                         <CardContent>
-                          <div className='text-2xl font-bold'>{salesLoading ? '—' : salesKpis.processed}</div>
+                          <div className='text-2xl font-bold'>
+                            {salesLoading ? '—' : salesKpis.processed}
+                          </div>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Today Revenue</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Today Revenue
+                          </CardTitle>
                           <Icons.CurrencyDollar />
                         </CardHeader>
                         <CardContent>
-                          <div className='text-2xl font-bold'>{salesLoading ? '—' : (salesKpis.todaysRevenue || 0).toLocaleString()}</div>
+                          <div className='text-2xl font-bold'>
+                            {salesLoading
+                              ? '—'
+                              : (salesKpis.todaysRevenue || 0).toLocaleString()}
+                          </div>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Refunds</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Refunds
+                          </CardTitle>
                           <Icons.XCircle />
                         </CardHeader>
                         <CardContent>
-                          <div className='text-2xl font-bold'>{salesLoading ? '—' : salesKpis.refunds}</div>
+                          <div className='text-2xl font-bold'>
+                            {salesLoading ? '—' : salesKpis.refunds}
+                          </div>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Avg Order Value</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Avg Order Value
+                          </CardTitle>
                           <Icons.TrendingUp />
                         </CardHeader>
                         <CardContent>
-                          <div className='text-2xl font-bold'>{salesLoading ? '—' : salesKpis.aov.toLocaleString()}</div>
+                          <div className='text-2xl font-bold'>
+                            {salesLoading
+                              ? '—'
+                              : salesKpis.aov.toLocaleString()}
+                          </div>
                         </CardContent>
                       </Card>
                     </div>
@@ -1466,27 +1683,56 @@ export default function ReportsPage() {
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
                       <Card>
                         <CardHeader>
-                          <CardTitle className='text-base'>Revenue by Month</CardTitle>
+                          <CardTitle className='text-base'>
+                            Revenue by Month
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className='text-sm text-gray-600 mb-2'>Chart Container (h-40 with border)</div>
+                          <div className='text-sm text-gray-600 mb-2'>
+                            Chart Container (h-40 with border)
+                          </div>
                           <div className='grid grid-cols-12 gap-2 items-end h-40 border border-gray-200 p-2 bg-gray-50'>
-                            {(!salesLoading && monthlyRevenue && monthlyRevenue.length > 0) ? monthlyRevenue.map((m, idx) => {
-                              const height = Math.min(100, Math.max(8, Math.round(((m.revenue || 0) / monthlyMaxRevenue) * 100)));
-                              console.log(`📊 Chart bar ${idx}:`, { month: m.month, revenue: m.revenue, height, monthlyMaxRevenue });
-                              return (
-                                <div key={idx} className='flex flex-col items-center h-full'>
+                            {!salesLoading &&
+                            monthlyRevenue &&
+                            monthlyRevenue.length > 0 ? (
+                              monthlyRevenue.map((m, idx) => {
+                                const height = Math.min(
+                                  100,
+                                  Math.max(
+                                    8,
+                                    Math.round(
+                                      ((m.revenue || 0) / monthlyMaxRevenue) *
+                                        100
+                                    )
+                                  )
+                                );
+                                console.log(`📊 Chart bar ${idx}:`, {
+                                  month: m.month,
+                                  revenue: m.revenue,
+                                  height,
+                                  monthlyMaxRevenue,
+                                });
+                                return (
                                   <div
-                                    className='w-full bg-blue-500 rounded min-h-[8px] border border-blue-600'
-                                    style={{ height: `${height}%` }}
-                                    title={`${m.month}: $${m.revenue?.toFixed(2) || 0}`}
-                                  />
-                                  <div className='text-[10px] mt-1 truncate'>{m.month?.slice(0,3)}</div>
-                                </div>
-                              );
-                            }) : (
+                                    key={idx}
+                                    className='flex flex-col items-center h-full'
+                                  >
+                                    <div
+                                      className='w-full bg-blue-500 rounded min-h-[8px] border border-blue-600'
+                                      style={{ height: `${height}%` }}
+                                      title={`${m.month}: $${m.revenue?.toFixed(2) || 0}`}
+                                    />
+                                    <div className='text-[10px] mt-1 truncate'>
+                                      {m.month?.slice(0, 3)}
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
                               <div className='col-span-12 text-center text-sm text-muted-foreground'>
-                                {salesLoading ? 'Loading...' : 'No revenue data'}
+                                {salesLoading
+                                  ? 'Loading...'
+                                  : 'No revenue data'}
                               </div>
                             )}
                           </div>
@@ -1494,25 +1740,49 @@ export default function ReportsPage() {
                       </Card>
                       <Card>
                         <CardHeader>
-                          <CardTitle className='text-base'>Orders by Status</CardTitle>
+                          <CardTitle className='text-base'>
+                            Orders by Status
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className='text-sm text-gray-600 mb-2'>Status Chart Container (h-40 with border)</div>
+                          <div className='text-sm text-gray-600 mb-2'>
+                            Status Chart Container (h-40 with border)
+                          </div>
                           <div className='grid grid-cols-4 gap-4 items-end h-40 border border-gray-200 p-2 bg-gray-50'>
-                            {['CONFIRMED','PROCESSED','SHIPPED','CANCELLED'].map(status => {
+                            {[
+                              'CONFIRMED',
+                              'PROCESSED',
+                              'SHIPPED',
+                              'CANCELLED',
+                            ].map(status => {
                               const value = statusCounts[status] || 0;
-                              const pct = Math.min(100, Math.max(8, Math.round((value / statusMax) * 100)));
-                              console.log(`📊 Status bar ${status}:`, { value, pct, statusMax });
+                              const pct = Math.min(
+                                100,
+                                Math.max(
+                                  8,
+                                  Math.round((value / statusMax) * 100)
+                                )
+                              );
+                              console.log(`📊 Status bar ${status}:`, {
+                                value,
+                                pct,
+                                statusMax,
+                              });
                               return (
-                                <div key={status} className='flex flex-col items-center h-full'>
+                                <div
+                                  key={status}
+                                  className='flex flex-col items-center h-full'
+                                >
                                   <div className='w-full bg-foreground/10 rounded h-full flex items-end'>
-                                    <div 
-                                      className='w-full bg-foreground rounded min-h-[8px] border border-gray-400' 
-                                      style={{ height: `${pct}%` }} 
-                                      title={`${status}: ${value}`} 
+                                    <div
+                                      className='w-full bg-foreground rounded min-h-[8px] border border-gray-400'
+                                      style={{ height: `${pct}%` }}
+                                      title={`${status}: ${value}`}
                                     />
                                   </div>
-                                  <div className='text-[10px] mt-1'>{status}</div>
+                                  <div className='text-[10px] mt-1'>
+                                    {status}
+                                  </div>
                                 </div>
                               );
                             })}
@@ -1524,31 +1794,64 @@ export default function ReportsPage() {
                     {/* Tables */}
                     <div className='grid grid-cols-1 gap-8'>
                       <div>
-                        <div className='mb-3 text-sm font-semibold'>Recent Orders</div>
+                        <div className='mb-3 text-sm font-semibold'>
+                          Recent Orders
+                        </div>
                         <div className='overflow-x-auto'>
                           <table className='min-w-full divide-y divide-gray-200'>
                             <thead className='bg-muted/50'>
                               <tr>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Order ID</th>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Customer</th>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Status</th>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total</th>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Created</th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Order ID
+                                </th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Customer
+                                </th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Status
+                                </th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Total
+                                </th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Created
+                                </th>
                               </tr>
                             </thead>
                             <tbody className='bg-white divide-y divide-gray-200'>
-                              {(salesLoading ? [] : recentOrders).slice(0,10).map(o => (
-                                <tr key={o.orderId} className='hover:bg-muted/30'>
-                                  <td className='px-6 py-4 text-sm font-medium'>{o.orderId}</td>
-                                  <td className='px-6 py-4 text-sm'>{o.customerId}</td>
-                                  <td className='px-6 py-4 text-sm'>{o.status}</td>
-                                  <td className='px-6 py-4 text-sm'>{o.totalAmount?.toLocaleString?.() || o.totalAmount}</td>
-                                  <td className='px-6 py-4 text-sm'>{new Date(o.createdAt).toLocaleString()}</td>
-                                </tr>
-                              ))}
+                              {(salesLoading ? [] : recentOrders)
+                                .slice(0, 10)
+                                .map(o => (
+                                  <tr
+                                    key={o.orderId}
+                                    className='hover:bg-muted/30'
+                                  >
+                                    <td className='px-6 py-4 text-sm font-medium'>
+                                      {o.orderId}
+                                    </td>
+                                    <td className='px-6 py-4 text-sm'>
+                                      {o.customerId}
+                                    </td>
+                                    <td className='px-6 py-4 text-sm'>
+                                      {o.status}
+                                    </td>
+                                    <td className='px-6 py-4 text-sm'>
+                                      {o.totalAmount?.toLocaleString?.() ||
+                                        o.totalAmount}
+                                    </td>
+                                    <td className='px-6 py-4 text-sm'>
+                                      {new Date(o.createdAt).toLocaleString()}
+                                    </td>
+                                  </tr>
+                                ))}
                               {!salesLoading && recentOrders.length === 0 && (
                                 <tr>
-                                  <td className='px-6 py-6 text-sm text-muted-foreground' colSpan={5}>No recent orders</td>
+                                  <td
+                                    className='px-6 py-6 text-sm text-muted-foreground'
+                                    colSpan={5}
+                                  >
+                                    No recent orders
+                                  </td>
                                 </tr>
                               )}
                             </tbody>
@@ -1558,19 +1861,34 @@ export default function ReportsPage() {
 
                       <div>
                         <div className='mb-3 flex items-center justify-between'>
-                          <div className='text-sm font-semibold'>Orders by Status</div>
+                          <div className='text-sm font-semibold'>
+                            Orders by Status
+                          </div>
                           <div className='flex items-center gap-2'>
-                            <Select value={selectedStatus} onValueChange={v => setSelectedStatus(v)}>
+                            <Select
+                              value={selectedStatus}
+                              onValueChange={v => setSelectedStatus(v)}
+                            >
                               <SelectTrigger className='w-40'>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {['CONFIRMED','PROCESSED','SHIPPED','CANCELLED'].map(s => (
-                                  <SelectItem value={s} key={s}>{s}</SelectItem>
+                                {[
+                                  'CONFIRMED',
+                                  'PROCESSED',
+                                  'SHIPPED',
+                                  'CANCELLED',
+                                ].map(s => (
+                                  <SelectItem value={s} key={s}>
+                                    {s}
+                                  </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Button variant='outline' onClick={() => setSelectedStatus(selectedStatus)}>
+                            <Button
+                              variant='outline'
+                              onClick={() => setSelectedStatus(selectedStatus)}
+                            >
                               <Icons.Refresh />
                               <span className='ml-2'>Refresh</span>
                             </Button>
@@ -1580,26 +1898,57 @@ export default function ReportsPage() {
                           <table className='min-w-full divide-y divide-gray-200'>
                             <thead className='bg-muted/50'>
                               <tr>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Order ID</th>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Customer</th>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Status</th>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Total</th>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>Created</th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Order ID
+                                </th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Customer
+                                </th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Status
+                                </th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Total
+                                </th>
+                                <th className='px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+                                  Created
+                                </th>
                               </tr>
                             </thead>
                             <tbody className='bg-white divide-y divide-gray-200'>
-                              {(salesLoading ? [] : ordersByStatus).slice(0,10).map(o => (
-                                <tr key={o.orderId} className='hover:bg-muted/30'>
-                                  <td className='px-6 py-4 text-sm font-medium'>{o.orderId}</td>
-                                  <td className='px-6 py-4 text-sm'>{o.customerId}</td>
-                                  <td className='px-6 py-4 text-sm'>{o.status}</td>
-                                  <td className='px-6 py-4 text-sm'>{o.totalAmount?.toLocaleString?.() || o.totalAmount}</td>
-                                  <td className='px-6 py-4 text-sm'>{new Date(o.createdAt).toLocaleString()}</td>
-                                </tr>
-                              ))}
+                              {(salesLoading ? [] : ordersByStatus)
+                                .slice(0, 10)
+                                .map(o => (
+                                  <tr
+                                    key={o.orderId}
+                                    className='hover:bg-muted/30'
+                                  >
+                                    <td className='px-6 py-4 text-sm font-medium'>
+                                      {o.orderId}
+                                    </td>
+                                    <td className='px-6 py-4 text-sm'>
+                                      {o.customerId}
+                                    </td>
+                                    <td className='px-6 py-4 text-sm'>
+                                      {o.status}
+                                    </td>
+                                    <td className='px-6 py-4 text-sm'>
+                                      {o.totalAmount?.toLocaleString?.() ||
+                                        o.totalAmount}
+                                    </td>
+                                    <td className='px-6 py-4 text-sm'>
+                                      {new Date(o.createdAt).toLocaleString()}
+                                    </td>
+                                  </tr>
+                                ))}
                               {!salesLoading && ordersByStatus.length === 0 && (
                                 <tr>
-                                  <td className='px-6 py-6 text-sm text-muted-foreground' colSpan={5}>No orders for status {selectedStatus}</td>
+                                  <td
+                                    className='px-6 py-6 text-sm text-muted-foreground'
+                                    colSpan={5}
+                                  >
+                                    No orders for status {selectedStatus}
+                                  </td>
                                 </tr>
                               )}
                             </tbody>
@@ -1629,7 +1978,9 @@ export default function ReportsPage() {
                     {logisticsLoading && (
                       <div className='flex items-center justify-center py-12'>
                         <div className='h-8 w-8 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent mr-3' />
-                        <span className='text-muted-foreground'>Loading logistics data...</span>
+                        <span className='text-muted-foreground'>
+                          Loading logistics data...
+                        </span>
                       </div>
                     )}
 
@@ -1641,8 +1992,12 @@ export default function ReportsPage() {
                             <Icons.XCircle />
                           </div>
                           <div>
-                            <h3 className='text-sm font-medium text-red-800'>Error Loading Logistics Data</h3>
-                            <p className='text-sm text-red-700 mt-1'>{logisticsError}</p>
+                            <h3 className='text-sm font-medium text-red-800'>
+                              Error Loading Logistics Data
+                            </h3>
+                            <p className='text-sm text-red-700 mt-1'>
+                              {logisticsError}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1655,8 +2010,12 @@ export default function ReportsPage() {
                           <CardContent className='p-6'>
                             <div className='flex items-center justify-between'>
                               <div>
-                                <p className='text-sm font-medium text-muted-foreground'>Delivery Success Rate</p>
-                                <p className='text-2xl font-bold'>{logisticsMetrics.deliverySuccessRate}%</p>
+                                <p className='text-sm font-medium text-muted-foreground'>
+                                  Delivery Success Rate
+                                </p>
+                                <p className='text-2xl font-bold'>
+                                  {logisticsMetrics.deliverySuccessRate}%
+                                </p>
                               </div>
                               <div className='h-8 w-8 text-green-500'>
                                 <Icons.CheckCircle />
@@ -1669,8 +2028,12 @@ export default function ReportsPage() {
                           <CardContent className='p-6'>
                             <div className='flex items-center justify-between'>
                               <div>
-                                <p className='text-sm font-medium text-muted-foreground'>Avg Delivery Time</p>
-                                <p className='text-2xl font-bold'>{logisticsMetrics.averageDeliveryTime}h</p>
+                                <p className='text-sm font-medium text-muted-foreground'>
+                                  Avg Delivery Time
+                                </p>
+                                <p className='text-2xl font-bold'>
+                                  {logisticsMetrics.averageDeliveryTime}h
+                                </p>
                               </div>
                               <div className='h-8 w-8 text-blue-500'>
                                 <Icons.Clock />
@@ -1683,8 +2046,12 @@ export default function ReportsPage() {
                           <CardContent className='p-6'>
                             <div className='flex items-center justify-between'>
                               <div>
-                                <p className='text-sm font-medium text-muted-foreground'>Driver Utilization</p>
-                                <p className='text-2xl font-bold'>{logisticsMetrics.driverUtilization}%</p>
+                                <p className='text-sm font-medium text-muted-foreground'>
+                                  Driver Utilization
+                                </p>
+                                <p className='text-2xl font-bold'>
+                                  {logisticsMetrics.driverUtilization}%
+                                </p>
                               </div>
                               <div className='h-8 w-8 text-purple-500'>
                                 <Icons.Users />
@@ -1697,8 +2064,12 @@ export default function ReportsPage() {
                           <CardContent className='p-6'>
                             <div className='flex items-center justify-between'>
                               <div>
-                                <p className='text-sm font-medium text-muted-foreground'>Vehicle Utilization</p>
-                                <p className='text-2xl font-bold'>{logisticsMetrics.vehicleUtilization}%</p>
+                                <p className='text-sm font-medium text-muted-foreground'>
+                                  Vehicle Utilization
+                                </p>
+                                <p className='text-2xl font-bold'>
+                                  {logisticsMetrics.vehicleUtilization}%
+                                </p>
                               </div>
                               <div className='h-8 w-8 text-orange-500'>
                                 <Icons.Truck />
@@ -1723,20 +2094,36 @@ export default function ReportsPage() {
                         <CardContent>
                           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
                             <div className='text-center'>
-                              <div className='text-2xl font-bold text-blue-600'>{fleetUtilization.totalDrivers}</div>
-                              <div className='text-sm text-muted-foreground'>Total Drivers</div>
+                              <div className='text-2xl font-bold text-blue-600'>
+                                {fleetUtilization.totalDrivers}
+                              </div>
+                              <div className='text-sm text-muted-foreground'>
+                                Total Drivers
+                              </div>
                             </div>
                             <div className='text-center'>
-                              <div className='text-2xl font-bold text-green-600'>{fleetUtilization.activeDrivers}</div>
-                              <div className='text-sm text-muted-foreground'>Active Drivers</div>
+                              <div className='text-2xl font-bold text-green-600'>
+                                {fleetUtilization.activeDrivers}
+                              </div>
+                              <div className='text-sm text-muted-foreground'>
+                                Active Drivers
+                              </div>
                             </div>
                             <div className='text-center'>
-                              <div className='text-2xl font-bold text-purple-600'>{fleetUtilization.totalVehicles}</div>
-                              <div className='text-sm text-muted-foreground'>Total Vehicles</div>
+                              <div className='text-2xl font-bold text-purple-600'>
+                                {fleetUtilization.totalVehicles}
+                              </div>
+                              <div className='text-sm text-muted-foreground'>
+                                Total Vehicles
+                              </div>
                             </div>
                             <div className='text-center'>
-                              <div className='text-2xl font-bold text-orange-600'>{fleetUtilization.assignedVehicles}</div>
-                              <div className='text-sm text-muted-foreground'>Assigned Vehicles</div>
+                              <div className='text-2xl font-bold text-orange-600'>
+                                {fleetUtilization.assignedVehicles}
+                              </div>
+                              <div className='text-sm text-muted-foreground'>
+                                Assigned Vehicles
+                              </div>
                             </div>
                           </div>
                         </CardContent>
@@ -1774,7 +2161,9 @@ export default function ReportsPage() {
                               logisticsData.map((item, index) => (
                                 <tr key={index} className='hover:bg-muted/30'>
                                   <td className='px-6 py-4 text-sm font-medium'>
-                                    {new Date(item.deliveryDate).toLocaleDateString()}
+                                    {new Date(
+                                      item.deliveryDate
+                                    ).toLocaleDateString()}
                                   </td>
                                   <td className='px-6 py-4 text-sm'>
                                     {item.ordersDelivered}
@@ -1788,11 +2177,11 @@ export default function ReportsPage() {
                                   <td className='px-6 py-4'>
                                     <span
                                       className={`px-3 py-1 rounded-full text-sm font-medium flex items-center ${
-                                        item.deliverySuccess >= 95 
-                                          ? 'bg-green-100 text-green-800' 
-                                          : item.deliverySuccess >= 90 
-                                          ? 'bg-yellow-100 text-yellow-800'
-                                          : 'bg-red-100 text-red-800'
+                                        item.deliverySuccess >= 95
+                                          ? 'bg-green-100 text-green-800'
+                                          : item.deliverySuccess >= 90
+                                            ? 'bg-yellow-100 text-yellow-800'
+                                            : 'bg-red-100 text-red-800'
                                       }`}
                                     >
                                       {item.deliverySuccess >= 95 ? (
@@ -1832,7 +2221,10 @@ export default function ReportsPage() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={6} className='px-6 py-12 text-center text-muted-foreground'>
+                                <td
+                                  colSpan={6}
+                                  className='px-6 py-12 text-center text-muted-foreground'
+                                >
                                   No delivery data available
                                 </td>
                               </tr>
@@ -1854,7 +2246,8 @@ export default function ReportsPage() {
                       <span className='ml-3'>Supplier Analytics</span>
                     </h2>
                     <p className='text-muted-foreground mt-1'>
-                      Supplier performance, purchase orders, and spending analysis
+                      Supplier performance, purchase orders, and spending
+                      analysis
                     </p>
                   </div>
 
@@ -1863,15 +2256,21 @@ export default function ReportsPage() {
                       <div className='flex items-center justify-center py-12'>
                         <div className='text-center'>
                           <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
-                          <p className='text-muted-foreground'>Loading supplier analytics...</p>
+                          <p className='text-muted-foreground'>
+                            Loading supplier analytics...
+                          </p>
                         </div>
                       </div>
                     ) : supplierError ? (
                       <div className='flex items-center justify-center py-12'>
                         <div className='text-center'>
                           <div className='text-red-500 mb-4'>❌</div>
-                          <p className='text-red-600 font-medium'>Failed to load supplier data</p>
-                          <p className='text-sm text-muted-foreground mt-2'>{supplierError}</p>
+                          <p className='text-red-600 font-medium'>
+                            Failed to load supplier data
+                          </p>
+                          <p className='text-sm text-muted-foreground mt-2'>
+                            {supplierError}
+                          </p>
                         </div>
                       </div>
                     ) : supplierAnalytics ? (
@@ -1882,8 +2281,12 @@ export default function ReportsPage() {
                             <CardContent className='p-6'>
                               <div className='flex items-center justify-between'>
                                 <div>
-                                  <p className='text-sm font-medium text-muted-foreground'>Total Orders</p>
-                                  <p className='text-2xl font-bold'>{supplierAnalytics.totalOrders || 0}</p>
+                                  <p className='text-sm font-medium text-muted-foreground'>
+                                    Total Orders
+                                  </p>
+                                  <p className='text-2xl font-bold'>
+                                    {supplierAnalytics.totalOrders || 0}
+                                  </p>
                                 </div>
                                 <div className='h-8 w-8 text-muted-foreground'>
                                   <Icons.ShoppingCart />
@@ -1895,8 +2298,15 @@ export default function ReportsPage() {
                             <CardContent className='p-6'>
                               <div className='flex items-center justify-between'>
                                 <div>
-                                  <p className='text-sm font-medium text-muted-foreground'>Total Value</p>
-                                  <p className='text-2xl font-bold'>${(supplierAnalytics.totalValue || 0).toLocaleString()}</p>
+                                  <p className='text-sm font-medium text-muted-foreground'>
+                                    Total Value
+                                  </p>
+                                  <p className='text-2xl font-bold'>
+                                    $
+                                    {(
+                                      supplierAnalytics.totalValue || 0
+                                    ).toLocaleString()}
+                                  </p>
                                 </div>
                                 <div className='h-8 w-8 text-muted-foreground'>
                                   <Icons.CreditCard />
@@ -1908,8 +2318,15 @@ export default function ReportsPage() {
                             <CardContent className='p-6'>
                               <div className='flex items-center justify-between'>
                                 <div>
-                                  <p className='text-sm font-medium text-muted-foreground'>Avg Order Value</p>
-                                  <p className='text-2xl font-bold'>${(supplierAnalytics.averageOrderValue || 0).toLocaleString()}</p>
+                                  <p className='text-sm font-medium text-muted-foreground'>
+                                    Avg Order Value
+                                  </p>
+                                  <p className='text-2xl font-bold'>
+                                    $
+                                    {(
+                                      supplierAnalytics.averageOrderValue || 0
+                                    ).toLocaleString()}
+                                  </p>
                                 </div>
                                 <div className='h-8 w-8 text-muted-foreground'>
                                   <Icons.TrendingUp />
@@ -1921,8 +2338,12 @@ export default function ReportsPage() {
                             <CardContent className='p-6'>
                               <div className='flex items-center justify-between'>
                                 <div>
-                                  <p className='text-sm font-medium text-muted-foreground'>Completed Orders</p>
-                                  <p className='text-2xl font-bold'>{supplierAnalytics.completedOrders || 0}</p>
+                                  <p className='text-sm font-medium text-muted-foreground'>
+                                    Completed Orders
+                                  </p>
+                                  <p className='text-2xl font-bold'>
+                                    {supplierAnalytics.completedOrders || 0}
+                                  </p>
                                 </div>
                                 <div className='h-8 w-8 text-muted-foreground'>
                                   <Icons.Package />
@@ -1936,19 +2357,46 @@ export default function ReportsPage() {
                         <Card>
                           <CardHeader>
                             <CardTitle>Order Status Distribution</CardTitle>
-                            <CardDescription>Breakdown of purchase orders by status</CardDescription>
+                            <CardDescription>
+                              Breakdown of purchase orders by status
+                            </CardDescription>
                           </CardHeader>
                           <CardContent>
                             <div className='grid grid-cols-3 gap-4 items-end h-40 border border-gray-200 p-4 bg-gray-50 rounded-lg'>
                               {[
-                                { status: 'Pending', count: supplierAnalytics.pendingOrders || 0, color: 'bg-yellow-500' },
-                                { status: 'Completed', count: supplierAnalytics.completedOrders || 0, color: 'bg-green-500' },
-                                { status: 'Cancelled', count: supplierAnalytics.cancelledOrders || 0, color: 'bg-red-500' }
+                                {
+                                  status: 'Pending',
+                                  count: supplierAnalytics.pendingOrders || 0,
+                                  color: 'bg-yellow-500',
+                                },
+                                {
+                                  status: 'Completed',
+                                  count: supplierAnalytics.completedOrders || 0,
+                                  color: 'bg-green-500',
+                                },
+                                {
+                                  status: 'Cancelled',
+                                  count: supplierAnalytics.cancelledOrders || 0,
+                                  color: 'bg-red-500',
+                                },
                               ].map(({ status, count, color }) => {
-                                const maxCount = Math.max(supplierAnalytics.pendingOrders || 0, supplierAnalytics.completedOrders || 0, supplierAnalytics.cancelledOrders || 0);
-                                const height = maxCount > 0 ? Math.max(8, Math.round((count / maxCount) * 100)) : 8;
+                                const maxCount = Math.max(
+                                  supplierAnalytics.pendingOrders || 0,
+                                  supplierAnalytics.completedOrders || 0,
+                                  supplierAnalytics.cancelledOrders || 0
+                                );
+                                const height =
+                                  maxCount > 0
+                                    ? Math.max(
+                                        8,
+                                        Math.round((count / maxCount) * 100)
+                                      )
+                                    : 8;
                                 return (
-                                  <div key={status} className='flex flex-col items-center h-full'>
+                                  <div
+                                    key={status}
+                                    className='flex flex-col items-center h-full'
+                                  >
                                     <div
                                       className={`w-full ${color} rounded min-h-[8px] border border-gray-400`}
                                       style={{ height: `${height}%` }}
@@ -1956,7 +2404,9 @@ export default function ReportsPage() {
                                     ></div>
                                     <div className='text-xs text-center mt-2'>
                                       <div className='font-medium'>{count}</div>
-                                      <div className='text-muted-foreground'>{status}</div>
+                                      <div className='text-muted-foreground'>
+                                        {status}
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -1969,30 +2419,51 @@ export default function ReportsPage() {
                         <Card>
                           <CardHeader>
                             <CardTitle>Top Suppliers by Spend</CardTitle>
-                            <CardDescription>Suppliers ranked by total purchase value</CardDescription>
+                            <CardDescription>
+                              Suppliers ranked by total purchase value
+                            </CardDescription>
                           </CardHeader>
                           <CardContent>
-                            {(supplierAnalytics.topSuppliers || []).length > 0 ? (
+                            {(supplierAnalytics.topSuppliers || []).length >
+                            0 ? (
                               <div className='space-y-4'>
-                                {(supplierAnalytics.topSuppliers || []).map((supplier, index) => (
-                                  <div key={supplier.supplierId} className='flex items-center justify-between p-4 border rounded-lg'>
-                                    <div className='flex items-center space-x-4'>
-                                      <div className='flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium'>
-                                        {index + 1}
+                                {(supplierAnalytics.topSuppliers || []).map(
+                                  (supplier, index) => (
+                                    <div
+                                      key={supplier.supplierId}
+                                      className='flex items-center justify-between p-4 border rounded-lg'
+                                    >
+                                      <div className='flex items-center space-x-4'>
+                                        <div className='flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium'>
+                                          {index + 1}
+                                        </div>
+                                        <div>
+                                          <p className='font-medium'>
+                                            {supplier.supplierName}
+                                          </p>
+                                          <p className='text-sm text-muted-foreground'>
+                                            {supplier.orderCount} orders
+                                          </p>
+                                        </div>
                                       </div>
-                                      <div>
-                                        <p className='font-medium'>{supplier.supplierName}</p>
-                                        <p className='text-sm text-muted-foreground'>{supplier.orderCount} orders</p>
+                                      <div className='text-right'>
+                                        <p className='font-bold'>
+                                          $
+                                          {(
+                                            supplier.totalSpend || 0
+                                          ).toLocaleString()}
+                                        </p>
+                                        <p className='text-sm text-muted-foreground'>
+                                          Avg: $
+                                          {Math.round(
+                                            (supplier.totalSpend || 0) /
+                                              (supplier.orderCount || 1)
+                                          ).toLocaleString()}
+                                        </p>
                                       </div>
                                     </div>
-                                    <div className='text-right'>
-                                      <p className='font-bold'>${(supplier.totalSpend || 0).toLocaleString()}</p>
-                                      <p className='text-sm text-muted-foreground'>
-                                        Avg: ${Math.round((supplier.totalSpend || 0) / (supplier.orderCount || 1)).toLocaleString()}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
+                                  )
+                                )}
                               </div>
                             ) : (
                               <div className='text-center py-8 text-muted-foreground'>
@@ -2007,39 +2478,73 @@ export default function ReportsPage() {
                           <Card>
                             <CardHeader>
                               <CardTitle>Monthly Purchase Trends</CardTitle>
-                              <CardDescription>Purchase orders and value over time</CardDescription>
+                              <CardDescription>
+                                Purchase orders and value over time
+                              </CardDescription>
                             </CardHeader>
                             <CardContent>
                               <div className='space-y-4'>
                                 <div className='grid grid-cols-12 gap-2 items-end h-40 border border-gray-200 p-4 bg-gray-50 rounded-lg'>
-                                  {(supplierAnalytics.monthlyTrends || []).map((trend, idx) => {
-                                    const maxValue = Math.max(...(supplierAnalytics.monthlyTrends || []).map(t => t.value || 0));
-                                    const height = maxValue > 0 ? Math.max(8, Math.round((trend.value / maxValue) * 100)) : 8;
-                                    return (
-                                      <div key={idx} className='flex flex-col items-center h-full'>
+                                  {(supplierAnalytics.monthlyTrends || []).map(
+                                    (trend, idx) => {
+                                      const maxValue = Math.max(
+                                        ...(
+                                          supplierAnalytics.monthlyTrends || []
+                                        ).map(t => t.value || 0)
+                                      );
+                                      const height =
+                                        maxValue > 0
+                                          ? Math.max(
+                                              8,
+                                              Math.round(
+                                                (trend.value / maxValue) * 100
+                                              )
+                                            )
+                                          : 8;
+                                      return (
                                         <div
-                                          className='w-full bg-blue-500 rounded min-h-[8px] border border-blue-600'
-                                          style={{ height: `${height}%` }}
-                                          title={`${trend.month}: $${(trend.value || 0).toLocaleString()} (${trend.orders || 0} orders)`}
-                                        ></div>
-                                        <div className='text-xs text-center mt-2 transform -rotate-45 origin-left'>
-                                          {trend.month.slice(-2)}
+                                          key={idx}
+                                          className='flex flex-col items-center h-full'
+                                        >
+                                          <div
+                                            className='w-full bg-blue-500 rounded min-h-[8px] border border-blue-600'
+                                            style={{ height: `${height}%` }}
+                                            title={`${trend.month}: $${(trend.value || 0).toLocaleString()} (${trend.orders || 0} orders)`}
+                                          ></div>
+                                          <div className='text-xs text-center mt-2 transform -rotate-45 origin-left'>
+                                            {trend.month.slice(-2)}
+                                          </div>
                                         </div>
-                                      </div>
-                                    );
-                                  })}
+                                      );
+                                    }
+                                  )}
                                 </div>
                                 <div className='grid grid-cols-2 gap-4 text-sm'>
                                   <div className='text-center p-3 bg-blue-50 rounded-lg'>
-                                    <div className='font-medium text-blue-900'>Total Value</div>
+                                    <div className='font-medium text-blue-900'>
+                                      Total Value
+                                    </div>
                                     <div className='text-2xl font-bold text-blue-600'>
-                                      ${(supplierAnalytics.monthlyTrends || []).reduce((sum, t) => sum + (t.value || 0), 0).toLocaleString()}
+                                      $
+                                      {(supplierAnalytics.monthlyTrends || [])
+                                        .reduce(
+                                          (sum, t) => sum + (t.value || 0),
+                                          0
+                                        )
+                                        .toLocaleString()}
                                     </div>
                                   </div>
                                   <div className='text-center p-3 bg-green-50 rounded-lg'>
-                                    <div className='font-medium text-green-900'>Total Orders</div>
+                                    <div className='font-medium text-green-900'>
+                                      Total Orders
+                                    </div>
                                     <div className='text-2xl font-bold text-green-600'>
-                                      {(supplierAnalytics.monthlyTrends || []).reduce((sum, t) => sum + (t.orders || 0), 0)}
+                                      {(
+                                        supplierAnalytics.monthlyTrends || []
+                                      ).reduce(
+                                        (sum, t) => sum + (t.orders || 0),
+                                        0
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -2052,7 +2557,9 @@ export default function ReportsPage() {
                       <div className='flex items-center justify-center py-12'>
                         <div className='text-center'>
                           <div className='text-muted-foreground mb-4'>📊</div>
-                          <p className='text-muted-foreground'>No supplier data available</p>
+                          <p className='text-muted-foreground'>
+                            No supplier data available
+                          </p>
                         </div>
                       </div>
                     )}
@@ -2097,7 +2604,8 @@ export default function ReportsPage() {
                       <span className='ml-3'>Cost Analysis Reports</span>
                     </h2>
                     <p className='text-muted-foreground mt-1'>
-                      Inventory costs, purchase analysis, and cost optimization insights
+                      Inventory costs, purchase analysis, and cost optimization
+                      insights
                     </p>
                   </div>
 
@@ -2107,15 +2615,23 @@ export default function ReportsPage() {
                       {/* Total Inventory Cost */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Inventory Value</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Inventory Value
+                          </CardTitle>
                           <Icons.Package />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${inventoryCost?.totalAvailableInventoryCost ? inventoryCost.totalAvailableInventoryCost.toFixed(2) : '0.00'}
+                            $
+                            {inventoryCost?.totalAvailableInventoryCost
+                              ? inventoryCost.totalAvailableInventoryCost.toFixed(
+                                  2
+                                )
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
-                            {inventoryCost?.totalProductsWithStock || 0} products in stock
+                            {inventoryCost?.totalProductsWithStock || 0}{' '}
+                            products in stock
                           </p>
                         </CardContent>
                       </Card>
@@ -2123,12 +2639,17 @@ export default function ReportsPage() {
                       {/* Purchase Costs */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Purchase Costs</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Purchase Costs
+                          </CardTitle>
                           <Icons.ShoppingCart />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${purchaseStats?.totalValue ? purchaseStats.totalValue.toFixed(2) : '0.00'}
+                            $
+                            {purchaseStats?.totalValue
+                              ? purchaseStats.totalValue.toFixed(2)
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
                             {purchaseStats?.totalOrders || 0} purchase orders
@@ -2139,12 +2660,17 @@ export default function ReportsPage() {
                       {/* Total Costs */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Total Costs</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Total Costs
+                          </CardTitle>
                           <Icons.CurrencyDollar />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${costMetrics?.totalCosts ? costMetrics.totalCosts.toFixed(2) : '0.00'}
+                            $
+                            {costMetrics?.totalCosts
+                              ? costMetrics.totalCosts.toFixed(2)
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
                             Combined inventory + purchases
@@ -2155,12 +2681,17 @@ export default function ReportsPage() {
                       {/* Cost per Product */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Cost per Product</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Cost per Product
+                          </CardTitle>
                           <Icons.TrendingUp />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${costMetrics?.costPerProduct ? costMetrics.costPerProduct.toFixed(2) : '0.00'}
+                            $
+                            {costMetrics?.costPerProduct
+                              ? costMetrics.costPerProduct.toFixed(2)
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
                             Average cost per item
@@ -2176,48 +2707,63 @@ export default function ReportsPage() {
                         <CardHeader>
                           <CardTitle>Cost Breakdown</CardTitle>
                           <CardDescription>
-                            Distribution of costs between inventory and purchases
+                            Distribution of costs between inventory and
+                            purchases
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
                           {costLoading ? (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>Loading cost data...</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Loading cost data...
+                              </div>
                             </div>
                           ) : costMetrics ? (
                             <div className='space-y-4'>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Inventory Value</span>
+                                <span className='text-sm font-medium'>
+                                  Inventory Value
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${costMetrics.inventoryCost ? costMetrics.inventoryCost.toFixed(2) : '0.00'}
+                                  $
+                                  {costMetrics.inventoryCost
+                                    ? costMetrics.inventoryCost.toFixed(2)
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='w-full bg-gray-200 rounded-full h-2'>
-                                <div 
-                                  className='bg-blue-500 h-2 rounded-full' 
-                                  style={{ 
-                                    width: `${costMetrics.totalCosts && costMetrics.totalCosts > 0 && costMetrics.inventoryCost ? (costMetrics.inventoryCost / costMetrics.totalCosts) * 100 : 0}%` 
+                                <div
+                                  className='bg-blue-500 h-2 rounded-full'
+                                  style={{
+                                    width: `${costMetrics.totalCosts && costMetrics.totalCosts > 0 && costMetrics.inventoryCost ? (costMetrics.inventoryCost / costMetrics.totalCosts) * 100 : 0}%`,
                                   }}
                                 />
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Purchase Costs</span>
+                                <span className='text-sm font-medium'>
+                                  Purchase Costs
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${costMetrics.purchaseCosts ? costMetrics.purchaseCosts.toFixed(2) : '0.00'}
+                                  $
+                                  {costMetrics.purchaseCosts
+                                    ? costMetrics.purchaseCosts.toFixed(2)
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='w-full bg-gray-200 rounded-full h-2'>
-                                <div 
-                                  className='bg-green-500 h-2 rounded-full' 
-                                  style={{ 
-                                    width: `${costMetrics.totalCosts && costMetrics.totalCosts > 0 && costMetrics.purchaseCosts ? (costMetrics.purchaseCosts / costMetrics.totalCosts) * 100 : 0}%` 
+                                <div
+                                  className='bg-green-500 h-2 rounded-full'
+                                  style={{
+                                    width: `${costMetrics.totalCosts && costMetrics.totalCosts > 0 && costMetrics.purchaseCosts ? (costMetrics.purchaseCosts / costMetrics.totalCosts) * 100 : 0}%`,
                                   }}
                                 />
                               </div>
                             </div>
                           ) : (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>No cost data available</div>
+                              <div className='text-sm text-muted-foreground'>
+                                No cost data available
+                              </div>
                             </div>
                           )}
                         </CardContent>
@@ -2234,45 +2780,74 @@ export default function ReportsPage() {
                         <CardContent>
                           {costLoading ? (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>Loading purchase data...</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Loading purchase data...
+                              </div>
                             </div>
                           ) : purchaseStats ? (
                             <div className='space-y-4'>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Total Orders</span>
+                                <span className='text-sm font-medium'>
+                                  Total Orders
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
                                   {purchaseStats.totalOrders}
                                 </span>
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Average Order Value</span>
+                                <span className='text-sm font-medium'>
+                                  Average Order Value
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${purchaseStats.averageOrderValue ? purchaseStats.averageOrderValue.toFixed(2) : '0.00'}
+                                  $
+                                  {purchaseStats.averageOrderValue
+                                    ? purchaseStats.averageOrderValue.toFixed(2)
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Total Value</span>
+                                <span className='text-sm font-medium'>
+                                  Total Value
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${purchaseStats.totalValue ? purchaseStats.totalValue.toFixed(2) : '0.00'}
+                                  $
+                                  {purchaseStats.totalValue
+                                    ? purchaseStats.totalValue.toFixed(2)
+                                    : '0.00'}
                                 </span>
                               </div>
-                              {purchaseStats.topSuppliers && purchaseStats.topSuppliers.length > 0 && (
-                                <div className='mt-4'>
-                                  <h4 className='text-sm font-medium mb-2'>Top Suppliers</h4>
-                                  <div className='space-y-2'>
-                                    {purchaseStats.topSuppliers.slice(0, 3).map((supplier, idx) => (
-                                      <div key={idx} className='flex justify-between text-xs'>
-                                        <span>{supplier.supplierName}</span>
-                                        <span>${supplier.totalSpent ? supplier.totalSpent.toFixed(2) : '0.00'}</span>
-                                      </div>
-                                    ))}
+                              {purchaseStats.topSuppliers &&
+                                purchaseStats.topSuppliers.length > 0 && (
+                                  <div className='mt-4'>
+                                    <h4 className='text-sm font-medium mb-2'>
+                                      Top Suppliers
+                                    </h4>
+                                    <div className='space-y-2'>
+                                      {purchaseStats.topSuppliers
+                                        .slice(0, 3)
+                                        .map((supplier, idx) => (
+                                          <div
+                                            key={idx}
+                                            className='flex justify-between text-xs'
+                                          >
+                                            <span>{supplier.supplierName}</span>
+                                            <span>
+                                              $
+                                              {supplier.totalSpent
+                                                ? supplier.totalSpent.toFixed(2)
+                                                : '0.00'}
+                                            </span>
+                                          </div>
+                                        ))}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
                             </div>
                           ) : (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>No purchase data available</div>
+                              <div className='text-sm text-muted-foreground'>
+                                No purchase data available
+                              </div>
                             </div>
                           )}
                         </CardContent>
@@ -2284,7 +2859,8 @@ export default function ReportsPage() {
                       <CardHeader>
                         <CardTitle>Cost Optimization Insights</CardTitle>
                         <CardDescription>
-                          Recommendations for cost reduction and efficiency improvements
+                          Recommendations for cost reduction and efficiency
+                          improvements
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -2293,31 +2869,53 @@ export default function ReportsPage() {
                             <h4 className='font-semibold'>Cost Metrics</h4>
                             <div className='space-y-2'>
                               <div className='flex justify-between'>
-                                <span className='text-sm'>Inventory Turnover</span>
+                                <span className='text-sm'>
+                                  Inventory Turnover
+                                </span>
                                 <span className='text-sm font-medium'>
-                                  {costMetrics?.inventoryTurnover ? costMetrics.inventoryTurnover.toFixed(2) : '0.00'}
+                                  {costMetrics?.inventoryTurnover
+                                    ? costMetrics.inventoryTurnover.toFixed(2)
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='flex justify-between'>
                                 <span className='text-sm'>Cost Efficiency</span>
                                 <span className='text-sm font-medium text-green-600'>
-                                  {costMetrics?.costPerProduct && costMetrics.costPerProduct < 100 ? 'Good' : 'Needs Review'}
+                                  {costMetrics?.costPerProduct &&
+                                  costMetrics.costPerProduct < 100
+                                    ? 'Good'
+                                    : 'Needs Review'}
                                 </span>
                               </div>
                             </div>
                           </div>
                           <div className='space-y-4'>
-                            <h4 className='font-semibold'>Optimization Recommendations</h4>
+                            <h4 className='font-semibold'>
+                              Optimization Recommendations
+                            </h4>
                             <div className='space-y-2 text-sm text-muted-foreground'>
-                              <p>• {costMetrics?.inventoryCost && costMetrics.inventoryCost > costMetrics.purchaseCosts 
-                                ? 'Consider reducing inventory levels' 
-                                : 'Inventory levels are well balanced'}</p>
-                              <p>• {purchaseStats?.averageOrderValue && purchaseStats.averageOrderValue > 1000 
-                                ? 'Consider bulk purchasing for better rates' 
-                                : 'Purchase order sizes are optimal'}</p>
-                              <p>• {costMetrics?.inventoryTurnover && costMetrics.inventoryTurnover < 1 
-                                ? 'Improve inventory turnover rate' 
-                                : 'Inventory turnover is healthy'}</p>
+                              <p>
+                                •{' '}
+                                {costMetrics?.inventoryCost &&
+                                costMetrics.inventoryCost >
+                                  costMetrics.purchaseCosts
+                                  ? 'Consider reducing inventory levels'
+                                  : 'Inventory levels are well balanced'}
+                              </p>
+                              <p>
+                                •{' '}
+                                {purchaseStats?.averageOrderValue &&
+                                purchaseStats.averageOrderValue > 1000
+                                  ? 'Consider bulk purchasing for better rates'
+                                  : 'Purchase order sizes are optimal'}
+                              </p>
+                              <p>
+                                •{' '}
+                                {costMetrics?.inventoryTurnover &&
+                                costMetrics.inventoryTurnover < 1
+                                  ? 'Improve inventory turnover rate'
+                                  : 'Inventory turnover is healthy'}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -2335,48 +2933,103 @@ export default function ReportsPage() {
                       <CardContent>
                         {costLoading ? (
                           <div className='flex items-center justify-center h-32'>
-                            <div className='text-sm text-muted-foreground'>Loading cost analysis...</div>
+                            <div className='text-sm text-muted-foreground'>
+                              Loading cost analysis...
+                            </div>
                           </div>
                         ) : costMetrics ? (
                           <div className='overflow-x-auto'>
                             <table className='w-full text-sm'>
                               <thead>
                                 <tr className='border-b'>
-                                  <th className='text-left py-2'>Cost Category</th>
+                                  <th className='text-left py-2'>
+                                    Cost Category
+                                  </th>
                                   <th className='text-right py-2'>Amount</th>
-                                  <th className='text-right py-2'>Percentage</th>
+                                  <th className='text-right py-2'>
+                                    Percentage
+                                  </th>
                                   <th className='text-right py-2'>Status</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 <tr className='border-b'>
-                                  <td className='py-2 font-medium'>Inventory Value</td>
-                                  <td className='py-2 text-right'>${costMetrics.inventoryCost ? costMetrics.inventoryCost.toFixed(2) : '0.00'}</td>
-                                  <td className='py-2 text-right'>
-                                    {costMetrics.totalCosts && costMetrics.totalCosts > 0 && costMetrics.inventoryCost ? ((costMetrics.inventoryCost / costMetrics.totalCosts) * 100).toFixed(1) : '0.0'}%
+                                  <td className='py-2 font-medium'>
+                                    Inventory Value
                                   </td>
-                                  <td className='py-2 text-right text-blue-600'>Active</td>
+                                  <td className='py-2 text-right'>
+                                    $
+                                    {costMetrics.inventoryCost
+                                      ? costMetrics.inventoryCost.toFixed(2)
+                                      : '0.00'}
+                                  </td>
+                                  <td className='py-2 text-right'>
+                                    {costMetrics.totalCosts &&
+                                    costMetrics.totalCosts > 0 &&
+                                    costMetrics.inventoryCost
+                                      ? (
+                                          (costMetrics.inventoryCost /
+                                            costMetrics.totalCosts) *
+                                          100
+                                        ).toFixed(1)
+                                      : '0.0'}
+                                    %
+                                  </td>
+                                  <td className='py-2 text-right text-blue-600'>
+                                    Active
+                                  </td>
                                 </tr>
                                 <tr className='border-b'>
-                                  <td className='py-2 font-medium'>Purchase Costs</td>
-                                  <td className='py-2 text-right'>${costMetrics.purchaseCosts ? costMetrics.purchaseCosts.toFixed(2) : '0.00'}</td>
-                                  <td className='py-2 text-right'>
-                                    {costMetrics.totalCosts && costMetrics.totalCosts > 0 && costMetrics.purchaseCosts ? ((costMetrics.purchaseCosts / costMetrics.totalCosts) * 100).toFixed(1) : '0.0'}%
+                                  <td className='py-2 font-medium'>
+                                    Purchase Costs
                                   </td>
-                                  <td className='py-2 text-right text-green-600'>Recent</td>
+                                  <td className='py-2 text-right'>
+                                    $
+                                    {costMetrics.purchaseCosts
+                                      ? costMetrics.purchaseCosts.toFixed(2)
+                                      : '0.00'}
+                                  </td>
+                                  <td className='py-2 text-right'>
+                                    {costMetrics.totalCosts &&
+                                    costMetrics.totalCosts > 0 &&
+                                    costMetrics.purchaseCosts
+                                      ? (
+                                          (costMetrics.purchaseCosts /
+                                            costMetrics.totalCosts) *
+                                          100
+                                        ).toFixed(1)
+                                      : '0.0'}
+                                    %
+                                  </td>
+                                  <td className='py-2 text-right text-green-600'>
+                                    Recent
+                                  </td>
                                 </tr>
                                 <tr className='border-b bg-gray-50'>
-                                  <td className='py-2 font-medium'>Total Costs</td>
-                                  <td className='py-2 text-right font-bold'>${costMetrics.totalCosts ? costMetrics.totalCosts.toFixed(2) : '0.00'}</td>
-                                  <td className='py-2 text-right font-bold'>100.0%</td>
-                                  <td className='py-2 text-right text-purple-600'>Combined</td>
+                                  <td className='py-2 font-medium'>
+                                    Total Costs
+                                  </td>
+                                  <td className='py-2 text-right font-bold'>
+                                    $
+                                    {costMetrics.totalCosts
+                                      ? costMetrics.totalCosts.toFixed(2)
+                                      : '0.00'}
+                                  </td>
+                                  <td className='py-2 text-right font-bold'>
+                                    100.0%
+                                  </td>
+                                  <td className='py-2 text-right text-purple-600'>
+                                    Combined
+                                  </td>
                                 </tr>
                               </tbody>
                             </table>
                           </div>
                         ) : (
                           <div className='flex items-center justify-center h-32'>
-                            <div className='text-sm text-muted-foreground'>No cost analysis data available</div>
+                            <div className='text-sm text-muted-foreground'>
+                              No cost analysis data available
+                            </div>
                           </div>
                         )}
                       </CardContent>
@@ -2394,7 +3047,8 @@ export default function ReportsPage() {
                       <span className='ml-3'>Profitability Reports</span>
                     </h2>
                     <p className='text-muted-foreground mt-1'>
-                      Gross profit analysis, discount impact, and order profitability insights
+                      Gross profit analysis, discount impact, and order
+                      profitability insights
                     </p>
                   </div>
 
@@ -2404,15 +3058,23 @@ export default function ReportsPage() {
                       {/* Gross Profit */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Gross Profit</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Gross Profit
+                          </CardTitle>
                           <Icons.TrendingUp />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold text-green-600'>
-                            ${grossProfitAnalysis?.grossProfit ? grossProfitAnalysis.grossProfit.toFixed(2) : '0.00'}
+                            $
+                            {grossProfitAnalysis?.grossProfit
+                              ? grossProfitAnalysis.grossProfit.toFixed(2)
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
-                            {grossProfitAnalysis?.grossProfitMargin ? grossProfitAnalysis.grossProfitMargin.toFixed(1) : '0.0'}% margin
+                            {grossProfitAnalysis?.grossProfitMargin
+                              ? grossProfitAnalysis.grossProfitMargin.toFixed(1)
+                              : '0.0'}
+                            % margin
                           </p>
                         </CardContent>
                       </Card>
@@ -2420,15 +3082,27 @@ export default function ReportsPage() {
                       {/* Total Revenue */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Total Revenue</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Total Revenue
+                          </CardTitle>
                           <Icons.CurrencyDollar />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${grossProfitAnalysis?.totalRevenue ? grossProfitAnalysis.totalRevenue.toFixed(2) : '0.00'}
+                            $
+                            {grossProfitAnalysis?.totalRevenue
+                              ? grossProfitAnalysis.totalRevenue.toFixed(2)
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
-                            {grossProfitAnalysis?.revenueGrowth ? (grossProfitAnalysis.revenueGrowth > 0 ? '+' : '') + grossProfitAnalysis.revenueGrowth.toFixed(1) + '%' : '0.0%'} growth
+                            {grossProfitAnalysis?.revenueGrowth
+                              ? (grossProfitAnalysis.revenueGrowth > 0
+                                  ? '+'
+                                  : '') +
+                                grossProfitAnalysis.revenueGrowth.toFixed(1) +
+                                '%'
+                              : '0.0%'}{' '}
+                            growth
                           </p>
                         </CardContent>
                       </Card>
@@ -2436,15 +3110,29 @@ export default function ReportsPage() {
                       {/* Cost of Goods Sold */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>COGS</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            COGS
+                          </CardTitle>
                           <Icons.Package />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold text-red-600'>
-                            ${grossProfitAnalysis?.totalCostOfGoodsSold ? grossProfitAnalysis.totalCostOfGoodsSold.toFixed(2) : '0.00'}
+                            $
+                            {grossProfitAnalysis?.totalCostOfGoodsSold
+                              ? grossProfitAnalysis.totalCostOfGoodsSold.toFixed(
+                                  2
+                                )
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
-                            {grossProfitAnalysis?.costGrowth ? (grossProfitAnalysis.costGrowth > 0 ? '+' : '') + grossProfitAnalysis.costGrowth.toFixed(1) + '%' : '0.0%'} change
+                            {grossProfitAnalysis?.costGrowth
+                              ? (grossProfitAnalysis.costGrowth > 0
+                                  ? '+'
+                                  : '') +
+                                grossProfitAnalysis.costGrowth.toFixed(1) +
+                                '%'
+                              : '0.0%'}{' '}
+                            change
                           </p>
                         </CardContent>
                       </Card>
@@ -2452,15 +3140,27 @@ export default function ReportsPage() {
                       {/* Discount Impact */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Discount Impact</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Discount Impact
+                          </CardTitle>
                           <Icons.CreditCard />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold text-orange-600'>
-                            ${discountImpactAnalysis?.totalDiscountsGiven ? discountImpactAnalysis.totalDiscountsGiven.toFixed(2) : '0.00'}
+                            $
+                            {discountImpactAnalysis?.totalDiscountsGiven
+                              ? discountImpactAnalysis.totalDiscountsGiven.toFixed(
+                                  2
+                                )
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
-                            {discountImpactAnalysis?.discountPercentage ? discountImpactAnalysis.discountPercentage.toFixed(1) : '0.0'}% of revenue
+                            {discountImpactAnalysis?.discountPercentage
+                              ? discountImpactAnalysis.discountPercentage.toFixed(
+                                  1
+                                )
+                              : '0.0'}
+                            % of revenue
                           </p>
                         </CardContent>
                       </Card>
@@ -2479,49 +3179,79 @@ export default function ReportsPage() {
                         <CardContent>
                           {profitabilityLoading ? (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>Loading profitability data...</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Loading profitability data...
+                              </div>
                             </div>
                           ) : grossProfitAnalysis ? (
                             <div className='space-y-4'>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Revenue</span>
+                                <span className='text-sm font-medium'>
+                                  Revenue
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${grossProfitAnalysis.totalRevenue ? grossProfitAnalysis.totalRevenue.toFixed(2) : '0.00'}
+                                  $
+                                  {grossProfitAnalysis.totalRevenue
+                                    ? grossProfitAnalysis.totalRevenue.toFixed(
+                                        2
+                                      )
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='w-full bg-gray-200 rounded-full h-2'>
-                                <div 
-                                  className='bg-green-500 h-2 rounded-full' 
-                                  style={{ 
-                                    width: `${grossProfitAnalysis.totalRevenue && grossProfitAnalysis.totalRevenue > 0 ? 100 : 0}%` 
+                                <div
+                                  className='bg-green-500 h-2 rounded-full'
+                                  style={{
+                                    width: `${grossProfitAnalysis.totalRevenue && grossProfitAnalysis.totalRevenue > 0 ? 100 : 0}%`,
                                   }}
                                 />
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Cost of Goods Sold</span>
+                                <span className='text-sm font-medium'>
+                                  Cost of Goods Sold
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${grossProfitAnalysis.totalCostOfGoodsSold ? grossProfitAnalysis.totalCostOfGoodsSold.toFixed(2) : '0.00'}
+                                  $
+                                  {grossProfitAnalysis.totalCostOfGoodsSold
+                                    ? grossProfitAnalysis.totalCostOfGoodsSold.toFixed(
+                                        2
+                                      )
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='w-full bg-gray-200 rounded-full h-2'>
-                                <div 
-                                  className='bg-red-500 h-2 rounded-full' 
-                                  style={{ 
-                                    width: `${grossProfitAnalysis.totalRevenue && grossProfitAnalysis.totalRevenue > 0 && grossProfitAnalysis.totalCostOfGoodsSold ? 
-                                      (grossProfitAnalysis.totalCostOfGoodsSold / grossProfitAnalysis.totalRevenue) * 100 : 0}%` 
+                                <div
+                                  className='bg-red-500 h-2 rounded-full'
+                                  style={{
+                                    width: `${
+                                      grossProfitAnalysis.totalRevenue &&
+                                      grossProfitAnalysis.totalRevenue > 0 &&
+                                      grossProfitAnalysis.totalCostOfGoodsSold
+                                        ? (grossProfitAnalysis.totalCostOfGoodsSold /
+                                            grossProfitAnalysis.totalRevenue) *
+                                          100
+                                        : 0
+                                    }%`,
                                   }}
                                 />
                               </div>
                               <div className='flex justify-between items-center pt-2 border-t'>
-                                <span className='text-sm font-medium'>Gross Profit</span>
+                                <span className='text-sm font-medium'>
+                                  Gross Profit
+                                </span>
                                 <span className='text-sm font-bold text-green-600'>
-                                  ${grossProfitAnalysis.grossProfit ? grossProfitAnalysis.grossProfit.toFixed(2) : '0.00'}
+                                  $
+                                  {grossProfitAnalysis.grossProfit
+                                    ? grossProfitAnalysis.grossProfit.toFixed(2)
+                                    : '0.00'}
                                 </span>
                               </div>
                             </div>
                           ) : (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>No profitability data available</div>
+                              <div className='text-sm text-muted-foreground'>
+                                No profitability data available
+                              </div>
                             </div>
                           )}
                         </CardContent>
@@ -2538,45 +3268,86 @@ export default function ReportsPage() {
                         <CardContent>
                           {profitabilityLoading ? (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>Loading discount data...</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Loading discount data...
+                              </div>
                             </div>
                           ) : discountImpactAnalysis ? (
                             <div className='space-y-4'>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Total Discounts</span>
+                                <span className='text-sm font-medium'>
+                                  Total Discounts
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${discountImpactAnalysis.totalDiscountsGiven ? discountImpactAnalysis.totalDiscountsGiven.toFixed(2) : '0.00'}
+                                  $
+                                  {discountImpactAnalysis.totalDiscountsGiven
+                                    ? discountImpactAnalysis.totalDiscountsGiven.toFixed(
+                                        2
+                                      )
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Net Revenue</span>
+                                <span className='text-sm font-medium'>
+                                  Net Revenue
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${discountImpactAnalysis.netRevenue ? discountImpactAnalysis.netRevenue.toFixed(2) : '0.00'}
+                                  $
+                                  {discountImpactAnalysis.netRevenue
+                                    ? discountImpactAnalysis.netRevenue.toFixed(
+                                        2
+                                      )
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Discount Efficiency</span>
+                                <span className='text-sm font-medium'>
+                                  Discount Efficiency
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  {discountImpactAnalysis.discountEfficiency ? discountImpactAnalysis.discountEfficiency.toFixed(1) : '0.0'}%
+                                  {discountImpactAnalysis.discountEfficiency
+                                    ? discountImpactAnalysis.discountEfficiency.toFixed(
+                                        1
+                                      )
+                                    : '0.0'}
+                                  %
                                 </span>
                               </div>
-                              {discountImpactAnalysis.topDiscounts && discountImpactAnalysis.topDiscounts.length > 0 && (
-                                <div className='mt-4'>
-                                  <h4 className='text-sm font-medium mb-2'>Top Discounts</h4>
-                                  <div className='space-y-2'>
-                                    {discountImpactAnalysis.topDiscounts.slice(0, 3).map((discount, idx) => (
-                                      <div key={idx} className='flex justify-between text-xs'>
-                                        <span>{discount.discountName}</span>
-                                        <span>${discount.totalSavings ? discount.totalSavings.toFixed(2) : '0.00'}</span>
-                                      </div>
-                                    ))}
+                              {discountImpactAnalysis.topDiscounts &&
+                                discountImpactAnalysis.topDiscounts.length >
+                                  0 && (
+                                  <div className='mt-4'>
+                                    <h4 className='text-sm font-medium mb-2'>
+                                      Top Discounts
+                                    </h4>
+                                    <div className='space-y-2'>
+                                      {discountImpactAnalysis.topDiscounts
+                                        .slice(0, 3)
+                                        .map((discount, idx) => (
+                                          <div
+                                            key={idx}
+                                            className='flex justify-between text-xs'
+                                          >
+                                            <span>{discount.discountName}</span>
+                                            <span>
+                                              $
+                                              {discount.totalSavings
+                                                ? discount.totalSavings.toFixed(
+                                                    2
+                                                  )
+                                                : '0.00'}
+                                            </span>
+                                          </div>
+                                        ))}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
                             </div>
                           ) : (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>No discount data available</div>
+                              <div className='text-sm text-muted-foreground'>
+                                No discount data available
+                              </div>
                             </div>
                           )}
                         </CardContent>
@@ -2594,36 +3365,63 @@ export default function ReportsPage() {
                       <CardContent>
                         {profitabilityLoading ? (
                           <div className='flex items-center justify-center h-32'>
-                            <div className='text-sm text-muted-foreground'>Loading order profitability data...</div>
+                            <div className='text-sm text-muted-foreground'>
+                              Loading order profitability data...
+                            </div>
                           </div>
                         ) : orderProfitability ? (
                           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
                             <div className='text-center p-4 border rounded-lg'>
-                              <div className='text-2xl font-bold'>{orderProfitability.totalOrders || 0}</div>
-                              <div className='text-sm text-muted-foreground'>Total Orders</div>
+                              <div className='text-2xl font-bold'>
+                                {orderProfitability.totalOrders || 0}
+                              </div>
+                              <div className='text-sm text-muted-foreground'>
+                                Total Orders
+                              </div>
                             </div>
                             <div className='text-center p-4 border rounded-lg'>
                               <div className='text-2xl font-bold text-green-600'>
-                                ${orderProfitability.averageOrderProfit ? orderProfitability.averageOrderProfit.toFixed(2) : '0.00'}
+                                $
+                                {orderProfitability.averageOrderProfit
+                                  ? orderProfitability.averageOrderProfit.toFixed(
+                                      2
+                                    )
+                                  : '0.00'}
                               </div>
-                              <div className='text-sm text-muted-foreground'>Avg Order Profit</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Avg Order Profit
+                              </div>
                             </div>
                             <div className='text-center p-4 border rounded-lg'>
                               <div className='text-2xl font-bold'>
-                                {orderProfitability.profitMargin ? orderProfitability.profitMargin.toFixed(1) : '0.0'}%
+                                {orderProfitability.profitMargin
+                                  ? orderProfitability.profitMargin.toFixed(1)
+                                  : '0.0'}
+                                %
                               </div>
-                              <div className='text-sm text-muted-foreground'>Profit Margin</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Profit Margin
+                              </div>
                             </div>
                             <div className='text-center p-4 border rounded-lg'>
                               <div className='text-2xl font-bold text-blue-600'>
-                                {orderProfitability.profitabilityRate ? orderProfitability.profitabilityRate.toFixed(1) : '0.0'}%
+                                {orderProfitability.profitabilityRate
+                                  ? orderProfitability.profitabilityRate.toFixed(
+                                      1
+                                    )
+                                  : '0.0'}
+                                %
                               </div>
-                              <div className='text-sm text-muted-foreground'>Profitability Rate</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Profitability Rate
+                              </div>
                             </div>
                           </div>
                         ) : (
                           <div className='flex items-center justify-center h-32'>
-                            <div className='text-sm text-muted-foreground'>No order profitability data available</div>
+                            <div className='text-sm text-muted-foreground'>
+                              No order profitability data available
+                            </div>
                           </div>
                         )}
                       </CardContent>
@@ -2634,30 +3432,60 @@ export default function ReportsPage() {
                       <CardHeader>
                         <CardTitle>Profitability Insights</CardTitle>
                         <CardDescription>
-                          Key insights and recommendations for improving profitability
+                          Key insights and recommendations for improving
+                          profitability
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                           <div className='space-y-4'>
-                            <h4 className='font-semibold'>Performance Metrics</h4>
+                            <h4 className='font-semibold'>
+                              Performance Metrics
+                            </h4>
                             <div className='space-y-2'>
                               <div className='flex justify-between'>
-                                <span className='text-sm'>Gross Profit Margin</span>
+                                <span className='text-sm'>
+                                  Gross Profit Margin
+                                </span>
                                 <span className='text-sm font-medium'>
-                                  {grossProfitAnalysis?.grossProfitMargin ? grossProfitAnalysis.grossProfitMargin.toFixed(1) : '0.0'}%
+                                  {grossProfitAnalysis?.grossProfitMargin
+                                    ? grossProfitAnalysis.grossProfitMargin.toFixed(
+                                        1
+                                      )
+                                    : '0.0'}
+                                  %
                                 </span>
                               </div>
                               <div className='flex justify-between'>
                                 <span className='text-sm'>Revenue Growth</span>
-                                <span className={`text-sm font-medium ${grossProfitAnalysis?.revenueGrowth && grossProfitAnalysis.revenueGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {grossProfitAnalysis?.revenueGrowth ? (grossProfitAnalysis.revenueGrowth > 0 ? '+' : '') + grossProfitAnalysis.revenueGrowth.toFixed(1) + '%' : '0.0%'}
+                                <span
+                                  className={`text-sm font-medium ${grossProfitAnalysis?.revenueGrowth && grossProfitAnalysis.revenueGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}
+                                >
+                                  {grossProfitAnalysis?.revenueGrowth
+                                    ? (grossProfitAnalysis.revenueGrowth > 0
+                                        ? '+'
+                                        : '') +
+                                      grossProfitAnalysis.revenueGrowth.toFixed(
+                                        1
+                                      ) +
+                                      '%'
+                                    : '0.0%'}
                                 </span>
                               </div>
                               <div className='flex justify-between'>
                                 <span className='text-sm'>Cost Growth</span>
-                                <span className={`text-sm font-medium ${grossProfitAnalysis?.costGrowth && grossProfitAnalysis.costGrowth < 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {grossProfitAnalysis?.costGrowth ? (grossProfitAnalysis.costGrowth > 0 ? '+' : '') + grossProfitAnalysis.costGrowth.toFixed(1) + '%' : '0.0%'}
+                                <span
+                                  className={`text-sm font-medium ${grossProfitAnalysis?.costGrowth && grossProfitAnalysis.costGrowth < 0 ? 'text-green-600' : 'text-red-600'}`}
+                                >
+                                  {grossProfitAnalysis?.costGrowth
+                                    ? (grossProfitAnalysis.costGrowth > 0
+                                        ? '+'
+                                        : '') +
+                                      grossProfitAnalysis.costGrowth.toFixed(
+                                        1
+                                      ) +
+                                      '%'
+                                    : '0.0%'}
                                 </span>
                               </div>
                             </div>
@@ -2665,15 +3493,27 @@ export default function ReportsPage() {
                           <div className='space-y-4'>
                             <h4 className='font-semibold'>Recommendations</h4>
                             <div className='space-y-2 text-sm text-muted-foreground'>
-                              <p>• {grossProfitAnalysis?.grossProfitMargin && grossProfitAnalysis.grossProfitMargin < 20 
-                                ? 'Focus on improving gross profit margins' 
-                                : 'Gross profit margins are healthy'}</p>
-                              <p>• {discountImpactAnalysis?.discountPercentage && discountImpactAnalysis.discountPercentage > 15 
-                                ? 'Review discount strategy to maintain profitability' 
-                                : 'Discount strategy is well balanced'}</p>
-                              <p>• {orderProfitability?.profitabilityRate && orderProfitability.profitabilityRate < 70 
-                                ? 'Improve order profitability through cost optimization' 
-                                : 'Order profitability is strong'}</p>
+                              <p>
+                                •{' '}
+                                {grossProfitAnalysis?.grossProfitMargin &&
+                                grossProfitAnalysis.grossProfitMargin < 20
+                                  ? 'Focus on improving gross profit margins'
+                                  : 'Gross profit margins are healthy'}
+                              </p>
+                              <p>
+                                •{' '}
+                                {discountImpactAnalysis?.discountPercentage &&
+                                discountImpactAnalysis.discountPercentage > 15
+                                  ? 'Review discount strategy to maintain profitability'
+                                  : 'Discount strategy is well balanced'}
+                              </p>
+                              <p>
+                                •{' '}
+                                {orderProfitability?.profitabilityRate &&
+                                orderProfitability.profitabilityRate < 70
+                                  ? 'Improve order profitability through cost optimization'
+                                  : 'Order profitability is strong'}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -2692,7 +3532,8 @@ export default function ReportsPage() {
                       <span className='ml-3'>Operational Cost Reports</span>
                     </h2>
                     <p className='text-muted-foreground mt-1'>
-                      Logistics costs, delivery analysis, and operational efficiency metrics
+                      Logistics costs, delivery analysis, and operational
+                      efficiency metrics
                     </p>
                   </div>
 
@@ -2702,15 +3543,25 @@ export default function ReportsPage() {
                       {/* Total Logistics Cost */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Total Logistics Cost</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Total Logistics Cost
+                          </CardTitle>
                           <Icons.Truck />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${logisticsCostAnalysis?.totalLogisticsCost ? logisticsCostAnalysis.totalLogisticsCost.toFixed(2) : '0.00'}
+                            $
+                            {logisticsCostAnalysis?.totalLogisticsCost
+                              ? logisticsCostAnalysis.totalLogisticsCost.toFixed(
+                                  2
+                                )
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
-                            {logisticsCostAnalysis?.efficiencyScore ? logisticsCostAnalysis.efficiencyScore.toFixed(1) : '0.0'}% efficiency
+                            {logisticsCostAnalysis?.efficiencyScore
+                              ? logisticsCostAnalysis.efficiencyScore.toFixed(1)
+                              : '0.0'}
+                            % efficiency
                           </p>
                         </CardContent>
                       </Card>
@@ -2718,15 +3569,24 @@ export default function ReportsPage() {
                       {/* Delivery Costs */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Delivery Costs</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Delivery Costs
+                          </CardTitle>
                           <Icons.Package />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${logisticsCostAnalysis?.deliveryCosts ? logisticsCostAnalysis.deliveryCosts.toFixed(2) : '0.00'}
+                            $
+                            {logisticsCostAnalysis?.deliveryCosts
+                              ? logisticsCostAnalysis.deliveryCosts.toFixed(2)
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
-                            ${logisticsCostAnalysis?.costPerDelivery ? logisticsCostAnalysis.costPerDelivery.toFixed(2) : '0.00'} per delivery
+                            $
+                            {logisticsCostAnalysis?.costPerDelivery
+                              ? logisticsCostAnalysis.costPerDelivery.toFixed(2)
+                              : '0.00'}{' '}
+                            per delivery
                           </p>
                         </CardContent>
                       </Card>
@@ -2734,12 +3594,17 @@ export default function ReportsPage() {
                       {/* Vehicle Costs */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Vehicle Costs</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Vehicle Costs
+                          </CardTitle>
                           <Icons.Truck />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${logisticsCostAnalysis?.vehicleCosts ? logisticsCostAnalysis.vehicleCosts.toFixed(2) : '0.00'}
+                            $
+                            {logisticsCostAnalysis?.vehicleCosts
+                              ? logisticsCostAnalysis.vehicleCosts.toFixed(2)
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
                             Fleet maintenance & fuel
@@ -2750,12 +3615,17 @@ export default function ReportsPage() {
                       {/* Driver Costs */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Driver Costs</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Driver Costs
+                          </CardTitle>
                           <Icons.TrendingUp />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${logisticsCostAnalysis?.driverCosts ? logisticsCostAnalysis.driverCosts.toFixed(2) : '0.00'}
+                            $
+                            {logisticsCostAnalysis?.driverCosts
+                              ? logisticsCostAnalysis.driverCosts.toFixed(2)
+                              : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
                             Wages & benefits
@@ -2771,65 +3641,115 @@ export default function ReportsPage() {
                         <CardHeader>
                           <CardTitle>Logistics Cost Breakdown</CardTitle>
                           <CardDescription>
-                            Distribution of operational costs across different categories
+                            Distribution of operational costs across different
+                            categories
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
                           {operationalLoading ? (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>Loading logistics data...</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Loading logistics data...
+                              </div>
                             </div>
                           ) : logisticsCostAnalysis ? (
                             <div className='space-y-4'>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Delivery Costs</span>
+                                <span className='text-sm font-medium'>
+                                  Delivery Costs
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${logisticsCostAnalysis.deliveryCosts ? logisticsCostAnalysis.deliveryCosts.toFixed(2) : '0.00'}
+                                  $
+                                  {logisticsCostAnalysis.deliveryCosts
+                                    ? logisticsCostAnalysis.deliveryCosts.toFixed(
+                                        2
+                                      )
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='w-full bg-gray-200 rounded-full h-2'>
-                                <div 
-                                  className='bg-blue-500 h-2 rounded-full' 
-                                  style={{ 
-                                    width: `${logisticsCostAnalysis.totalLogisticsCost && logisticsCostAnalysis.totalLogisticsCost > 0 && logisticsCostAnalysis.deliveryCosts ? 
-                                      (logisticsCostAnalysis.deliveryCosts / logisticsCostAnalysis.totalLogisticsCost) * 100 : 0}%` 
+                                <div
+                                  className='bg-blue-500 h-2 rounded-full'
+                                  style={{
+                                    width: `${
+                                      logisticsCostAnalysis.totalLogisticsCost &&
+                                      logisticsCostAnalysis.totalLogisticsCost >
+                                        0 &&
+                                      logisticsCostAnalysis.deliveryCosts
+                                        ? (logisticsCostAnalysis.deliveryCosts /
+                                            logisticsCostAnalysis.totalLogisticsCost) *
+                                          100
+                                        : 0
+                                    }%`,
                                   }}
                                 />
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Vehicle Costs</span>
+                                <span className='text-sm font-medium'>
+                                  Vehicle Costs
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${logisticsCostAnalysis.vehicleCosts ? logisticsCostAnalysis.vehicleCosts.toFixed(2) : '0.00'}
+                                  $
+                                  {logisticsCostAnalysis.vehicleCosts
+                                    ? logisticsCostAnalysis.vehicleCosts.toFixed(
+                                        2
+                                      )
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='w-full bg-gray-200 rounded-full h-2'>
-                                <div 
-                                  className='bg-green-500 h-2 rounded-full' 
-                                  style={{ 
-                                    width: `${logisticsCostAnalysis.totalLogisticsCost && logisticsCostAnalysis.totalLogisticsCost > 0 && logisticsCostAnalysis.vehicleCosts ? 
-                                      (logisticsCostAnalysis.vehicleCosts / logisticsCostAnalysis.totalLogisticsCost) * 100 : 0}%` 
+                                <div
+                                  className='bg-green-500 h-2 rounded-full'
+                                  style={{
+                                    width: `${
+                                      logisticsCostAnalysis.totalLogisticsCost &&
+                                      logisticsCostAnalysis.totalLogisticsCost >
+                                        0 &&
+                                      logisticsCostAnalysis.vehicleCosts
+                                        ? (logisticsCostAnalysis.vehicleCosts /
+                                            logisticsCostAnalysis.totalLogisticsCost) *
+                                          100
+                                        : 0
+                                    }%`,
                                   }}
                                 />
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Driver Costs</span>
+                                <span className='text-sm font-medium'>
+                                  Driver Costs
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${logisticsCostAnalysis.driverCosts ? logisticsCostAnalysis.driverCosts.toFixed(2) : '0.00'}
+                                  $
+                                  {logisticsCostAnalysis.driverCosts
+                                    ? logisticsCostAnalysis.driverCosts.toFixed(
+                                        2
+                                      )
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='w-full bg-gray-200 rounded-full h-2'>
-                                <div 
-                                  className='bg-orange-500 h-2 rounded-full' 
-                                  style={{ 
-                                    width: `${logisticsCostAnalysis.totalLogisticsCost && logisticsCostAnalysis.totalLogisticsCost > 0 && logisticsCostAnalysis.driverCosts ? 
-                                      (logisticsCostAnalysis.driverCosts / logisticsCostAnalysis.totalLogisticsCost) * 100 : 0}%` 
+                                <div
+                                  className='bg-orange-500 h-2 rounded-full'
+                                  style={{
+                                    width: `${
+                                      logisticsCostAnalysis.totalLogisticsCost &&
+                                      logisticsCostAnalysis.totalLogisticsCost >
+                                        0 &&
+                                      logisticsCostAnalysis.driverCosts
+                                        ? (logisticsCostAnalysis.driverCosts /
+                                            logisticsCostAnalysis.totalLogisticsCost) *
+                                          100
+                                        : 0
+                                    }%`,
                                   }}
                                 />
                               </div>
                             </div>
                           ) : (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>No logistics data available</div>
+                              <div className='text-sm text-muted-foreground'>
+                                No logistics data available
+                              </div>
                             </div>
                           )}
                         </CardContent>
@@ -2840,50 +3760,90 @@ export default function ReportsPage() {
                         <CardHeader>
                           <CardTitle>Operational Efficiency</CardTitle>
                           <CardDescription>
-                            Key performance indicators for operational efficiency
+                            Key performance indicators for operational
+                            efficiency
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
                           {operationalLoading ? (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>Loading efficiency data...</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Loading efficiency data...
+                              </div>
                             </div>
                           ) : operationalEfficiencyMetrics ? (
                             <div className='space-y-4'>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Revenue per Employee</span>
+                                <span className='text-sm font-medium'>
+                                  Revenue per Employee
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${operationalEfficiencyMetrics.revenuePerEmployee ? operationalEfficiencyMetrics.revenuePerEmployee.toFixed(0) : '0'}
+                                  $
+                                  {operationalEfficiencyMetrics.revenuePerEmployee
+                                    ? operationalEfficiencyMetrics.revenuePerEmployee.toFixed(
+                                        0
+                                      )
+                                    : '0'}
                                 </span>
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Cost per Order</span>
+                                <span className='text-sm font-medium'>
+                                  Cost per Order
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  ${operationalEfficiencyMetrics.costPerOrder ? operationalEfficiencyMetrics.costPerOrder.toFixed(2) : '0.00'}
+                                  $
+                                  {operationalEfficiencyMetrics.costPerOrder
+                                    ? operationalEfficiencyMetrics.costPerOrder.toFixed(
+                                        2
+                                      )
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Inventory Turnover</span>
+                                <span className='text-sm font-medium'>
+                                  Inventory Turnover
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  {operationalEfficiencyMetrics.inventoryTurnover ? operationalEfficiencyMetrics.inventoryTurnover.toFixed(1) : '0.0'}x
+                                  {operationalEfficiencyMetrics.inventoryTurnover
+                                    ? operationalEfficiencyMetrics.inventoryTurnover.toFixed(
+                                        1
+                                      )
+                                    : '0.0'}
+                                  x
                                 </span>
                               </div>
                               <div className='flex justify-between items-center'>
-                                <span className='text-sm font-medium'>Delivery Efficiency</span>
+                                <span className='text-sm font-medium'>
+                                  Delivery Efficiency
+                                </span>
                                 <span className='text-sm text-muted-foreground'>
-                                  {operationalEfficiencyMetrics.deliveryEfficiency ? operationalEfficiencyMetrics.deliveryEfficiency.toFixed(1) : '0.0'}%
+                                  {operationalEfficiencyMetrics.deliveryEfficiency
+                                    ? operationalEfficiencyMetrics.deliveryEfficiency.toFixed(
+                                        1
+                                      )
+                                    : '0.0'}
+                                  %
                                 </span>
                               </div>
                               <div className='flex justify-between items-center pt-2 border-t'>
-                                <span className='text-sm font-medium'>Overall Efficiency</span>
+                                <span className='text-sm font-medium'>
+                                  Overall Efficiency
+                                </span>
                                 <span className='text-sm font-bold text-green-600'>
-                                  {operationalEfficiencyMetrics.overallEfficiency ? operationalEfficiencyMetrics.overallEfficiency.toFixed(1) : '0.0'}%
+                                  {operationalEfficiencyMetrics.overallEfficiency
+                                    ? operationalEfficiencyMetrics.overallEfficiency.toFixed(
+                                        1
+                                      )
+                                    : '0.0'}
+                                  %
                                 </span>
                               </div>
                             </div>
                           ) : (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>No efficiency data available</div>
+                              <div className='text-sm text-muted-foreground'>
+                                No efficiency data available
+                              </div>
                             </div>
                           )}
                         </CardContent>
@@ -2895,41 +3855,69 @@ export default function ReportsPage() {
                       <CardHeader>
                         <CardTitle>Operational Recommendations</CardTitle>
                         <CardDescription>
-                          Recommendations for improving operational efficiency and reducing costs
+                          Recommendations for improving operational efficiency
+                          and reducing costs
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
                         {operationalLoading ? (
                           <div className='flex items-center justify-center h-32'>
-                            <div className='text-sm text-muted-foreground'>Loading recommendations...</div>
+                            <div className='text-sm text-muted-foreground'>
+                              Loading recommendations...
+                            </div>
                           </div>
-                        ) : operationalEfficiencyMetrics && operationalEfficiencyMetrics.recommendations ? (
+                        ) : operationalEfficiencyMetrics &&
+                          operationalEfficiencyMetrics.recommendations ? (
                           <div className='space-y-4'>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                              {operationalEfficiencyMetrics.recommendations.map((recommendation, idx) => (
-                                <div key={idx} className='p-3 bg-blue-50 border border-blue-200 rounded-lg'>
-                                  <div className='text-sm font-medium text-blue-800'>{recommendation}</div>
-                                </div>
-                              ))}
+                              {operationalEfficiencyMetrics.recommendations.map(
+                                (recommendation, idx) => (
+                                  <div
+                                    key={idx}
+                                    className='p-3 bg-blue-50 border border-blue-200 rounded-lg'
+                                  >
+                                    <div className='text-sm font-medium text-blue-800'>
+                                      {recommendation}
+                                    </div>
+                                  </div>
+                                )
+                              )}
                             </div>
                             <div className='mt-4 p-4 bg-gray-50 rounded-lg'>
-                              <h4 className='font-semibold mb-2'>Additional Insights</h4>
+                              <h4 className='font-semibold mb-2'>
+                                Additional Insights
+                              </h4>
                               <div className='space-y-2 text-sm text-muted-foreground'>
-                                <p>• {logisticsCostAnalysis?.costPerDelivery && logisticsCostAnalysis.costPerDelivery > 50 
-                                  ? 'Consider optimizing delivery routes to reduce costs' 
-                                  : 'Delivery costs are well optimized'}</p>
-                                <p>• {operationalEfficiencyMetrics?.overallEfficiency && operationalEfficiencyMetrics.overallEfficiency < 70 
-                                  ? 'Focus on improving overall operational efficiency' 
-                                  : 'Operational efficiency is strong'}</p>
-                                <p>• {logisticsCostAnalysis?.efficiencyScore && logisticsCostAnalysis.efficiencyScore < 80 
-                                  ? 'Review logistics operations for efficiency improvements' 
-                                  : 'Logistics operations are efficient'}</p>
+                                <p>
+                                  •{' '}
+                                  {logisticsCostAnalysis?.costPerDelivery &&
+                                  logisticsCostAnalysis.costPerDelivery > 50
+                                    ? 'Consider optimizing delivery routes to reduce costs'
+                                    : 'Delivery costs are well optimized'}
+                                </p>
+                                <p>
+                                  •{' '}
+                                  {operationalEfficiencyMetrics?.overallEfficiency &&
+                                  operationalEfficiencyMetrics.overallEfficiency <
+                                    70
+                                    ? 'Focus on improving overall operational efficiency'
+                                    : 'Operational efficiency is strong'}
+                                </p>
+                                <p>
+                                  •{' '}
+                                  {logisticsCostAnalysis?.efficiencyScore &&
+                                  logisticsCostAnalysis.efficiencyScore < 80
+                                    ? 'Review logistics operations for efficiency improvements'
+                                    : 'Logistics operations are efficient'}
+                                </p>
                               </div>
                             </div>
                           </div>
                         ) : (
                           <div className='flex items-center justify-center h-32'>
-                            <div className='text-sm text-muted-foreground'>No recommendations available</div>
+                            <div className='text-sm text-muted-foreground'>
+                              No recommendations available
+                            </div>
                           </div>
                         )}
                       </CardContent>
@@ -2947,7 +3935,8 @@ export default function ReportsPage() {
                       <span className='ml-3'>Revenue Reports</span>
                     </h2>
                     <p className='text-muted-foreground mt-1'>
-                      Revenue analytics, trends, and financial performance insights
+                      Revenue analytics, trends, and financial performance
+                      insights
                     </p>
                   </div>
 
@@ -2957,7 +3946,9 @@ export default function ReportsPage() {
                       {/* Today's Revenue */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Today&apos;s Revenue</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Today&apos;s Revenue
+                          </CardTitle>
                           <Icons.CurrencyDollar />
                         </CardHeader>
                         <CardContent>
@@ -2973,7 +3964,9 @@ export default function ReportsPage() {
                       {/* Total Revenue */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Total Revenue</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Total Revenue
+                          </CardTitle>
                           <Icons.TrendingUp />
                         </CardHeader>
                         <CardContent>
@@ -2989,7 +3982,9 @@ export default function ReportsPage() {
                       {/* Refunds */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Refunds</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Refunds
+                          </CardTitle>
                           <Icons.CreditCard />
                         </CardHeader>
                         <CardContent>
@@ -3005,13 +4000,20 @@ export default function ReportsPage() {
                       {/* Average Order Value */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Avg Order Value</CardTitle>
+                          <CardTitle className='text-sm font-medium'>
+                            Avg Order Value
+                          </CardTitle>
                           <Icons.ShoppingCart />
                         </CardHeader>
                         <CardContent>
                           <div className='text-2xl font-bold'>
-                            ${stripeStats?.total_payments && stripeStats.total_payments > 0 
-                              ? (stripeStats.total_revenue / stripeStats.total_payments).toFixed(2)
+                            $
+                            {stripeStats?.total_payments &&
+                            stripeStats.total_payments > 0
+                              ? (
+                                  stripeStats.total_revenue /
+                                  stripeStats.total_payments
+                                ).toFixed(2)
                               : '0.00'}
                           </div>
                           <p className='text-xs text-muted-foreground'>
@@ -3034,15 +4036,28 @@ export default function ReportsPage() {
                           <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                             {monthlyRevenue.slice(0, 3).map((month, idx) => {
                               const prevMonth = monthlyRevenue[idx + 1];
-                              const growth = prevMonth && prevMonth.revenue > 0 
-                                ? ((month.revenue - prevMonth.revenue) / prevMonth.revenue) * 100
-                                : 0;
+                              const growth =
+                                prevMonth && prevMonth.revenue > 0
+                                  ? ((month.revenue - prevMonth.revenue) /
+                                      prevMonth.revenue) *
+                                    100
+                                  : 0;
                               return (
-                                <div key={idx} className='text-center p-4 border rounded-lg'>
-                                  <div className='text-sm font-medium text-muted-foreground'>{month.month}</div>
-                                  <div className='text-2xl font-bold'>${month.revenue?.toFixed(2) || '0.00'}</div>
-                                  <div className={`text-sm ${growth > 0 ? 'text-green-600' : growth < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
-                                    {growth > 0 ? '+' : ''}{growth.toFixed(1)}% vs previous
+                                <div
+                                  key={idx}
+                                  className='text-center p-4 border rounded-lg'
+                                >
+                                  <div className='text-sm font-medium text-muted-foreground'>
+                                    {month.month}
+                                  </div>
+                                  <div className='text-2xl font-bold'>
+                                    ${month.revenue?.toFixed(2) || '0.00'}
+                                  </div>
+                                  <div
+                                    className={`text-sm ${growth > 0 ? 'text-green-600' : growth < 0 ? 'text-red-600' : 'text-muted-foreground'}`}
+                                  >
+                                    {growth > 0 ? '+' : ''}
+                                    {growth.toFixed(1)}% vs previous
                                   </div>
                                 </div>
                               );
@@ -3069,32 +4084,57 @@ export default function ReportsPage() {
                         <CardContent>
                           {salesLoading ? (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>Loading revenue data...</div>
+                              <div className='text-sm text-muted-foreground'>
+                                Loading revenue data...
+                              </div>
                             </div>
                           ) : monthlyRevenue && monthlyRevenue.length > 0 ? (
                             <div className='space-y-4'>
                               <div className='grid grid-cols-12 gap-2 items-end h-40'>
                                 {monthlyRevenue.map((month, idx) => {
-                                  const height = Math.min(100, Math.max(8, Math.round(((month.revenue || 0) / monthlyMaxRevenue) * 100)));
+                                  const height = Math.min(
+                                    100,
+                                    Math.max(
+                                      8,
+                                      Math.round(
+                                        ((month.revenue || 0) /
+                                          monthlyMaxRevenue) *
+                                          100
+                                      )
+                                    )
+                                  );
                                   return (
-                                    <div key={idx} className='flex flex-col items-center h-full'>
+                                    <div
+                                      key={idx}
+                                      className='flex flex-col items-center h-full'
+                                    >
                                       <div
                                         className='w-full bg-blue-500 rounded min-h-[8px] border border-blue-600'
                                         style={{ height: `${height}%` }}
                                         title={`${month.month}: $${month.revenue?.toFixed(2) || 0}`}
                                       />
-                                      <div className='text-[10px] mt-1 truncate'>{month.month?.slice(0,3)}</div>
+                                      <div className='text-[10px] mt-1 truncate'>
+                                        {month.month?.slice(0, 3)}
+                                      </div>
                                     </div>
                                   );
                                 })}
                               </div>
                               <div className='text-sm text-muted-foreground text-center'>
-                                Total Monthly Revenue: ${monthlyRevenue.reduce((sum, month) => sum + (month.revenue || 0), 0).toFixed(2)}
+                                Total Monthly Revenue: $
+                                {monthlyRevenue
+                                  .reduce(
+                                    (sum, month) => sum + (month.revenue || 0),
+                                    0
+                                  )
+                                  .toFixed(2)}
                               </div>
                             </div>
                           ) : (
                             <div className='flex items-center justify-center h-40'>
-                              <div className='text-sm text-muted-foreground'>No revenue data available</div>
+                              <div className='text-sm text-muted-foreground'>
+                                No revenue data available
+                              </div>
                             </div>
                           )}
                         </CardContent>
@@ -3111,41 +4151,66 @@ export default function ReportsPage() {
                         <CardContent>
                           <div className='space-y-4'>
                             <div className='flex justify-between items-center'>
-                              <span className='text-sm font-medium'>Today&apos;s Performance</span>
+                              <span className='text-sm font-medium'>
+                                Today&apos;s Performance
+                              </span>
                               <span className='text-sm text-muted-foreground'>
                                 ${todayRevenue?.revenue?.toFixed(2) || '0.00'}
                               </span>
                             </div>
                             <div className='flex justify-between items-center'>
-                              <span className='text-sm font-medium'>Best Month</span>
+                              <span className='text-sm font-medium'>
+                                Best Month
+                              </span>
                               <span className='text-sm text-muted-foreground'>
-                                {monthlyRevenue && monthlyRevenue.length > 0 
-                                  ? monthlyRevenue.reduce((best, month) => 
-                                      (month.revenue || 0) > (best.revenue || 0) ? month : best
-                                    ).month + ': $' + 
-                                    monthlyRevenue.reduce((best, month) => 
-                                      (month.revenue || 0) > (best.revenue || 0) ? month : best
-                                    ).revenue?.toFixed(2)
-                                  : 'N/A'
-                                }
+                                {monthlyRevenue && monthlyRevenue.length > 0
+                                  ? monthlyRevenue.reduce((best, month) =>
+                                      (month.revenue || 0) > (best.revenue || 0)
+                                        ? month
+                                        : best
+                                    ).month +
+                                    ': $' +
+                                    monthlyRevenue
+                                      .reduce((best, month) =>
+                                        (month.revenue || 0) >
+                                        (best.revenue || 0)
+                                          ? month
+                                          : best
+                                      )
+                                      .revenue?.toFixed(2)
+                                  : 'N/A'}
                               </span>
                             </div>
                             <div className='flex justify-between items-center'>
-                              <span className='text-sm font-medium'>Average Monthly</span>
+                              <span className='text-sm font-medium'>
+                                Average Monthly
+                              </span>
                               <span className='text-sm text-muted-foreground'>
-                                ${monthlyRevenue && monthlyRevenue.length > 0
-                                  ? (monthlyRevenue.reduce((sum, month) => sum + (month.revenue || 0), 0) / monthlyRevenue.length).toFixed(2)
-                                  : '0.00'
-                                }
+                                $
+                                {monthlyRevenue && monthlyRevenue.length > 0
+                                  ? (
+                                      monthlyRevenue.reduce(
+                                        (sum, month) =>
+                                          sum + (month.revenue || 0),
+                                        0
+                                      ) / monthlyRevenue.length
+                                    ).toFixed(2)
+                                  : '0.00'}
                               </span>
                             </div>
                             <div className='flex justify-between items-center'>
-                              <span className='text-sm font-medium'>Refund Rate</span>
+                              <span className='text-sm font-medium'>
+                                Refund Rate
+                              </span>
                               <span className='text-sm text-muted-foreground'>
-                                {stripeStats?.total_payments && stripeStats.total_payments > 0 
-                                  ? ((stripeStats.total_refunds / stripeStats.total_payments) * 100).toFixed(1) + '%'
-                                  : '0.0%'
-                                }
+                                {stripeStats?.total_payments &&
+                                stripeStats.total_payments > 0
+                                  ? (
+                                      (stripeStats.total_refunds /
+                                        stripeStats.total_payments) *
+                                      100
+                                    ).toFixed(1) + '%'
+                                  : '0.0%'}
                               </span>
                             </div>
                           </div>
@@ -3164,33 +4229,50 @@ export default function ReportsPage() {
                       <CardContent>
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                           <div className='space-y-4'>
-                            <h4 className='font-semibold'>Performance Metrics</h4>
+                            <h4 className='font-semibold'>
+                              Performance Metrics
+                            </h4>
                             <div className='space-y-2'>
                               <div className='flex justify-between'>
-                                <span className='text-sm'>Revenue per Transaction</span>
+                                <span className='text-sm'>
+                                  Revenue per Transaction
+                                </span>
                                 <span className='text-sm font-medium'>
-                                  ${stripeStats?.total_payments && stripeStats.total_payments > 0 
-                                    ? (stripeStats.total_revenue / stripeStats.total_payments).toFixed(2)
-                                    : '0.00'
-                                  }
+                                  $
+                                  {stripeStats?.total_payments &&
+                                  stripeStats.total_payments > 0
+                                    ? (
+                                        stripeStats.total_revenue /
+                                        stripeStats.total_payments
+                                      ).toFixed(2)
+                                    : '0.00'}
                                 </span>
                               </div>
                               <div className='flex justify-between'>
                                 <span className='text-sm'>Success Rate</span>
                                 <span className='text-sm font-medium text-green-600'>
-                                  {stripeStats?.total_payments && stripeStats.total_payments > 0 
-                                    ? (((stripeStats.total_payments - (stripeStats.total_refunds || 0)) / stripeStats.total_payments) * 100).toFixed(1) + '%'
-                                    : '0.0%'
-                                  }
+                                  {stripeStats?.total_payments &&
+                                  stripeStats.total_payments > 0
+                                    ? (
+                                        ((stripeStats.total_payments -
+                                          (stripeStats.total_refunds || 0)) /
+                                          stripeStats.total_payments) *
+                                        100
+                                      ).toFixed(1) + '%'
+                                    : '0.0%'}
                                 </span>
                               </div>
                               <div className='flex justify-between'>
                                 <span className='text-sm'>Refund Rate</span>
                                 <span className='text-sm font-medium text-red-600'>
-                                  {stripeStats?.total_payments && stripeStats.total_payments > 0 
-                                    ? (((stripeStats.total_refunds || 0) / stripeStats.total_payments) * 100).toFixed(1) + '%'
-                                    : '0.0%'
-                                  }
+                                  {stripeStats?.total_payments &&
+                                  stripeStats.total_payments > 0
+                                    ? (
+                                        ((stripeStats.total_refunds || 0) /
+                                          stripeStats.total_payments) *
+                                        100
+                                      ).toFixed(1) + '%'
+                                    : '0.0%'}
                                 </span>
                               </div>
                             </div>
@@ -3198,9 +4280,26 @@ export default function ReportsPage() {
                           <div className='space-y-4'>
                             <h4 className='font-semibold'>Business Insights</h4>
                             <div className='space-y-2 text-sm text-muted-foreground'>
-                              <p>• {todayRevenue?.revenue && todayRevenue.revenue > 0 ? 'Strong daily performance' : 'Monitor daily revenue trends'}</p>
-                              <p>• {monthlyRevenue && monthlyRevenue.length > 0 ? 'Revenue data available for analysis' : 'Limited historical data'}</p>
-                              <p>• {stripeStats?.total_refunds && stripeStats.total_refunds > 0 ? 'Some refunds processed' : 'No refunds recorded'}</p>
+                              <p>
+                                •{' '}
+                                {todayRevenue?.revenue &&
+                                todayRevenue.revenue > 0
+                                  ? 'Strong daily performance'
+                                  : 'Monitor daily revenue trends'}
+                              </p>
+                              <p>
+                                •{' '}
+                                {monthlyRevenue && monthlyRevenue.length > 0
+                                  ? 'Revenue data available for analysis'
+                                  : 'Limited historical data'}
+                              </p>
+                              <p>
+                                •{' '}
+                                {stripeStats?.total_refunds &&
+                                stripeStats.total_refunds > 0
+                                  ? 'Some refunds processed'
+                                  : 'No refunds recorded'}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -3218,7 +4317,9 @@ export default function ReportsPage() {
                       <CardContent>
                         {salesLoading ? (
                           <div className='flex items-center justify-center h-32'>
-                            <div className='text-sm text-muted-foreground'>Loading revenue data...</div>
+                            <div className='text-sm text-muted-foreground'>
+                              Loading revenue data...
+                            </div>
                           </div>
                         ) : monthlyRevenue && monthlyRevenue.length > 0 ? (
                           <div className='overflow-x-auto'>
@@ -3227,18 +4328,33 @@ export default function ReportsPage() {
                                 <tr className='border-b'>
                                   <th className='text-left py-2'>Month</th>
                                   <th className='text-right py-2'>Revenue</th>
-                                  <th className='text-right py-2'>Transactions</th>
-                                  <th className='text-right py-2'>Avg per Transaction</th>
+                                  <th className='text-right py-2'>
+                                    Transactions
+                                  </th>
+                                  <th className='text-right py-2'>
+                                    Avg per Transaction
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {monthlyRevenue.map((month, idx) => (
                                   <tr key={idx} className='border-b'>
-                                    <td className='py-2 font-medium'>{month.month}</td>
-                                    <td className='py-2 text-right'>${month.revenue?.toFixed(2) || '0.00'}</td>
-                                    <td className='py-2 text-right'>{month.count || 0}</td>
+                                    <td className='py-2 font-medium'>
+                                      {month.month}
+                                    </td>
                                     <td className='py-2 text-right'>
-                                      ${month.count > 0 ? (month.revenue / month.count).toFixed(2) : '0.00'}
+                                      ${month.revenue?.toFixed(2) || '0.00'}
+                                    </td>
+                                    <td className='py-2 text-right'>
+                                      {month.count || 0}
+                                    </td>
+                                    <td className='py-2 text-right'>
+                                      $
+                                      {month.count > 0
+                                        ? (month.revenue / month.count).toFixed(
+                                            2
+                                          )
+                                        : '0.00'}
                                     </td>
                                   </tr>
                                 ))}
@@ -3247,7 +4363,9 @@ export default function ReportsPage() {
                           </div>
                         ) : (
                           <div className='flex items-center justify-center h-32'>
-                            <div className='text-sm text-muted-foreground'>No revenue data available</div>
+                            <div className='text-sm text-muted-foreground'>
+                              No revenue data available
+                            </div>
                           </div>
                         )}
                       </CardContent>

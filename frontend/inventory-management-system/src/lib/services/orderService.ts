@@ -212,7 +212,9 @@ export const orderService = {
   /**
    * Get all orders status counts (for analytics)
    */
-  async getAllStatusCounts(): Promise<{ statusBreakdown: Record<string, number> }> {
+  async getAllStatusCounts(): Promise<{
+    statusBreakdown: Record<string, number>;
+  }> {
     try {
       const response = await fetch(
         `${API_BASE_URL}/debug/status-counts`,

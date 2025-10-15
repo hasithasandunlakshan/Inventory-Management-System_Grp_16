@@ -79,7 +79,11 @@ export interface LogisticsMetrics {
 }
 
 class LogisticsService {
-  private async makeRequest(serviceUrl: string, endpoint: string, options: RequestInit = {}) {
+  private async makeRequest(
+    serviceUrl: string,
+    endpoint: string,
+    options: RequestInit = {}
+  ) {
     const token = authService.getToken();
     if (!token) {
       throw new Error('Authentication required');
@@ -89,7 +93,7 @@ class LogisticsService {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         ...options.headers,
       },
     });
@@ -104,12 +108,15 @@ class LogisticsService {
   // Delivery Logs
   async getDeliveryLogs(purchaseOrderId?: number): Promise<DeliveryLog[]> {
     try {
-      const endpoint = purchaseOrderId 
+      const endpoint = purchaseOrderId
         ? `/api/delivery-logs?purchaseOrderId=${purchaseOrderId}`
         : '/api/delivery-logs/recent';
       return await this.makeRequest(SUPPLIER_SERVICE_URL, endpoint);
     } catch (error) {
-      console.error('Failed to fetch delivery logs (supplier service may not be running):', error);
+      console.error(
+        'Failed to fetch delivery logs (supplier service may not be running):',
+        error
+      );
       // Return mock data for development
       return [
         {
@@ -117,8 +124,8 @@ class LogisticsService {
           purchaseOrder: { poId: 1, supplierName: 'Mock Supplier' },
           itemId: 1,
           receivedQuantity: 10,
-          receivedDate: new Date().toISOString()
-        }
+          receivedDate: new Date().toISOString(),
+        },
       ];
     }
   }
@@ -126,7 +133,10 @@ class LogisticsService {
   // Driver Management
   async getAllDrivers(): Promise<DriverProfile[]> {
     try {
-      const response = await this.makeRequest(RESOURCE_SERVICE_URL, '/api/resources/drivers');
+      const response = await this.makeRequest(
+        RESOURCE_SERVICE_URL,
+        '/api/resources/drivers'
+      );
       return response.data || [];
     } catch (error) {
       console.error('Failed to fetch drivers:', error);
@@ -136,7 +146,10 @@ class LogisticsService {
 
   async getAvailableDrivers(): Promise<DriverProfile[]> {
     try {
-      const response = await this.makeRequest(RESOURCE_SERVICE_URL, '/api/resources/drivers/available');
+      const response = await this.makeRequest(
+        RESOURCE_SERVICE_URL,
+        '/api/resources/drivers/available'
+      );
       return response.data || [];
     } catch (error) {
       console.error('Failed to fetch available drivers:', error);
@@ -147,7 +160,10 @@ class LogisticsService {
   // Vehicle Management
   async getAllVehicles(): Promise<Vehicle[]> {
     try {
-      const response = await this.makeRequest(RESOURCE_SERVICE_URL, '/api/resources/vehicles');
+      const response = await this.makeRequest(
+        RESOURCE_SERVICE_URL,
+        '/api/resources/vehicles'
+      );
       return response.data || [];
     } catch (error) {
       console.error('Failed to fetch vehicles:', error);
@@ -157,7 +173,10 @@ class LogisticsService {
 
   async getAvailableVehicles(): Promise<Vehicle[]> {
     try {
-      const response = await this.makeRequest(RESOURCE_SERVICE_URL, '/api/resources/vehicles/available');
+      const response = await this.makeRequest(
+        RESOURCE_SERVICE_URL,
+        '/api/resources/vehicles/available'
+      );
       return response.data || [];
     } catch (error) {
       console.error('Failed to fetch available vehicles:', error);
@@ -168,7 +187,10 @@ class LogisticsService {
   // Assignment Management
   async getAllAssignments(): Promise<Assignment[]> {
     try {
-      const response = await this.makeRequest(RESOURCE_SERVICE_URL, '/api/resources/assignments');
+      const response = await this.makeRequest(
+        RESOURCE_SERVICE_URL,
+        '/api/resources/assignments'
+      );
       return response.data || [];
     } catch (error) {
       console.error('Failed to fetch assignments:', error);
@@ -178,7 +200,10 @@ class LogisticsService {
 
   async getActiveAssignments(): Promise<Assignment[]> {
     try {
-      const response = await this.makeRequest(RESOURCE_SERVICE_URL, '/api/resources/assignments/active');
+      const response = await this.makeRequest(
+        RESOURCE_SERVICE_URL,
+        '/api/resources/assignments/active'
+      );
       return response.data || [];
     } catch (error) {
       console.error('Failed to fetch active assignments:', error);
@@ -188,7 +213,10 @@ class LogisticsService {
 
   async getAssignmentsByDriver(driverId: number): Promise<Assignment[]> {
     try {
-      const response = await this.makeRequest(RESOURCE_SERVICE_URL, `/api/resources/assignments/driver/${driverId}`);
+      const response = await this.makeRequest(
+        RESOURCE_SERVICE_URL,
+        `/api/resources/assignments/driver/${driverId}`
+      );
       return response.data || [];
     } catch (error) {
       console.error('Failed to fetch driver assignments:', error);
@@ -206,22 +234,31 @@ class LogisticsService {
     try {
       const queryParams = new URLSearchParams();
       if (filters?.status) queryParams.append('status', filters.status);
-      if (filters?.supplierId) queryParams.append('supplierId', filters.supplierId.toString());
+      if (filters?.supplierId)
+        queryParams.append('supplierId', filters.supplierId.toString());
       if (filters?.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
       if (filters?.dateTo) queryParams.append('dateTo', filters.dateTo);
 
       const endpoint = `/api/purchase-orders/stats/summary${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       return await this.makeRequest(SUPPLIER_SERVICE_URL, endpoint);
     } catch (error) {
-      console.error('Failed to fetch purchase order stats (supplier service may not be running):', error);
+      console.error(
+        'Failed to fetch purchase order stats (supplier service may not be running):',
+        error
+      );
       return {
         totalOrders: 5,
         totalValue: 25000,
         averageOrderValue: 5000,
-        statusBreakdown: { 'PENDING': 2, 'CONFIRMED': 2, 'DELIVERED': 1 },
+        statusBreakdown: { PENDING: 2, CONFIRMED: 2, DELIVERED: 1 },
         topSuppliers: [
-          { supplierId: 1, supplierName: 'Mock Supplier', orderCount: 3, totalValue: 15000 }
-        ]
+          {
+            supplierId: 1,
+            supplierName: 'Mock Supplier',
+            orderCount: 3,
+            totalValue: 15000,
+          },
+        ],
       };
     }
   }
@@ -229,13 +266,16 @@ class LogisticsService {
   // Order Status Analytics
   async getOrderStatusCounts(): Promise<OrderStatusCounts> {
     try {
-      return await this.makeRequest(ORDER_SERVICE_URL, '/api/orders/debug/status-counts');
+      return await this.makeRequest(
+        ORDER_SERVICE_URL,
+        '/api/orders/debug/status-counts'
+      );
     } catch (error) {
       console.error('Failed to fetch order status counts:', error);
       return {
         totalOrders: 0,
         confirmedOrders: 0,
-        statusBreakdown: {}
+        statusBreakdown: {},
       };
     }
   }
@@ -247,22 +287,23 @@ class LogisticsService {
         deliveryLogs,
         activeAssignments,
         orderStatusCounts,
-        purchaseOrderStats
+        purchaseOrderStats,
       ] = await Promise.all([
         this.getDeliveryLogs(),
         this.getActiveAssignments(),
         this.getOrderStatusCounts(),
-        this.getPurchaseOrderStats()
+        this.getPurchaseOrderStats(),
       ]);
 
       // Calculate delivery success rate
       const totalDeliveries = deliveryLogs.length;
-      const successfulDeliveries = deliveryLogs.filter(log => 
-        log.receivedQuantity > 0
+      const successfulDeliveries = deliveryLogs.filter(
+        log => log.receivedQuantity > 0
       ).length;
-      const deliverySuccessRate = totalDeliveries > 0 
-        ? (successfulDeliveries / totalDeliveries) * 100 
-        : 0;
+      const deliverySuccessRate =
+        totalDeliveries > 0
+          ? (successfulDeliveries / totalDeliveries) * 100
+          : 0;
 
       // Calculate average delivery time (simplified)
       const averageDeliveryTime = totalDeliveries > 0 ? 2.5 : 0; // This would need more complex calculation
@@ -270,16 +311,16 @@ class LogisticsService {
       // Calculate driver utilization
       const allDrivers = await this.getAllDrivers();
       const activeDrivers = activeAssignments.length;
-      const driverUtilization = allDrivers.length > 0 
-        ? (activeDrivers / allDrivers.length) * 100 
-        : 0;
+      const driverUtilization =
+        allDrivers.length > 0 ? (activeDrivers / allDrivers.length) * 100 : 0;
 
       // Calculate vehicle utilization
       const allVehicles = await this.getAllVehicles();
       const assignedVehicles = activeAssignments.length;
-      const vehicleUtilization = allVehicles.length > 0 
-        ? (assignedVehicles / allVehicles.length) * 100 
-        : 0;
+      const vehicleUtilization =
+        allVehicles.length > 0
+          ? (assignedVehicles / allVehicles.length) * 100
+          : 0;
 
       // Calculate order processing time (simplified)
       const orderProcessingTime = orderStatusCounts.totalOrders > 0 ? 1.5 : 0;
@@ -294,7 +335,7 @@ class LogisticsService {
         driverUtilization: Math.round(driverUtilization * 100) / 100,
         vehicleUtilization: Math.round(vehicleUtilization * 100) / 100,
         orderProcessingTime,
-        inventoryTurnover
+        inventoryTurnover,
       };
     } catch (error) {
       console.error('Failed to calculate logistics metrics:', error);
@@ -305,7 +346,7 @@ class LogisticsService {
         driverUtilization: 0,
         vehicleUtilization: 0,
         orderProcessingTime: 0,
-        inventoryTurnover: 0
+        inventoryTurnover: 0,
       };
     }
   }
@@ -315,37 +356,53 @@ class LogisticsService {
     try {
       const [deliveryLogs, metrics] = await Promise.all([
         this.getDeliveryLogs(),
-        this.getLogisticsMetrics()
+        this.getLogisticsMetrics(),
       ]);
 
       // Group delivery logs by date
-      const deliveriesByDate = deliveryLogs.reduce((acc, log) => {
-        const date = new Date(log.receivedDate).toISOString().split('T')[0];
-        if (!acc[date]) {
-          acc[date] = {
-            date,
-            ordersDelivered: 0,
-            totalQuantity: 0,
-            successfulDeliveries: 0
-          };
-        }
-        acc[date].ordersDelivered += 1;
-        acc[date].totalQuantity += log.receivedQuantity;
-        if (log.receivedQuantity > 0) {
-          acc[date].successfulDeliveries += 1;
-        }
-        return acc;
-      }, {} as Record<string, { date: string; ordersDelivered: number; totalQuantity: number; successfulDeliveries: number }>);
+      const deliveriesByDate = deliveryLogs.reduce(
+        (acc, log) => {
+          const date = new Date(log.receivedDate).toISOString().split('T')[0];
+          if (!acc[date]) {
+            acc[date] = {
+              date,
+              ordersDelivered: 0,
+              totalQuantity: 0,
+              successfulDeliveries: 0,
+            };
+          }
+          acc[date].ordersDelivered += 1;
+          acc[date].totalQuantity += log.receivedQuantity;
+          if (log.receivedQuantity > 0) {
+            acc[date].successfulDeliveries += 1;
+          }
+          return acc;
+        },
+        {} as Record<
+          string,
+          {
+            date: string;
+            ordersDelivered: number;
+            totalQuantity: number;
+            successfulDeliveries: number;
+          }
+        >
+      );
 
-      return Object.values(deliveriesByDate).map((delivery) => ({
+      return Object.values(deliveriesByDate).map(delivery => ({
         deliveryDate: delivery.date,
         ordersDelivered: delivery.ordersDelivered,
         averageDeliveryTime: metrics.averageDeliveryTime,
-        deliverySuccess: delivery.ordersDelivered > 0 
-          ? Math.round((delivery.successfulDeliveries / delivery.ordersDelivered) * 100 * 100) / 100
-          : 0,
+        deliverySuccess:
+          delivery.ordersDelivered > 0
+            ? Math.round(
+                (delivery.successfulDeliveries / delivery.ordersDelivered) *
+                  100 *
+                  100
+              ) / 100
+            : 0,
         fuelCost: delivery.ordersDelivered * 200, // Estimated cost per delivery
-        driverEfficiency: Math.round(metrics.driverUtilization * 100) / 100
+        driverEfficiency: Math.round(metrics.driverUtilization * 100) / 100,
       }));
     } catch (error) {
       console.error('Failed to generate delivery performance report:', error);
@@ -359,7 +416,7 @@ class LogisticsService {
       const [drivers, vehicles, assignments] = await Promise.all([
         this.getAllDrivers(),
         this.getAllVehicles(),
-        this.getAllAssignments()
+        this.getAllAssignments(),
       ]);
 
       return {
@@ -368,13 +425,26 @@ class LogisticsService {
         totalVehicles: vehicles.length,
         assignedVehicles: vehicles.filter(v => v.status === 'ASSIGNED').length,
         totalAssignments: assignments.length,
-        activeAssignments: assignments.filter(a => a.status === 'ACTIVE').length,
-        driverUtilization: drivers.length > 0 
-          ? Math.round((drivers.filter(d => d.status === 'ON_DUTY').length / drivers.length) * 100 * 100) / 100
-          : 0,
-        vehicleUtilization: vehicles.length > 0 
-          ? Math.round((vehicles.filter(v => v.status === 'ASSIGNED').length / vehicles.length) * 100 * 100) / 100
-          : 0
+        activeAssignments: assignments.filter(a => a.status === 'ACTIVE')
+          .length,
+        driverUtilization:
+          drivers.length > 0
+            ? Math.round(
+                (drivers.filter(d => d.status === 'ON_DUTY').length /
+                  drivers.length) *
+                  100 *
+                  100
+              ) / 100
+            : 0,
+        vehicleUtilization:
+          vehicles.length > 0
+            ? Math.round(
+                (vehicles.filter(v => v.status === 'ASSIGNED').length /
+                  vehicles.length) *
+                  100 *
+                  100
+              ) / 100
+            : 0,
       };
     } catch (error) {
       console.error('Failed to generate fleet utilization report:', error);
@@ -386,7 +456,7 @@ class LogisticsService {
         totalAssignments: 0,
         activeAssignments: 0,
         driverUtilization: 0,
-        vehicleUtilization: 0
+        vehicleUtilization: 0,
       };
     }
   }
