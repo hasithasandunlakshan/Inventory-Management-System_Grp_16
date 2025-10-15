@@ -23,7 +23,6 @@ export const supplierService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch suppliers:', error);
       throw new Error('Failed to fetch suppliers - backend not available');
     }
   },
@@ -47,7 +46,6 @@ export const supplierService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch supplier:', error);
       throw error;
     }
   },
@@ -78,7 +76,6 @@ export const supplierService = {
 
       throw new Error(`Failed to create supplier: ${response.status}`);
     } catch (error) {
-      console.error('Failed to create supplier:', error);
       throw new Error('Failed to create supplier - backend not available');
     }
   },
@@ -99,7 +96,6 @@ export const supplierService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to update supplier:', error);
       throw new Error('Failed to update supplier - backend not available');
     }
   },
@@ -118,7 +114,6 @@ export const supplierService = {
         throw new Error('Failed to delete supplier');
       }
     } catch (error) {
-      console.error('Failed to delete supplier:', error);
       throw new Error('Failed to delete supplier - backend not available');
     }
   },
