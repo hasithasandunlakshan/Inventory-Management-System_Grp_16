@@ -54,7 +54,7 @@ export default function CategoriesClient({
       setCategoryName('');
       setIsCreateDialogOpen(false);
       toast.success('Category created successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to create category. Please try again.');
     }
   };
@@ -78,7 +78,7 @@ export default function CategoriesClient({
       setEditingCategory(null);
       setIsEditDialogOpen(false);
       toast.success('Category updated successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update category. Please try again.');
     }
   };
@@ -88,7 +88,7 @@ export default function CategoriesClient({
       await categoryService.deleteCategory(id);
       setCategories(categories.filter(cat => cat.id !== id));
       toast.success('Category deleted successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete category. Please try again.');
     }
   };

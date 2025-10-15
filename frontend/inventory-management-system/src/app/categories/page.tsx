@@ -31,7 +31,7 @@ export default async function CategoriesPage() {
       if (Array.isArray(data)) {
         categoriesData = data;
       }
-    } catch (error) {
+    } catch {
       // Fallback to empty array on error
       categoriesData = [];
     }
