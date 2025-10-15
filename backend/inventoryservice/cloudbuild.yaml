@@ -1,0 +1,29 @@
+# Cloud Build configuration to build and deploy the image to Cloud Run
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_IMAGE}', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_IMAGE}']
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud run deploy ${_SERVICE_NAME} \
+          --image ${_IMAGE} \
+          --region ${_REGION} \
+          --platform managed \
+          --allow-unauthenticated \
+          --port 8085 \
+          --memory 512Mi \
+          --timeout 300
+
+images:
+  - '${_IMAGE}'
+
+substitutions:
+  _IMAGE: 'gcr.io/api-gateway-474511/inventoryservice:latest'
+  _SERVICE_NAME: 'inventoryservice'
+  _REGION: 'us-central1'
