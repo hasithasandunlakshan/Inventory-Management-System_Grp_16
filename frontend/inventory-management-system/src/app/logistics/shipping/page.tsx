@@ -299,7 +299,7 @@ function ShippingPage() {
       waypointOrder: { lat: number; lng: number }[];
     };
   }[]>([]);
-  // const [showComparison, setShowComparison] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
   const [comparisonMetrics, setComparisonMetrics] = useState<{
     originalDistance: number;
     optimizedDistance: number;

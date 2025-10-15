@@ -151,7 +151,7 @@ export const profitabilityService = {
         discountPercentage,
         netRevenue,
         discountEfficiency,
-        topDiscounts: discountStats.slice(0, 5).map((stat: { discountName?: string; totalDiscountGiven?: number }) => ({
+        topDiscounts: discountStats.slice(0, 5).map((stat: { discountName?: string; totalDiscountGiven?: number; totalUsage?: number }) => ({
           discountName: stat.discountName || 'Unknown',
           totalSavings: stat.totalDiscountGiven || 0,
           usageCount: stat.totalUsage || 0
