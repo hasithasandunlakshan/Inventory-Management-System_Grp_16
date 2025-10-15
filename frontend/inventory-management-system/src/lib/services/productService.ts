@@ -1,10 +1,14 @@
 import { Product, CreateProductRequest } from '../types/product';
 
-const API_BASE_URL =
-`${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083'}/api/products`;
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083'}/api/products`;
 
 export const productService = {
-  async getAllProducts(page = 0, size = 20, sortBy = 'id', sortDir = 'asc'): Promise<{
+  async getAllProducts(
+    page = 0,
+    size = 20,
+    sortBy = 'id',
+    sortDir = 'asc'
+  ): Promise<{
     content: Product[];
     totalElements: number;
     totalPages: number;
@@ -18,9 +22,9 @@ export const productService = {
         page: page.toString(),
         size: size.toString(),
         sortBy,
-        sortDir
+        sortDir,
       });
-      
+
       const response = await fetch(`${API_BASE_URL}?${params}`);
       if (!response.ok) {
         throw new Error(
@@ -34,7 +38,12 @@ export const productService = {
     }
   },
 
-  async getAllProductsWithCategories(page = 0, size = 20, sortBy = 'id', sortDir = 'asc'): Promise<{
+  async getAllProductsWithCategories(
+    page = 0,
+    size = 20,
+    sortBy = 'id',
+    sortDir = 'asc'
+  ): Promise<{
     content: Product[];
     totalElements: number;
     totalPages: number;
@@ -49,9 +58,9 @@ export const productService = {
         page: page.toString(),
         size: size.toString(),
         sortBy,
-        sortDir
+        sortDir,
       });
-      
+
       const response = await fetch(`${API_BASE_URL}?${params}`);
       if (!response.ok) {
         throw new Error(
