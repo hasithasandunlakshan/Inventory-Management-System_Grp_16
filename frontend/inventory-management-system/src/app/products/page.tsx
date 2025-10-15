@@ -29,6 +29,11 @@ export default async function ProductsPage({
   const apiUrl =
     process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
   console.log('🔍 Fetching from API:', apiUrl);
+  console.log('🔍 Environment check:', {
+    NODE_ENV: process.env.NODE_ENV,
+    API_URL: apiUrl,
+    hasEnvVar: !!process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL,
+  });
 
   // Fetch products data with ISR caching
   // next.revalidate: Cache for 5 minutes, then revalidate in background
