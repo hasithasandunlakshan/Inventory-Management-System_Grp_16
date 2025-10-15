@@ -453,15 +453,20 @@ export const discountService = {
         );
       }
 
-      // Handle both direct array response and wrapped response
+      // Handle paginated response from the new API
       const data = await response.json();
 
-      // If it's a direct array, return it
+      // If it's a direct array, return it (legacy support)
       if (Array.isArray(data)) {
         return data as Product[];
       }
 
-      // If it's wrapped in a response object, extract the products
+      // If it's a paginated response, extract the content
+      if (data.content && Array.isArray(data.content)) {
+        return data.content as Product[];
+      }
+
+      // If it's wrapped in a response object, extract the products (legacy support)
       const productsResponse = data as ProductsResponse;
       return productsResponse.products || productsResponse.data || [];
     } catch (error) {

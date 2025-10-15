@@ -1,9 +1,11 @@
 import { Product, Category } from '@/lib/types/product';
 import ProductsClient from './ProductsClient';
-// ISR Configuration - Revalidate every 5 minutes
+
+// ISR Configuration - Revalidate every 5 minutes (300 seconds)
+// This pre-renders the page at build time and regenerates it every 5 minutes
 export const revalidate = 300;
 
-// Server Component - Fetches data at build time and revalidates
+// Server Component - Fetches data with ISR
 export default async function ProductsPage({
   searchParams,
 }: {
@@ -24,39 +26,118 @@ export default async function ProductsPage({
     ? parseInt((params as { category?: string }).category!)
     : null;
 
-  // Fetch products data at build time with ISR
-  const productsResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083'}/api/products?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`
-  );
+  const apiUrl =
+    process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
+  console.log('🔍 Fetching from API:', apiUrl);
+  console.log('🔍 Environment check:', {
+    NODE_ENV: process.env.NODE_ENV,
+    API_URL: apiUrl,
+    hasEnvVar: !!process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL,
+  });
 
-  // Fetch categories data
-  const categoriesResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083'}/api/categories`
-  );
+  // Fetch products data with ISR caching
+  // next.revalidate: Cache for 5 minutes, then revalidate in background
+  const productsResponse = await fetch(
+    `${apiUrl}/api/products?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`,
+    {
+      next: { revalidate: 300 }, // ISR: Revalidate every 5 minutes
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  ).catch(() => null); // Handle fetch errors gracefully
+
+  // Fetch categories data with longer cache (categories change less frequently)
+  const categoriesResponse = await fetch(`${apiUrl}/api/categories`, {
+    next: { revalidate: 600 }, // ISR: Revalidate every 10 minutes
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }).catch(() => null); // Handle fetch errors gracefully
 
   let productsData;
   let categoriesData;
 
-  try {
-    productsData = await productsResponse.json();
-  } catch (error) {
-    console.error('Failed to fetch products:', error);
-    productsData = { content: [], totalElements: 0, totalPages: 0 };
+  // Handle products response
+  if (!productsResponse) {
+    console.error('❌ Failed to connect to products API');
+    productsData = {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: 0,
+      number: 0,
+      first: true,
+      last: true,
+    };
+  } else {
+    try {
+      if (!productsResponse.ok) {
+        console.error(
+          `Products API error: ${productsResponse.status} ${productsResponse.statusText}`
+        );
+        throw new Error(`HTTP error! status: ${productsResponse.status}`);
+      }
+      productsData = await productsResponse.json();
+      console.log('✅ Products fetched:', productsData.totalElements, 'items');
+      // Ensure productsData has the expected structure
+      if (!productsData.content || !Array.isArray(productsData.content)) {
+        console.error('Invalid products data structure:', productsData);
+        productsData = {
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          size: 0,
+          number: 0,
+          first: true,
+          last: true,
+        };
+      }
+    } catch (error) {
+      console.error('Failed to parse products response:', error);
+      productsData = {
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+        size: 0,
+        number: 0,
+        first: true,
+        last: true,
+      };
+    }
   }
 
-  try {
-    categoriesData = await categoriesResponse.json();
-  } catch (error) {
-    console.error('Failed to fetch categories:', error);
+  // Handle categories response
+  if (!categoriesResponse) {
+    console.error('❌ Failed to connect to categories API');
     categoriesData = [];
+  } else {
+    try {
+      if (!categoriesResponse.ok) {
+        console.error(
+          `Categories API error: ${categoriesResponse.status} ${categoriesResponse.statusText}`
+        );
+        throw new Error(`HTTP error! status: ${categoriesResponse.status}`);
+      }
+      categoriesData = await categoriesResponse.json();
+      console.log('✅ Categories fetched:', categoriesData.length, 'items');
+      // Ensure categoriesData is an array
+      if (!Array.isArray(categoriesData)) {
+        console.error('Invalid categories data structure:', categoriesData);
+        categoriesData = [];
+      }
+    } catch (error) {
+      console.error('Failed to parse categories response:', error);
+      categoriesData = [];
+    }
   }
 
   // Filter products by category if specified
-  let filteredProducts = productsData.content;
-  let filteredTotalElements = productsData.totalElements;
-  let filteredTotalPages = productsData.totalPages;
+  let filteredProducts = productsData.content || [];
+  let filteredTotalElements = productsData.totalElements || 0;
+  let filteredTotalPages = productsData.totalPages || 0;
 
-  if (selectedCategory) {
+  if (selectedCategory && Array.isArray(productsData.content)) {
     // Filter products by category on the server side
     filteredProducts = productsData.content.filter(
       (product: Product) =>
