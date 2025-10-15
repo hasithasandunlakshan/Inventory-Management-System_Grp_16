@@ -81,7 +81,7 @@ export default async function ProductsPage({
           last: true,
         };
       }
-    } catch (error) {
+    } catch {
       productsData = {
         content: [],
         totalElements: 0,
@@ -107,7 +107,7 @@ export default async function ProductsPage({
       if (!Array.isArray(categoriesData)) {
         categoriesData = [];
       }
-    } catch (error) {
+    } catch {
       categoriesData = [];
     }
   }

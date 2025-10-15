@@ -233,15 +233,15 @@ public final class ProductController {
                         "success", true,
                         "message", "Product found successfully",
                         "product", Map.of(
-                                "productId", product.getProductId(),
-                                "name", product.getName(),
-                                "description", product.getDescription(),
-                                "imageUrl", product.getImageUrl(),
-                                "price", product.getPrice(),
-                                "currentStock", product.getStock(),
-                                "reservedStock", product.getReserved(),
-                                "availableStock", product.getAvailableStock(),
-                                "barcode", product.getBarcode(),
+                        "productId", product.getProductId(),
+                        "name", product.getName(),
+                        "description", product.getDescription(),
+                        "imageUrl", product.getImageUrl(),
+                        "price", product.getPrice(),
+                        "currentStock", product.getStock(),
+                        "reservedStock", product.getReserved(),
+                        "availableStock", product.getAvailableStock(),
+                        "barcode", product.getBarcode(),
                                 "categoryName", product.getCategoryName())));
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
