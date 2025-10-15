@@ -1,7 +1,7 @@
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 import { userService, UserInfo } from './userService';
 
-const API_BASE_URL = 'https://order.shopmindnotification.app/api/orders'; // Through API Gateway
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084'}/api/orders`;
 
 export interface OrderItem {
   orderItemId: number;

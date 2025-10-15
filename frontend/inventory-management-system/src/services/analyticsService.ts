@@ -186,7 +186,6 @@ export const analyticsService = {
         categoryData,
       };
     } catch (error) {
-      console.error('Error fetching inventory analytics:', error);
       throw error;
     }
   },
@@ -282,7 +281,6 @@ export const analyticsService = {
         topProducts,
       };
     } catch (error) {
-      console.error('Error fetching sales analytics:', error);
       throw error;
     }
   },
@@ -384,7 +382,6 @@ export const analyticsService = {
         deliveryTrend,
       };
     } catch (error) {
-      console.error('Error fetching supplier analytics:', error);
       throw error;
     }
   },

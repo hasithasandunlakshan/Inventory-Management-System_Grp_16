@@ -41,13 +41,6 @@ export default function DebugApiPage() {
     const supplierServiceUrl =
       process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL || 'http://localhost:8085';
 
-    console.log('🔍 Testing API URLs:', {
-      productServiceUrl,
-      orderServiceUrl,
-      userServiceUrl,
-      supplierServiceUrl,
-    });
-
     const endpoints = {
       // Product Service
       'Products (GET /api/products)': `${productServiceUrl}/api/products?page=0&size=5`,
@@ -55,9 +48,9 @@ export default function DebugApiPage() {
       'Single Product (GET /api/products/1)': `${productServiceUrl}/api/products/1`,
 
       // Order Service
-      'Orders (GET /api/orders)': `${orderServiceUrl}/api/orders`,
-      'Order Stats (GET /api/orders/stats)': `${orderServiceUrl}/api/orders/stats`,
-      'Discounts (GET /api/admin/discounts)': `${orderServiceUrl}/api/admin/discounts`,
+      'Orders (GET /api/orders/all)': `${orderServiceUrl}/api/orders/all?page=0&size=5`,
+      'Order Count Confirmed (GET /api/orders/count/confirmed)': `${orderServiceUrl}/api/orders/count/confirmed`,
+      'Discounts (GET /api/admin/discounts/all)': `${orderServiceUrl}/api/admin/discounts/all?page=0&size=5`,
 
       // User Service
       'Users (GET /api/users)': `${userServiceUrl}/api/users`,
@@ -76,7 +69,6 @@ export default function DebugApiPage() {
       // Test all endpoints
       for (const [name, url] of Object.entries(endpoints)) {
         try {
-          console.log(`Testing: ${name} - ${url}`);
           const response = await fetch(url, {
             method: 'GET',
             headers: {
