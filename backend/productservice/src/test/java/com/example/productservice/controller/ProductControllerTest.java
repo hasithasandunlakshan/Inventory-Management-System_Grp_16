@@ -15,6 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -123,18 +126,21 @@ class ProductControllerTest {
     @DisplayName("Should get all products successfully")
     void testGetAllProducts_Success() throws Exception {
         // Given
-        when(productService.getAllProductsWithCategories())
-                .thenReturn(Arrays.asList(testProductWithCategoryDTO));
+        Page<ProductWithCategoryDTO> mockPage = new PageImpl<>(Arrays.asList(testProductWithCategoryDTO));
+        when(productService.getAllProductsWithCategories(any(Pageable.class)))
+                .thenReturn(mockPage);
 
         // When & Then
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productId").value(1L))
-                .andExpect(jsonPath("$[0].name").value("Test Product"))
-                .andExpect(jsonPath("$[0].categoryName").value("Electronics"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productId").value(1L))
+                .andExpect(jsonPath("$.content[0].name").value("Test Product"))
+                .andExpect(jsonPath("$.content[0].categoryName").value("Electronics"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
 
-        verify(productService).getAllProductsWithCategories();
+        verify(productService).getAllProductsWithCategories(any(Pageable.class));
     }
 
     @Test
@@ -261,15 +267,19 @@ class ProductControllerTest {
     @DisplayName("Should handle empty product list")
     void testGetAllProducts_EmptyList() throws Exception {
         // Given
-        when(productService.getAllProductsWithCategories()).thenReturn(Arrays.asList());
+        Page<ProductWithCategoryDTO> mockPage = new PageImpl<>(Arrays.asList());
+        when(productService.getAllProductsWithCategories(any(Pageable.class)))
+                .thenReturn(mockPage);
 
         // When & Then
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(1));
 
-        verify(productService).getAllProductsWithCategories();
+        verify(productService).getAllProductsWithCategories(any(Pageable.class));
     }
 
     @Test
@@ -287,19 +297,22 @@ class ProductControllerTest {
                 .barcode("PRD-20241201120000-testproduct")
                 .build();
 
-        when(productService.getAllProductsWithCategories())
-                .thenReturn(Arrays.asList(productWithoutCategory));
+        Page<ProductWithCategoryDTO> mockPage = new PageImpl<>(Arrays.asList(productWithoutCategory));
+        when(productService.getAllProductsWithCategories(any(Pageable.class)))
+                .thenReturn(mockPage);
 
         // When & Then
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productId").value(1L))
-                .andExpect(jsonPath("$[0].name").value("Test Product"))
-                .andExpect(jsonPath("$[0].categoryId").doesNotExist())
-                .andExpect(jsonPath("$[0].categoryName").doesNotExist());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productId").value(1L))
+                .andExpect(jsonPath("$.content[0].name").value("Test Product"))
+                .andExpect(jsonPath("$.content[0].categoryId").doesNotExist())
+                .andExpect(jsonPath("$.content[0].categoryName").doesNotExist())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
 
-        verify(productService).getAllProductsWithCategories();
+        verify(productService).getAllProductsWithCategories(any(Pageable.class));
     }
 
     @Test
@@ -318,18 +331,21 @@ class ProductControllerTest {
                 .price(149.99)
                 .build();
 
-        when(productService.getAllProductsWithCategories())
-                .thenReturn(Arrays.asList(product1, product2));
+        Page<ProductWithCategoryDTO> mockPage = new PageImpl<>(Arrays.asList(product1, product2));
+        when(productService.getAllProductsWithCategories(any(Pageable.class)))
+                .thenReturn(mockPage);
 
         // When & Then
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].productId").value(1L))
-                .andExpect(jsonPath("$[1].productId").value(2L));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].productId").value(1L))
+                .andExpect(jsonPath("$.content[1].productId").value(2L))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1));
 
-        verify(productService).getAllProductsWithCategories();
+        verify(productService).getAllProductsWithCategories(any(Pageable.class));
     }
 
     @Test
