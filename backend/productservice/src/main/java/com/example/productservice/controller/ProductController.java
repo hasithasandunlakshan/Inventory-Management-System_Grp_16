@@ -3,6 +3,11 @@ package com.example.productservice.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.productservice.dto.ProductDTO;
@@ -25,16 +31,6 @@ import com.example.productservice.service.ProductService;
 @RestController
 @RequestMapping("/api/products")
 public final class ProductController {
-
-    /**
-     * HTTP status code for not found.
-     */
-    private static final int HTTP_NOT_FOUND = 404;
-
-    /**
-     * HTTP status code for internal server error.
-     */
-    private static final int HTTP_INTERNAL_ERROR = 500;
 
     /**
      * The product service.
@@ -64,13 +60,44 @@ public final class ProductController {
     }
 
     /**
-     * Retrieves all products with categories.
+     * Retrieves all products with categories with pagination support.
      * 
-     * @return list of products with categories
+     * @param page    page number (0-based, default: 0)
+     * @param size    page size (default: 20)
+     * @param sortBy  sort field (default: "id")
+     * @param sortDir sort direction (default: "asc")
+     * @return paginated list of products with categories
      */
     @GetMapping
-    public ResponseEntity<List<ProductWithCategoryDTO>> getAllProducts() {
-        final List<ProductWithCategoryDTO> products = service.getAllProductsWithCategories();
+    public ResponseEntity<Page<ProductWithCategoryDTO>> getAllProducts(
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size,
+            @RequestParam(defaultValue = "id") final String sortBy,
+            @RequestParam(defaultValue = "asc") final String sortDir) {
+
+        // Create Sort object
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        // Create Pageable object
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // Debug logging
+        System.out.println("=== PAGINATION DEBUG ===");
+        System.out.println("Page: " + page);
+        System.out.println("Size: " + size);
+        System.out.println("Sort By: " + sortBy);
+        System.out.println("Sort Direction: " + sortDir);
+        System.out.println("========================");
+
+        final Page<ProductWithCategoryDTO> products = service.getAllProductsWithCategories(pageable);
+
+        System.out.println("Total Elements: " + products.getTotalElements());
+        System.out.println("Total Pages: " + products.getTotalPages());
+        System.out.println("Current Page Size: " + products.getNumberOfElements());
+        System.out.println("========================");
+
         return ResponseEntity.ok(products);
     }
 
@@ -113,7 +140,6 @@ public final class ProductController {
             @RequestBody final ProductDTO dto) {
         try {
             final Product updatedProduct = service.updateProduct(id, dto);
-            System.out.println("Updated product: " + updatedProduct);
             return ResponseEntity.ok(updatedProduct);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -129,7 +155,6 @@ public final class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable final Long id) {
         try {
-            System.out.println("Deleting product with ID: " + id);
             service.deleteProduct(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
@@ -149,10 +174,6 @@ public final class ProductController {
             @PathVariable final Long productId,
             @PathVariable final int quantity) {
         try {
-            System.out.println("=== REDUCING INVENTORY ENDPOINT HIT ===");
-            System.out.println("Product ID: " + productId);
-            System.out.println("Quantity to reduce: " + quantity);
-
             final Product updatedProduct = service.reduceInventory(productId, quantity);
 
             return ResponseEntity.ok(Map.of(
@@ -165,35 +186,18 @@ public final class ProductController {
                     "newAvailableStock", updatedProduct.getAvailableStock()));
 
         } catch (ProductNotFoundException e) {
-            System.err.println("Product not found: " + e.getMessage());
-            return ResponseEntity.status(HTTP_NOT_FOUND).body(Map.of(
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "success", false,
                     "message", "Product not found with ID: " + productId));
         } catch (IllegalArgumentException e) {
-            System.err.println("Invalid argument: " + e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", e.getMessage()));
         } catch (Exception e) {
-            System.err.println("Unexpected error reducing inventory: " + e.getMessage());
-            e.printStackTrace();
-
-            return ResponseEntity.status(HTTP_INTERNAL_ERROR).body(Map.of(
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "success", false,
                     "message", "Internal server error: " + e.getMessage()));
         }
-    }
-
-    /**
-     * Test endpoint for debugging.
-     * 
-     * @param id the test ID
-     * @return test response
-     */
-    @GetMapping("/test/{id}")
-    public ResponseEntity<Map<String, Object>> test(@PathVariable final Long id) {
-        return ResponseEntity.ok(Map.of("success", true, "id", id,
-                "message", "Test endpoint works"));
     }
 
     /**
@@ -205,15 +209,8 @@ public final class ProductController {
     @GetMapping("/inventory/cost")
     public ResponseEntity<Map<String, Object>> getAvailableInventoryCost() {
         try {
-            System.out.println("=== CALCULATING AVAILABLE INVENTORY COST ===");
-
             final double totalInventoryCost = service.calculateTotalAvailableInventoryCost();
             final int totalProductsWithStock = service.getProductsWithAvailableStock();
-
-            System.out.println("Total Available Inventory Cost: $"
-                    + totalInventoryCost);
-            System.out.println("Products with available stock: "
-                    + totalProductsWithStock);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -224,11 +221,7 @@ public final class ProductController {
                     "calculatedAt", java.time.LocalDateTime.now().toString()));
 
         } catch (Exception e) {
-            System.err.println("Error calculating inventory cost: "
-                    + e.getMessage());
-            e.printStackTrace();
-
-            return ResponseEntity.status(HTTP_INTERNAL_ERROR).body(Map.of(
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "success", false,
                     "message", "Failed to calculate inventory cost: "
                             + e.getMessage()));
@@ -245,15 +238,9 @@ public final class ProductController {
     public ResponseEntity<Map<String, Object>> getProductByBarcode(
             @PathVariable final String barcode) {
         try {
-            System.out.println("=== BARCODE SCANNED ===");
-            System.out.println("Barcode: " + barcode);
-
             final ProductWithCategoryDTO product = service.getProductByBarcode(barcode);
 
             if (product != null) {
-                System.out.println("Product found: " + product.getName());
-                System.out.println("Current Stock: " + product.getStock());
-                System.out.println("Available Stock: " + product.getAvailableStock());
 
                 return ResponseEntity.ok(Map.of(
                         "success", true,
@@ -270,17 +257,13 @@ public final class ProductController {
                                 "barcode", product.getBarcode(),
                                 "categoryName", product.getCategoryName())));
             } else {
-                System.out.println("Product not found for barcode: " + barcode);
-                return ResponseEntity.status(HTTP_NOT_FOUND).body(Map.of(
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                         "success", false,
                         "message", "Product not found for barcode: " + barcode));
             }
 
         } catch (Exception e) {
-            System.err.println("Error scanning barcode: " + e.getMessage());
-            e.printStackTrace();
-
-            return ResponseEntity.status(HTTP_INTERNAL_ERROR).body(Map.of(
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "success", false,
                     "message", "Error scanning barcode: " + e.getMessage()));
         }
@@ -299,16 +282,7 @@ public final class ProductController {
             @PathVariable final Long productId,
             @PathVariable final int quantity) {
         try {
-            System.out.println("=== RESTOCKING PRODUCT ===");
-            System.out.println("Product ID: " + productId);
-            System.out.println("Quantity to add: " + quantity);
-
             final Product restockedProduct = service.restockProduct(productId, quantity);
-
-            System.out.println("Restock successful!");
-            System.out.println("New Physical Stock: " + restockedProduct.getStock());
-            System.out.println("New Available Stock: "
-                    + restockedProduct.getAvailableStock());
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -322,20 +296,15 @@ public final class ProductController {
                     "restockedAt", java.time.LocalDateTime.now().toString()));
 
         } catch (ProductNotFoundException e) {
-            System.err.println("Product not found: " + e.getMessage());
-            return ResponseEntity.status(HTTP_NOT_FOUND).body(Map.of(
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "success", false,
                     "message", "Product not found with ID: " + productId));
         } catch (IllegalArgumentException e) {
-            System.err.println("Invalid quantity: " + e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", e.getMessage()));
         } catch (Exception e) {
-            System.err.println("Error restocking product: " + e.getMessage());
-            e.printStackTrace();
-
-            return ResponseEntity.status(HTTP_INTERNAL_ERROR).body(Map.of(
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "success", false,
                     "message", "Internal server error: " + e.getMessage()));
         }
@@ -353,10 +322,6 @@ public final class ProductController {
             @PathVariable final String barcode,
             @PathVariable final int quantity) {
         try {
-            System.out.println("=== RESTOCKING BY BARCODE ===");
-            System.out.println("Barcode: " + barcode);
-            System.out.println("Quantity to add: " + quantity);
-
             final Product restockedProduct = service.restockProductByBarcode(barcode, quantity);
 
             return ResponseEntity.ok(Map.of(
@@ -372,20 +337,15 @@ public final class ProductController {
                     "restockedAt", java.time.LocalDateTime.now().toString()));
 
         } catch (ProductNotFoundException e) {
-            System.err.println("Product not found: " + e.getMessage());
-            return ResponseEntity.status(HTTP_NOT_FOUND).body(Map.of(
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "success", false,
                     "message", "Product not found for barcode: " + barcode));
         } catch (IllegalArgumentException e) {
-            System.err.println("Invalid quantity: " + e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", e.getMessage()));
         } catch (Exception e) {
-            System.err.println("Error restocking product: " + e.getMessage());
-            e.printStackTrace();
-
-            return ResponseEntity.status(HTTP_INTERNAL_ERROR).body(Map.of(
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "success", false,
                     "message", "Internal server error: " + e.getMessage()));
         }

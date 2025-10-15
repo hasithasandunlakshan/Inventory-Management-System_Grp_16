@@ -1,13 +1,27 @@
 import { Product, CreateProductRequest } from '../types/product';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL ||
-  'http://localhost:8083/api/products';
+`${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083'}/api/products`;
 
 export const productService = {
-  async getAllProducts(): Promise<Product[]> {
+  async getAllProducts(page = 0, size = 20, sortBy = 'id', sortDir = 'asc'): Promise<{
+    content: Product[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+  }> {
     try {
-      const response = await fetch(API_BASE_URL);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+        sortBy,
+        sortDir
+      });
+      
+      const response = await fetch(`${API_BASE_URL}?${params}`);
       if (!response.ok) {
         throw new Error(
           `Failed to fetch products: ${response.status} ${response.statusText}`
@@ -20,10 +34,25 @@ export const productService = {
     }
   },
 
-  async getAllProductsWithCategories(): Promise<Product[]> {
+  async getAllProductsWithCategories(page = 0, size = 20, sortBy = 'id', sortDir = 'asc'): Promise<{
+    content: Product[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+  }> {
     try {
       // The backend /api/products endpoint already returns products with categories
-      const response = await fetch(API_BASE_URL);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+        sortBy,
+        sortDir
+      });
+      
+      const response = await fetch(`${API_BASE_URL}?${params}`);
       if (!response.ok) {
         throw new Error(
           `Failed to fetch products with categories: ${response.status} ${response.statusText}`
