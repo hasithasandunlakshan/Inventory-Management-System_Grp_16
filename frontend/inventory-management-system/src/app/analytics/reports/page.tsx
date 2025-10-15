@@ -23,7 +23,7 @@ import { inventoryService, type InventoryRow } from '@/lib/services/inventorySer
 import { stockAlertService, type StockAlert } from '@/lib/services/stockAlertService';
 import { orderService } from '@/lib/services/orderService';
 import { revenueService } from '@/services/revenueService';
-import { logisticsService, type LogisticsMetrics, type DeliveryLog, type DriverProfile, type Vehicle, type Assignment } from '@/lib/services/logisticsService';
+import { logisticsService, type LogisticsMetrics } from '@/lib/services/logisticsService';
 import { costService, type InventoryCostResponse, type PurchaseOrderStats, type CostAnalysisMetrics } from '@/lib/services/costService';
 import { profitabilityService, type GrossProfitAnalysis, type DiscountImpactAnalysis, type OrderProfitability, type LogisticsCostAnalysis, type OperationalEfficiencyMetrics } from '@/lib/services/profitabilityService';
 import { supplierService, type PurchaseOrderStats as SupplierPurchaseOrderStats } from '@/lib/services/supplierService';
@@ -360,25 +360,25 @@ type ReportType =
   | 'supplier';
 type TimeRange = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
-interface InventoryReport {
-  productId: string;
-  productName: string;
-  category: string;
-  currentStock: number;
-  reorderLevel: number;
-  stockValue: number;
-  turnoverRate: number;
-  status: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Overstocked';
-}
+// interface InventoryReport {
+//   productId: string;
+//   productName: string;
+//   category: string;
+//   currentStock: number;
+//   reorderLevel: number;
+//   stockValue: number;
+//   turnoverRate: number;
+//   status: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Overstocked';
+// }
 
-interface SalesReport {
-  period: string;
-  revenue: number;
-  orders: number;
-  averageOrderValue: number;
-  topProducts: string[];
-  growth: number;
-}
+// interface SalesReport {
+//   period: string;
+//   revenue: number;
+//   orders: number;
+//   averageOrderValue: number;
+//   topProducts: string[];
+//   growth: number;
+// }
 
 interface LogisticsReport {
   deliveryDate: string;
@@ -389,15 +389,15 @@ interface LogisticsReport {
   driverEfficiency: number;
 }
 
-interface SupplierReport {
-  supplierId: string;
-  supplierName: string;
-  totalOrders: number;
-  totalValue: number;
-  deliveryTime: number;
-  qualityRating: number;
-  paymentTerms: string;
-}
+// interface SupplierReport {
+//   supplierId: string;
+//   supplierName: string;
+//   totalOrders: number;
+//   totalValue: number;
+//   deliveryTime: number;
+//   qualityRating: number;
+//   paymentTerms: string;
+// }
 
 // Dummy data - commented out as it's not used
 /*
@@ -476,35 +476,35 @@ const salesData: SalesReport[] = [
 
 // Real logistics data will be loaded from backend
 
-const supplierData: SupplierReport[] = [
-  {
-    supplierId: 'SUP001',
-    supplierName: 'Lanka Rice Mills',
-    totalOrders: 45,
-    totalValue: 450000,
-    deliveryTime: 3.2,
-    qualityRating: 4.8,
-    paymentTerms: '30 days',
-  },
-  {
-    supplierId: 'SUP002',
-    supplierName: 'Ceylon Tea Co.',
-    totalOrders: 38,
-    totalValue: 285000,
-    deliveryTime: 2.8,
-    qualityRating: 4.9,
-    paymentTerms: '15 days',
-  },
-  {
-    supplierId: 'SUP003',
-    supplierName: 'Tropical Oils Ltd',
-    totalOrders: 25,
-    totalValue: 175000,
-    deliveryTime: 4.1,
-    qualityRating: 4.2,
-    paymentTerms: '45 days',
-  },
-];
+// const supplierData: SupplierReport[] = [
+//   {
+//     supplierId: 'SUP001',
+//     supplierName: 'Lanka Rice Mills',
+//     totalOrders: 45,
+//     totalValue: 450000,
+//     deliveryTime: 3.2,
+//     qualityRating: 4.8,
+//     paymentTerms: '30 days',
+//   },
+//   {
+//     supplierId: 'SUP002',
+//     supplierName: 'Ceylon Tea Co.',
+//     totalOrders: 38,
+//     totalValue: 285000,
+//     deliveryTime: 2.8,
+//     qualityRating: 4.9,
+//     paymentTerms: '15 days',
+//   },
+//   {
+//     supplierId: 'SUP003',
+//     supplierName: 'Tropical Oils Ltd',
+//     totalOrders: 25,
+//     totalValue: 175000,
+//     deliveryTime: 4.1,
+//     qualityRating: 4.2,
+//     paymentTerms: '45 days',
+//   },
+// ];
 
 export default function ReportsPage() {
   //console.log('🚀 ReportsPage component is rendering');
@@ -543,24 +543,24 @@ export default function ReportsPage() {
   const [purchaseStats, setPurchaseStats] = useState<PurchaseOrderStats | null>(null);
   const [costMetrics, setCostMetrics] = useState<CostAnalysisMetrics | null>(null);
   const [costLoading, setCostLoading] = useState(false);
-  const [costError, setCostError] = useState<string | null>(null);
+  // const [costError, setCostError] = useState<string | null>(null);
 
   // Profitability Analysis state
   const [grossProfitAnalysis, setGrossProfitAnalysis] = useState<GrossProfitAnalysis | null>(null);
   const [discountImpactAnalysis, setDiscountImpactAnalysis] = useState<DiscountImpactAnalysis | null>(null);
   const [orderProfitability, setOrderProfitability] = useState<OrderProfitability | null>(null);
   const [profitabilityLoading, setProfitabilityLoading] = useState(false);
-  const [profitabilityError, setProfitabilityError] = useState<string | null>(null);
+  // const [profitabilityError, setProfitabilityError] = useState<string | null>(null);
 
   // Operational Cost Analysis state
   const [logisticsCostAnalysis, setLogisticsCostAnalysis] = useState<LogisticsCostAnalysis | null>(null);
   const [operationalEfficiencyMetrics, setOperationalEfficiencyMetrics] = useState<OperationalEfficiencyMetrics | null>(null);
   const [operationalLoading, setOperationalLoading] = useState(false);
-  const [operationalError, setOperationalError] = useState<string | null>(null);
-  const [fleetUtilization, setFleetUtilization] = useState<any>(null);
-  const [drivers, setDrivers] = useState<DriverProfile[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  // const [operationalError, setOperationalError] = useState<string | null>(null);
+  const [fleetUtilization, setFleetUtilization] = useState<Record<string, unknown> | null>(null);
+  // const [drivers, setDrivers] = useState<DriverProfile[]>([]);
+  // const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  // const [assignments, setAssignments] = useState<Assignment[]>([]);
 
   // Supplier Analytics state
   const [supplierAnalytics, setSupplierAnalytics] = useState<SupplierPurchaseOrderStats | null>(null);
@@ -595,7 +595,7 @@ export default function ReportsPage() {
     const loadSales = async () => {
       setSalesLoading(true);
       setSalesError(null);
-      const statuses = ['CONFIRMED', 'PROCESSED', 'SHIPPED', 'CANCELLED'];
+      // const statuses = ['CONFIRMED', 'PROCESSED', 'SHIPPED', 'CANCELLED'];
       try {
         // Fetch revenue endpoints in parallel and tolerate failures
         const [todayRes, monthlyRes, stripeRes] = await Promise.allSettled([
@@ -2948,7 +2948,7 @@ export default function ReportsPage() {
                       {/* Today's Revenue */}
                       <Card>
                         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                          <CardTitle className='text-sm font-medium'>Today's Revenue</CardTitle>
+                          <CardTitle className='text-sm font-medium'>Today&apos;s Revenue</CardTitle>
                           <Icons.CurrencyDollar />
                         </CardHeader>
                         <CardContent>
@@ -3102,7 +3102,7 @@ export default function ReportsPage() {
                         <CardContent>
                           <div className='space-y-4'>
                             <div className='flex justify-between items-center'>
-                              <span className='text-sm font-medium'>Today's Performance</span>
+                              <span className='text-sm font-medium'>Today&apos;s Performance</span>
                               <span className='text-sm text-muted-foreground'>
                                 ${todayRevenue?.revenue?.toFixed(2) || '0.00'}
                               </span>

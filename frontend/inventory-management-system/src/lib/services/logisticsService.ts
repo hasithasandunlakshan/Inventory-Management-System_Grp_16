@@ -335,9 +335,9 @@ class LogisticsService {
           acc[date].successfulDeliveries += 1;
         }
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, { date: string; ordersDelivered: number; successfulDeliveries: number }>);
 
-      return Object.values(deliveriesByDate).map((delivery: any) => ({
+      return Object.values(deliveriesByDate).map((delivery) => ({
         deliveryDate: delivery.date,
         ordersDelivered: delivery.ordersDelivered,
         averageDeliveryTime: metrics.averageDeliveryTime,

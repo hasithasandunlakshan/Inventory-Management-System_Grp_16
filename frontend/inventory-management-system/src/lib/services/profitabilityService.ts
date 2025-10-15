@@ -126,7 +126,7 @@ export const profitabilityService = {
       const discountStats = await response.json();
       
       // Calculate discount impact metrics
-      const totalDiscountsGiven = discountStats.reduce((sum: number, stat: any) => sum + (stat.totalDiscountGiven || 0), 0);
+      const totalDiscountsGiven = discountStats.reduce((sum: number, stat: { totalDiscountGiven?: number }) => sum + (stat.totalDiscountGiven || 0), 0);
       
       // Fetch real revenue data
       const revenueResponse = await fetch(`${ORDER_SERVICE_URL}/api/revenue/today`, {
@@ -151,7 +151,7 @@ export const profitabilityService = {
         discountPercentage,
         netRevenue,
         discountEfficiency,
-        topDiscounts: discountStats.slice(0, 5).map((stat: any) => ({
+        topDiscounts: discountStats.slice(0, 5).map((stat: { discountName?: string; totalDiscountGiven?: number }) => ({
           discountName: stat.discountName || 'Unknown',
           totalSavings: stat.totalDiscountGiven || 0,
           usageCount: stat.totalUsage || 0
@@ -186,7 +186,7 @@ export const profitabilityService = {
         const ordersData = await ordersRes.value.json();
         totalOrders = ordersData.orders?.length || 0;
         // Calculate total costs from orders (simplified)
-        totalCosts = ordersData.orders?.reduce((sum: number, order: any) => sum + (order.totalAmount * 0.6), 0) || 0;
+        totalCosts = ordersData.orders?.reduce((sum: number, order: { totalAmount: number }) => sum + (order.totalAmount * 0.6), 0) || 0;
       }
 
       if (revenueRes.status === 'fulfilled' && revenueRes.value.ok) {

@@ -299,7 +299,7 @@ function ShippingPage() {
       waypointOrder: { lat: number; lng: number }[];
     };
   }[]>([]);
-  const [showComparison, setShowComparison] = useState(false);
+  // const [showComparison, setShowComparison] = useState(false);
   const [comparisonMetrics, setComparisonMetrics] = useState<{
     originalDistance: number;
     optimizedDistance: number;
@@ -500,7 +500,7 @@ function ShippingPage() {
       waypointOrder: { lat: number; lng: number }[];
     }[] = [];
 
-    clusters.forEach((cluster, clusterIndex) => {
+    clusters.forEach((cluster) => {
       if (cluster.length === 0) return;
 
       // Create waypoints from cluster orders
