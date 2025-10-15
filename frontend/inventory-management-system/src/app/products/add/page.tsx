@@ -43,8 +43,9 @@ export default function AddProductPage() {
       const fetchedCategories = await categoryService.getAllCategories();
       setCategories(fetchedCategories);
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
-      setError('Failed to load categories. Please refresh the page.');
+      setError(
+        `Failed to load categories: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setLoading(false);
     }
@@ -67,12 +68,8 @@ export default function AddProductPage() {
 
   const uploadImageToCloudinary = async (file: File) => {
     const productServiceUrl =
-      process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL ||
-      'http://localhost:8083/api/products';
-    const cloudinaryUrl = productServiceUrl.replace(
-      '/api/products',
-      '/api/cloudinary/signature'
-    );
+      process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
+    const cloudinaryUrl = `${productServiceUrl}/api/cloudinary/signature`;
     const sigRes = await axios.get(cloudinaryUrl);
     const { timestamp, signature, apiKey, cloudName } = sigRes.data;
 
