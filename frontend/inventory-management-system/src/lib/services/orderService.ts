@@ -1,7 +1,7 @@
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 import { userService, UserInfo } from './userService';
 
-const API_BASE_URL = 'https://api-gateway-q42ns563da-uc.a.run.app/api/orders'; // Through API Gateway
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084'}/api/orders`; // Direct to Order service
 
 export interface OrderItem {
   orderItemId: number;
@@ -236,6 +236,27 @@ export const orderService = {
     } catch (error) {
       console.error('Failed to fetch orders count:', error);
       throw new Error('Failed to fetch orders count - backend not available');
+    }
+  },
+
+  /**
+   * Get all orders status counts (for analytics)
+   */
+  async getAllStatusCounts(): Promise<{ statusBreakdown: Record<string, number> }> {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/debug/status-counts`,
+        createAuthenticatedRequestOptions()
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch status counts: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Failed to fetch status counts:', error);
+      throw new Error('Failed to fetch status counts - backend not available');
     }
   },
 };

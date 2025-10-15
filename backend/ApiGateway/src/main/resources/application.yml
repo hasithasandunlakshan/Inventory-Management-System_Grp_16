@@ -8,8 +8,15 @@ spring:
     gateway:
       globalcors:
         cors-configurations:
-          '[/**]':
-            allowedOriginPatterns: "*"
+          "[/**]":
+            allowedOriginPatterns:
+              - "http://localhost:3000"
+              - "http://localhost:3001"
+              - "http://127.0.0.1:3000"
+              - "http://127.0.0.1:3001"
+              - "https://*.vercel.app"
+              - "https://*.choreoapis.dev"
+              - "*"
             allowedMethods:
               - GET
               - POST

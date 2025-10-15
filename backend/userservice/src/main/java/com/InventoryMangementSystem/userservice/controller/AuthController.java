@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -33,46 +35,51 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody SignupRequest signupRequest) {
-    System.out.println("\n=== SIGNUP REQUEST RECEIVED ===");
-    System.out.println("Timestamp: " + java.time.LocalDateTime.now());
-    System.out.println("Request Details:");
-    System.out.println("  Username: " + signupRequest.getUsername());
-    System.out.println("  Email: " + signupRequest.getEmail());
-    System.out.println("  Full Name: " + signupRequest.getFullName());
-    System.out.println("  Phone Number: " + signupRequest.getPhoneNumber());
-    System.out.println("  Date of Birth: " + signupRequest.getDateOfBirth());
-    System.out.println("  Profile Image URL: " + signupRequest.getProfileImageUrl());
-    System.out.println("  Location - Lat: " + signupRequest.getLatitude() + ", Long: " + signupRequest.getLongitude());
-    System.out.println("  Formatted Address: " + signupRequest.getFormattedAddress());
-    System.out.println("  Password Length: " + (signupRequest.getPassword() != null ? signupRequest.getPassword().length() : "null"));
-    
-    try {
-        System.out.println("Calling UserService.registerUser...");
-        userService.registerUser(signupRequest);
-        System.out.println("User registration completed successfully");
-        System.out.println("=== SIGNUP REQUEST COMPLETED ===\n");
-        return ResponseEntity.ok("User registered successfully");
-    } catch (Exception e) {
-        System.err.println("ERROR during signup: " + e.getMessage());
-        System.out.println("=== SIGNUP REQUEST FAILED ===\n");
-        throw e;
+        System.out.println("\n=== SIGNUP REQUEST RECEIVED ===");
+        System.out.println("Timestamp: " + java.time.LocalDateTime.now());
+        System.out.println("Request Details:");
+        System.out.println("  Username: " + signupRequest.getUsername());
+        System.out.println("  Email: " + signupRequest.getEmail());
+        System.out.println("  Full Name: " + signupRequest.getFullName());
+        System.out.println("  Phone Number: " + signupRequest.getPhoneNumber());
+        System.out.println("  Date of Birth: " + signupRequest.getDateOfBirth());
+        System.out.println("  Profile Image URL: " + signupRequest.getProfileImageUrl());
+        System.out.println(
+                "  Location - Lat: " + signupRequest.getLatitude() + ", Long: " + signupRequest.getLongitude());
+        System.out.println("  Formatted Address: " + signupRequest.getFormattedAddress());
+        System.out.println("  Password Length: "
+                + (signupRequest.getPassword() != null ? signupRequest.getPassword().length() : "null"));
+
+        try {
+            System.out.println("Calling UserService.registerUser...");
+            userService.registerUser(signupRequest);
+            System.out.println("User registration completed successfully");
+            System.out.println("=== SIGNUP REQUEST COMPLETED ===\n");
+            return ResponseEntity.ok("User registered successfully");
+        } catch (Exception e) {
+            System.err.println("ERROR during signup: " + e.getMessage());
+            System.out.println("=== SIGNUP REQUEST FAILED ===\n");
+            throw e;
+        }
     }
-}
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         System.out.println("\n=== LOGIN REQUEST RECEIVED ===");
         System.out.println("Timestamp: " + java.time.LocalDateTime.now());
         System.out.println("Username: " + request.getUsername());
-        System.out.println("Password Length: " + (request.getPassword() != null ? request.getPassword().length() : "null"));
-        
+        System.out.println(
+                "Password Length: " + (request.getPassword() != null ? request.getPassword().length() : "null"));
+
         try {
             System.out.println("Calling UserService.login...");
             LoginResponse response = userService.login(request);
-            
+
             if (response.isSuccess()) {
-                System.out.println("Login successful. Token generated: " + 
-                    (response.getToken() != null ? response.getToken().substring(0, Math.min(20, response.getToken().length())) + "..." : "null"));
+                System.out.println("Login successful. Token generated: " +
+                        (response.getToken() != null
+                                ? response.getToken().substring(0, Math.min(20, response.getToken().length())) + "..."
+                                : "null"));
                 System.out.println("User info: " + response.getUser());
                 System.out.println("=== LOGIN REQUEST COMPLETED ===\n");
                 return ResponseEntity.ok(response);
@@ -93,33 +100,33 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> getAllUsersWithUserRole() {
         System.out.println("\n=== GET ALL USERS WITH USER ROLE REQUEST RECEIVED ===");
         System.out.println("Timestamp: " + java.time.LocalDateTime.now());
-        
+
         try {
             System.out.println("Calling UserService.getUsersByRole with role: USER");
             List<UserInfo> users = userService.getUsersByRole("USER");
-            
+
             // Create response map
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Users with role 'USER' retrieved successfully");
             response.put("users", users);
             response.put("totalUsers", users.size());
-            
+
             System.out.println("Successfully retrieved " + users.size() + " users with USER role");
             System.out.println("=== GET ALL USERS WITH USER ROLE REQUEST COMPLETED ===\n");
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             System.err.println("ERROR during get users request: " + e.getMessage());
             System.out.println("=== GET ALL USERS WITH USER ROLE REQUEST FAILED ===\n");
-            
+
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "Failed to retrieve users: " + e.getMessage());
             errorResponse.put("users", List.of());
             errorResponse.put("totalUsers", 0);
-            
+
             return ResponseEntity.status(500).body(errorResponse);
         }
     }

@@ -1,6 +1,9 @@
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090'}/api/stock-alerts`;
+// Prefer direct Inventory Service when API Gateway is unavailable
+// Usage: set NEXT_PUBLIC_INVENTORY_SERVICE_URL (e.g., http://localhost:8080)
+const INVENTORY_BASE = process.env.NEXT_PUBLIC_INVENTORY_SERVICE_URL || 'http://localhost:8085';
+const API_BASE_URL = `${INVENTORY_BASE}/api/stock-alerts`;
 
 export interface StockAlert {
   alertId: number;
