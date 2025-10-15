@@ -202,56 +202,12 @@ function kMeansCluster(points: number[][], k: number): number[] {
   return assignments;
 }
 
-const dummyOrders: ShippingOrder[] = [
-  {
-    id: 1,
-    name: 'Order #001',
-    lat: 6.9271,
-    lng: 79.8612,
-    address: 'Colombo, Sri Lanka',
-    status: 'Pending',
-  },
-  {
-    id: 2,
-    name: 'Order #002',
-    lat: 7.2906,
-    lng: 80.6337,
-    address: 'Kandy, Sri Lanka',
-    status: 'Processing',
-  },
-  {
-    id: 3,
-    name: 'Order #003',
-    lat: 6.0535,
-    lng: 80.221,
-    address: 'Galle, Sri Lanka',
-    status: 'Ready',
-  },
-  {
-    id: 4,
-    name: 'Order #004',
-    lat: 7.2083,
-    lng: 79.8358,
-    address: 'Negombo, Sri Lanka',
-    status: 'Pending',
-  },
-  {
-    id: 5,
-    name: 'Order #005',
-    lat: 5.9549,
-    lng: 80.555,
-    address: 'Matara, Sri Lanka',
-    status: 'Processing',
-  },
-  {
-    id: 6,
-    name: 'Order #006',
-    lat: 7.8731,
-    lng: 80.7718,
-    address: 'Anuradhapura, Sri Lanka',
-    status: 'Ready',
-  },
-];
+// Default fallback coordinates for orders without location data
+const DEFAULT_LOCATION = {
+  lat: 6.9271,
+  lng: 79.8612,
+  address: 'Colombo, Sri Lanka (Default)',
+};
 
 // Store location (starting point for all deliveries)
 const storeLocation = {
@@ -261,12 +217,13 @@ const storeLocation = {
   lng: 80.3464,
 };
 
-// Dummy Drivers with more details
-const drivers = [
-  { id: 1, name: 'John Silva', vehicle: 'Truck T-001' },
-  { id: 2, name: 'Mary Fernando', vehicle: 'Van V-002' },
-  { id: 3, name: 'David Perera', vehicle: 'Truck T-003' },
-];
+// Driver interface matching backend response
+interface DriverWithVehicle {
+  assignmentId: number;
+  userId: number;
+  driverName: string;
+  vehicleType: string;
+}
 
 // Cluster colors for better visualization
 const clusterColors = [
@@ -371,20 +328,10 @@ function ShippingPage() {
           // Default to Colombo for other addresses
         }
       } else {
-        // Fallback: assign default Sri Lankan locations for orders without addresses
-        const fallbackLocations = [
-          {
-            lat: 6.9271,
-            lng: 79.8612,
-            address: 'Colombo, Sri Lanka (Default)',
-          },
-          { lat: 7.2906, lng: 80.6337, address: 'Kandy, Sri Lanka (Default)' },
-          { lat: 6.0535, lng: 80.221, address: 'Galle, Sri Lanka (Default)' },
-        ];
-        const location = fallbackLocations[index % fallbackLocations.length];
-        lat = location.lat;
-        lng = location.lng;
-        address = location.address;
+        // Use default location if no address available
+        lat = DEFAULT_LOCATION.lat;
+        lng = DEFAULT_LOCATION.lng;
+        address = DEFAULT_LOCATION.address;
       }
 
       return {
@@ -418,8 +365,8 @@ function ShippingPage() {
       const token = localStorage.getItem('inventory_auth_token');
       if (!token) {
         setOrdersError('Please log in to view orders.');
-        setRealOrders(dummyOrders);
-        setUsingDummyData(true);
+        setRealOrders([]);
+        setUsingDummyData(false);
         return;
       }
 
@@ -433,15 +380,15 @@ function ShippingPage() {
         setUsingDummyData(false);
       } else {
         setOrdersError(response.message || 'No orders found in database.');
-        setRealOrders(dummyOrders);
-        setUsingDummyData(true);
+        setRealOrders([]);
+        setUsingDummyData(false);
       }
     } catch (error) {
       setOrdersError(
         `Failed to load orders: ${error instanceof Error ? error.message : String(error)}`
       );
-      setRealOrders(dummyOrders);
-      setUsingDummyData(true);
+      setRealOrders([]);
+      setUsingDummyData(false);
     } finally {
       if (showLoadingState) {
         setIsLoadingOrders(false);
@@ -449,10 +396,32 @@ function ShippingPage() {
     }
   }, []);
 
+  // Fetch available drivers with vehicles
+  const fetchDrivers = async () => {
+    try {
+      setIsLoadingDrivers(true);
+      const resourceServiceUrl = process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8086';
+      
+      const response = await fetch(`${resourceServiceUrl}/api/resources/drivers/available-with-vehicles`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data)) {
+          setDrivers(data.data);
+        }
+      }
+    } catch {
+      // Failed to fetch drivers, use empty array
+      setDrivers([]);
+    } finally {
+      setIsLoadingDrivers(false);
+    }
+  };
+
   // Fetch orders on component mount and set up auto-refresh
   useEffect(() => {
     // Initial fetch
     fetchOrders();
+    fetchDrivers();
 
     // Auto-refresh every 2 minutes (reduced frequency)
     const intervalId = setInterval(() => {
@@ -462,8 +431,8 @@ function ShippingPage() {
     return () => clearInterval(intervalId);
   }, [fetchOrders]); // Include fetchOrders in dependencies
 
-  // Get the current orders to display (real or dummy)
-  const currentOrders = realOrders.length > 0 ? realOrders : dummyOrders;
+  // Get the current orders to display
+  const currentOrders = realOrders;
 
   // Cluster Orders
   const handleClustering = () => {
@@ -754,11 +723,6 @@ function ShippingPage() {
                 <span className='font-semibold text-gray-900'>
                   {isLoadingOrders ? '...' : currentOrders.length}
                 </span>
-                {usingDummyData && (
-                  <span className='ml-2 text-xs text-blue-600'>
-                    (Sample Data)
-                  </span>
-                )}
               </div>
               <div className='text-sm text-gray-500'>
                 Clusters:{' '}
@@ -791,14 +755,9 @@ function ShippingPage() {
               </div>
               <div className='ml-3'>
                 <h3 className='text-sm font-medium text-yellow-800'>
-                  Authentication Required
+                  Error Loading Orders
                 </h3>
                 <p className='mt-1 text-sm text-yellow-700'>{ordersError}</p>
-                {usingDummyData && (
-                  <p className='mt-1 text-sm text-yellow-700'>
-                    Showing sample data for demonstration purposes.
-                  </p>
-                )}
               </div>
             </div>
           </div>
@@ -815,7 +774,7 @@ function ShippingPage() {
           </div>
         )}
 
-        {!isLoadingOrders && !ordersError && !usingDummyData && (
+        {!isLoadingOrders && !ordersError && realOrders.length > 0 && (
           <div className='mb-6 bg-green-50 border border-green-200 rounded-lg p-4'>
             <div className='flex'>
               <div className='flex-shrink-0'>
@@ -833,8 +792,7 @@ function ShippingPage() {
               </div>
               <div className='ml-3'>
                 <p className='text-sm text-green-700'>
-                  ✅ Successfully loaded {realOrders.length} orders from
-                  database
+                  ✅ Successfully loaded {realOrders.length} orders from database
                 </p>
               </div>
             </div>
@@ -963,14 +921,6 @@ function ShippingPage() {
                     </div>
                   ) : (
                     <>
-                      {usingDummyData && (
-                        <div className='p-3 bg-blue-50 border border-blue-200 rounded-lg mb-3'>
-                          <p className='text-sm text-blue-800'>
-                            📝 Using sample data for demonstration. Connect to
-                            database to see real orders.
-                          </p>
-                        </div>
-                      )}
                       {currentOrders.map(order => (
                         <div
                           key={order.id}
@@ -1421,14 +1371,17 @@ function ShippingPage() {
                             }}
                             className='w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                             onClick={e => e.stopPropagation()}
+                            disabled={isLoadingDrivers}
                           >
-                            <option value=''>Select Driver</option>
+                            <option value=''>
+                              {isLoadingDrivers ? 'Loading drivers...' : 'Select Driver'}
+                            </option>
                             {drivers.map(driver => (
                               <option
-                                key={driver.id}
-                                value={`${driver.name} (${driver.vehicle})`}
+                                key={driver.assignmentId}
+                                value={`${driver.driverName} (${driver.vehicleType})`}
                               >
-                                {driver.name} ({driver.vehicle})
+                                {driver.driverName} ({driver.vehicleType})
                               </option>
                             ))}
                           </select>
