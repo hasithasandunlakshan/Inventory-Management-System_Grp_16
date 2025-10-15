@@ -68,8 +68,6 @@ export const deliveryLogService = {
   // Get 10 most recent delivery logs
   async getAllDeliveryLogs(): Promise<DeliveryLog[]> {
     const authHeader = authService.getAuthHeader();
-    console.log('Fetching delivery logs with auth header:', authHeader);
-
     const response = await fetch(`${API_BASE_URL}/api/delivery-logs/recent`, {
       method: 'GET',
       headers: {
@@ -77,20 +75,14 @@ export const deliveryLogService = {
         ...authHeader, // Add JWT token
       },
     });
-
-    console.log('API Response status:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API Error response:', errorText);
       throw new Error(
         `Failed to fetch recent delivery logs: ${response.status} ${response.statusText} - ${errorText}`
       );
     }
 
     const rawLogs: Record<string, unknown>[] = await response.json();
-    console.log('Raw API response:', rawLogs);
-
     // Transform backend response to match frontend expectations
     const transformedLogs = rawLogs.map((log, index) => ({
       id: log.id,
@@ -104,8 +96,6 @@ export const deliveryLogService = {
       // Use the actual purchase order status from backend instead of deriving from date
       status: log.purchaseOrderStatus || 'UNKNOWN', // Real PO status from database
     }));
-
-    console.log('Transformed logs:', transformedLogs);
     return transformedLogs as unknown as DeliveryLog[];
   },
 };

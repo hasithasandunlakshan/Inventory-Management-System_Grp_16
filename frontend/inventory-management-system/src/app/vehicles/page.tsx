@@ -80,7 +80,6 @@ export default function VehiclesPage() {
         setAvailableVehicles(availableVehiclesResponse.data);
       }
     } catch (error) {
-      console.error('Failed to load vehicles:', error);
       toast.error('Failed to load vehicles');
     } finally {
       setLoading(false);
@@ -111,7 +110,6 @@ export default function VehiclesPage() {
         toast.error(response.message || 'Failed to register vehicle');
       }
     } catch (error) {
-      console.error('Registration failed:', error);
       toast.error('Failed to register vehicle');
     }
   };

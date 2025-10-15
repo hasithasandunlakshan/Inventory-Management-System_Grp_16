@@ -296,7 +296,6 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
       setOrderAudit(audit);
       setIsViewOrderOpen(true);
     } catch (error) {
-      console.error('Failed to load purchase order details:', error);
       setError('Failed to load purchase order details');
     } finally {
       setLoadingOrderDetails(false);
@@ -317,7 +316,6 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
         filename
       );
     } catch (error) {
-      console.error('Failed to download attachment:', error);
       setError('Failed to download attachment');
     }
   };
@@ -340,9 +338,7 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
       await loadPurchaseOrders();
 
       // Show success message (you might want to add a toast notification here)
-      console.log('Purchase order deleted successfully');
     } catch (error) {
-      console.error('Failed to delete purchase order:', error);
       setError('Failed to delete purchase order');
     } finally {
       setDeletingOrderId(null);
@@ -356,36 +352,12 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
 
     // Debug: Read the file content to see what we're actually sending
     const text = await file.text();
-    console.log(
-      '🔍 File content preview (first 200 chars):',
-      JSON.stringify(text.substring(0, 200))
-    );
-    console.log(
-      '🔍 File first line bytes:',
-      Array.from(text.split('\n')[0]).map(c => c.charCodeAt(0))
-    );
-    console.log(
-      '🔍 Expected header bytes:',
-      Array.from(
-        'tempKey,supplierId,date,status,itemId,quantity,unitPrice'
-      ).map(c => c.charCodeAt(0))
-    );
-
     // Reset any previous success message
     setImportSuccess(null);
 
     try {
       setImporting(true);
       const result = await purchaseOrderService.importPurchaseOrders(file);
-
-      console.log('📊 Import result details:', {
-        created: result.created,
-        failed: result.failed,
-        hasErrors: result.errors && result.errors.length > 0,
-        errors: result.errors,
-        errorCount: result.errors?.length || 0,
-      });
-
       // Show success if any orders were created
       if (result.created > 0) {
         setImportSuccess(
@@ -394,7 +366,6 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
         // Refresh the purchase orders list
         await loadPurchaseOrders();
       } else {
-        console.warn('⚠️ No orders were created during import');
         setError(
           `Import failed: No orders were created. ${result.failed ? `${result.failed} rows failed validation.` : ''}`
         );
@@ -402,11 +373,7 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
 
       // Show errors/warnings if any
       if (result.errors && result.errors.length > 0) {
-        console.warn('Import errors/warnings:', result.errors);
-        console.warn('🔍 Detailed error analysis:');
-        result.errors.forEach((error, index) => {
-          console.warn(`   Error ${index + 1}: "${error}"`);
-        });
+        result.errors.forEach((error, index) => {});
 
         const errorMessages = result.errors.slice(0, 3).join('; ');
         if (result.created === 0) {
@@ -423,11 +390,9 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
           }
         } else {
           // Just show as info if some succeeded
-          console.info(`Import completed with warnings: ${errorMessages}`);
         }
       }
     } catch (error) {
-      console.error('Failed to import purchase orders:', error);
       setError(
         error instanceof Error
           ? error.message
@@ -455,10 +420,7 @@ function PurchaseOrdersTab({ refreshTrigger }: { refreshTrigger?: number }) {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
-      console.log('Purchase orders exported successfully');
     } catch (error) {
-      console.error('Failed to export purchase orders:', error);
       setError('Failed to export purchase orders');
     } finally {
       setExporting(false);
@@ -494,7 +456,6 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
       setEditingPurchaseOrder(orderDetails);
       setIsEditOrderOpen(true);
     } catch (error) {
-      console.error('Failed to load purchase order for editing:', error);
       setError('Failed to load purchase order for editing');
     } finally {
       setLoadingOrderDetails(false);
@@ -511,7 +472,6 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
       // Load totals for each order
       await loadOrderTotals(orders);
     } catch (error) {
-      console.error('Failed to load purchase orders:', error);
       setError('Failed to load purchase orders. Please try again.');
     } finally {
       setLoading(false);
@@ -550,7 +510,6 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
             await purchaseOrderService.getPurchaseOrderTotal(order.id);
           return { id: order.id, total: totalResponse.total };
         } catch (error) {
-          console.error(`Failed to fetch total for order ${order.id}:`, error);
           // Return the existing total from the order if API call fails
           return { id: order.id, total: order.total || 0 };
         }
@@ -564,7 +523,6 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
 
       setOrderTotals(totalsMap);
     } catch (error) {
-      console.error('Failed to load order totals:', error);
       // If loading totals fails, use the totals from the original orders
       const fallbackTotals = new Map<number, number>();
       orders.forEach(order => {
@@ -1184,29 +1142,13 @@ function EditPurchaseOrderForm({
     try {
       setLoadingNotes(true);
       setLoadingAttachments(true);
-
-      console.log(
-        `🔄 Loading notes and attachments for Purchase Order #${purchaseOrder.id}`
-      );
-
       const [notesData, attachmentsData] = await Promise.all([
         purchaseOrderService.getPurchaseOrderNotes(purchaseOrder.id),
         purchaseOrderService.getPurchaseOrderAttachments(purchaseOrder.id),
       ]);
-
-      console.log(
-        `📝 Loaded ${notesData.length} notes for PO #${purchaseOrder.id}:`,
-        notesData
-      );
-      console.log(
-        `📎 Loaded ${attachmentsData.length} attachments for PO #${purchaseOrder.id}:`,
-        attachmentsData
-      );
-
       setNotes(notesData);
       setAttachments(attachmentsData);
     } catch (error) {
-      console.error('Failed to load notes and attachments:', error);
     } finally {
       setLoadingNotes(false);
       setLoadingAttachments(false);
@@ -1216,13 +1158,6 @@ function EditPurchaseOrderForm({
   // Update uploadedBy when user information changes
   useEffect(() => {
     const newUploadedBy = user?.fullName || user?.username || 'Unknown User';
-    console.log('👤 User info changed:', {
-      user,
-      newUploadedBy,
-      fullName: user?.fullName,
-      username: user?.username,
-      id: user?.id,
-    });
     setUploadedBy(newUploadedBy);
   }, [user]);
 
@@ -1239,13 +1174,6 @@ function EditPurchaseOrderForm({
         date: formData.date,
         status: formData.status.toString(),
       };
-
-      console.log('💾 Saving purchase order with data:', {
-        purchaseOrderId: purchaseOrder.id,
-        updateData,
-        originalFormData: formData,
-      });
-
       // Update purchase order details
       await purchaseOrderService.updatePurchaseOrder(
         purchaseOrder.id,
@@ -1255,7 +1183,6 @@ function EditPurchaseOrderForm({
       onSave();
       onClose();
     } catch (error) {
-      console.error('Failed to save purchase order:', error);
       alert(
         'Failed to save purchase order. Please check the console for details.'
       );
@@ -1281,9 +1208,7 @@ function EditPurchaseOrderForm({
           item.itemId === itemId ? { ...item, ...updates } : item
         )
       );
-    } catch (error) {
-      console.error('Failed to update item:', error);
-    }
+    } catch (error) {}
   };
 
   const handleItemDelete = async (itemId: number) => {
@@ -1295,9 +1220,7 @@ function EditPurchaseOrderForm({
         itemId
       );
       setItems(items.filter(item => item.itemId !== itemId));
-    } catch (error) {
-      console.error('Failed to delete item:', error);
-    }
+    } catch (error) {}
   };
 
   const handleQuantityUpdate = async (itemId: number, quantity: number) => {
@@ -1312,27 +1235,17 @@ function EditPurchaseOrderForm({
           item.itemId === itemId ? { ...item, quantity } : item
         )
       );
-    } catch (error) {
-      console.error('Failed to update quantity:', error);
-    }
+    } catch (error) {}
   };
 
   const handleStatusUpdate = async (status: string) => {
     try {
-      console.log(
-        'Updating status to:',
-        status,
-        'for order:',
-        purchaseOrder.id
-      );
       const updatedOrder = await purchaseOrderService.updatePurchaseOrderStatus(
         purchaseOrder.id,
         { status }
       );
       setFormData({ ...formData, status: status as PurchaseOrderStatus });
-      console.log('Status updated successfully:', updatedOrder);
     } catch (error) {
-      console.error('Failed to update status:', error);
       // Show user-friendly error
       alert('Failed to update status. Please check the console for details.');
     }
@@ -1343,29 +1256,17 @@ function EditPurchaseOrderForm({
 
     try {
       const userInfo = user?.fullName || user?.username || 'Unknown User';
-      console.log('🔍 Creating note with user info:', {
-        user,
-        userInfo,
-        fullName: user?.fullName,
-        username: user?.username,
-      });
-
       const noteRequest: NoteCreateRequest = {
         text: newNote.trim(), // Backend expects 'text' property
         createdBy: userInfo,
       };
-
-      console.log('📝 Sending note request:', noteRequest);
-
       const createdNote = await purchaseOrderService.addNote(
         purchaseOrder.id,
         noteRequest
       );
-      console.log('✅ Note created successfully:', createdNote);
       setNotes([...notes, createdNote]);
       setNewNote('');
     } catch (error) {
-      console.error('Failed to add note:', error);
       alert('Failed to add note. Please try again.');
     }
   };
@@ -1378,19 +1279,11 @@ function EditPurchaseOrderForm({
 
     try {
       setUploadingFile(true);
-      console.log('📎 Uploading attachment with user info:', {
-        user,
-        uploadedBy,
-        fullName: user?.fullName,
-        username: user?.username,
-      });
-
       const createdAttachment = await purchaseOrderService.addAttachment(
         purchaseOrder.id,
         selectedFile,
         uploadedBy
       );
-      console.log('✅ Attachment uploaded successfully:', createdAttachment);
       setAttachments([...attachments, createdAttachment]);
       setSelectedFile(null);
       // Reset file input
@@ -1399,7 +1292,6 @@ function EditPurchaseOrderForm({
       ) as HTMLInputElement;
       if (fileInput) fileInput.value = '';
     } catch (error) {
-      console.error('Failed to upload attachment:', error);
       alert('Failed to upload attachment. Please try again.');
     } finally {
       setUploadingFile(false);
@@ -1417,7 +1309,6 @@ function EditPurchaseOrderForm({
         filename
       );
     } catch (error) {
-      console.error('Failed to download attachment:', error);
       alert('Failed to download attachment. Please try again.');
     }
   };
@@ -1856,8 +1747,6 @@ function SuppliersTab({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      console.error('Failed to load suppliers:', errorMessage);
-
       // Check if it's an authentication error that requires re-login
       if (
         errorMessage.includes('login') ||
@@ -2111,11 +2000,8 @@ function DeliveryLogsTab() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadDeliveryLogs = useCallback(async () => {
-    console.log('Loading delivery logs... isAuthenticated:', isAuthenticated);
-
     if (!isAuthenticated) {
       // No data when not authenticated
-      console.log('User not authenticated, setting empty arrays');
       setDeliveryLogs([]);
       setFilteredLogs([]);
       return;
@@ -2123,18 +2009,14 @@ function DeliveryLogsTab() {
 
     setLoading(true);
     setApiError(null);
-    console.log('Making API call to fetch delivery logs...');
-
     try {
       // Fetch from the actual API with authentication
       const apiLogs = await deliveryLogService.getAllDeliveryLogs();
-      console.log('API response received:', apiLogs);
       setDeliveryLogs(apiLogs);
       setFilteredLogs(apiLogs);
     } catch (apiError) {
       const errorMessage =
         apiError instanceof Error ? apiError.message : 'Unknown error';
-      console.error('API call failed:', errorMessage);
       setApiError(errorMessage);
 
       // Set empty arrays on API failure
@@ -2200,7 +2082,6 @@ function DeliveryLogsTab() {
       // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch (error) {
-      console.error('Failed to create delivery log:', error);
       const errorMsg =
         error instanceof Error
           ? error.message
@@ -2560,7 +2441,6 @@ function AnalyticsTab() {
         setSupplierCategoryData(categoryCounts);
         setTotalSuppliers(suppliers.length);
       } catch (error) {
-        console.error('Failed to load supplier category data:', error);
       } finally {
         setLoadingCategory(false);
       }
@@ -2620,10 +2500,6 @@ function AnalyticsTab() {
                 total: totalResponse.total,
               };
             } catch (error) {
-              console.error(
-                `Failed to fetch total for order ${order.id}:`,
-                error
-              );
               return {
                 supplierId: order.supplierId,
                 total: order.total || 0,
@@ -2660,7 +2536,6 @@ function AnalyticsTab() {
           sortedSpendData.reduce((sum, supplier) => sum + supplier.spend, 0)
         );
       } catch (error) {
-        console.error('Failed to load supplier spend data:', error);
       } finally {
         setLoadingSpend(false);
       }
@@ -2725,7 +2600,6 @@ function AnalyticsTab() {
 
         setPoStatusData(chartData);
       } catch (error) {
-        console.error('Failed to load PO status data:', error);
       } finally {
         setLoadingPoStatus(false);
       }
@@ -2789,10 +2663,6 @@ function AnalyticsTab() {
                 total: totalResponse.total,
               };
             } catch (error) {
-              console.error(
-                `Failed to fetch total for order ${order.id}:`,
-                error
-              );
               return {
                 monthKey,
                 total: order.total || 0,
@@ -2824,7 +2694,6 @@ function AnalyticsTab() {
 
         setMonthlyTrendsData(chartData);
       } catch (error) {
-        console.error('Failed to load monthly trends data:', error);
       } finally {
         setLoadingTrends(false);
       }
@@ -2863,28 +2732,14 @@ function AnalyticsTab() {
             totalValue: number;
           }
         >();
-
-        console.log(
-          '🔍 Processing',
-          purchaseOrders.length,
-          'purchase orders for items data'
-        );
-
         // Process each purchase order to get items
         const itemPromises = purchaseOrders.map(
           async (order: PurchaseOrderSummary) => {
             try {
               const orderDetails =
                 await purchaseOrderService.getPurchaseOrderById(order.id);
-              console.log(
-                `📦 Order ${order.id} has ${orderDetails.items?.length || 0} items`
-              );
               return orderDetails.items || [];
             } catch (error) {
-              console.error(
-                `Failed to fetch items for order ${order.id}:`,
-                error
-              );
               return [];
             }
           }
@@ -2892,8 +2747,6 @@ function AnalyticsTab() {
 
         const allOrderItems = await Promise.all(itemPromises);
         const flattenedItems = allOrderItems.flat();
-        console.log('📊 Total items found:', flattenedItems.length);
-
         // Flatten and aggregate item data
         flattenedItems.forEach((item: PurchaseOrderItem) => {
           const itemId = item.itemId;
@@ -2924,14 +2777,8 @@ function AnalyticsTab() {
           }))
           .sort((a, b) => b.totalQuantity - a.totalQuantity)
           .slice(0, 15);
-
-        console.log('📈 Top items data:', sortedItems);
-
         // If no real data, use sample data for demonstration (sorted by quantity)
         if (sortedItems.length === 0) {
-          console.log(
-            '🎭 No real data found, using sample data for demonstration'
-          );
           const sampleData = [
             {
               itemId: 1003,
@@ -2988,11 +2835,7 @@ function AnalyticsTab() {
           setTopItemsData(sortedItems);
         }
       } catch (error) {
-        console.error('Failed to load top items data:', error);
         // Fallback to sample data on error (sorted by quantity)
-        console.log(
-          '🎭 Error loading data, using sample data for demonstration'
-        );
         const sampleData = [
           {
             itemId: 1003,
@@ -3072,13 +2915,6 @@ function AnalyticsTab() {
         months.forEach(({ key }) => {
           monthlySpendData.set(key, { totalSpend: 0, orderCount: 0 });
         });
-
-        console.log(
-          '💰 Processing',
-          allPurchaseOrders.length,
-          'purchase orders for spend over time'
-        );
-
         // Process each purchase order to get total spend
         const spendPromises = allPurchaseOrders.map(
           async (order: PurchaseOrderSummary) => {
@@ -3101,10 +2937,6 @@ function AnalyticsTab() {
                 total: totalResponse.total,
               };
             } catch (error) {
-              console.error(
-                `Failed to fetch total for order ${order.id}:`,
-                error
-              );
               return {
                 monthKey,
                 total: order.total || 0,
@@ -3142,14 +2974,8 @@ function AnalyticsTab() {
                 : 0,
           };
         });
-
-        console.log('💰 Spend over time data:', chartData);
-
         // If no real data, use sample data for demonstration
         if (chartData.every(item => item.totalSpend === 0)) {
-          console.log(
-            '🎭 No real spend data found, using sample data for demonstration'
-          );
           const sampleData = [
             {
               month: 'Jan 2025',
@@ -3229,7 +3055,6 @@ function AnalyticsTab() {
           setSpendOverTimeData(chartData);
         }
       } catch (error) {
-        console.error('Failed to load spend over time data:', error);
         // Fallback to sample data on error
         const sampleData = [
           {
@@ -4426,7 +4251,6 @@ function SupplierDetailsSheet({
       // Load totals for filtered orders
       await loadOrderTotals(filteredOrders);
     } catch (error) {
-      console.error('Failed to load supplier orders:', error);
     } finally {
       setLoadingOrders(false);
     }
@@ -4450,7 +4274,6 @@ function SupplierDetailsSheet({
             await purchaseOrderService.getPurchaseOrderTotal(order.id);
           return { id: order.id, total: totalResponse.total };
         } catch (error) {
-          console.error(`Failed to fetch total for order ${order.id}:`, error);
           return { id: order.id, total: order.total || 0 };
         }
       });
@@ -4463,7 +4286,6 @@ function SupplierDetailsSheet({
 
       setOrderTotals(totalsMap);
     } catch (error) {
-      console.error('Failed to load order totals:', error);
       const fallbackTotals = new Map<number, number>();
       orders.forEach(order => {
         fallbackTotals.set(order.id, order.total || 0);
@@ -4677,7 +4499,6 @@ function AddSupplierSheet({
       const categoriesData = await supplierCategoryService.getAllCategories();
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Failed to load categories:', error);
       setError(
         'Failed to load supplier categories. Please check if you are logged in and try again.'
       );
@@ -4714,25 +4535,16 @@ function AddSupplierSheet({
 
     setLoadingUsers(true);
     try {
-      console.log('🔍 Searching for users with term:', searchTerm);
       const searchResults = await userService.searchUsers(searchTerm);
-      console.log('🔍 Search results:', searchResults);
       setUsers(searchResults);
     } catch (error) {
-      console.error('Failed to search users:', error);
-
       // Check if it's a permission error
       if (error instanceof Error && error.message.includes('Access denied')) {
-        console.log('🚫 Access denied, falling back to current user');
         // Fallback to current user only
         try {
           const currentUser = await userService.getCurrentUser();
           setUsers([currentUser]);
         } catch (currentUserError) {
-          console.error(
-            'Failed to get current user as fallback:',
-            currentUserError
-          );
           setUsers([]);
         }
       } else {
@@ -4762,15 +4574,9 @@ function AddSupplierSheet({
   // Load all users if user has permission (for admins/managers)
   const loadAllUsersIfAllowed = async () => {
     try {
-      console.log('👥 Attempting to load all users...');
       const allUsers = await userService.getAllUsers();
-      console.log('👥 Loaded all users:', allUsers.length);
       setUsers(allUsers);
     } catch (error) {
-      console.log(
-        '👥 Cannot load all users (insufficient permissions), keeping empty',
-        error
-      );
       setUsers([]);
     }
   };
@@ -4813,7 +4619,6 @@ function AddSupplierSheet({
         onOpenChange(false);
       }, 1500);
     } catch (error) {
-      console.error('Failed to create supplier:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to create supplier';
       setError(errorMessage);
@@ -5084,7 +4889,6 @@ function AddCategorySheet({
         onOpenChange(false);
       }, 1500);
     } catch (error) {
-      console.error('Failed to create category:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to create category';
       setError(errorMessage);
@@ -5251,7 +5055,6 @@ function AddPurchaseOrderSheet({
         await enhancedSupplierService.getAllSuppliersWithUserDetails();
       setSuppliers(suppliersData);
     } catch (error) {
-      console.error('Failed to load suppliers:', error);
       setError('Failed to load suppliers. Please try again.');
     } finally {
       setLoadingSuppliers(false);
@@ -5285,7 +5088,6 @@ function AddPurchaseOrderSheet({
         onPurchaseOrderAdded();
       }, 1500);
     } catch (error) {
-      console.error('Failed to create purchase order:', error);
       setError('Failed to create purchase order. Please try again.');
     } finally {
       setSubmitting(false);

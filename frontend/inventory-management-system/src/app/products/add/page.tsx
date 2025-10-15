@@ -122,7 +122,6 @@ export default function AddProductPage() {
       router.push('/products');
     } catch (error) {
       setError('Failed to add product. Please try again.');
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }

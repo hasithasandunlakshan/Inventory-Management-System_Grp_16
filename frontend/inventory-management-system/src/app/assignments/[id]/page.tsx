@@ -83,12 +83,12 @@ export default function AssignmentDetailPage() {
                 if (userResponse) {
                   setDriverUserDetails(userResponse);
                 }
-              } catch (error) {
-                console.error('Failed to load driver user details:', error);
+              } catch {
+                // Failed to load driver user details
               }
             }
-          } catch (error) {
-            console.error('Failed to load driver details:', error);
+          } catch {
+            // Failed to load driver details
           }
         }
 
@@ -104,8 +104,8 @@ export default function AssignmentDetailPage() {
                 setVehicleDetails(vehicle);
               }
             }
-          } catch (error) {
-            console.error('Failed to load vehicle details:', error);
+          } catch {
+            // Failed to load vehicle details
           }
         }
 
@@ -118,8 +118,8 @@ export default function AssignmentDetailPage() {
             if (userResponse) {
               setAssignedByDetails(userResponse);
             }
-          } catch (error) {
-            console.error('Failed to load assigned by details:', error);
+          } catch {
+            // Failed to load assigned by details
           }
         }
 
@@ -132,16 +132,15 @@ export default function AssignmentDetailPage() {
             if (userResponse) {
               setUnassignedByDetails(userResponse);
             }
-          } catch (error) {
-            console.error('Failed to load unassigned by details:', error);
+          } catch {
+            // Failed to load unassigned by details
           }
         }
       } else {
         toast.error('Assignment not found');
         router.push('/assignments');
       }
-    } catch (error) {
-      console.error('Failed to load assignment details:', error);
+    } catch {
       toast.error('Failed to load assignment details');
       router.push('/assignments');
     } finally {

@@ -95,7 +95,6 @@ export default function AssignmentsPage() {
         setAvailableVehicles(availableVehiclesResponse.data);
       }
     } catch (error) {
-      console.error('Failed to load data:', error);
       toast.error('Failed to load assignment data');
     } finally {
       setLoading(false);
@@ -132,7 +131,6 @@ export default function AssignmentsPage() {
         toast.error(response.message || 'Failed to create assignment');
       }
     } catch (error) {
-      console.error('Assignment creation failed:', error);
       toast.error('Failed to create assignment');
     }
   };

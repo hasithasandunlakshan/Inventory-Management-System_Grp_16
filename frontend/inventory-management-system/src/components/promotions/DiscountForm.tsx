@@ -196,7 +196,6 @@ export default function DiscountForm({
 
       setSelectedProducts(convertedProducts);
     } catch (error) {
-      console.error('Error loading existing discount products:', error);
       toast.error('Failed to load associated products.');
     }
   };
@@ -207,7 +206,6 @@ export default function DiscountForm({
       const productList = await discountService.getAllProducts();
       setProducts(productList);
     } catch (error) {
-      console.error('Error loading products:', error);
       toast.error('Failed to load products. Please try again.');
     } finally {
       setLoadingProducts(false);
@@ -285,7 +283,6 @@ export default function DiscountForm({
 
       onSave();
     } catch (error) {
-      console.error('Error saving discount:', error);
       toast.error(
         `Failed to ${isEditMode ? 'update' : 'create'} discount. Please try again.`
       );

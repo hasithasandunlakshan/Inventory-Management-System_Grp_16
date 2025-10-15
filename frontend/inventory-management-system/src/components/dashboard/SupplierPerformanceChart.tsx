@@ -43,7 +43,6 @@ export default function SupplierPerformanceChart() {
         setSupplierData(analytics.supplierPerformance);
         setDeliveryTrend(analytics.deliveryTrend);
       } catch (error) {
-        console.error('Error fetching supplier data:', error);
       } finally {
         setLoading(false);
       }

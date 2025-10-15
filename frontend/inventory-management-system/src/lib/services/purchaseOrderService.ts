@@ -42,7 +42,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to create purchase order:', error);
       throw new Error(
         'Failed to create purchase order - backend not available'
       );
@@ -65,7 +64,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch purchase orders:', error);
       throw new Error(
         'Failed to fetch purchase orders - backend not available'
       );
@@ -101,14 +99,9 @@ export const purchaseOrderService = {
       } else if (data && typeof data.totalAmount === 'number') {
         return { total: data.totalAmount };
       } else {
-        console.warn(
-          'Unexpected response format for purchase order total:',
-          data
-        );
         return { total: 0 };
       }
     } catch (error) {
-      console.error('Failed to fetch purchase order total:', error);
       throw error;
     }
   },
@@ -132,7 +125,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch purchase order:', error);
       throw error;
     }
   },
@@ -145,7 +137,6 @@ export const purchaseOrderService = {
     order: PurchaseOrderUpdateRequest
   ): Promise<PurchaseOrder> {
     try {
-      console.log('🔄 Updating purchase order:', id, order);
       const response = await fetch(
         `${API_BASE_URL}/${id}`,
         createAuthenticatedRequestOptions('PUT', order)
@@ -153,14 +144,6 @@ export const purchaseOrderService = {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Purchase order update failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          errorBody: errorText,
-          url: `${API_BASE_URL}/${id}`,
-          requestData: order,
-        });
-
         if (response.status === 409) {
           throw new Error(
             `Conflict: ${errorText || 'The purchase order was modified by another user. Please refresh and try again.'}`
@@ -173,10 +156,8 @@ export const purchaseOrderService = {
       }
 
       const result = await response.json();
-      console.log('✅ Purchase order updated successfully:', result);
       return result;
     } catch (error) {
-      console.error('Failed to update purchase order:', error);
       throw error; // Re-throw the original error instead of wrapping it
     }
   },
@@ -204,7 +185,6 @@ export const purchaseOrderService = {
         throw new Error('Failed to delete purchase order');
       }
     } catch (error) {
-      console.error('Failed to delete purchase order:', error);
       throw new Error(
         'Failed to delete purchase order - backend not available'
       );
@@ -230,7 +210,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to update purchase order status:', error);
       throw new Error(
         'Failed to update purchase order status - backend not available'
       );
@@ -256,7 +235,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to mark purchase order as received:', error);
       throw new Error(
         'Failed to mark purchase order as received - backend not available'
       );
@@ -292,7 +270,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to search purchase orders:', error);
       throw new Error(
         'Failed to search purchase orders - backend not available'
       );
@@ -333,7 +310,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch purchase order statistics:', error);
       throw new Error(
         'Failed to fetch purchase order statistics - backend not available'
       );
@@ -363,12 +339,6 @@ export const purchaseOrderService = {
       // Calculate last day of previous month more accurately
       const lastDayOfPrevMonth = new Date(prevYear, prevMonth, 0).getDate();
       const prevMonthEnd = `${prevYear}-${String(prevMonth).padStart(2, '0')}-${String(lastDayOfPrevMonth).padStart(2, '0')}`;
-
-      console.log('📊 Monthly stats date ranges:', {
-        currentMonth: { start: currentMonthStart, end: currentMonthEnd },
-        previousMonth: { start: prevMonthStart, end: prevMonthEnd },
-      });
-
       // Fetch both months' data in parallel
       const [currentMonthStats, prevMonthStats] = await Promise.all([
         this.getStatsSummary({
@@ -380,12 +350,6 @@ export const purchaseOrderService = {
           dateTo: prevMonthEnd,
         }),
       ]);
-
-      console.log('📊 Monthly stats data:', {
-        current: currentMonthStats,
-        previous: prevMonthStats,
-      });
-
       // Calculate percentage changes
       const countChange =
         prevMonthStats.count > 0
@@ -423,11 +387,8 @@ export const purchaseOrderService = {
           total: Math.round(totalChange * 10) / 10,
         },
       };
-
-      console.log('📊 Final monthly stats result:', result);
       return result;
     } catch (error) {
-      console.error('Failed to fetch monthly statistics:', error);
       // Return default values if API fails
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
@@ -489,7 +450,6 @@ export const purchaseOrderService = {
 
       return response.blob();
     } catch (error) {
-      console.error('Failed to export purchase orders:', error);
       throw new Error(
         'Failed to export purchase orders - backend not available'
       );
@@ -516,7 +476,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch purchase order items:', error);
       throw new Error(
         'Failed to fetch purchase order items - backend not available'
       );
@@ -542,7 +501,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to add purchase order items:', error);
       throw new Error(
         'Failed to add purchase order items - backend not available'
       );
@@ -569,7 +527,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to update purchase order item:', error);
       throw new Error(
         'Failed to update purchase order item - backend not available'
       );
@@ -593,7 +550,6 @@ export const purchaseOrderService = {
         throw new Error('Failed to delete purchase order item');
       }
     } catch (error) {
-      console.error('Failed to delete purchase order item:', error);
       throw new Error(
         'Failed to delete purchase order item - backend not available'
       );
@@ -621,7 +577,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch purchase order notes:', error);
       return []; // Return empty array on error
     }
   },
@@ -649,7 +604,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch purchase order attachments:', error);
       return []; // Return empty array on error
     }
   },
@@ -675,7 +629,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch purchase order audit:', error);
       return []; // Return empty array on error
     }
   },
@@ -698,7 +651,6 @@ export const purchaseOrderService = {
         throw new Error('Failed to update item quantity');
       }
     } catch (error) {
-      console.error('Failed to update item quantity:', error);
       throw error;
     }
   },
@@ -722,7 +674,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to receive purchase order:', error);
       throw error;
     }
   },
@@ -742,11 +693,6 @@ export const purchaseOrderService = {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Status update failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText,
-        });
         throw new Error(
           `Failed to update purchase order status: ${response.status} ${response.statusText}`
         );
@@ -754,7 +700,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to update purchase order status:', error);
       throw error;
     }
   },
@@ -778,7 +723,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to add note:', error);
       throw error;
     }
   },
@@ -814,7 +758,6 @@ export const purchaseOrderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to add attachment:', error);
       throw error;
     }
   },
@@ -860,7 +803,6 @@ export const purchaseOrderService = {
       // Clean up
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Failed to download attachment:', error);
       throw error;
     }
   },
@@ -874,14 +816,6 @@ export const purchaseOrderService = {
       formData.append('file', file);
 
       const token = localStorage.getItem('inventory_auth_token');
-
-      console.log('🔄 Starting import:', {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        hasToken: !!token,
-      });
-
       const response = await fetch(`${API_BASE_URL}/import`, {
         method: 'POST',
         headers: {
@@ -889,37 +823,17 @@ export const purchaseOrderService = {
         },
         body: formData,
       });
-
-      console.log('📥 Import response:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-      });
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Import failed with response:', errorText);
         throw new Error(
           `Import failed: ${response.status} ${response.statusText} - ${errorText}`
         );
       }
 
       const result = await response.json();
-      console.log(
-        '✅ Import successful - Raw response:',
-        JSON.stringify(result, null, 2)
-      );
-      console.log('✅ Import successful - Response structure:', {
-        created: result.created,
-        failed: result.failed,
-        errorsLength: result.errors?.length || 0,
-        errorsContent: result.errors,
-      });
-
       // Return the backend ImportReportDTO directly
       return result;
     } catch (error) {
-      console.error('❌ Failed to import purchase orders:', error);
       throw error;
     }
   },
@@ -940,7 +854,6 @@ export const purchaseOrderService = {
 
       return response.blob();
     } catch (error) {
-      console.error('Failed to export purchase orders:', error);
       throw error;
     }
   },

@@ -51,7 +51,6 @@ export const discountService = {
       const discount: Discount = await response.json();
       return discount;
     } catch (error) {
-      console.error('Error creating discount:', error);
       throw error;
     }
   },
@@ -124,7 +123,6 @@ export const discountService = {
         pageSize: discountsResponse.pageSize || size,
       };
     } catch (error) {
-      console.error('Error fetching discounts:', error);
       throw error;
     }
   },
@@ -161,7 +159,6 @@ export const discountService = {
       const discounts: Discount[] = await response.json();
       return discounts;
     } catch (error) {
-      console.error('Error fetching active discounts:', error);
       throw error;
     }
   },
@@ -194,7 +191,6 @@ export const discountService = {
       const discount: Discount = await response.json();
       return discount;
     } catch (error) {
-      console.error('Error fetching discount by ID:', error);
       throw error;
     }
   },
@@ -231,7 +227,6 @@ export const discountService = {
       const discount: Discount = await response.json();
       return discount;
     } catch (error) {
-      console.error('Error updating discount:', error);
       throw error;
     }
   },
@@ -261,7 +256,6 @@ export const discountService = {
         );
       }
     } catch (error) {
-      console.error('Error deleting discount:', error);
       throw error;
     }
   },
@@ -295,7 +289,6 @@ export const discountService = {
         );
       }
     } catch (error) {
-      console.error('Error adding products to discount:', error);
       throw error;
     }
   },
@@ -329,7 +322,6 @@ export const discountService = {
         );
       }
     } catch (error) {
-      console.error('Error removing products from discount:', error);
       throw error;
     }
   },
@@ -364,7 +356,6 @@ export const discountService = {
       const data: DiscountProductsResponse = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching discount products:', error);
       throw error;
     }
   },
@@ -428,7 +419,6 @@ export const discountService = {
 
       return analytics;
     } catch (error) {
-      console.error('Error fetching discount analytics:', error);
       throw error;
     }
   },
@@ -471,7 +461,6 @@ export const discountService = {
       const productsResponse = data as ProductsResponse;
       return productsResponse.products || productsResponse.data || [];
     } catch (error) {
-      console.error('Error fetching products:', error);
       throw error;
     }
   },

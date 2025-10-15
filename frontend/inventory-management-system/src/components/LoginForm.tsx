@@ -31,21 +31,13 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true);
 
     try {
-      console.log('🔐 Attempting login with:', { username, password: '***' });
       const result = await login(username, password);
-      console.log('🔐 Login result:', {
-        success: result.success,
-        error: result.error,
-      });
-
       if (result.success) {
-        console.log('✅ Login successful, calling onLoginSuccess');
         onLoginSuccess?.();
       } else {
         setError(result.error || 'Login failed');
       }
     } catch (err) {
-      console.error('🚫 Login error:', err);
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

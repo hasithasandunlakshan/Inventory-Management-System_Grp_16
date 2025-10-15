@@ -49,7 +49,6 @@ export default function RevenueDashboard() {
       setMonthlyRevenue(monthlyData);
       setStripeStats(stripeData);
     } catch (error) {
-      console.error('Error fetching revenue data:', error);
       setError('Failed to load revenue data. Please try again.');
     } finally {
       setLoading(false);

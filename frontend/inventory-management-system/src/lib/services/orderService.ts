@@ -58,41 +58,20 @@ export const orderService = {
       // Add timestamp to URL to prevent caching
       const timestamp = Date.now();
       const url = `${API_BASE_URL}/all?_t=${timestamp}`;
-      console.log('🚀 Fetching fresh orders from:', url);
-
       const requestOptions = createAuthenticatedRequestOptions();
-
-      console.log('📡 Request options:', requestOptions);
-
       const response = await fetch(url, requestOptions);
-
-      console.log('📥 Response status:', response.status, response.statusText);
-      console.log(
-        '📥 Response headers:',
-        Object.fromEntries(response.headers.entries())
-      );
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Response error:', errorText);
         throw new Error(
           `Failed to fetch orders: ${response.status} - ${errorText}`
         );
       }
 
       const data = await response.json();
-      console.log(
-        '✅ Orders fetched successfully at',
-        new Date().toISOString(),
-        ':',
-        data
-      );
-
       // Add fetch timestamp to response for debugging
       data.fetchedAt = new Date().toISOString();
       return data;
     } catch (error) {
-      console.error('💥 Failed to fetch orders:', error);
       throw new Error('Failed to fetch orders - backend not available');
     }
   },
@@ -124,10 +103,6 @@ export const orderService = {
             customerInfo,
           });
         } catch (error) {
-          console.warn(
-            `Failed to fetch customer info for order ${order.orderId} (customer ${order.customerId}):`,
-            error
-          );
           // Add order without customer info
           ordersWithCustomers.push({
             ...order,
@@ -143,7 +118,6 @@ export const orderService = {
         totalOrders: ordersWithCustomers.length,
       };
     } catch (error) {
-      console.error('Failed to fetch orders with customers:', error);
       throw new Error(
         'Failed to fetch orders with customers - backend not available'
       );
@@ -166,7 +140,6 @@ export const orderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch orders by status:', error);
       throw new Error(
         'Failed to fetch orders by status - backend not available'
       );
@@ -189,7 +162,6 @@ export const orderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch order:', error);
       throw new Error('Failed to fetch order - backend not available');
     }
   },
@@ -213,7 +185,6 @@ export const orderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to update order status:', error);
       throw new Error('Failed to update order status - backend not available');
     }
   },
@@ -234,7 +205,6 @@ export const orderService = {
 
       return response.json();
     } catch (error) {
-      console.error('Failed to fetch orders count:', error);
       throw new Error('Failed to fetch orders count - backend not available');
     }
   },

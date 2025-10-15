@@ -63,8 +63,7 @@ export default function EditProductPage() {
           imageUrl: productData.imageUrl,
           categoryId: productData.categoryId || 0,
         });
-      } catch (error) {
-        console.error('Error fetching data:', error);
+      } catch {
         toast.error('Failed to load product data');
       } finally {
         setLoading(false);
@@ -125,7 +124,6 @@ export default function EditProductPage() {
 
       toast.success('Image uploaded successfully');
     } catch (error) {
-      console.error('Error uploading image:', error);
       toast.error(
         error instanceof Error ? error.message : 'Failed to upload image'
       );
@@ -168,12 +166,10 @@ export default function EditProductPage() {
         imageUrl: formData.imageUrl,
         categoryId: formData.categoryId,
       };
-      console.log(updateData);
       await productService.updateProduct(parseInt(productId), updateData);
       toast.success('Product updated successfully');
       router.push('/products');
-    } catch (error) {
-      console.error('Error updating product:', error);
+    } catch {
       toast.error('Failed to update product');
     } finally {
       setSaving(false);

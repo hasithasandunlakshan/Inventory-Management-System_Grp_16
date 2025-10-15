@@ -18,51 +18,28 @@ export default function KpiCards() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log(
-      '🔄 KpiCards component mounted, fetching revenue and inventory data...'
-    );
-
     const fetchData = async () => {
       try {
         // Check authentication first
         const token = localStorage.getItem('inventory_auth_token');
         const userInfo = localStorage.getItem('inventory_user_info');
-        console.log('🔐 Authentication check:', {
-          hasToken: !!token,
-          tokenLength: token?.length || 0,
-          hasUserInfo: !!userInfo,
-          userInfo: userInfo ? JSON.parse(userInfo) : null,
-        });
-
         if (!token) {
-          console.error('❌ No authentication token found!');
           setLoading(false);
           return;
         }
-
-        console.log('📞 About to call revenue and inventory services');
-
         // Fetch both revenue and inventory data in parallel
         const [revenueData, inventoryData] = await Promise.all([
           revenueService.getTodayRevenue().catch(err => {
-            console.error('Revenue API failed:', err);
             return null;
           }),
           inventoryService.getInventoryCost().catch(err => {
-            console.error('Inventory API failed:', err);
             return null;
           }),
         ]);
-
-        console.log('✅ KpiCards received revenue data:', revenueData);
-        console.log('✅ KpiCards received inventory data:', inventoryData);
-
         setTodayRevenue(revenueData);
         setInventoryCost(inventoryData);
       } catch (error) {
-        console.error('❌ KpiCards error fetching data:', error);
       } finally {
-        console.log('🏁 KpiCards finished loading');
         setLoading(false);
       }
     };
