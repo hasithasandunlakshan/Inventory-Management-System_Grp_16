@@ -107,6 +107,7 @@ export default function AddProductClient({
     }
 
     try {
+      console.log('newProduct', newProduct);
       await productService.addProduct(newProduct);
       router.push('/products');
     } catch {

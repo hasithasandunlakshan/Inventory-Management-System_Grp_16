@@ -86,11 +86,11 @@ export default function DebugApiPage() {
       for (const [name, url] of Object.entries(endpoints)) {
         try {
           const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
           let data;
           let dataCount;
@@ -143,7 +143,7 @@ export default function DebugApiPage() {
         stack: error instanceof Error ? error.stack : undefined,
       });
     } finally {
-      setLoading(false);
+    setLoading(false);
     }
   };
 
@@ -213,7 +213,7 @@ export default function DebugApiPage() {
 
           <Button
             onClick={testApiConnection}
-            disabled={loading}
+          disabled={loading}
             className='w-full'
           >
             {loading ? 'Testing All Endpoints...' : 'Test All API Endpoints'}
@@ -254,7 +254,7 @@ export default function DebugApiPage() {
                       >
                         {endpoint.result.status || 'FAIL'}
                       </span>
-                    </div>
+      </div>
                     <p className='text-xs font-mono text-gray-600 mb-2 break-all'>
                       {endpoint.url}
                     </p>
@@ -280,7 +280,7 @@ export default function DebugApiPage() {
                   </div>
                 ))}
               </div>
-            </div>
+      </div>
           )}
         </CardContent>
       </Card>
