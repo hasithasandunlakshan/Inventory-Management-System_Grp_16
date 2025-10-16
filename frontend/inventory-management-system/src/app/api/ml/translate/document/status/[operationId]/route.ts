@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ML_SERVICE_URL = process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8081';
+const ML_SERVICE_URL =
+  process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8081';
 
 export async function GET(
   request: NextRequest,
@@ -8,13 +9,16 @@ export async function GET(
 ) {
   try {
     const { operationId } = await params;
-    
-    const response = await fetch(`${ML_SERVICE_URL}/translate/document/status/${operationId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
+
+    const response = await fetch(
+      `${ML_SERVICE_URL}/translate/document/status/${operationId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    });
+    );
 
     if (!response.ok) {
       const errorData = await response.json();

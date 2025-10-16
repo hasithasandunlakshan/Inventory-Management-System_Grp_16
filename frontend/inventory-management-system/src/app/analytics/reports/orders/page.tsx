@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -140,12 +135,12 @@ export default function OrdersReportPage() {
   const getTimeFrameDates = (range: TimeRange) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (range) {
       case 'daily':
         return {
           from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
+          to: today.toISOString().split('T')[0],
         };
       case 'weekly':
         const weekStart = new Date(today);
@@ -154,21 +149,21 @@ export default function OrdersReportPage() {
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
           from: weekStart.toISOString().split('T')[0],
-          to: weekEnd.toISOString().split('T')[0]
+          to: weekEnd.toISOString().split('T')[0],
         };
       case 'monthly':
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         return {
           from: monthStart.toISOString().split('T')[0],
-          to: monthEnd.toISOString().split('T')[0]
+          to: monthEnd.toISOString().split('T')[0],
         };
       case 'yearly':
         const yearStart = new Date(today.getFullYear(), 0, 1);
         const yearEnd = new Date(today.getFullYear(), 11, 31);
         return {
           from: yearStart.toISOString().split('T')[0],
-          to: yearEnd.toISOString().split('T')[0]
+          to: yearEnd.toISOString().split('T')[0],
         };
       default:
         return { from: dateFrom, to: dateTo };
@@ -194,7 +189,10 @@ export default function OrdersReportPage() {
       setOrdersLoading(true);
       setOrdersError(null);
       try {
-        console.log('📦 Loading orders data from backend...', { dateFrom, dateTo });
+        console.log('📦 Loading orders data from backend...', {
+          dateFrom,
+          dateTo,
+        });
         const orders = await orderService.getAllOrders(dateFrom, dateTo);
         console.log('📦 Orders data loaded:', orders);
         const ordersArray = orders.orders || [];
@@ -228,14 +226,24 @@ export default function OrdersReportPage() {
 
   const ordersKpis = useMemo(() => {
     const totalOrders = allOrders.length;
-    const confirmed = allOrders.filter((o: any) => o.status === 'CONFIRMED').length;
-    const processed = allOrders.filter((o: any) => o.status === 'PROCESSED').length;
+    const confirmed = allOrders.filter(
+      (o: any) => o.status === 'CONFIRMED'
+    ).length;
+    const processed = allOrders.filter(
+      (o: any) => o.status === 'PROCESSED'
+    ).length;
     const shipped = allOrders.filter((o: any) => o.status === 'SHIPPED').length;
-    const cancelled = allOrders.filter((o: any) => o.status === 'CANCELLED').length;
+    const cancelled = allOrders.filter(
+      (o: any) => o.status === 'CANCELLED'
+    ).length;
     const pending = allOrders.filter((o: any) => o.status === 'PENDING').length;
-    const totalRevenue = allOrders.reduce((sum, o: any) => sum + (o.totalAmount || 0), 0);
-    const avgOrderValue = totalOrders > 0 ? (totalRevenue as number) / totalOrders : 0;
-    
+    const totalRevenue = allOrders.reduce(
+      (sum, o: any) => sum + (o.totalAmount || 0),
+      0
+    );
+    const avgOrderValue =
+      totalOrders > 0 ? (totalRevenue as number) / totalOrders : 0;
+
     return {
       totalOrders,
       confirmed,
@@ -279,7 +287,9 @@ export default function OrdersReportPage() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-8'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>Orders Report</h1>
+              <h1 className='text-3xl font-bold text-gray-900'>
+                Orders Report
+              </h1>
               <p className='mt-2 text-gray-600'>
                 Order processing and fulfillment analysis
               </p>
@@ -305,14 +315,14 @@ export default function OrdersReportPage() {
                   <Input
                     type='date'
                     value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    onChange={e => setDateFrom(e.target.value)}
                     className='w-40'
                   />
                   <span>to</span>
                   <Input
                     type='date'
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={e => setDateTo(e.target.value)}
                     className='w-40'
                   />
                 </div>
@@ -345,9 +355,7 @@ export default function OrdersReportPage() {
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Confirmed
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Confirmed</CardTitle>
               <Icons.CheckCircle />
             </CardHeader>
             <CardContent>
@@ -358,9 +366,7 @@ export default function OrdersReportPage() {
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Processed
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Processed</CardTitle>
               <Icons.DocumentReport />
             </CardHeader>
             <CardContent>
@@ -371,9 +377,7 @@ export default function OrdersReportPage() {
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Shipped
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Shipped</CardTitle>
               <Icons.Truck />
             </CardHeader>
             <CardContent>
@@ -384,9 +388,7 @@ export default function OrdersReportPage() {
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Cancelled
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Cancelled</CardTitle>
               <Icons.XCircle />
             </CardHeader>
             <CardContent>
@@ -397,9 +399,7 @@ export default function OrdersReportPage() {
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Pending
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Pending</CardTitle>
               <Icons.Clock />
             </CardHeader>
             <CardContent>
@@ -414,21 +414,20 @@ export default function OrdersReportPage() {
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
           <Card>
             <CardHeader>
-              <CardTitle className='text-base'>
-                Total Revenue
-              </CardTitle>
+              <CardTitle className='text-base'>Total Revenue</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='text-3xl font-bold'>
-                ${ordersLoading ? '—' : (ordersKpis.totalRevenue as number).toFixed(2)}
+                $
+                {ordersLoading
+                  ? '—'
+                  : (ordersKpis.totalRevenue as number).toFixed(2)}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className='text-base'>
-                Average Order Value
-              </CardTitle>
+              <CardTitle className='text-base'>Average Order Value</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='text-3xl font-bold'>
@@ -441,9 +440,7 @@ export default function OrdersReportPage() {
         {/* Orders by Status Chart */}
         <Card className='mb-8'>
           <CardHeader>
-            <CardTitle className='text-base'>
-              Orders by Status
-            </CardTitle>
+            <CardTitle className='text-base'>Orders by Status</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='text-sm text-gray-600 mb-2'>
@@ -461,17 +458,20 @@ export default function OrdersReportPage() {
                 const value = statusCounts[status] || 0;
                 const pct = Math.min(
                   100,
-                  Math.max(
-                    8,
-                    Math.round((value / statusMax) * 100)
-                  )
+                  Math.max(8, Math.round((value / statusMax) * 100))
                 );
-                const color = status === 'CONFIRMED' ? 'bg-green-500' :
-                             status === 'PROCESSED' ? 'bg-blue-500' :
-                             status === 'SHIPPED' ? 'bg-purple-500' :
-                             status === 'CANCELLED' ? 'bg-red-500' :
-                             status === 'PENDING' ? 'bg-orange-500' :
-                             'bg-gray-500';
+                const color =
+                  status === 'CONFIRMED'
+                    ? 'bg-green-500'
+                    : status === 'PROCESSED'
+                      ? 'bg-blue-500'
+                      : status === 'SHIPPED'
+                        ? 'bg-purple-500'
+                        : status === 'CANCELLED'
+                          ? 'bg-red-500'
+                          : status === 'PENDING'
+                            ? 'bg-orange-500'
+                            : 'bg-gray-500';
                 return (
                   <div
                     key={status}
@@ -487,9 +487,7 @@ export default function OrdersReportPage() {
                     <div className='text-xs text-center mt-2'>
                       {status.slice(0, 3)}
                     </div>
-                    <div className='text-xs text-center'>
-                      {value}
-                    </div>
+                    <div className='text-xs text-center'>{value}</div>
                   </div>
                 );
               })}
@@ -531,10 +529,7 @@ export default function OrdersReportPage() {
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200'>
                   {(ordersLoading ? [] : filteredOrders).map((order: any) => (
-                    <tr
-                      key={order.orderId}
-                      className='hover:bg-muted/30'
-                    >
+                    <tr key={order.orderId} className='hover:bg-muted/30'>
                       <td className='px-6 py-4 text-sm font-medium'>
                         {order.orderId}
                       </td>
@@ -542,14 +537,21 @@ export default function OrdersReportPage() {
                         {order.customerName || 'N/A'}
                       </td>
                       <td className='px-6 py-4 text-sm'>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          order.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
-                          order.status === 'PROCESSED' ? 'bg-blue-100 text-blue-800' :
-                          order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
-                          order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                          order.status === 'PENDING' ? 'bg-orange-100 text-orange-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            order.status === 'CONFIRMED'
+                              ? 'bg-green-100 text-green-800'
+                              : order.status === 'PROCESSED'
+                                ? 'bg-blue-100 text-blue-800'
+                                : order.status === 'SHIPPED'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : order.status === 'CANCELLED'
+                                    ? 'bg-red-100 text-red-800'
+                                    : order.status === 'PENDING'
+                                      ? 'bg-orange-100 text-orange-800'
+                                      : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
                           {order.status}
                         </span>
                       </td>

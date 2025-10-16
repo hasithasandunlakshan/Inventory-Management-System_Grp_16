@@ -48,20 +48,23 @@ export class TranslatorService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8081';
+    this.baseUrl =
+      process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8081';
   }
 
   /**
    * Translate a single text
    */
-  async translateText(request: TranslationRequest): Promise<TranslationResponse> {
+  async translateText(
+    request: TranslationRequest
+  ): Promise<TranslationResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/translate/text`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {
@@ -90,7 +93,7 @@ export class TranslatorService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {
@@ -114,7 +117,7 @@ export class TranslatorService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {
@@ -134,7 +137,7 @@ export class TranslatorService {
   async getSupportedLanguages(): Promise<SupportedLanguages> {
     try {
       const response = await fetch(`${this.baseUrl}/translate/languages`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to get languages: ${response.statusText}`);
       }
@@ -152,7 +155,7 @@ export class TranslatorService {
   async healthCheck(): Promise<HealthCheck> {
     try {
       const response = await fetch(`${this.baseUrl}/translate/health`);
-      
+
       if (!response.ok) {
         throw new Error(`Health check failed: ${response.statusText}`);
       }
@@ -179,7 +182,7 @@ export class TranslatorService {
 
       const response = await fetch(`${this.baseUrl}/translate/detect`, {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
@@ -212,38 +215,47 @@ export class TranslatorService {
       { value: 'nl', label: 'Dutch' },
       { value: 'pl', label: 'Polish' },
       { value: 'tr', label: 'Turkish' },
-      { value: 'hi', label: 'Hindi' }
+      { value: 'hi', label: 'Hindi' },
     ];
   }
 
   /**
    * Translate supplier-related content
    */
-  async translateSupplierContent(content: string, targetLanguage: string): Promise<TranslationResponse> {
+  async translateSupplierContent(
+    content: string,
+    targetLanguage: string
+  ): Promise<TranslationResponse> {
     return this.translateText({
       text: content,
       target_language: targetLanguage,
-      source_language: 'en' // Assuming supplier content is in English
+      source_language: 'en', // Assuming supplier content is in English
     });
   }
 
   /**
    * Translate product descriptions
    */
-  async translateProductDescription(description: string, targetLanguage: string): Promise<TranslationResponse> {
+  async translateProductDescription(
+    description: string,
+    targetLanguage: string
+  ): Promise<TranslationResponse> {
     return this.translateText({
       text: description,
-      target_language: targetLanguage
+      target_language: targetLanguage,
     });
   }
 
   /**
    * Translate order-related content
    */
-  async translateOrderContent(content: string, targetLanguage: string): Promise<TranslationResponse> {
+  async translateOrderContent(
+    content: string,
+    targetLanguage: string
+  ): Promise<TranslationResponse> {
     return this.translateText({
       text: content,
-      target_language: targetLanguage
+      target_language: targetLanguage,
     });
   }
 }

@@ -13,11 +13,11 @@ interface SearchBarProps {
   className?: string;
 }
 
-export default function SearchBar({ 
-  onSearch, 
+export default function SearchBar({
+  onSearch,
   onFiltersChange,
-  placeholder = "Search products, suppliers, documents...",
-  className = ""
+  placeholder = 'Search products, suppliers, documents...',
+  className = '',
 }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -25,7 +25,7 @@ export default function SearchBar({
   const [popularSearches, setPopularSearches] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
@@ -36,7 +36,10 @@ export default function SearchBar({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node)
+      ) {
         setShowSuggestions(false);
       }
     };
@@ -47,7 +50,7 @@ export default function SearchBar({
 
   const handleInputChange = async (value: string) => {
     setQuery(value);
-    
+
     if (value.length > 2) {
       setIsLoading(true);
       try {
@@ -96,49 +99,51 @@ export default function SearchBar({
 
   return (
     <div className={`relative ${className}`}>
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+      <div className='relative'>
+        <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
         <Input
           ref={inputRef}
-          type="text"
+          type='text'
           placeholder={placeholder}
           value={query}
-          onChange={(e) => handleInputChange(e.target.value)}
+          onChange={e => handleInputChange(e.target.value)}
           onKeyDown={handleKeyPress}
           onFocus={() => setShowSuggestions(true)}
-          className="pl-10 pr-10"
+          className='pl-10 pr-10'
         />
         {query && (
           <Button
-            variant="ghost"
-            size="sm"
+            variant='ghost'
+            size='sm'
             onClick={clearSearch}
-            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+            className='absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0'
           >
-            <X className="h-4 w-4" />
+            <X className='h-4 w-4' />
           </Button>
         )}
         {isLoading && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
+            <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600'></div>
           </div>
         )}
       </div>
 
       {showSuggestions && (
-        <div 
+        <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
+          className='absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto'
         >
           {/* Search Suggestions */}
           {suggestions.length > 0 && (
-            <div className="p-2">
-              <div className="text-xs font-medium text-gray-500 mb-2 px-2">Suggestions</div>
+            <div className='p-2'>
+              <div className='text-xs font-medium text-gray-500 mb-2 px-2'>
+                Suggestions
+              </div>
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="w-full text-left px-2 py-2 hover:bg-gray-100 rounded text-sm"
+                  className='w-full text-left px-2 py-2 hover:bg-gray-100 rounded text-sm'
                 >
                   {suggestion}
                 </button>
@@ -148,16 +153,16 @@ export default function SearchBar({
 
           {/* Recent Searches */}
           {recentSearches.length > 0 && query.length === 0 && (
-            <div className="p-2 border-t">
-              <div className="text-xs font-medium text-gray-500 mb-2 px-2 flex items-center">
-                <Clock className="h-3 w-3 mr-1" />
+            <div className='p-2 border-t'>
+              <div className='text-xs font-medium text-gray-500 mb-2 px-2 flex items-center'>
+                <Clock className='h-3 w-3 mr-1' />
                 Recent Searches
               </div>
               {recentSearches.slice(0, 5).map((search, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick(search)}
-                  className="w-full text-left px-2 py-2 hover:bg-gray-100 rounded text-sm"
+                  className='w-full text-left px-2 py-2 hover:bg-gray-100 rounded text-sm'
                 >
                   {search}
                 </button>
@@ -167,16 +172,16 @@ export default function SearchBar({
 
           {/* Popular Searches */}
           {popularSearches.length > 0 && query.length === 0 && (
-            <div className="p-2 border-t">
-              <div className="text-xs font-medium text-gray-500 mb-2 px-2 flex items-center">
-                <TrendingUp className="h-3 w-3 mr-1" />
+            <div className='p-2 border-t'>
+              <div className='text-xs font-medium text-gray-500 mb-2 px-2 flex items-center'>
+                <TrendingUp className='h-3 w-3 mr-1' />
                 Popular Searches
               </div>
               {popularSearches.slice(0, 5).map((search, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick(search)}
-                  className="w-full text-left px-2 py-2 hover:bg-gray-100 rounded text-sm"
+                  className='w-full text-left px-2 py-2 hover:bg-gray-100 rounded text-sm'
                 >
                   {search}
                 </button>
@@ -186,7 +191,7 @@ export default function SearchBar({
 
           {/* No suggestions message */}
           {suggestions.length === 0 && query.length > 2 && (
-            <div className="p-4 text-center text-gray-500 text-sm">
+            <div className='p-4 text-center text-gray-500 text-sm'>
               No suggestions found
             </div>
           )}

@@ -100,12 +100,12 @@ export default function OperationalCostsReportPage() {
   const getTimeFrameDates = (range: TimeRange) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (range) {
       case 'daily':
         return {
           from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
+          to: today.toISOString().split('T')[0],
         };
       case 'weekly':
         const weekStart = new Date(today);
@@ -114,21 +114,21 @@ export default function OperationalCostsReportPage() {
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
           from: weekStart.toISOString().split('T')[0],
-          to: weekEnd.toISOString().split('T')[0]
+          to: weekEnd.toISOString().split('T')[0],
         };
       case 'monthly':
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         return {
           from: monthStart.toISOString().split('T')[0],
-          to: monthEnd.toISOString().split('T')[0]
+          to: monthEnd.toISOString().split('T')[0],
         };
       case 'yearly':
         const yearStart = new Date(today.getFullYear(), 0, 1);
         const yearEnd = new Date(today.getFullYear(), 11, 31);
         return {
           from: yearStart.toISOString().split('T')[0],
-          to: yearEnd.toISOString().split('T')[0]
+          to: yearEnd.toISOString().split('T')[0],
         };
       default:
         return { from: dateFrom, to: dateTo };
@@ -146,8 +146,10 @@ export default function OperationalCostsReportPage() {
 
   const [operationalLoading, setOperationalLoading] = useState(true);
   const [, setOperationalError] = useState<string | null>(null);
-  const [logisticsCostAnalysis, setLogisticsCostAnalysis] = useState<LogisticsCostAnalysis | null>(null);
-  const [operationalEfficiency, setOperationalEfficiency] = useState<OperationalEfficiencyMetrics | null>(null);
+  const [logisticsCostAnalysis, setLogisticsCostAnalysis] =
+    useState<LogisticsCostAnalysis | null>(null);
+  const [operationalEfficiency, setOperationalEfficiency] =
+    useState<OperationalEfficiencyMetrics | null>(null);
 
   // Load operational costs data
   useEffect(() => {
@@ -155,13 +157,19 @@ export default function OperationalCostsReportPage() {
       setOperationalLoading(true);
       setOperationalError(null);
       try {
-        console.log('🚚 Loading operational costs data from backend...', { dateFrom, dateTo });
+        console.log('🚚 Loading operational costs data from backend...', {
+          dateFrom,
+          dateTo,
+        });
         const [logisticsCost, operational] = await Promise.all([
           profitabilityService.getLogisticsCostAnalysis(),
           profitabilityService.getOperationalEfficiencyMetrics(),
         ]);
-        
-        console.log('🚚 Operational costs data loaded:', { logisticsCost, operational });
+
+        console.log('🚚 Operational costs data loaded:', {
+          logisticsCost,
+          operational,
+        });
         setLogisticsCostAnalysis(logisticsCost);
         setOperationalEfficiency(operational);
       } catch (err) {
@@ -179,12 +187,15 @@ export default function OperationalCostsReportPage() {
     setOperationalLoading(true);
     setOperationalError(null);
     try {
-      console.log('🔄 Reloading operational costs data...', { dateFrom, dateTo });
+      console.log('🔄 Reloading operational costs data...', {
+        dateFrom,
+        dateTo,
+      });
       const [logisticsCost, operational] = await Promise.all([
         profitabilityService.getLogisticsCostAnalysis(),
         profitabilityService.getOperationalEfficiencyMetrics(),
       ]);
-      
+
       setLogisticsCostAnalysis(logisticsCost);
       setOperationalEfficiency(operational);
     } catch (err) {
@@ -202,9 +213,12 @@ export default function OperationalCostsReportPage() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-8'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>Operational Costs Report</h1>
+              <h1 className='text-3xl font-bold text-gray-900'>
+                Operational Costs Report
+              </h1>
               <p className='mt-2 text-gray-600'>
-                Logistics costs, delivery analysis, and operational efficiency metrics
+                Logistics costs, delivery analysis, and operational efficiency
+                metrics
               </p>
             </div>
             <div className='flex items-center space-x-4'>
@@ -228,14 +242,14 @@ export default function OperationalCostsReportPage() {
                   <Input
                     type='date'
                     value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    onChange={e => setDateFrom(e.target.value)}
                     className='w-40'
                   />
                   <span>to</span>
                   <Input
                     type='date'
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={e => setDateTo(e.target.value)}
                     className='w-40'
                   />
                 </div>
@@ -338,9 +352,7 @@ export default function OperationalCostsReportPage() {
                   ? logisticsCostAnalysis.driverCosts.toFixed(2)
                   : '0.00'}
               </div>
-              <p className='text-xs text-muted-foreground'>
-                Wages & benefits
-              </p>
+              <p className='text-xs text-muted-foreground'>Wages & benefits</p>
             </CardContent>
           </Card>
         </div>
@@ -365,9 +377,7 @@ export default function OperationalCostsReportPage() {
               ) : logisticsCostAnalysis ? (
                 <div className='space-y-4'>
                   <div className='flex justify-between items-center'>
-                    <span className='text-sm font-medium'>
-                      Delivery Costs
-                    </span>
+                    <span className='text-sm font-medium'>Delivery Costs</span>
                     <span className='text-sm text-muted-foreground'>
                       $
                       {logisticsCostAnalysis.deliveryCosts
@@ -392,9 +402,7 @@ export default function OperationalCostsReportPage() {
                     />
                   </div>
                   <div className='flex justify-between items-center'>
-                    <span className='text-sm font-medium'>
-                      Vehicle Costs
-                    </span>
+                    <span className='text-sm font-medium'>Vehicle Costs</span>
                     <span className='text-sm text-muted-foreground'>
                       $
                       {logisticsCostAnalysis.vehicleCosts
@@ -419,9 +427,7 @@ export default function OperationalCostsReportPage() {
                     />
                   </div>
                   <div className='flex justify-between items-center'>
-                    <span className='text-sm font-medium'>
-                      Driver Costs
-                    </span>
+                    <span className='text-sm font-medium'>Driver Costs</span>
                     <span className='text-sm text-muted-foreground'>
                       $
                       {logisticsCostAnalysis.driverCosts
@@ -476,7 +482,9 @@ export default function OperationalCostsReportPage() {
                   <div className='grid grid-cols-2 gap-4'>
                     <div className='text-center p-4 border rounded-lg'>
                       <div className='text-2xl font-bold text-blue-600'>
-                        {operationalEfficiency.deliveryEfficiency?.toFixed(1) || '0.0'}%
+                        {operationalEfficiency.deliveryEfficiency?.toFixed(1) ||
+                          '0.0'}
+                        %
                       </div>
                       <div className='text-sm text-muted-foreground'>
                         Order Fulfillment Rate
@@ -484,7 +492,8 @@ export default function OperationalCostsReportPage() {
                     </div>
                     <div className='text-center p-4 border rounded-lg'>
                       <div className='text-2xl font-bold text-green-600'>
-                        {operationalEfficiency.inventoryTurnover?.toFixed(1) || '0.0'}
+                        {operationalEfficiency.inventoryTurnover?.toFixed(1) ||
+                          '0.0'}
                       </div>
                       <div className='text-sm text-muted-foreground'>
                         Inventory Turnover
@@ -493,7 +502,8 @@ export default function OperationalCostsReportPage() {
                   </div>
                   <div className='text-center p-4 border rounded-lg'>
                     <div className='text-2xl font-bold text-purple-600'>
-                      {operationalEfficiency.overallEfficiency?.toFixed(1) || '0.0'}
+                      {operationalEfficiency.overallEfficiency?.toFixed(1) ||
+                        '0.0'}
                     </div>
                     <div className='text-sm text-muted-foreground'>
                       Customer Satisfaction Score
@@ -524,30 +534,40 @@ export default function OperationalCostsReportPage() {
           <CardHeader>
             <CardTitle>Cost Optimization Recommendations</CardTitle>
             <CardDescription>
-              Suggestions for improving operational efficiency and reducing costs
+              Suggestions for improving operational efficiency and reducing
+              costs
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className='space-y-4'>
               <div className='p-4 border rounded-lg bg-blue-50'>
-                <h4 className='font-semibold text-blue-900 mb-2'>Delivery Optimization</h4>
+                <h4 className='font-semibold text-blue-900 mb-2'>
+                  Delivery Optimization
+                </h4>
                 <p className='text-sm text-blue-800'>
-                  Consider consolidating delivery routes to reduce fuel costs and improve efficiency.
-                  Current cost per delivery: ${logisticsCostAnalysis?.costPerDelivery?.toFixed(2) || '0.00'}
+                  Consider consolidating delivery routes to reduce fuel costs
+                  and improve efficiency. Current cost per delivery: $
+                  {logisticsCostAnalysis?.costPerDelivery?.toFixed(2) || '0.00'}
                 </p>
               </div>
               <div className='p-4 border rounded-lg bg-green-50'>
-                <h4 className='font-semibold text-green-900 mb-2'>Vehicle Utilization</h4>
+                <h4 className='font-semibold text-green-900 mb-2'>
+                  Vehicle Utilization
+                </h4>
                 <p className='text-sm text-green-800'>
-                  Optimize vehicle utilization to reduce maintenance costs and improve fleet efficiency.
-                  Current efficiency score: {logisticsCostAnalysis?.efficiencyScore?.toFixed(1) || '0.0'}%
+                  Optimize vehicle utilization to reduce maintenance costs and
+                  improve fleet efficiency. Current efficiency score:{' '}
+                  {logisticsCostAnalysis?.efficiencyScore?.toFixed(1) || '0.0'}%
                 </p>
               </div>
               <div className='p-4 border rounded-lg bg-purple-50'>
-                <h4 className='font-semibold text-purple-900 mb-2'>Driver Performance</h4>
+                <h4 className='font-semibold text-purple-900 mb-2'>
+                  Driver Performance
+                </h4>
                 <p className='text-sm text-purple-800'>
-                  Implement driver performance tracking to optimize routes and reduce operational costs.
-                  Focus on training and efficiency improvements.
+                  Implement driver performance tracking to optimize routes and
+                  reduce operational costs. Focus on training and efficiency
+                  improvements.
                 </p>
               </div>
             </div>

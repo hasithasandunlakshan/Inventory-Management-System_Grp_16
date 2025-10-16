@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -146,12 +141,12 @@ export default function SalesReportPage() {
   const getTimeFrameDates = (range: TimeRange) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (range) {
       case 'daily':
         return {
           from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
+          to: today.toISOString().split('T')[0],
         };
       case 'weekly':
         const weekStart = new Date(today);
@@ -160,21 +155,21 @@ export default function SalesReportPage() {
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
           from: weekStart.toISOString().split('T')[0],
-          to: weekEnd.toISOString().split('T')[0]
+          to: weekEnd.toISOString().split('T')[0],
         };
       case 'monthly':
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         return {
           from: monthStart.toISOString().split('T')[0],
-          to: monthEnd.toISOString().split('T')[0]
+          to: monthEnd.toISOString().split('T')[0],
         };
       case 'yearly':
         const yearStart = new Date(today.getFullYear(), 0, 1);
         const yearEnd = new Date(today.getFullYear(), 11, 31);
         return {
           from: yearStart.toISOString().split('T')[0],
-          to: yearEnd.toISOString().split('T')[0]
+          to: yearEnd.toISOString().split('T')[0],
         };
       default:
         return { from: dateFrom, to: dateTo };
@@ -194,8 +189,12 @@ export default function SalesReportPage() {
   const [, setSalesError] = useState<string | null>(null);
   const [recentOrders, setRecentOrders] = useState<unknown[]>([]);
   const [allOrders, setAllOrders] = useState<unknown[]>([]);
-  const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(null);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse>([]);
+  const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(
+    null
+  );
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse>(
+    []
+  );
   const [, setStripeStats] = useState<StripeStatsResponse | null>(null);
 
   // Load sales data
@@ -204,15 +203,23 @@ export default function SalesReportPage() {
       setSalesLoading(true);
       setSalesError(null);
       try {
-        console.log('💰 Loading sales data from backend...', { dateFrom, dateTo });
+        console.log('💰 Loading sales data from backend...', {
+          dateFrom,
+          dateTo,
+        });
         const [orders, todayRev, monthlyRev, stripe] = await Promise.all([
           orderService.getAllOrders(dateFrom, dateTo),
           revenueService.getTodayRevenue(dateFrom, dateTo),
           revenueService.getMonthlyRevenue(dateFrom, dateTo),
           revenueService.getStripeStats(dateFrom, dateTo),
         ]);
-        
-        console.log('💰 Sales data loaded:', { orders, todayRev, monthlyRev, stripe });
+
+        console.log('💰 Sales data loaded:', {
+          orders,
+          todayRev,
+          monthlyRev,
+          stripe,
+        });
         const ordersArray = orders.orders || [];
         setRecentOrders(ordersArray.slice(0, 10));
         setAllOrders(ordersArray);
@@ -241,7 +248,7 @@ export default function SalesReportPage() {
         revenueService.getMonthlyRevenue(dateFrom, dateTo),
         revenueService.getStripeStats(dateFrom, dateTo),
       ]);
-      
+
       const ordersArray = orders.orders || [];
       setRecentOrders(ordersArray.slice(0, 10));
       setAllOrders(ordersArray);
@@ -258,12 +265,24 @@ export default function SalesReportPage() {
 
   const salesKpis = useMemo(() => {
     const totalOrders = allOrders.length;
-    const confirmed = allOrders.filter((o: any) => o.status === 'CONFIRMED').length;
-    const processed = allOrders.filter((o: any) => o.status === 'PROCESSED').length;
-    const refunds = allOrders.filter((o: any) => o.status === 'REFUNDED').length;
+    const confirmed = allOrders.filter(
+      (o: any) => o.status === 'CONFIRMED'
+    ).length;
+    const processed = allOrders.filter(
+      (o: any) => o.status === 'PROCESSED'
+    ).length;
+    const refunds = allOrders.filter(
+      (o: any) => o.status === 'REFUNDED'
+    ).length;
     const todaysRevenue = todayRevenue?.revenue || 0;
-    const aov = totalOrders > 0 ? (allOrders.reduce((sum, o: any) => sum + (o.totalAmount || 0), 0) as number) / totalOrders : 0;
-    
+    const aov =
+      totalOrders > 0
+        ? (allOrders.reduce(
+            (sum, o: any) => sum + (o.totalAmount || 0),
+            0
+          ) as number) / totalOrders
+        : 0;
+
     return {
       totalOrders,
       confirmed,
@@ -323,14 +342,14 @@ export default function SalesReportPage() {
                   <Input
                     type='date'
                     value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    onChange={e => setDateFrom(e.target.value)}
                     className='w-40'
                   />
                   <span>to</span>
                   <Input
                     type='date'
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={e => setDateTo(e.target.value)}
                     className='w-40'
                   />
                 </div>
@@ -363,9 +382,7 @@ export default function SalesReportPage() {
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Confirmed
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Confirmed</CardTitle>
               <Icons.CheckCircle />
             </CardHeader>
             <CardContent>
@@ -376,9 +393,7 @@ export default function SalesReportPage() {
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Processed
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Processed</CardTitle>
               <Icons.DocumentReport />
             </CardHeader>
             <CardContent>
@@ -404,9 +419,7 @@ export default function SalesReportPage() {
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Refunds
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Refunds</CardTitle>
               <Icons.XCircle />
             </CardHeader>
             <CardContent>
@@ -424,9 +437,7 @@ export default function SalesReportPage() {
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold'>
-                {salesLoading
-                  ? '—'
-                  : salesKpis.aov.toLocaleString()}
+                {salesLoading ? '—' : salesKpis.aov.toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -436,9 +447,7 @@ export default function SalesReportPage() {
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
           <Card>
             <CardHeader>
-              <CardTitle className='text-base'>
-                Revenue by Month
-              </CardTitle>
+              <CardTitle className='text-base'>Revenue by Month</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='text-sm text-gray-600 mb-2'>
@@ -453,10 +462,7 @@ export default function SalesReportPage() {
                       100,
                       Math.max(
                         8,
-                        Math.round(
-                          ((m.revenue || 0) / monthlyMaxRevenue) *
-                            100
-                        )
+                        Math.round(((m.revenue || 0) / monthlyMaxRevenue) * 100)
                       )
                     );
                     return (
@@ -477,9 +483,7 @@ export default function SalesReportPage() {
                   })
                 ) : (
                   <div className='col-span-12 text-center text-sm text-muted-foreground'>
-                    {salesLoading
-                      ? 'Loading...'
-                      : 'No revenue data'}
+                    {salesLoading ? 'Loading...' : 'No revenue data'}
                   </div>
                 )}
               </div>
@@ -487,55 +491,45 @@ export default function SalesReportPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className='text-base'>
-                Orders by Status
-              </CardTitle>
+              <CardTitle className='text-base'>Orders by Status</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='text-sm text-gray-600 mb-2'>
                 Status Chart Container (h-40 with border)
               </div>
               <div className='grid grid-cols-4 gap-4 items-end h-40 border border-gray-200 p-2 bg-gray-50'>
-                {[
-                  'CONFIRMED',
-                  'PROCESSED',
-                  'SHIPPED',
-                  'CANCELLED',
-                ].map(status => {
-                  const value = statusCounts[status] || 0;
-                  const pct = Math.min(
-                    100,
-                    Math.max(
-                      8,
-                      Math.round((value / statusMax) * 100)
-                    )
-                  );
-                  console.log(`📊 Status bar ${status}:`, {
-                    value,
-                    pct,
-                    statusMax,
-                  });
-                  return (
-                    <div
-                      key={status}
-                      className='flex flex-col items-center h-full'
-                    >
-                      <div className='w-full bg-foreground/10 rounded h-full flex items-end'>
-                        <div
-                          className='w-full bg-foreground rounded min-h-[8px] border border-gray-400'
-                          style={{ height: `${pct}%` }}
-                          title={`${status}: ${value}`}
-                        />
+                {['CONFIRMED', 'PROCESSED', 'SHIPPED', 'CANCELLED'].map(
+                  status => {
+                    const value = statusCounts[status] || 0;
+                    const pct = Math.min(
+                      100,
+                      Math.max(8, Math.round((value / statusMax) * 100))
+                    );
+                    console.log(`📊 Status bar ${status}:`, {
+                      value,
+                      pct,
+                      statusMax,
+                    });
+                    return (
+                      <div
+                        key={status}
+                        className='flex flex-col items-center h-full'
+                      >
+                        <div className='w-full bg-foreground/10 rounded h-full flex items-end'>
+                          <div
+                            className='w-full bg-foreground rounded min-h-[8px] border border-gray-400'
+                            style={{ height: `${pct}%` }}
+                            title={`${status}: ${value}`}
+                          />
+                        </div>
+                        <div className='text-xs text-center mt-2'>
+                          {status.slice(0, 3)}
+                        </div>
+                        <div className='text-xs text-center'>{value}</div>
                       </div>
-                      <div className='text-xs text-center mt-2'>
-                        {status.slice(0, 3)}
-                      </div>
-                      <div className='text-xs text-center'>
-                        {value}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
             </CardContent>
           </Card>
@@ -544,9 +538,7 @@ export default function SalesReportPage() {
         {/* Recent Orders Table */}
         <Card>
           <CardHeader>
-            <CardTitle className='text-base'>
-              Recent Orders
-            </CardTitle>
+            <CardTitle className='text-base'>Recent Orders</CardTitle>
           </CardHeader>
           <CardContent>
             <div className='overflow-x-auto'>
@@ -572,10 +564,7 @@ export default function SalesReportPage() {
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200'>
                   {(salesLoading ? [] : recentOrders).map((order: any) => (
-                    <tr
-                      key={order.orderId}
-                      className='hover:bg-muted/30'
-                    >
+                    <tr key={order.orderId} className='hover:bg-muted/30'>
                       <td className='px-6 py-4 text-sm font-medium'>
                         {order.orderId}
                       </td>
@@ -583,13 +572,19 @@ export default function SalesReportPage() {
                         {order.customerName || 'N/A'}
                       </td>
                       <td className='px-6 py-4 text-sm'>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          order.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
-                          order.status === 'PROCESSED' ? 'bg-blue-100 text-blue-800' :
-                          order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
-                          order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            order.status === 'CONFIRMED'
+                              ? 'bg-green-100 text-green-800'
+                              : order.status === 'PROCESSED'
+                                ? 'bg-blue-100 text-blue-800'
+                                : order.status === 'SHIPPED'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : order.status === 'CANCELLED'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
                           {order.status}
                         </span>
                       </td>

@@ -55,27 +55,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 1. Fetch data from your existing services
     console.log('Fetching data from existing services...');
-    
+
     const searchDocuments: SearchDocument[] = [];
     let totalFetched = 0;
 
     try {
       // Fetch products from product service
       console.log('Fetching products...');
-      const productsResponse = await fetch('http://localhost:8083/api/products', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Add timeout to prevent hanging
-        signal: AbortSignal.timeout(10000)
-      });
+      const productsResponse = await fetch(
+        'http://localhost:8083/api/products',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Add timeout to prevent hanging
+          signal: AbortSignal.timeout(10000),
+        }
+      );
 
       if (productsResponse.ok) {
         const productsData = await productsResponse.json();
         const products: Product[] = productsData.content || [];
         console.log(`Fetched ${products.length} products`);
-        
+
         // Transform products to search documents
         products.forEach(product => {
           // Determine stock status based on available stock
@@ -96,7 +99,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             stockLevel: product.availableStock || 0,
             stockStatus: stockStatus,
             supplier: 'Unknown Supplier', // Products don't have supplier info in this structure
-            createdDate: new Date().toISOString()
+            createdDate: new Date().toISOString(),
           });
         });
         totalFetched += products.length;
@@ -110,18 +113,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
       // Fetch suppliers from supplier service
       console.log('Fetching suppliers...');
-      const suppliersResponse = await fetch('http://localhost:8082/api/suppliers', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(10000)
-      });
+      const suppliersResponse = await fetch(
+        'http://localhost:8082/api/suppliers',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(10000),
+        }
+      );
 
       if (suppliersResponse.ok) {
         const suppliers: Supplier[] = await suppliersResponse.json();
         console.log(`Fetched ${suppliers.length} suppliers`);
-        
+
         // Transform suppliers to search documents
         suppliers.forEach(supplier => {
           searchDocuments.push({
@@ -131,7 +137,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             description: supplier.description || '',
             category: supplier.categoryName || 'Supplier',
             supplier: supplier.userName || 'Unknown Supplier',
-            createdDate: supplier.createdDate || new Date().toISOString()
+            createdDate: supplier.createdDate || new Date().toISOString(),
           });
         });
         totalFetched += suppliers.length;
@@ -144,8 +150,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // If no data was fetched, add some sample data for testing
     if (searchDocuments.length === 0) {
-      console.log('No data fetched from services, adding sample data for testing...');
-      
+      console.log(
+        'No data fetched from services, adding sample data for testing...'
+      );
+
       // Add sample products
       searchDocuments.push({
         id: 'sample-product-1',
@@ -157,7 +165,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         stockLevel: 50,
         stockStatus: 'in_stock',
         supplier: 'Sample Tech Corp',
-        createdDate: new Date().toISOString()
+        createdDate: new Date().toISOString(),
       });
 
       searchDocuments.push({
@@ -170,7 +178,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         stockLevel: 25,
         stockStatus: 'in_stock',
         supplier: 'Sample Game Gear',
-        createdDate: new Date().toISOString()
+        createdDate: new Date().toISOString(),
       });
 
       // Add sample suppliers
@@ -181,7 +189,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         description: 'Leading electronics supplier with 10+ years experience',
         category: 'Electronics',
         supplier: 'Sample Tech Corp',
-        createdDate: new Date().toISOString()
+        createdDate: new Date().toISOString(),
       });
 
       searchDocuments.push({
@@ -191,14 +199,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         description: 'Gaming accessories and peripherals supplier',
         category: 'Gaming',
         supplier: 'Sample Game Gear',
-        createdDate: new Date().toISOString()
+        createdDate: new Date().toISOString(),
       });
 
       totalFetched = searchDocuments.length;
-      console.log(`Added ${searchDocuments.length} sample documents for testing`);
+      console.log(
+        `Added ${searchDocuments.length} sample documents for testing`
+      );
     }
 
-    console.log(`Transformed ${searchDocuments.length} documents for search index`);
+    console.log(
+      `Transformed ${searchDocuments.length} documents for search index`
+    );
 
     // 2. Upload to Azure Search
     console.log('Uploading documents to Azure Search...');
@@ -218,9 +230,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const errorText = await response.text();
       console.error('Azure Search upload failed:', errorText);
       return NextResponse.json(
-        { 
-          success: false, 
-          error: `Search sync failed: ${response.status} - ${errorText}` 
+        {
+          success: false,
+          error: `Search sync failed: ${response.status} - ${errorText}`,
         },
         { status: response.status }
       );
@@ -229,30 +241,40 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const result = await response.json();
     console.log('Successfully synced data to Azure Search');
 
-    const syncResponse = NextResponse.json({ 
-      success: true, 
+    const syncResponse = NextResponse.json({
+      success: true,
       message: `Successfully synced ${searchDocuments.length} documents to search index`,
       data: {
         totalDocuments: searchDocuments.length,
-        products: searchDocuments.filter(doc => doc.entityType === 'product').length,
-        suppliers: searchDocuments.filter(doc => doc.entityType === 'supplier').length,
-        syncTime: new Date().toISOString()
-      }
+        products: searchDocuments.filter(doc => doc.entityType === 'product')
+          .length,
+        suppliers: searchDocuments.filter(doc => doc.entityType === 'supplier')
+          .length,
+        syncTime: new Date().toISOString(),
+      },
     });
 
     // Add CORS headers
     syncResponse.headers.set('Access-Control-Allow-Origin', '*');
-    syncResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    syncResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    syncResponse.headers.set(
+      'Access-Control-Allow-Methods',
+      'GET, POST, OPTIONS'
+    );
+    syncResponse.headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization'
+    );
 
     return syncResponse;
-
   } catch (error) {
     console.error('Sync error:', error);
     const response = NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred during sync' 
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error occurred during sync',
       },
       { status: 500 }
     );
@@ -260,7 +282,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Add CORS headers to error response
     response.headers.set('Access-Control-Allow-Origin', '*');
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization'
+    );
 
     return response;
   }
@@ -272,8 +297,8 @@ export async function GET(): Promise<NextResponse> {
     usage: 'POST to this endpoint to sync your database data to Azure Search',
     endpoints: {
       products: 'http://localhost:8083/api/products',
-      suppliers: 'http://localhost:8082/api/suppliers'
-    }
+      suppliers: 'http://localhost:8082/api/suppliers',
+    },
   });
 }
 

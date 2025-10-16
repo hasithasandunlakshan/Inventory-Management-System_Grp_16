@@ -1,9 +1,9 @@
 /**
  * Azure Document Intelligence Service
- * 
+ *
  * This service provides secure integration with Azure AI Document Intelligence
  * through a backend proxy API route.
- * 
+ *
  * Security: API keys are stored server-side and never exposed to the client
  */
 
@@ -28,8 +28,10 @@ export interface AnalysisError {
 
 export class DocumentIntelligenceService {
   // Backend API Configuration
-  private static readonly API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-  private static readonly DOCUMENT_INTELLIGENCE_ENDPOINT = '/api/ml/document-intelligence';
+  private static readonly API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+  private static readonly DOCUMENT_INTELLIGENCE_ENDPOINT =
+    '/api/ml/document-intelligence';
 
   /**
    * Validates file before processing
@@ -38,10 +40,10 @@ export class DocumentIntelligenceService {
     const maxSize = 50 * 1024 * 1024; // 50MB
     const allowedTypes = [
       'image/jpeg',
-      'image/jpg', 
+      'image/jpg',
       'image/png',
       'image/tiff',
-      'application/pdf'
+      'application/pdf',
     ];
 
     if (file.size > maxSize) {
@@ -49,7 +51,9 @@ export class DocumentIntelligenceService {
     }
 
     if (!allowedTypes.includes(file.type)) {
-      throw new Error('Unsupported file type. Please use JPG, PNG, TIFF, or PDF');
+      throw new Error(
+        'Unsupported file type. Please use JPG, PNG, TIFF, or PDF'
+      );
     }
   }
 
@@ -70,10 +74,9 @@ export class DocumentIntelligenceService {
     });
   }
 
-
   /**
    * Analyzes document using Azure Document Intelligence
-   * 
+   *
    * Secure backend proxy integration
    */
   public static async analyzeDocument(
@@ -121,8 +124,7 @@ export class DocumentIntelligenceService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.error || 
-          `Request failed with status ${response.status}`
+          errorData.error || `Request failed with status ${response.status}`
         );
       }
 
@@ -133,18 +135,16 @@ export class DocumentIntelligenceService {
       }
 
       return result.data;
-
     } catch (error) {
       console.error('Document analysis failed:', error);
-      
+
       if (error instanceof Error) {
         throw new Error(`Document analysis failed: ${error.message}`);
       }
-      
+
       throw new Error('An unexpected error occurred during document analysis');
     }
   }
-
 
   /**
    * Sanitizes and validates API response
@@ -160,12 +160,12 @@ export class DocumentIntelligenceService {
     // Sanitize tables
     if (result.tables && Array.isArray(result.tables)) {
       sanitized.tables = result.tables.map((table: any) => ({
-        headers: Array.isArray(table.headers) 
+        headers: Array.isArray(table.headers)
           ? table.headers.map((h: any) => String(h).trim())
           : [],
         rows: Array.isArray(table.rows)
-          ? table.rows.map((row: any) => 
-              Array.isArray(row) 
+          ? table.rows.map((row: any) =>
+              Array.isArray(row)
                 ? row.map((cell: any) => String(cell).trim())
                 : []
             )
@@ -176,11 +176,12 @@ export class DocumentIntelligenceService {
     // Sanitize key-value pairs
     if (result.keyValuePairs && Array.isArray(result.keyValuePairs)) {
       sanitized.keyValuePairs = result.keyValuePairs
-        .filter((pair: any) => 
-          pair && 
-          typeof pair.key === 'string' && 
-          typeof pair.value === 'string' &&
-          typeof pair.confidence === 'number'
+        .filter(
+          (pair: any) =>
+            pair &&
+            typeof pair.key === 'string' &&
+            typeof pair.value === 'string' &&
+            typeof pair.confidence === 'number'
         )
         .map((pair: any) => ({
           key: String(pair.key).trim(),
@@ -199,9 +200,9 @@ export class DocumentIntelligenceService {
     return [
       'image/jpeg',
       'image/jpg',
-      'image/png', 
+      'image/png',
       'image/tiff',
-      'application/pdf'
+      'application/pdf',
     ];
   }
 

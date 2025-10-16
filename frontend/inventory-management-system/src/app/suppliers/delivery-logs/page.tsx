@@ -167,18 +167,14 @@ function DeliveryLogsPageContent() {
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>
-            Delivery Logs
-          </h1>
+          <h1 className='text-3xl font-bold tracking-tight'>Delivery Logs</h1>
           <p className='text-muted-foreground'>
             Monitor recent shipment status and delivery progress
           </p>
         </div>
         <Sheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
           <SheetTrigger asChild>
-            <Button
-              disabled={!isAuthenticated || !canAccessSupplierService()}
-            >
+            <Button disabled={!isAuthenticated || !canAccessSupplierService()}>
               <Plus className='mr-2 h-4 w-4' />
               New Delivery Log
             </Button>
@@ -363,7 +359,9 @@ function DeliveryLogsPageContent() {
           ) : filteredLogs.length === 0 ? (
             <div className='text-center py-8'>
               <Truck className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-              <h3 className='text-lg font-semibold mb-2'>No delivery logs found</h3>
+              <h3 className='text-lg font-semibold mb-2'>
+                No delivery logs found
+              </h3>
               <p className='text-muted-foreground mb-4'>
                 {deliveryLogs.length === 0
                   ? 'No delivery logs have been recorded yet.'

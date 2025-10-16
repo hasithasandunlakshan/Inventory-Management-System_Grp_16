@@ -369,9 +369,8 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
       await Promise.all(
         orders.map(async order => {
           try {
-            const totalResponse = await purchaseOrderService.getPurchaseOrderTotal(
-              order.id
-            );
+            const totalResponse =
+              await purchaseOrderService.getPurchaseOrderTotal(order.id);
             totalsMap.set(order.id, totalResponse.total);
           } catch (error) {
             console.error(`Failed to load total for order ${order.id}:`, error);
@@ -395,9 +394,12 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
       order.id.toString().includes(searchTerm) ||
       order.status.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = !statusFilter || statusFilter === 'all' || order.status === statusFilter;
+    const matchesStatus =
+      !statusFilter || statusFilter === 'all' || order.status === statusFilter;
     const matchesSupplier =
-      !supplierFilter || supplierFilter === 'all' || order.supplierName === supplierFilter;
+      !supplierFilter ||
+      supplierFilter === 'all' ||
+      order.supplierName === supplierFilter;
 
     return matchesSearch && matchesStatus && matchesSupplier;
   });
@@ -421,9 +423,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>
-            Purchase Orders
-          </h1>
+          <h1 className='text-3xl font-bold tracking-tight'>Purchase Orders</h1>
           <p className='text-muted-foreground'>
             Manage and track purchase orders
           </p>
@@ -592,7 +592,9 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
           ) : filteredOrders.length === 0 ? (
             <div className='text-center py-8'>
               <Package className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-              <h3 className='text-lg font-semibold mb-2'>No purchase orders found</h3>
+              <h3 className='text-lg font-semibold mb-2'>
+                No purchase orders found
+              </h3>
               <p className='text-muted-foreground mb-4'>
                 {purchaseOrders.length === 0
                   ? 'Get started by creating your first purchase order.'
@@ -617,7 +619,9 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                   DELIVERED: 'bg-green-100 text-green-800',
                   CANCELLED: 'bg-red-100 text-red-800',
                 };
-                const statusColor = statusColorMap[order.status as keyof typeof statusColorMap] || 'bg-gray-100 text-gray-800';
+                const statusColor =
+                  statusColorMap[order.status as keyof typeof statusColorMap] ||
+                  'bg-gray-100 text-gray-800';
 
                 return (
                   <div
@@ -705,7 +709,9 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
         <Sheet open={isViewOrderOpen} onOpenChange={setIsViewOrderOpen}>
           <SheetContent className='w-full sm:max-w-2xl overflow-y-auto'>
             <SheetHeader>
-              <SheetTitle>Purchase Order #{selectedPurchaseOrder.id}</SheetTitle>
+              <SheetTitle>
+                Purchase Order #{selectedPurchaseOrder.id}
+              </SheetTitle>
               <SheetDescription>
                 View and manage purchase order details
               </SheetDescription>
@@ -738,7 +744,9 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
               <div className='mt-6'>
                 <div className='space-y-4'>
                   <div>
-                    <h4 className='font-semibold mb-2'>Notes ({orderNotes.length})</h4>
+                    <h4 className='font-semibold mb-2'>
+                      Notes ({orderNotes.length})
+                    </h4>
                     <div className='space-y-2'>
                       {orderNotes.map(note => (
                         <div key={note.id} className='p-3 border rounded-lg'>
@@ -757,13 +765,20 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                   </div>
 
                   <div>
-                    <h4 className='font-semibold mb-2'>Attachments ({orderAttachments.length})</h4>
+                    <h4 className='font-semibold mb-2'>
+                      Attachments ({orderAttachments.length})
+                    </h4>
                     <div className='space-y-2'>
                       {orderAttachments.map(attachment => (
-                        <div key={attachment.id} className='flex items-center justify-between p-3 border rounded-lg'>
+                        <div
+                          key={attachment.id}
+                          className='flex items-center justify-between p-3 border rounded-lg'
+                        >
                           <div className='flex items-center gap-2'>
                             <Paperclip className='h-4 w-4' />
-                            <span className='text-sm'>{attachment.filename}</span>
+                            <span className='text-sm'>
+                              {attachment.filename}
+                            </span>
                           </div>
                           <Button
                             variant='outline'
@@ -783,7 +798,9 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                   </div>
 
                   <div>
-                    <h4 className='font-semibold mb-2'>Audit Log ({orderAudit.length})</h4>
+                    <h4 className='font-semibold mb-2'>
+                      Audit Log ({orderAudit.length})
+                    </h4>
                     <div className='space-y-2'>
                       {orderAudit.map((audit, index) => (
                         <div key={index} className='p-3 border rounded-lg'>

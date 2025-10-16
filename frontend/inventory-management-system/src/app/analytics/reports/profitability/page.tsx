@@ -118,12 +118,12 @@ export default function ProfitabilityReportPage() {
   const getTimeFrameDates = (range: TimeRange) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (range) {
       case 'daily':
         return {
           from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
+          to: today.toISOString().split('T')[0],
         };
       case 'weekly':
         const weekStart = new Date(today);
@@ -132,21 +132,21 @@ export default function ProfitabilityReportPage() {
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
           from: weekStart.toISOString().split('T')[0],
-          to: weekEnd.toISOString().split('T')[0]
+          to: weekEnd.toISOString().split('T')[0],
         };
       case 'monthly':
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         return {
           from: monthStart.toISOString().split('T')[0],
-          to: monthEnd.toISOString().split('T')[0]
+          to: monthEnd.toISOString().split('T')[0],
         };
       case 'yearly':
         const yearStart = new Date(today.getFullYear(), 0, 1);
         const yearEnd = new Date(today.getFullYear(), 11, 31);
         return {
           from: yearStart.toISOString().split('T')[0],
-          to: yearEnd.toISOString().split('T')[0]
+          to: yearEnd.toISOString().split('T')[0],
         };
       default:
         return { from: dateFrom, to: dateTo };
@@ -164,11 +164,17 @@ export default function ProfitabilityReportPage() {
 
   const [profitabilityLoading, setProfitabilityLoading] = useState(true);
   const [, setProfitabilityError] = useState<string | null>(null);
-  const [grossProfitAnalysis, setGrossProfitAnalysis] = useState<GrossProfitAnalysis | null>(null);
-  const [discountImpactAnalysis, setDiscountImpactAnalysis] = useState<DiscountImpactAnalysis | null>(null);
-  const [orderProfitability, setOrderProfitability] = useState<OrderProfitability | null>(null);
-  const [, setLogisticsCostAnalysis] = useState<LogisticsCostAnalysis | null>(null);
-  const [operationalEfficiency, setOperationalEfficiency] = useState<OperationalEfficiencyMetrics | null>(null);
+  const [grossProfitAnalysis, setGrossProfitAnalysis] =
+    useState<GrossProfitAnalysis | null>(null);
+  const [discountImpactAnalysis, setDiscountImpactAnalysis] =
+    useState<DiscountImpactAnalysis | null>(null);
+  const [orderProfitability, setOrderProfitability] =
+    useState<OrderProfitability | null>(null);
+  const [, setLogisticsCostAnalysis] = useState<LogisticsCostAnalysis | null>(
+    null
+  );
+  const [operationalEfficiency, setOperationalEfficiency] =
+    useState<OperationalEfficiencyMetrics | null>(null);
 
   // Load profitability analysis data
   useEffect(() => {
@@ -176,16 +182,31 @@ export default function ProfitabilityReportPage() {
       setProfitabilityLoading(true);
       setProfitabilityError(null);
       try {
-        console.log('💰 Loading profitability analysis data from backend...', { dateFrom, dateTo });
-        const [grossProfit, discountImpact, orderProfit, logisticsCost, operational] = await Promise.all([
+        console.log('💰 Loading profitability analysis data from backend...', {
+          dateFrom,
+          dateTo,
+        });
+        const [
+          grossProfit,
+          discountImpact,
+          orderProfit,
+          logisticsCost,
+          operational,
+        ] = await Promise.all([
           profitabilityService.getGrossProfitAnalysis(),
           profitabilityService.getDiscountImpactAnalysis(),
           profitabilityService.getOrderProfitability(),
           profitabilityService.getLogisticsCostAnalysis(),
           profitabilityService.getOperationalEfficiencyMetrics(),
         ]);
-        
-        console.log('💰 Profitability analysis data loaded:', { grossProfit, discountImpact, orderProfit, logisticsCost, operational });
+
+        console.log('💰 Profitability analysis data loaded:', {
+          grossProfit,
+          discountImpact,
+          orderProfit,
+          logisticsCost,
+          operational,
+        });
         setGrossProfitAnalysis(grossProfit);
         setDiscountImpactAnalysis(discountImpact);
         setOrderProfitability(orderProfit);
@@ -206,15 +227,24 @@ export default function ProfitabilityReportPage() {
     setProfitabilityLoading(true);
     setProfitabilityError(null);
     try {
-      console.log('🔄 Reloading profitability analysis data...', { dateFrom, dateTo });
-      const [grossProfit, discountImpact, orderProfit, logisticsCost, operational] = await Promise.all([
+      console.log('🔄 Reloading profitability analysis data...', {
+        dateFrom,
+        dateTo,
+      });
+      const [
+        grossProfit,
+        discountImpact,
+        orderProfit,
+        logisticsCost,
+        operational,
+      ] = await Promise.all([
         profitabilityService.getGrossProfitAnalysis(),
         profitabilityService.getDiscountImpactAnalysis(),
         profitabilityService.getOrderProfitability(),
         profitabilityService.getLogisticsCostAnalysis(),
         profitabilityService.getOperationalEfficiencyMetrics(),
       ]);
-      
+
       setGrossProfitAnalysis(grossProfit);
       setDiscountImpactAnalysis(discountImpact);
       setOrderProfitability(orderProfit);
@@ -235,9 +265,12 @@ export default function ProfitabilityReportPage() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-8'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>Profitability Report</h1>
+              <h1 className='text-3xl font-bold text-gray-900'>
+                Profitability Report
+              </h1>
               <p className='mt-2 text-gray-600'>
-                Gross profit analysis, discount impact, and order profitability insights
+                Gross profit analysis, discount impact, and order profitability
+                insights
               </p>
             </div>
             <div className='flex items-center space-x-4'>
@@ -261,14 +294,14 @@ export default function ProfitabilityReportPage() {
                   <Input
                     type='date'
                     value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    onChange={e => setDateFrom(e.target.value)}
                     className='w-40'
                   />
                   <span>to</span>
                   <Input
                     type='date'
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={e => setDateTo(e.target.value)}
                     className='w-40'
                   />
                 </div>
@@ -327,9 +360,7 @@ export default function ProfitabilityReportPage() {
               </div>
               <p className='text-xs text-muted-foreground'>
                 {grossProfitAnalysis?.revenueGrowth
-                  ? (grossProfitAnalysis.revenueGrowth > 0
-                      ? '+'
-                      : '') +
+                  ? (grossProfitAnalysis.revenueGrowth > 0 ? '+' : '') +
                     grossProfitAnalysis.revenueGrowth.toFixed(1) +
                     '%'
                   : '0.0%'}{' '}
@@ -341,9 +372,7 @@ export default function ProfitabilityReportPage() {
           {/* Cost of Goods Sold */}
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                COGS
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>COGS</CardTitle>
               <Icons.Package />
             </CardHeader>
             <CardContent>
@@ -355,9 +384,7 @@ export default function ProfitabilityReportPage() {
               </div>
               <p className='text-xs text-muted-foreground'>
                 {grossProfitAnalysis?.costGrowth
-                  ? (grossProfitAnalysis.costGrowth > 0
-                      ? '+'
-                      : '') +
+                  ? (grossProfitAnalysis.costGrowth > 0 ? '+' : '') +
                     grossProfitAnalysis.costGrowth.toFixed(1) +
                     '%'
                   : '0.0%'}{' '}
@@ -411,9 +438,7 @@ export default function ProfitabilityReportPage() {
               ) : grossProfitAnalysis ? (
                 <div className='space-y-4'>
                   <div className='flex justify-between items-center'>
-                    <span className='text-sm font-medium'>
-                      Revenue
-                    </span>
+                    <span className='text-sm font-medium'>Revenue</span>
                     <span className='text-sm text-muted-foreground'>
                       $
                       {grossProfitAnalysis.totalRevenue
@@ -449,9 +474,7 @@ export default function ProfitabilityReportPage() {
                     />
                   </div>
                   <div className='flex justify-between items-center'>
-                    <span className='text-sm font-medium'>
-                      Gross Profit
-                    </span>
+                    <span className='text-sm font-medium'>Gross Profit</span>
                     <span className='text-sm text-muted-foreground'>
                       $
                       {grossProfitAnalysis.grossProfit
@@ -498,7 +521,10 @@ export default function ProfitabilityReportPage() {
                   <div className='grid grid-cols-2 gap-4'>
                     <div className='text-center p-4 border rounded-lg'>
                       <div className='text-2xl font-bold text-orange-600'>
-                        ${discountImpactAnalysis.totalDiscountsGiven?.toFixed(2) || '0.00'}
+                        $
+                        {discountImpactAnalysis.totalDiscountsGiven?.toFixed(
+                          2
+                        ) || '0.00'}
                       </div>
                       <div className='text-sm text-muted-foreground'>
                         Total Discounts
@@ -506,7 +532,10 @@ export default function ProfitabilityReportPage() {
                     </div>
                     <div className='text-center p-4 border rounded-lg'>
                       <div className='text-2xl font-bold text-blue-600'>
-                        {discountImpactAnalysis.discountPercentage?.toFixed(1) || '0.0'}%
+                        {discountImpactAnalysis.discountPercentage?.toFixed(
+                          1
+                        ) || '0.0'}
+                        %
                       </div>
                       <div className='text-sm text-muted-foreground'>
                         Discount Rate
@@ -546,7 +575,9 @@ export default function ProfitabilityReportPage() {
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                 <div className='text-center p-4 border rounded-lg'>
                   <div className='text-2xl font-bold text-green-600'>
-                    ${orderProfitability.averageOrderProfit?.toFixed(2) || '0.00'}
+                    $
+                    {orderProfitability.averageOrderProfit?.toFixed(2) ||
+                      '0.00'}
                   </div>
                   <div className='text-sm text-muted-foreground'>
                     Avg Order Profit
@@ -586,7 +617,9 @@ export default function ProfitabilityReportPage() {
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
                 <div className='text-center p-4 border rounded-lg'>
                   <div className='text-2xl font-bold text-blue-600'>
-                    {operationalEfficiency.deliveryEfficiency?.toFixed(1) || '0.0'}%
+                    {operationalEfficiency.deliveryEfficiency?.toFixed(1) ||
+                      '0.0'}
+                    %
                   </div>
                   <div className='text-sm text-muted-foreground'>
                     Order Fulfillment Rate
@@ -594,7 +627,8 @@ export default function ProfitabilityReportPage() {
                 </div>
                 <div className='text-center p-4 border rounded-lg'>
                   <div className='text-2xl font-bold text-green-600'>
-                    {operationalEfficiency.inventoryTurnover?.toFixed(1) || '0.0'}
+                    {operationalEfficiency.inventoryTurnover?.toFixed(1) ||
+                      '0.0'}
                   </div>
                   <div className='text-sm text-muted-foreground'>
                     Inventory Turnover
@@ -602,7 +636,8 @@ export default function ProfitabilityReportPage() {
                 </div>
                 <div className='text-center p-4 border rounded-lg'>
                   <div className='text-2xl font-bold text-purple-600'>
-                    {operationalEfficiency.overallEfficiency?.toFixed(1) || '0.0'}
+                    {operationalEfficiency.overallEfficiency?.toFixed(1) ||
+                      '0.0'}
                   </div>
                   <div className='text-sm text-muted-foreground'>
                     Customer Satisfaction

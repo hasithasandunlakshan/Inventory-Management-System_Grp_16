@@ -1,6 +1,6 @@
 /**
  * Search Sync Service
- * 
+ *
  * This service handles syncing data from your existing database
  * to Azure Search for intelligent search functionality.
  */
@@ -25,7 +25,8 @@ export interface SyncOptions {
 }
 
 export class SearchSyncService {
-  private static readonly API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+  private static readonly API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
   private static readonly SYNC_ENDPOINT = '/api/ml/search/sync';
 
   /**
@@ -47,8 +48,8 @@ export class SearchSyncService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.error || 
-          `Data sync request failed with status ${response.status}`
+          errorData.error ||
+            `Data sync request failed with status ${response.status}`
         );
       }
 
@@ -59,7 +60,8 @@ export class SearchSyncService {
       return {
         success: false,
         message: 'Failed to synchronize data with Azure Search.',
-        error: error instanceof Error ? error.message : 'An unknown error occurred.',
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred.',
       };
     }
   }
@@ -69,12 +71,15 @@ export class SearchSyncService {
    */
   public static async getSyncInfo(): Promise<any> {
     try {
-      const response = await fetch(`${this.API_BASE_URL}${this.SYNC_ENDPOINT}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.API_BASE_URL}${this.SYNC_ENDPOINT}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to get sync info: ${response.status}`);
@@ -98,7 +103,7 @@ export class SearchSyncService {
     const results = {
       products: false,
       suppliers: false,
-      overall: false
+      overall: false,
     };
 
     try {
@@ -108,15 +113,18 @@ export class SearchSyncService {
         const timeoutId = setTimeout(() => {
           controller.abort();
         }, 3000);
-        
-        const productsResponse = await fetch('http://localhost:8083/api/products', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-          signal: controller.signal
-        });
-        
+
+        const productsResponse = await fetch(
+          'http://localhost:8083/api/products',
+          {
+            method: 'GET',
+            headers: {
+              Accept: 'application/json',
+            },
+            signal: controller.signal,
+          }
+        );
+
         clearTimeout(timeoutId);
         results.products = productsResponse.ok;
       } catch (error) {
@@ -130,15 +138,18 @@ export class SearchSyncService {
         const timeoutId = setTimeout(() => {
           controller.abort();
         }, 3000);
-        
-        const suppliersResponse = await fetch('http://localhost:8082/api/suppliers', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-          signal: controller.signal
-        });
-        
+
+        const suppliersResponse = await fetch(
+          'http://localhost:8082/api/suppliers',
+          {
+            method: 'GET',
+            headers: {
+              Accept: 'application/json',
+            },
+            signal: controller.signal,
+          }
+        );
+
         clearTimeout(timeoutId);
         results.suppliers = suppliersResponse.ok;
       } catch (error) {
@@ -153,7 +164,7 @@ export class SearchSyncService {
       return {
         products: false,
         suppliers: false,
-        overall: false
+        overall: false,
       };
     }
   }
@@ -180,7 +191,7 @@ export class SearchSyncService {
 
     return {
       estimatedTime,
-      dataSources
+      dataSources,
     };
   }
 
@@ -219,7 +230,7 @@ export class SearchSyncService {
     return {
       valid: issues.length === 0,
       issues,
-      recommendations
+      recommendations,
     };
   }
 }

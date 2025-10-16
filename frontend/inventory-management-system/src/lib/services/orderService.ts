@@ -53,7 +53,10 @@ export const orderService = {
   /**
    * Get all orders - returns confirmed orders ready for delivery
    */
-  async getAllOrders(dateFrom?: string, dateTo?: string): Promise<AllOrdersResponse> {
+  async getAllOrders(
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<AllOrdersResponse> {
     try {
       // Add timestamp to URL to prevent caching
       const timestamp = Date.now();

@@ -1,9 +1,9 @@
 /**
  * Azure Search Service
- * 
+ *
  * This service provides secure integration with Azure AI Search
  * through a backend proxy API route.
- * 
+ *
  * Security: API keys are stored server-side and never exposed to the client
  */
 
@@ -48,7 +48,8 @@ export interface SearchRequest {
 
 export class AzureSearchService {
   // Backend API Configuration
-  private static readonly API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+  private static readonly API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
   private static readonly SEARCH_ENDPOINT = '/api/ml/search';
 
   /**
@@ -70,8 +71,8 @@ export class AzureSearchService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.error || 
-          `Search request failed with status ${response.status}`
+          errorData.error ||
+            `Search request failed with status ${response.status}`
         );
       }
 
@@ -82,14 +83,13 @@ export class AzureSearchService {
       }
 
       return result.data;
-
     } catch (error) {
       console.error('Search failed:', error);
-      
+
       if (error instanceof Error) {
         throw new Error(`Search failed: ${error.message}`);
       }
-      
+
       throw new Error('An unexpected error occurred during search');
     }
   }
@@ -97,7 +97,10 @@ export class AzureSearchService {
   /**
    * Gets search suggestions/autocomplete
    */
-  public static async getSuggestions(query: string, entityType?: string): Promise<string[]> {
+  public static async getSuggestions(
+    query: string,
+    entityType?: string
+  ): Promise<string[]> {
     try {
       const response = await fetch(
         `${this.API_BASE_URL}${this.SEARCH_ENDPOINT}`,
@@ -110,7 +113,7 @@ export class AzureSearchService {
             query: query,
             filters: entityType ? { entityType } : undefined,
             top: 5,
-            facets: ['name']
+            facets: ['name'],
           }),
         }
       );
@@ -120,7 +123,7 @@ export class AzureSearchService {
       }
 
       const result = await response.json();
-      
+
       if (!result.success) {
         return [];
       }
@@ -129,7 +132,6 @@ export class AzureSearchService {
       return result.data.results
         .map((item: SearchResult) => item.name)
         .slice(0, 5);
-
     } catch (error) {
       console.error('Suggestions failed:', error);
       return [];
@@ -150,7 +152,6 @@ export class AzureSearchService {
       }
 
       return await response.json();
-
     } catch (error) {
       console.error('Health check failed:', error);
       throw error;
@@ -200,7 +201,7 @@ export class AzureSearchService {
       products: results.filter(r => r.entityType === 'product'),
       suppliers: results.filter(r => r.entityType === 'supplier'),
       documents: results.filter(r => r.entityType === 'document'),
-      purchaseOrders: results.filter(r => r.entityType === 'purchase_order')
+      purchaseOrders: results.filter(r => r.entityType === 'purchase_order'),
     };
   }
 
@@ -213,7 +214,7 @@ export class AzureSearchService {
       'electronics under $100',
       'suppliers in electronics',
       'recent purchase orders',
-      'out of stock items'
+      'out of stock items',
     ];
   }
 
@@ -222,7 +223,7 @@ export class AzureSearchService {
    */
   public static getRecentSearches(): string[] {
     if (typeof window === 'undefined') return [];
-    
+
     try {
       const recent = localStorage.getItem('recent-searches');
       return recent ? JSON.parse(recent) : [];
@@ -236,7 +237,7 @@ export class AzureSearchService {
    */
   public static saveRecentSearch(query: string): void {
     if (typeof window === 'undefined') return;
-    
+
     try {
       const recent = this.getRecentSearches();
       const updated = [query, ...recent.filter(q => q !== query)].slice(0, 10);

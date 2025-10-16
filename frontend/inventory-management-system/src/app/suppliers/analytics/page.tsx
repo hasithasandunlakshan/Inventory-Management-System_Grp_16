@@ -45,7 +45,11 @@ import { supplierCategoryService } from '@/lib/services/supplierCategoryService'
 import { purchaseOrderService } from '@/lib/services/purchaseOrderService';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDistinctColor } from '@/lib/utils/colorUtils';
-import { EnhancedSupplier, SupplierCategory, PurchaseOrderSummary } from '@/lib/types/supplier';
+import {
+  EnhancedSupplier,
+  SupplierCategory,
+  PurchaseOrderSummary,
+} from '@/lib/types/supplier';
 
 // Main component
 function AnalyticsPageContent() {
@@ -312,14 +316,14 @@ function AnalyticsPageContent() {
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Suppliers</CardTitle>
+            <CardTitle className='text-sm font-medium'>
+              Total Suppliers
+            </CardTitle>
             <Users className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>{totalSuppliers}</div>
-            <p className='text-xs text-muted-foreground'>
-              Active suppliers
-            </p>
+            <p className='text-xs text-muted-foreground'>Active suppliers</p>
           </CardContent>
         </Card>
         <Card>
@@ -328,7 +332,9 @@ function AnalyticsPageContent() {
             <DollarSign className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>${totalSpend.toLocaleString()}</div>
+            <div className='text-2xl font-bold'>
+              ${totalSpend.toLocaleString()}
+            </div>
             <p className='text-xs text-muted-foreground'>
               {timeRange === 'all' ? 'All time' : `Last ${timeRange} days`}
             </p>
@@ -336,7 +342,9 @@ function AnalyticsPageContent() {
         </Card>
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Purchase Orders</CardTitle>
+            <CardTitle className='text-sm font-medium'>
+              Purchase Orders
+            </CardTitle>
             <Package className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
@@ -348,16 +356,19 @@ function AnalyticsPageContent() {
         </Card>
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Avg Order Value</CardTitle>
+            <CardTitle className='text-sm font-medium'>
+              Avg Order Value
+            </CardTitle>
             <TrendingUp className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>
-              ${totalPurchaseOrders > 0 ? (totalSpend / totalPurchaseOrders).toFixed(2) : '0.00'}
+              $
+              {totalPurchaseOrders > 0
+                ? (totalSpend / totalPurchaseOrders).toFixed(2)
+                : '0.00'}
             </div>
-            <p className='text-xs text-muted-foreground'>
-              Per purchase order
-            </p>
+            <p className='text-xs text-muted-foreground'>Per purchase order</p>
           </CardContent>
         </Card>
       </div>
@@ -381,7 +392,9 @@ function AnalyticsPageContent() {
               <div className='flex items-center justify-center h-64'>
                 <div className='text-center'>
                   <BarChart3 className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-                  <p className='text-muted-foreground'>No category data available</p>
+                  <p className='text-muted-foreground'>
+                    No category data available
+                  </p>
                 </div>
               </div>
             ) : (
@@ -425,7 +438,9 @@ function AnalyticsPageContent() {
               <div className='flex items-center justify-center h-64'>
                 <div className='text-center'>
                   <Package className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-                  <p className='text-muted-foreground'>No status data available</p>
+                  <p className='text-muted-foreground'>
+                    No status data available
+                  </p>
                 </div>
               </div>
             ) : (
@@ -456,9 +471,7 @@ function AnalyticsPageContent() {
         <Card>
           <CardHeader>
             <CardTitle>Top Suppliers by Spend</CardTitle>
-            <CardDescription>
-              Highest spending suppliers
-            </CardDescription>
+            <CardDescription>Highest spending suppliers</CardDescription>
           </CardHeader>
           <CardContent>
             {loadingSpend ? (
@@ -469,24 +482,26 @@ function AnalyticsPageContent() {
               <div className='flex items-center justify-center h-64'>
                 <div className='text-center'>
                   <TrendingUp className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-                  <p className='text-muted-foreground'>No spend data available</p>
+                  <p className='text-muted-foreground'>
+                    No spend data available
+                  </p>
                 </div>
               </div>
             ) : (
               <ResponsiveContainer width='100%' height={300}>
                 <BarChart data={supplierSpendData}>
                   <CartesianGrid strokeDasharray='3 3' />
-                  <XAxis 
-                    dataKey='supplierName' 
+                  <XAxis
+                    dataKey='supplierName'
                     angle={-45}
                     textAnchor='end'
                     height={80}
                   />
                   <YAxis />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value, name) => [
                       name === 'spend' ? `$${value.toLocaleString()}` : value,
-                      name === 'spend' ? 'Spend' : 'Orders'
+                      name === 'spend' ? 'Spend' : 'Orders',
                     ]}
                   />
                   <Bar dataKey='spend' fill='#3b82f6' />
@@ -500,9 +515,7 @@ function AnalyticsPageContent() {
         <Card>
           <CardHeader>
             <CardTitle>Supplier Performance</CardTitle>
-            <CardDescription>
-              Orders vs Spend analysis
-            </CardDescription>
+            <CardDescription>Orders vs Spend analysis</CardDescription>
           </CardHeader>
           <CardContent>
             {loadingSpend ? (
@@ -513,13 +526,18 @@ function AnalyticsPageContent() {
               <div className='flex items-center justify-center h-64'>
                 <div className='text-center'>
                   <BarChart3 className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-                  <p className='text-muted-foreground'>No performance data available</p>
+                  <p className='text-muted-foreground'>
+                    No performance data available
+                  </p>
                 </div>
               </div>
             ) : (
               <div className='space-y-4'>
                 {supplierSpendData.slice(0, 5).map((supplier, index) => (
-                  <div key={supplier.supplierName} className='flex items-center justify-between p-3 border rounded-lg'>
+                  <div
+                    key={supplier.supplierName}
+                    className='flex items-center justify-between p-3 border rounded-lg'
+                  >
                     <div className='flex items-center gap-3'>
                       <div className='w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium'>
                         {index + 1}
@@ -532,9 +550,15 @@ function AnalyticsPageContent() {
                       </div>
                     </div>
                     <div className='text-right'>
-                      <p className='font-semibold'>${supplier.spend.toLocaleString()}</p>
+                      <p className='font-semibold'>
+                        ${supplier.spend.toLocaleString()}
+                      </p>
                       <p className='text-sm text-muted-foreground'>
-                        ${supplier.orders > 0 ? (supplier.spend / supplier.orders).toFixed(2) : '0.00'} avg
+                        $
+                        {supplier.orders > 0
+                          ? (supplier.spend / supplier.orders).toFixed(2)
+                          : '0.00'}{' '}
+                        avg
                       </p>
                     </div>
                   </div>

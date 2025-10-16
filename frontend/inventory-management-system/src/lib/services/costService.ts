@@ -49,7 +49,10 @@ export interface CostAnalysisMetrics {
 
 export const costService = {
   // Get inventory cost analysis
-  async getInventoryCost(dateFrom?: string, dateTo?: string): Promise<InventoryCostResponse> {
+  async getInventoryCost(
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<InventoryCostResponse> {
     try {
       // Make direct request to Product Service backend (bypassing API Gateway)
       const response = await fetch(
@@ -82,7 +85,10 @@ export const costService = {
   },
 
   // Get purchase order statistics
-  async getPurchaseOrderStats(dateFrom?: string, dateTo?: string): Promise<PurchaseOrderStats> {
+  async getPurchaseOrderStats(
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<PurchaseOrderStats> {
     try {
       // Make direct request to Supplier Service backend (bypassing API Gateway)
       const response = await fetch(
@@ -183,7 +189,10 @@ export const costService = {
   },
 
   // Calculate cost analysis metrics
-  async getCostAnalysisMetrics(dateFrom?: string, dateTo?: string): Promise<CostAnalysisMetrics> {
+  async getCostAnalysisMetrics(
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<CostAnalysisMetrics> {
     try {
       const [inventoryCost, purchaseStats] = await Promise.all([
         this.getInventoryCost(dateFrom, dateTo),

@@ -36,7 +36,8 @@ export interface MLFeaturesDTO {
 }
 
 class SupplierMLService {
-  private baseUrl = process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL || 'http://localhost:8082';
+  private baseUrl =
+    process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL || 'http://localhost:8082';
 
   constructor() {
     console.log('🤖 SupplierMLService initialized with URL:', this.baseUrl);
@@ -52,7 +53,7 @@ class SupplierMLService {
     try {
       const queryParams = orderDate ? `?order_date=${orderDate}` : '';
       const url = `${this.baseUrl}/api/suppliers/${supplierId}/ml-features${queryParams}`;
-      
+
       console.log('🤖 Fetching ML features for supplier:', url);
 
       const response = await fetch(url, {
@@ -85,7 +86,7 @@ class SupplierMLService {
   async getSupplierScore(supplierId: number): Promise<SupplierScoreDTO> {
     try {
       const url = `${this.baseUrl}/api/ml/supplier/${supplierId}/score`;
-      
+
       console.log('🤖 Fetching supplier score:', url);
 
       const response = await fetch(url, {
@@ -120,11 +121,14 @@ class SupplierMLService {
   ): Promise<SupplierPredictionResponse> {
     try {
       const url = `${this.baseUrl}/api/ml/supplier/${request.supplierId}/predict`;
-      
+
       console.log('🤖 Predicting supplier performance:', url);
 
       const response = await fetch(url, {
-        ...createAuthenticatedRequestOptions('POST', request.customFeatures || {}),
+        ...createAuthenticatedRequestOptions(
+          'POST',
+          request.customFeatures || {}
+        ),
         credentials: 'include',
       });
 
@@ -148,12 +152,16 @@ class SupplierMLService {
   /**
    * Get batch predictions for multiple suppliers
    */
-  async getBatchPredictions(supplierIds: number[]): Promise<SupplierPredictionResponse[]> {
+  async getBatchPredictions(
+    supplierIds: number[]
+  ): Promise<SupplierPredictionResponse[]> {
     try {
       console.log('🤖 Getting batch predictions for suppliers:', supplierIds);
 
       const predictions = await Promise.allSettled(
-        supplierIds.map(id => this.predictSupplierPerformance({ supplierId: id }))
+        supplierIds.map(id =>
+          this.predictSupplierPerformance({ supplierId: id })
+        )
       );
 
       const results: SupplierPredictionResponse[] = [];
@@ -161,7 +169,10 @@ class SupplierMLService {
         if (result.status === 'fulfilled') {
           results.push(result.value);
         } else {
-          console.error(`🤖 Failed to get prediction for supplier ${supplierIds[index]}:`, result.reason);
+          console.error(
+            `🤖 Failed to get prediction for supplier ${supplierIds[index]}:`,
+            result.reason
+          );
           // Add fallback prediction
           results.push({
             supplier_id: supplierIds[index],

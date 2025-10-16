@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -72,12 +67,12 @@ export default function InventoryReportPage() {
   const getTimeFrameDates = (range: TimeRange) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (range) {
       case 'daily':
         return {
           from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
+          to: today.toISOString().split('T')[0],
         };
       case 'weekly':
         const weekStart = new Date(today);
@@ -86,21 +81,21 @@ export default function InventoryReportPage() {
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
           from: weekStart.toISOString().split('T')[0],
-          to: weekEnd.toISOString().split('T')[0]
+          to: weekEnd.toISOString().split('T')[0],
         };
       case 'monthly':
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         return {
           from: monthStart.toISOString().split('T')[0],
-          to: monthEnd.toISOString().split('T')[0]
+          to: monthEnd.toISOString().split('T')[0],
         };
       case 'yearly':
         const yearStart = new Date(today.getFullYear(), 0, 1);
         const yearEnd = new Date(today.getFullYear(), 11, 31);
         return {
           from: yearStart.toISOString().split('T')[0],
-          to: yearEnd.toISOString().split('T')[0]
+          to: yearEnd.toISOString().split('T')[0],
         };
       default:
         return { from: dateFrom, to: dateTo };
@@ -128,7 +123,10 @@ export default function InventoryReportPage() {
       setLoading(true);
       setError(null);
       try {
-        console.log('📦 Loading inventory data from backend...', { dateFrom, dateTo });
+        console.log('📦 Loading inventory data from backend...', {
+          dateFrom,
+          dateTo,
+        });
         const inventoryData = await inventoryService.listAll(dateFrom, dateTo);
         console.log('📦 Inventory data loaded:', inventoryData);
         setInventory(inventoryData);
@@ -147,13 +145,16 @@ export default function InventoryReportPage() {
   useEffect(() => {
     const loadStockAlerts = async () => {
       try {
-        console.log('🚨 Loading stock alerts from backend...', { dateFrom, dateTo });
+        console.log('🚨 Loading stock alerts from backend...', {
+          dateFrom,
+          dateTo,
+        });
         const [openAlerts, alertHistory] = await Promise.all([
           stockAlertService.listUnresolved(dateFrom, dateTo),
-          stockAlertService.listHistory(dateFrom, dateTo)
+          stockAlertService.listHistory(dateFrom, dateTo),
         ]);
         console.log('🚨 Stock alerts loaded:', { openAlerts, alertHistory });
-        
+
         setOpenAlerts(openAlerts);
         setAlertHistory(alertHistory);
       } catch (err) {
@@ -174,7 +175,7 @@ export default function InventoryReportPage() {
         stockAlertService.listUnresolved(dateFrom, dateTo),
         stockAlertService.listHistory(dateFrom, dateTo),
       ]);
-      
+
       setInventory(inventoryData);
       setOpenAlerts(openAlerts);
       setAlertHistory(alertHistory);
@@ -188,10 +189,17 @@ export default function InventoryReportPage() {
 
   const inventoryStats = useMemo(() => {
     const totalItems = inventory.length;
-    const lowStockItems = inventory.filter(row => (row.stock || 0) <= (row.minThreshold || 0)).length;
-    const outOfStockItems = inventory.filter(row => (row.stock || 0) === 0).length;
-    const totalValue = inventory.reduce((sum, row) => sum + ((row.stock || 0) * 0), 0);
-    
+    const lowStockItems = inventory.filter(
+      row => (row.stock || 0) <= (row.minThreshold || 0)
+    ).length;
+    const outOfStockItems = inventory.filter(
+      row => (row.stock || 0) === 0
+    ).length;
+    const totalValue = inventory.reduce(
+      (sum, row) => sum + (row.stock || 0) * 0,
+      0
+    );
+
     return {
       totalItems,
       lowStockItems,
@@ -233,7 +241,9 @@ export default function InventoryReportPage() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-8'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>Inventory Report</h1>
+              <h1 className='text-3xl font-bold text-gray-900'>
+                Inventory Report
+              </h1>
               <p className='mt-2 text-gray-600'>
                 Current stock levels and inventory analysis
               </p>
@@ -259,14 +269,14 @@ export default function InventoryReportPage() {
                   <Input
                     type='date'
                     value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    onChange={e => setDateFrom(e.target.value)}
                     className='w-40'
                   />
                   <span>to</span>
                   <Input
                     type='date'
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={e => setDateTo(e.target.value)}
                     className='w-40'
                   />
                 </div>
@@ -290,25 +300,35 @@ export default function InventoryReportPage() {
               <Icons.Package className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>{inventoryStats.totalItems}</div>
+              <div className='text-2xl font-bold'>
+                {inventoryStats.totalItems}
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Low Stock Items</CardTitle>
+              <CardTitle className='text-sm font-medium'>
+                Low Stock Items
+              </CardTitle>
               <Icons.Package className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold text-orange-600'>{inventoryStats.lowStockItems}</div>
+              <div className='text-2xl font-bold text-orange-600'>
+                {inventoryStats.lowStockItems}
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Out of Stock</CardTitle>
+              <CardTitle className='text-sm font-medium'>
+                Out of Stock
+              </CardTitle>
               <Icons.Package className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold text-red-600'>{inventoryStats.outOfStockItems}</div>
+              <div className='text-2xl font-bold text-red-600'>
+                {inventoryStats.outOfStockItems}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -317,7 +337,9 @@ export default function InventoryReportPage() {
               <Icons.Package className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>${inventoryStats.totalValue.toFixed(2)}</div>
+              <div className='text-2xl font-bold'>
+                ${inventoryStats.totalValue.toFixed(2)}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -370,12 +392,8 @@ export default function InventoryReportPage() {
                           <td className='px-6 py-4 text-sm font-medium'>
                             {item.productId}
                           </td>
-                          <td className='px-6 py-4 text-sm'>
-                            {item.stock}
-                          </td>
-                          <td className='px-6 py-4 text-sm'>
-                            {item.reserved}
-                          </td>
+                          <td className='px-6 py-4 text-sm'>{item.stock}</td>
+                          <td className='px-6 py-4 text-sm'>{item.reserved}</td>
                           <td className='px-6 py-4 text-sm'>
                             {item.availableStock}
                           </td>
@@ -401,9 +419,7 @@ export default function InventoryReportPage() {
 
               <div>
                 <div className='mb-3 flex items-center justify-between'>
-                  <div className='text-sm font-semibold'>
-                    Open Stock Alerts
-                  </div>
+                  <div className='text-sm font-semibold'>Open Stock Alerts</div>
                   <Button variant='outline' onClick={reloadData}>
                     <Icons.Refresh />
                     <span className='ml-2'>Refresh</span>
@@ -435,10 +451,7 @@ export default function InventoryReportPage() {
                     </thead>
                     <tbody className='bg-white divide-y divide-gray-200'>
                       {(loading ? [] : openAlerts).map(alert => (
-                        <tr
-                          key={alert.alertId}
-                          className='hover:bg-muted/30'
-                        >
+                        <tr key={alert.alertId} className='hover:bg-muted/30'>
                           <td className='px-6 py-4 text-sm font-medium'>
                             {alert.alertId}
                           </td>
@@ -448,18 +461,14 @@ export default function InventoryReportPage() {
                           <td className='px-6 py-4 text-sm'>
                             {alert.alertType}
                           </td>
-                          <td className='px-6 py-4 text-sm'>
-                            {alert.message}
-                          </td>
+                          <td className='px-6 py-4 text-sm'>{alert.message}</td>
                           <td className='px-6 py-4 text-sm'>
                             {new Date(alert.createdAt).toLocaleString()}
                           </td>
                           <td className='px-6 py-4 text-sm'>
                             <Button
                               size='sm'
-                              onClick={() =>
-                                handleResolveAlert(alert.alertId)
-                              }
+                              onClick={() => handleResolveAlert(alert.alertId)}
                             >
                               Resolve
                             </Button>
@@ -482,9 +491,7 @@ export default function InventoryReportPage() {
               </div>
 
               <div>
-                <div className='mb-3 text-sm font-semibold'>
-                  Alert History
-                </div>
+                <div className='mb-3 text-sm font-semibold'>Alert History</div>
                 <div className='overflow-x-auto'>
                   <table className='min-w-full divide-y divide-gray-200'>
                     <thead className='bg-muted/50'>
@@ -511,10 +518,7 @@ export default function InventoryReportPage() {
                     </thead>
                     <tbody className='bg-white divide-y divide-gray-200'>
                       {(loading ? [] : filteredHistory).map(alert => (
-                        <tr
-                          key={alert.alertId}
-                          className='hover:bg-muted/30'
-                        >
+                        <tr key={alert.alertId} className='hover:bg-muted/30'>
                           <td className='px-6 py-4 text-sm font-medium'>
                             {alert.alertId}
                           </td>
@@ -524,9 +528,7 @@ export default function InventoryReportPage() {
                           <td className='px-6 py-4 text-sm'>
                             {alert.alertType}
                           </td>
-                          <td className='px-6 py-4 text-sm'>
-                            {alert.message}
-                          </td>
+                          <td className='px-6 py-4 text-sm'>{alert.message}</td>
                           <td className='px-6 py-4 text-sm'>
                             {new Date(alert.createdAt).toLocaleString()}
                           </td>

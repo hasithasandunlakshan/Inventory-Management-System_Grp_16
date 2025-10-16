@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ML_SERVICE_URL = process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8081';
+const ML_SERVICE_URL =
+  process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8081';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    
+
     const response = await fetch(`${ML_SERVICE_URL}/translate/document`, {
       method: 'POST',
-      body: formData
+      body: formData,
     });
 
     if (!response.ok) {

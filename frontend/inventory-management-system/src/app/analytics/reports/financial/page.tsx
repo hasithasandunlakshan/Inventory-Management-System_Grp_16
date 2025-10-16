@@ -116,12 +116,12 @@ export default function FinancialReportPage() {
   const getTimeFrameDates = (range: TimeRange) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (range) {
       case 'daily':
         return {
           from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
+          to: today.toISOString().split('T')[0],
         };
       case 'weekly':
         const weekStart = new Date(today);
@@ -130,21 +130,21 @@ export default function FinancialReportPage() {
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
           from: weekStart.toISOString().split('T')[0],
-          to: weekEnd.toISOString().split('T')[0]
+          to: weekEnd.toISOString().split('T')[0],
         };
       case 'monthly':
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         return {
           from: monthStart.toISOString().split('T')[0],
-          to: monthEnd.toISOString().split('T')[0]
+          to: monthEnd.toISOString().split('T')[0],
         };
       case 'yearly':
         const yearStart = new Date(today.getFullYear(), 0, 1);
         const yearEnd = new Date(today.getFullYear(), 11, 31);
         return {
           from: yearStart.toISOString().split('T')[0],
-          to: yearEnd.toISOString().split('T')[0]
+          to: yearEnd.toISOString().split('T')[0],
         };
       default:
         return { from: dateFrom, to: dateTo };
@@ -162,9 +162,15 @@ export default function FinancialReportPage() {
 
   const [financialLoading, setFinancialLoading] = useState(true);
   const [, setFinancialError] = useState<string | null>(null);
-  const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(null);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse>([]);
-  const [stripeStats, setStripeStats] = useState<StripeStatsResponse | null>(null);
+  const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(
+    null
+  );
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse>(
+    []
+  );
+  const [stripeStats, setStripeStats] = useState<StripeStatsResponse | null>(
+    null
+  );
 
   // Load financial data
   useEffect(() => {
@@ -172,14 +178,21 @@ export default function FinancialReportPage() {
       setFinancialLoading(true);
       setFinancialError(null);
       try {
-        console.log('💰 Loading financial data from backend...', { dateFrom, dateTo });
+        console.log('💰 Loading financial data from backend...', {
+          dateFrom,
+          dateTo,
+        });
         const [todayRev, monthlyRev, stripe] = await Promise.all([
           revenueService.getTodayRevenue(dateFrom, dateTo),
           revenueService.getMonthlyRevenue(dateFrom, dateTo),
           revenueService.getStripeStats(dateFrom, dateTo),
         ]);
-        
-        console.log('💰 Financial data loaded:', { todayRev, monthlyRev, stripe });
+
+        console.log('💰 Financial data loaded:', {
+          todayRev,
+          monthlyRev,
+          stripe,
+        });
         setTodayRevenue(todayRev);
         setMonthlyRevenue(monthlyRev);
         setStripeStats(stripe);
@@ -204,7 +217,7 @@ export default function FinancialReportPage() {
         revenueService.getMonthlyRevenue(dateFrom, dateTo),
         revenueService.getStripeStats(dateFrom, dateTo),
       ]);
-      
+
       setTodayRevenue(todayRev);
       setMonthlyRevenue(monthlyRev);
       setStripeStats(stripe);
@@ -227,7 +240,9 @@ export default function FinancialReportPage() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-8'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>Financial Report</h1>
+              <h1 className='text-3xl font-bold text-gray-900'>
+                Financial Report
+              </h1>
               <p className='mt-2 text-gray-600'>
                 Revenue analytics, trends, and financial performance insights
               </p>
@@ -253,14 +268,14 @@ export default function FinancialReportPage() {
                   <Input
                     type='date'
                     value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    onChange={e => setDateFrom(e.target.value)}
                     className='w-40'
                   />
                   <span>to</span>
                   <Input
                     type='date'
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={e => setDateTo(e.target.value)}
                     className='w-40'
                   />
                 </div>
@@ -317,9 +332,7 @@ export default function FinancialReportPage() {
           {/* Refunds */}
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Refunds
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Refunds</CardTitle>
               <Icons.CreditCard />
             </CardHeader>
             <CardContent>
@@ -343,17 +356,13 @@ export default function FinancialReportPage() {
             <CardContent>
               <div className='text-2xl font-bold'>
                 $
-                {stripeStats?.total_payments &&
-                stripeStats.total_payments > 0
+                {stripeStats?.total_payments && stripeStats.total_payments > 0
                   ? (
-                      stripeStats.total_revenue /
-                      stripeStats.total_payments
+                      stripeStats.total_revenue / stripeStats.total_payments
                     ).toFixed(2)
                   : '0.00'}
               </div>
-              <p className='text-xs text-muted-foreground'>
-                Per transaction
-              </p>
+              <p className='text-xs text-muted-foreground'>Per transaction</p>
             </CardContent>
           </Card>
         </div>
@@ -432,9 +441,7 @@ export default function FinancialReportPage() {
                         Math.max(
                           8,
                           Math.round(
-                            ((month.revenue || 0) /
-                              monthlyMaxRevenue) *
-                              100
+                            ((month.revenue || 0) / monthlyMaxRevenue) * 100
                           )
                         )
                       );
@@ -504,7 +511,9 @@ export default function FinancialReportPage() {
                             <td className='text-right py-2'>
                               ${month.revenue?.toFixed(2) || '0.00'}
                             </td>
-                            <td className={`text-right py-2 ${growth > 0 ? 'text-green-600' : growth < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
+                            <td
+                              className={`text-right py-2 ${growth > 0 ? 'text-green-600' : growth < 0 ? 'text-red-600' : 'text-muted-foreground'}`}
+                            >
                               {growth > 0 ? '+' : ''}
                               {growth.toFixed(1)}%
                             </td>

@@ -116,12 +116,12 @@ export default function CostAnalysisReportPage() {
   const getTimeFrameDates = (range: TimeRange) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (range) {
       case 'daily':
         return {
           from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
+          to: today.toISOString().split('T')[0],
         };
       case 'weekly':
         const weekStart = new Date(today);
@@ -130,21 +130,21 @@ export default function CostAnalysisReportPage() {
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
           from: weekStart.toISOString().split('T')[0],
-          to: weekEnd.toISOString().split('T')[0]
+          to: weekEnd.toISOString().split('T')[0],
         };
       case 'monthly':
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         return {
           from: monthStart.toISOString().split('T')[0],
-          to: monthEnd.toISOString().split('T')[0]
+          to: monthEnd.toISOString().split('T')[0],
         };
       case 'yearly':
         const yearStart = new Date(today.getFullYear(), 0, 1);
         const yearEnd = new Date(today.getFullYear(), 11, 31);
         return {
           from: yearStart.toISOString().split('T')[0],
-          to: yearEnd.toISOString().split('T')[0]
+          to: yearEnd.toISOString().split('T')[0],
         };
       default:
         return { from: dateFrom, to: dateTo };
@@ -162,9 +162,14 @@ export default function CostAnalysisReportPage() {
 
   const [costLoading, setCostLoading] = useState(true);
   const [, setCostError] = useState<string | null>(null);
-  const [inventoryCost, setInventoryCost] = useState<InventoryCostResponse | null>(null);
-  const [purchaseStats, setPurchaseStats] = useState<PurchaseOrderStats | null>(null);
-  const [costMetrics, setCostMetrics] = useState<CostAnalysisMetrics | null>(null);
+  const [inventoryCost, setInventoryCost] =
+    useState<InventoryCostResponse | null>(null);
+  const [purchaseStats, setPurchaseStats] = useState<PurchaseOrderStats | null>(
+    null
+  );
+  const [costMetrics, setCostMetrics] = useState<CostAnalysisMetrics | null>(
+    null
+  );
 
   // Load cost analysis data
   useEffect(() => {
@@ -172,14 +177,22 @@ export default function CostAnalysisReportPage() {
       setCostLoading(true);
       setCostError(null);
       try {
-        console.log('💰 Loading cost analysis data from backend...', { dateFrom, dateTo });
-        const [inventoryCostData, purchaseStatsData, costMetricsData] = await Promise.all([
-          costService.getInventoryCost(dateFrom, dateTo),
-          costService.getPurchaseOrderStats(dateFrom, dateTo),
-          costService.getCostAnalysisMetrics(dateFrom, dateTo),
-        ]);
-        
-        console.log('💰 Cost analysis data loaded:', { inventoryCostData, purchaseStatsData, costMetricsData });
+        console.log('💰 Loading cost analysis data from backend...', {
+          dateFrom,
+          dateTo,
+        });
+        const [inventoryCostData, purchaseStatsData, costMetricsData] =
+          await Promise.all([
+            costService.getInventoryCost(dateFrom, dateTo),
+            costService.getPurchaseOrderStats(dateFrom, dateTo),
+            costService.getCostAnalysisMetrics(dateFrom, dateTo),
+          ]);
+
+        console.log('💰 Cost analysis data loaded:', {
+          inventoryCostData,
+          purchaseStatsData,
+          costMetricsData,
+        });
         setInventoryCost(inventoryCostData);
         setPurchaseStats(purchaseStatsData);
         setCostMetrics(costMetricsData);
@@ -199,12 +212,13 @@ export default function CostAnalysisReportPage() {
     setCostError(null);
     try {
       console.log('🔄 Reloading cost analysis data...', { dateFrom, dateTo });
-      const [inventoryCostData, purchaseStatsData, costMetricsData] = await Promise.all([
-        costService.getInventoryCost(dateFrom, dateTo),
-        costService.getPurchaseOrderStats(dateFrom, dateTo),
-        costService.getCostAnalysisMetrics(dateFrom, dateTo),
-      ]);
-      
+      const [inventoryCostData, purchaseStatsData, costMetricsData] =
+        await Promise.all([
+          costService.getInventoryCost(dateFrom, dateTo),
+          costService.getPurchaseOrderStats(dateFrom, dateTo),
+          costService.getCostAnalysisMetrics(dateFrom, dateTo),
+        ]);
+
       setInventoryCost(inventoryCostData);
       setPurchaseStats(purchaseStatsData);
       setCostMetrics(costMetricsData);
@@ -223,9 +237,12 @@ export default function CostAnalysisReportPage() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-8'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>Cost Analysis Report</h1>
+              <h1 className='text-3xl font-bold text-gray-900'>
+                Cost Analysis Report
+              </h1>
               <p className='mt-2 text-gray-600'>
-                Inventory costs, purchase analysis, and cost optimization insights
+                Inventory costs, purchase analysis, and cost optimization
+                insights
               </p>
             </div>
             <div className='flex items-center space-x-4'>
@@ -249,14 +266,14 @@ export default function CostAnalysisReportPage() {
                   <Input
                     type='date'
                     value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    onChange={e => setDateFrom(e.target.value)}
                     className='w-40'
                   />
                   <span>to</span>
                   <Input
                     type='date'
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={e => setDateTo(e.target.value)}
                     className='w-40'
                   />
                 </div>
@@ -290,8 +307,7 @@ export default function CostAnalysisReportPage() {
                   : '0.00'}
               </div>
               <p className='text-xs text-muted-foreground'>
-                {inventoryCost?.totalProductsWithStock || 0}{' '}
-                products in stock
+                {inventoryCost?.totalProductsWithStock || 0} products in stock
               </p>
             </CardContent>
           </Card>
@@ -320,9 +336,7 @@ export default function CostAnalysisReportPage() {
           {/* Total Costs */}
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Total Costs
-              </CardTitle>
+              <CardTitle className='text-sm font-medium'>Total Costs</CardTitle>
               <Icons.CurrencyDollar />
             </CardHeader>
             <CardContent>
@@ -380,9 +394,7 @@ export default function CostAnalysisReportPage() {
               ) : costMetrics ? (
                 <div className='space-y-4'>
                   <div className='flex justify-between items-center'>
-                    <span className='text-sm font-medium'>
-                      Inventory Value
-                    </span>
+                    <span className='text-sm font-medium'>Inventory Value</span>
                     <span className='text-sm text-muted-foreground'>
                       $
                       {costMetrics.inventoryCost
@@ -399,9 +411,7 @@ export default function CostAnalysisReportPage() {
                     />
                   </div>
                   <div className='flex justify-between items-center'>
-                    <span className='text-sm font-medium'>
-                      Purchase Costs
-                    </span>
+                    <span className='text-sm font-medium'>Purchase Costs</span>
                     <span className='text-sm text-muted-foreground'>
                       $
                       {costMetrics.purchaseCosts
@@ -503,15 +513,9 @@ export default function CostAnalysisReportPage() {
                 <table className='w-full text-sm'>
                   <thead>
                     <tr className='border-b'>
-                      <th className='text-left py-2'>
-                        Cost Category
-                      </th>
-                      <th className='text-right py-2'>
-                        Amount
-                      </th>
-                      <th className='text-right py-2'>
-                        Percentage
-                      </th>
+                      <th className='text-left py-2'>Cost Category</th>
+                      <th className='text-right py-2'>Amount</th>
+                      <th className='text-right py-2'>Percentage</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -521,9 +525,16 @@ export default function CostAnalysisReportPage() {
                         ${costMetrics.inventoryCost?.toFixed(2) || '0.00'}
                       </td>
                       <td className='text-right py-2'>
-                        {costMetrics.totalCosts && costMetrics.totalCosts > 0 && costMetrics.inventoryCost
-                          ? ((costMetrics.inventoryCost / costMetrics.totalCosts) * 100).toFixed(1)
-                          : '0.0'}%
+                        {costMetrics.totalCosts &&
+                        costMetrics.totalCosts > 0 &&
+                        costMetrics.inventoryCost
+                          ? (
+                              (costMetrics.inventoryCost /
+                                costMetrics.totalCosts) *
+                              100
+                            ).toFixed(1)
+                          : '0.0'}
+                        %
                       </td>
                     </tr>
                     <tr className='border-b'>
@@ -532,9 +543,16 @@ export default function CostAnalysisReportPage() {
                         ${costMetrics.purchaseCosts?.toFixed(2) || '0.00'}
                       </td>
                       <td className='text-right py-2'>
-                        {costMetrics.totalCosts && costMetrics.totalCosts > 0 && costMetrics.purchaseCosts
-                          ? ((costMetrics.purchaseCosts / costMetrics.totalCosts) * 100).toFixed(1)
-                          : '0.0'}%
+                        {costMetrics.totalCosts &&
+                        costMetrics.totalCosts > 0 &&
+                        costMetrics.purchaseCosts
+                          ? (
+                              (costMetrics.purchaseCosts /
+                                costMetrics.totalCosts) *
+                              100
+                            ).toFixed(1)
+                          : '0.0'}
+                        %
                       </td>
                     </tr>
                     <tr className='border-b font-semibold'>

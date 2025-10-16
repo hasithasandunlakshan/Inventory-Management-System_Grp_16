@@ -1,8 +1,21 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Brain, FileImage, ArrowRight, Sparkles, Users, TrendingUp } from 'lucide-react';
+import {
+  Brain,
+  FileImage,
+  ArrowRight,
+  Sparkles,
+  Users,
+  TrendingUp,
+} from 'lucide-react';
 import Link from 'next/link';
 import SupplierPredictionCard from '@/components/ml/SupplierPredictionCard';
 
@@ -10,7 +23,8 @@ export default function MLServicesPage() {
   const features = [
     {
       title: 'Document Intelligence',
-      description: 'Extract text, tables, and structured data from documents using Azure AI',
+      description:
+        'Extract text, tables, and structured data from documents using Azure AI',
       icon: FileImage,
       href: '/ml-services/document-intelligence',
       color: 'bg-blue-500',
@@ -18,12 +32,13 @@ export default function MLServicesPage() {
         'Invoice processing',
         'Receipt analysis',
         'Form data extraction',
-        'Table recognition'
-      ]
+        'Table recognition',
+      ],
     },
     {
       title: 'Supplier Predictions',
-      description: 'AI-powered supplier performance and reliability predictions',
+      description:
+        'AI-powered supplier performance and reliability predictions',
       icon: Users,
       href: '/ml-services/supplier-predictions',
       color: 'bg-green-500',
@@ -31,12 +46,13 @@ export default function MLServicesPage() {
         'Reliability scoring',
         'Risk assessment',
         'Performance predictions',
-        'Delivery forecasting'
-      ]
+        'Delivery forecasting',
+      ],
     },
     {
       title: 'AI Search',
-      description: 'Intelligent search across all your data using Azure Cognitive Search',
+      description:
+        'Intelligent search across all your data using Azure Cognitive Search',
       icon: TrendingUp,
       href: '/ml-services/ai-search',
       color: 'bg-purple-500',
@@ -44,8 +60,8 @@ export default function MLServicesPage() {
         'Semantic search',
         'Multi-entity search',
         'Faceted filtering',
-        'Real-time indexing'
-      ]
+        'Real-time indexing',
+      ],
     },
   ];
 
@@ -56,7 +72,8 @@ export default function MLServicesPage() {
         <div>
           <h1 className='text-3xl font-bold'>ML Services</h1>
           <p className='text-gray-600'>
-            Leverage AI and machine learning to automate document processing and gain insights
+            Leverage AI and machine learning to automate document processing and
+            gain insights
           </p>
         </div>
       </div>
@@ -65,7 +82,10 @@ export default function MLServicesPage() {
         {features.map((feature, index) => {
           const Icon = feature.icon;
           return (
-            <Card key={index} className='hover:shadow-lg transition-shadow duration-200'>
+            <Card
+              key={index}
+              className='hover:shadow-lg transition-shadow duration-200'
+            >
               <CardHeader>
                 <div className='flex items-center space-x-3'>
                   <div className={`p-2 rounded-lg ${feature.color} text-white`}>
@@ -119,12 +139,15 @@ export default function MLServicesPage() {
             </CardHeader>
             <CardContent>
               <p className='text-gray-600 mb-4'>
-                Our ML services provide intelligent insights and automation for your inventory management system.
+                Our ML services provide intelligent insights and automation for
+                your inventory management system.
               </p>
               <div className='space-y-2'>
                 <div className='flex items-center gap-2'>
                   <div className='w-2 h-2 bg-green-500 rounded-full'></div>
-                  <span className='text-sm'>Document Intelligence - Active</span>
+                  <span className='text-sm'>
+                    Document Intelligence - Active
+                  </span>
                 </div>
                 <div className='flex items-center gap-2'>
                   <div className='w-2 h-2 bg-green-500 rounded-full'></div>
@@ -147,7 +170,8 @@ export default function MLServicesPage() {
             <span>AI-Powered Automation</span>
           </CardTitle>
           <CardDescription>
-            Our ML services are built on Azure AI services, providing enterprise-grade security and reliability
+            Our ML services are built on Azure AI services, providing
+            enterprise-grade security and reliability
           </CardDescription>
         </CardHeader>
         <CardContent>

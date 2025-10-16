@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -131,12 +126,12 @@ export default function LogisticsReportPage() {
   const getTimeFrameDates = (range: TimeRange) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (range) {
       case 'daily':
         return {
           from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
+          to: today.toISOString().split('T')[0],
         };
       case 'weekly':
         const weekStart = new Date(today);
@@ -145,21 +140,21 @@ export default function LogisticsReportPage() {
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
           from: weekStart.toISOString().split('T')[0],
-          to: weekEnd.toISOString().split('T')[0]
+          to: weekEnd.toISOString().split('T')[0],
         };
       case 'monthly':
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         return {
           from: monthStart.toISOString().split('T')[0],
-          to: monthEnd.toISOString().split('T')[0]
+          to: monthEnd.toISOString().split('T')[0],
         };
       case 'yearly':
         const yearStart = new Date(today.getFullYear(), 0, 1);
         const yearEnd = new Date(today.getFullYear(), 11, 31);
         return {
           from: yearStart.toISOString().split('T')[0],
-          to: yearEnd.toISOString().split('T')[0]
+          to: yearEnd.toISOString().split('T')[0],
         };
       default:
         return { from: dateFrom, to: dateTo };
@@ -177,7 +172,8 @@ export default function LogisticsReportPage() {
 
   const [logisticsLoading, setLogisticsLoading] = useState(true);
   const [logisticsError, setLogisticsError] = useState<string | null>(null);
-  const [logisticsMetrics, setLogisticsMetrics] = useState<LogisticsMetrics | null>(null);
+  const [logisticsMetrics, setLogisticsMetrics] =
+    useState<LogisticsMetrics | null>(null);
   const [drivers, setDrivers] = useState<DriverProfile[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -188,15 +184,24 @@ export default function LogisticsReportPage() {
       setLogisticsLoading(true);
       setLogisticsError(null);
       try {
-        console.log('🚚 Loading logistics data from backend...', { dateFrom, dateTo });
-        const [metrics, driversData, vehiclesData, assignmentsData] = await Promise.all([
-          logisticsService.getLogisticsMetrics(dateFrom, dateTo),
-          logisticsService.getAllDrivers(),
-          logisticsService.getAllVehicles(),
-          logisticsService.getAllAssignments(),
-        ]);
-        
-        console.log('🚚 Logistics data loaded:', { metrics, driversData, vehiclesData, assignmentsData });
+        console.log('🚚 Loading logistics data from backend...', {
+          dateFrom,
+          dateTo,
+        });
+        const [metrics, driversData, vehiclesData, assignmentsData] =
+          await Promise.all([
+            logisticsService.getLogisticsMetrics(dateFrom, dateTo),
+            logisticsService.getAllDrivers(),
+            logisticsService.getAllVehicles(),
+            logisticsService.getAllAssignments(),
+          ]);
+
+        console.log('🚚 Logistics data loaded:', {
+          metrics,
+          driversData,
+          vehiclesData,
+          assignmentsData,
+        });
         setLogisticsMetrics(metrics);
         setDrivers(driversData);
         setVehicles(vehiclesData);
@@ -217,13 +222,14 @@ export default function LogisticsReportPage() {
     setLogisticsError(null);
     try {
       console.log('🔄 Reloading logistics data...', { dateFrom, dateTo });
-      const [metrics, driversData, vehiclesData, assignmentsData] = await Promise.all([
-        logisticsService.getLogisticsMetrics(dateFrom, dateTo),
-        logisticsService.getAllDrivers(),
-        logisticsService.getAllVehicles(),
-        logisticsService.getAllAssignments(),
-      ]);
-      
+      const [metrics, driversData, vehiclesData, assignmentsData] =
+        await Promise.all([
+          logisticsService.getLogisticsMetrics(dateFrom, dateTo),
+          logisticsService.getAllDrivers(),
+          logisticsService.getAllVehicles(),
+          logisticsService.getAllAssignments(),
+        ]);
+
       setLogisticsMetrics(metrics);
       setDrivers(driversData);
       setVehicles(vehiclesData);
@@ -240,8 +246,10 @@ export default function LogisticsReportPage() {
     const totalDrivers = drivers.length;
     const activeDrivers = drivers.filter(d => d.status === 'ACTIVE').length;
     const totalVehicles = vehicles.length;
-    const assignedVehicles = assignments.filter(a => a.status === 'ACTIVE').length;
-    
+    const assignedVehicles = assignments.filter(
+      a => a.status === 'ACTIVE'
+    ).length;
+
     return {
       totalDrivers,
       activeDrivers,
@@ -253,13 +261,38 @@ export default function LogisticsReportPage() {
   const deliveryPerformance = useMemo(() => {
     // Mock data for delivery performance - in real app this would come from the backend
     const performance = [
-      { date: '2025-01-01', ordersDelivered: 45, avgDeliveryTime: 2.5, successRate: 98 },
-      { date: '2025-01-02', ordersDelivered: 52, avgDeliveryTime: 2.3, successRate: 96 },
-      { date: '2025-01-03', ordersDelivered: 38, avgDeliveryTime: 2.8, successRate: 94 },
-      { date: '2025-01-04', ordersDelivered: 61, avgDeliveryTime: 2.1, successRate: 99 },
-      { date: '2025-01-05', ordersDelivered: 48, avgDeliveryTime: 2.6, successRate: 97 },
+      {
+        date: '2025-01-01',
+        ordersDelivered: 45,
+        avgDeliveryTime: 2.5,
+        successRate: 98,
+      },
+      {
+        date: '2025-01-02',
+        ordersDelivered: 52,
+        avgDeliveryTime: 2.3,
+        successRate: 96,
+      },
+      {
+        date: '2025-01-03',
+        ordersDelivered: 38,
+        avgDeliveryTime: 2.8,
+        successRate: 94,
+      },
+      {
+        date: '2025-01-04',
+        ordersDelivered: 61,
+        avgDeliveryTime: 2.1,
+        successRate: 99,
+      },
+      {
+        date: '2025-01-05',
+        ordersDelivered: 48,
+        avgDeliveryTime: 2.6,
+        successRate: 97,
+      },
     ];
-    
+
     return performance;
   }, []);
 
@@ -270,7 +303,9 @@ export default function LogisticsReportPage() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-8'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>Logistics Report</h1>
+              <h1 className='text-3xl font-bold text-gray-900'>
+                Logistics Report
+              </h1>
               <p className='mt-2 text-gray-600'>
                 Delivery performance and logistics efficiency
               </p>
@@ -296,14 +331,14 @@ export default function LogisticsReportPage() {
                   <Input
                     type='date'
                     value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    onChange={e => setDateFrom(e.target.value)}
                     className='w-40'
                   />
                   <span>to</span>
                   <Input
                     type='date'
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={e => setDateTo(e.target.value)}
                     className='w-40'
                   />
                 </div>
@@ -340,9 +375,7 @@ export default function LogisticsReportPage() {
                 <h3 className='text-sm font-medium text-red-800'>
                   Error Loading Logistics Data
                 </h3>
-                <p className='text-sm text-red-700 mt-1'>
-                  {logisticsError}
-                </p>
+                <p className='text-sm text-red-700 mt-1'>{logisticsError}</p>
               </div>
             </div>
           </div>
@@ -479,9 +512,7 @@ export default function LogisticsReportPage() {
         {!logisticsLoading && !logisticsError && (
           <Card>
             <CardHeader>
-              <CardTitle className='text-base'>
-                Delivery Performance
-              </CardTitle>
+              <CardTitle className='text-base'>Delivery Performance</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='overflow-x-auto'>
@@ -515,11 +546,15 @@ export default function LogisticsReportPage() {
                           {perf.avgDeliveryTime}h
                         </td>
                         <td className='px-6 py-4 text-sm'>
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            perf.successRate >= 98 ? 'bg-green-100 text-green-800' :
-                            perf.successRate >= 95 ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${
+                              perf.successRate >= 98
+                                ? 'bg-green-100 text-green-800'
+                                : perf.successRate >= 95
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                            }`}
+                          >
                             {perf.successRate}%
                           </span>
                         </td>
@@ -536,9 +571,7 @@ export default function LogisticsReportPage() {
         {!logisticsLoading && !logisticsError && drivers.length > 0 && (
           <Card className='mt-8'>
             <CardHeader>
-              <CardTitle className='text-base'>
-                Driver Performance
-              </CardTitle>
+              <CardTitle className='text-base'>Driver Performance</CardTitle>
             </CardHeader>
             <CardContent>
               <div className='overflow-x-auto'>
@@ -569,22 +602,23 @@ export default function LogisticsReportPage() {
                           Driver #{driver.driverId}
                         </td>
                         <td className='px-6 py-4 text-sm'>
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            driver.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                            driver.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${
+                              driver.status === 'ACTIVE'
+                                ? 'bg-green-100 text-green-800'
+                                : driver.status === 'INACTIVE'
+                                  ? 'bg-gray-100 text-gray-800'
+                                  : 'bg-red-100 text-red-800'
+                            }`}
+                          >
                             {driver.status}
                           </span>
                         </td>
+                        <td className='px-6 py-4 text-sm'>N/A</td>
+                        <td className='px-6 py-4 text-sm'>N/A</td>
                         <td className='px-6 py-4 text-sm'>
-                          N/A
-                        </td>
-                        <td className='px-6 py-4 text-sm'>
-                          N/A
-                        </td>
-                        <td className='px-6 py-4 text-sm'>
-                          {driver.assignedVehicle?.vehicleNumber || 'Unassigned'}
+                          {driver.assignedVehicle?.vehicleNumber ||
+                            'Unassigned'}
                         </td>
                       </tr>
                     ))}

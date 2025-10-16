@@ -21,11 +21,8 @@ export const inventoryService = {
     if (dateFrom && dateTo) {
       url += `?dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
     }
-    
-    const res = await fetch(
-      url,
-      createAuthenticatedRequestOptions('GET')
-    );
+
+    const res = await fetch(url, createAuthenticatedRequestOptions('GET'));
     if (!res.ok) {
       throw new Error('Failed to fetch inventory');
     }

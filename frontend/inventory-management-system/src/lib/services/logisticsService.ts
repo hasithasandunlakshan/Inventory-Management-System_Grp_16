@@ -281,7 +281,10 @@ class LogisticsService {
   }
 
   // Comprehensive Logistics Metrics
-  async getLogisticsMetrics(dateFrom?: string, dateTo?: string): Promise<LogisticsMetrics> {
+  async getLogisticsMetrics(
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<LogisticsMetrics> {
     try {
       const [
         deliveryLogs,

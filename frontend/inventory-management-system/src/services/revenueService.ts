@@ -8,7 +8,10 @@ import { authService } from '@/lib/services/authService';
 const BASE_URL = `${process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084'}/api/revenue`; // Direct to local Order Service
 
 export const revenueService = {
-  getTodayRevenue: async (dateFrom?: string, dateTo?: string): Promise<TodayRevenueResponse> => {
+  getTodayRevenue: async (
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<TodayRevenueResponse> => {
     try {
       const headers = {
         'Content-Type': 'application/json',
@@ -38,13 +41,16 @@ export const revenueService = {
     }
   },
 
-  getMonthlyRevenue: async (dateFrom?: string, dateTo?: string): Promise<MonthlyRevenueResponse> => {
+  getMonthlyRevenue: async (
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<MonthlyRevenueResponse> => {
     try {
       let url = `${BASE_URL}/monthly`;
       if (dateFrom && dateTo) {
         url += `?dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
       }
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -62,13 +68,16 @@ export const revenueService = {
     }
   },
 
-  getStripeStats: async (dateFrom?: string, dateTo?: string): Promise<StripeStatsResponse> => {
+  getStripeStats: async (
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<StripeStatsResponse> => {
     try {
       let url = `${BASE_URL}/stripe-stats`;
       if (dateFrom && dateTo) {
         url += `?dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
       }
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {

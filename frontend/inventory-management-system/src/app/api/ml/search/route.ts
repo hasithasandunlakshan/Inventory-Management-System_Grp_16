@@ -56,7 +56,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const { query, filters, facets, top = 20, skip = 0, orderBy } = body;
 
     // Build Azure Search query
-    const searchQuery = buildSearchQuery(query, filters, facets, top, skip, orderBy);
+    const searchQuery = buildSearchQuery(
+      query,
+      filters,
+      facets,
+      top,
+      skip,
+      orderBy
+    );
 
     // Call Azure Search API
     const searchResponse = await fetch(
@@ -74,27 +81,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!searchResponse.ok) {
       const errorText = await searchResponse.text();
       return NextResponse.json(
-        { success: false, error: `Azure Search error: ${searchResponse.status} - ${errorText}` },
+        {
+          success: false,
+          error: `Azure Search error: ${searchResponse.status} - ${errorText}`,
+        },
         { status: searchResponse.status }
       );
     }
 
     const searchResults = await searchResponse.json();
-    
+
     // Process and format results
     const processedResults = processSearchResults(searchResults);
 
     return NextResponse.json({
       success: true,
-      data: processedResults
+      data: processedResults,
     });
-
   } catch (error) {
     console.error('Search error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'Unknown error occurred',
       },
       { status: 500 }
     );
@@ -118,9 +128,14 @@ export async function GET(): Promise<NextResponse> {
       semantic_search: true,
       faceted_search: true,
       autocomplete: true,
-      suggestions: true
+      suggestions: true,
     },
-    supported_entity_types: ['product', 'supplier', 'document', 'purchase_order']
+    supported_entity_types: [
+      'product',
+      'supplier',
+      'document',
+      'purchase_order',
+    ],
   });
 }
 
@@ -143,7 +158,7 @@ function buildSearchQuery(
     highlight: 'name,description',
     highlightPreTag: '<mark>',
     highlightPostTag: '</mark>',
-    facets: facets || ['entityType', 'category', 'stockStatus']
+    facets: facets || ['entityType', 'category', 'stockStatus'],
   };
 
   // Add orderBy if specified (use 'orderby' instead of 'orderBy')
@@ -180,7 +195,9 @@ function buildSearchQuery(
 
     if (filters.dateRange) {
       const { start, end } = filters.dateRange;
-      filterExpressions.push(`createdDate ge ${start} and createdDate le ${end}`);
+      filterExpressions.push(
+        `createdDate ge ${start} and createdDate le ${end}`
+      );
     }
 
     if (filterExpressions.length > 0) {
@@ -195,27 +212,28 @@ function buildSearchQuery(
  * Processes Azure Search results into our format
  */
 function processSearchResults(searchResults: any): SearchResponse {
-  const results: SearchResult[] = searchResults.value?.map((item: any) => ({
-    id: item.id,
-    entityType: item.entityType,
-    name: item.name,
-    description: item.description,
-    category: item.category,
-    price: item.price,
-    stockLevel: item.stockLevel,
-    stockStatus: item.stockStatus,
-    supplier: item.supplier,
-    score: item['@search.score'],
-    highlights: item['@search.highlights']
-  })) || [];
+  const results: SearchResult[] =
+    searchResults.value?.map((item: any) => ({
+      id: item.id,
+      entityType: item.entityType,
+      name: item.name,
+      description: item.description,
+      category: item.category,
+      price: item.price,
+      stockLevel: item.stockLevel,
+      stockStatus: item.stockStatus,
+      supplier: item.supplier,
+      score: item['@search.score'],
+      highlights: item['@search.highlights'],
+    })) || [];
 
   const facets: { [key: string]: Array<{ value: string; count: number }> } = {};
-  
+
   if (searchResults['@search.facets']) {
     Object.entries(searchResults['@search.facets']).forEach(([key, value]) => {
       facets[key] = (value as any[]).map((facet: any) => ({
         value: facet.value,
-        count: facet.count
+        count: facet.count,
       }));
     });
   }
@@ -224,6 +242,6 @@ function processSearchResults(searchResults: any): SearchResponse {
     results,
     facets,
     totalCount: searchResults['@odata.count'] || results.length,
-    searchTime: searchResults['@search.time'] || 0
+    searchTime: searchResults['@search.time'] || 0,
   };
 }

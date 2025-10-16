@@ -36,7 +36,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Get Azure configuration from environment variables
     const azureEndpoint = process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT;
     const azureApiKey = process.env.AZURE_DOCUMENT_INTELLIGENCE_API_KEY;
-    const modelId = process.env.AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID || 'prebuilt-document';
+    const modelId =
+      process.env.AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID || 'prebuilt-document';
 
     if (!azureEndpoint || !azureApiKey) {
       return NextResponse.json(
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       'image/jpg',
       'image/png',
       'image/tiff',
-      'application/pdf'
+      'application/pdf',
     ];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           'Ocp-Apim-Subscription-Key': azureApiKey,
         },
         body: JSON.stringify({
-          base64Source: file.data
+          base64Source: file.data,
         }),
       }
     );
@@ -99,7 +100,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!azureResponse.ok) {
       const errorText = await azureResponse.text();
       return NextResponse.json(
-        { success: false, error: `Azure API error: ${azureResponse.status} - ${errorText}` },
+        {
+          success: false,
+          error: `Azure API error: ${azureResponse.status} - ${errorText}`,
+        },
         { status: azureResponse.status }
       );
     }
@@ -108,28 +112,31 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const operationLocation = azureResponse.headers.get('Operation-Location');
     if (!operationLocation) {
       return NextResponse.json(
-        { success: false, error: 'No operation location returned from Azure API' },
+        {
+          success: false,
+          error: 'No operation location returned from Azure API',
+        },
         { status: 500 }
       );
     }
 
     // Poll for results
     const result = await pollForResults(operationLocation, azureApiKey);
-    
+
     // Extract structured data
     const extractedData = extractStructuredData(result, options);
 
     return NextResponse.json({
       success: true,
-      data: extractedData
+      data: extractedData,
     });
-
   } catch (error) {
     console.error('Document analysis error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'Unknown error occurred',
       },
       { status: 500 }
     );
@@ -140,7 +147,8 @@ export async function GET(): Promise<NextResponse> {
   // Health check endpoint
   const azureEndpoint = process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT;
   const azureApiKey = process.env.AZURE_DOCUMENT_INTELLIGENCE_API_KEY;
-  const modelId = process.env.AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID || 'prebuilt-document';
+  const modelId =
+    process.env.AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID || 'prebuilt-document';
 
   return NextResponse.json({
     status: 'healthy',
@@ -153,23 +161,26 @@ export async function GET(): Promise<NextResponse> {
       table_extraction: true,
       key_value_extraction: true,
       form_analysis: true,
-      layout_analysis: true
+      layout_analysis: true,
     },
     supported_file_types: [
       'image/jpeg',
       'image/jpg',
       'image/png',
       'image/tiff',
-      'application/pdf'
+      'application/pdf',
     ],
-    max_file_size_mb: 50
+    max_file_size_mb: 50,
   });
 }
 
 /**
  * Polls Azure API for analysis results
  */
-async function pollForResults(operationLocation: string, apiKey: string): Promise<any> {
+async function pollForResults(
+  operationLocation: string,
+  apiKey: string
+): Promise<any> {
   const maxAttempts = 30; // 30 seconds max
   const pollInterval = 1000; // 1 second
 
@@ -185,11 +196,13 @@ async function pollForResults(operationLocation: string, apiKey: string): Promis
     }
 
     const result = await response.json();
-    
+
     if (result.status === 'succeeded') {
       return result;
     } else if (result.status === 'failed') {
-      throw new Error(`Analysis failed: ${result.error?.message || 'Unknown error'}`);
+      throw new Error(
+        `Analysis failed: ${result.error?.message || 'Unknown error'}`
+      );
     }
 
     // Wait before next poll
@@ -217,19 +230,23 @@ function extractStructuredData(result: any, options: any): any {
         headers: table.cells
           .filter((cell: any) => cell.rowIndex === 0)
           .map((cell: any) => cell.content),
-        rows: extractTableRows(table.cells)
+        rows: extractTableRows(table.cells),
       }));
     }
 
     // Extract key-value pairs
-    if (options.extractKeyValuePairs !== false && result.analyzeResult?.keyValuePairs) {
-      extractedData.keyValuePairs = result.analyzeResult.keyValuePairs.map((kvp: any) => ({
-        key: kvp.key?.content || '',
-        value: kvp.value?.content || '',
-        confidence: kvp.confidence || 0
-      }));
+    if (
+      options.extractKeyValuePairs !== false &&
+      result.analyzeResult?.keyValuePairs
+    ) {
+      extractedData.keyValuePairs = result.analyzeResult.keyValuePairs.map(
+        (kvp: any) => ({
+          key: kvp.key?.content || '',
+          value: kvp.value?.content || '',
+          confidence: kvp.confidence || 0,
+        })
+      );
     }
-
   } catch (error) {
     console.error('Error extracting structured data:', error);
     // Return basic text if available
@@ -252,7 +269,7 @@ function extractTableRows(cells: any[]): string[][] {
     const rowCells = cells
       .filter(cell => cell.rowIndex === rowIndex)
       .sort((a, b) => a.columnIndex - b.columnIndex);
-    
+
     rows.push(rowCells.map(cell => cell.content));
   }
 

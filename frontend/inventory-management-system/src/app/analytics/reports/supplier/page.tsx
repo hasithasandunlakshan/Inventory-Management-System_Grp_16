@@ -129,12 +129,12 @@ export default function SupplierReportPage() {
   const getTimeFrameDates = (range: TimeRange) => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     switch (range) {
       case 'daily':
         return {
           from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
+          to: today.toISOString().split('T')[0],
         };
       case 'weekly':
         const weekStart = new Date(today);
@@ -143,21 +143,21 @@ export default function SupplierReportPage() {
         weekEnd.setDate(weekStart.getDate() + 6);
         return {
           from: weekStart.toISOString().split('T')[0],
-          to: weekEnd.toISOString().split('T')[0]
+          to: weekEnd.toISOString().split('T')[0],
         };
       case 'monthly':
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         return {
           from: monthStart.toISOString().split('T')[0],
-          to: monthEnd.toISOString().split('T')[0]
+          to: monthEnd.toISOString().split('T')[0],
         };
       case 'yearly':
         const yearStart = new Date(today.getFullYear(), 0, 1);
         const yearEnd = new Date(today.getFullYear(), 11, 31);
         return {
           from: yearStart.toISOString().split('T')[0],
-          to: yearEnd.toISOString().split('T')[0]
+          to: yearEnd.toISOString().split('T')[0],
         };
       default:
         return { from: dateFrom, to: dateTo };
@@ -175,7 +175,8 @@ export default function SupplierReportPage() {
 
   const [supplierLoading, setSupplierLoading] = useState(true);
   const [supplierError, setSupplierError] = useState<string | null>(null);
-  const [supplierAnalytics, setSupplierAnalytics] = useState<StatsSummaryDTO | null>(null);
+  const [supplierAnalytics, setSupplierAnalytics] =
+    useState<StatsSummaryDTO | null>(null);
 
   // Load supplier analytics data
   useEffect(() => {
@@ -183,8 +184,14 @@ export default function SupplierReportPage() {
       setSupplierLoading(true);
       setSupplierError(null);
       try {
-        console.log('🏢 Loading supplier analytics data from backend...', { dateFrom, dateTo });
-        const analytics = await supplierService.getPurchaseOrderStats({ dateFrom, dateTo });
+        console.log('🏢 Loading supplier analytics data from backend...', {
+          dateFrom,
+          dateTo,
+        });
+        const analytics = await supplierService.getPurchaseOrderStats({
+          dateFrom,
+          dateTo,
+        });
         console.log('🏢 Supplier analytics data loaded:', analytics);
         setSupplierAnalytics(analytics);
       } catch (err) {
@@ -202,8 +209,14 @@ export default function SupplierReportPage() {
     setSupplierLoading(true);
     setSupplierError(null);
     try {
-      console.log('🔄 Reloading supplier analytics data...', { dateFrom, dateTo });
-      const analytics = await supplierService.getPurchaseOrderStats({ dateFrom, dateTo });
+      console.log('🔄 Reloading supplier analytics data...', {
+        dateFrom,
+        dateTo,
+      });
+      const analytics = await supplierService.getPurchaseOrderStats({
+        dateFrom,
+        dateTo,
+      });
       setSupplierAnalytics(analytics);
     } catch (err) {
       console.error('❌ Error reloading supplier analytics data:', err);
@@ -220,7 +233,9 @@ export default function SupplierReportPage() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-8'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>Supplier Report</h1>
+              <h1 className='text-3xl font-bold text-gray-900'>
+                Supplier Report
+              </h1>
               <p className='mt-2 text-gray-600'>
                 Supplier performance, purchase orders, and spending analysis
               </p>
@@ -246,14 +261,14 @@ export default function SupplierReportPage() {
                   <Input
                     type='date'
                     value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    onChange={e => setDateFrom(e.target.value)}
                     className='w-40'
                   />
                   <span>to</span>
                   <Input
                     type='date'
                     value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    onChange={e => setDateTo(e.target.value)}
                     className='w-40'
                   />
                 </div>
@@ -319,10 +334,7 @@ export default function SupplierReportPage() {
                         Total Value
                       </p>
                       <p className='text-2xl font-bold'>
-                        $
-                        {(
-                          supplierAnalytics.total || 0
-                        ).toLocaleString()}
+                        ${(supplierAnalytics.total || 0).toLocaleString()}
                       </p>
                     </div>
                     <div className='h-8 w-8 text-muted-foreground'>
@@ -340,8 +352,10 @@ export default function SupplierReportPage() {
                       </p>
                       <p className='text-2xl font-bold'>
                         $
-                        {supplierAnalytics.count > 0 
-                          ? (supplierAnalytics.total / supplierAnalytics.count).toLocaleString()
+                        {supplierAnalytics.count > 0
+                          ? (
+                              supplierAnalytics.total / supplierAnalytics.count
+                            ).toLocaleString()
                           : 0}
                       </p>
                     </div>
@@ -404,10 +418,7 @@ export default function SupplierReportPage() {
                     );
                     const height =
                       maxCount > 0
-                        ? Math.max(
-                            8,
-                            Math.round((count / maxCount) * 100)
-                          )
+                        ? Math.max(8, Math.round((count / maxCount) * 100))
                         : 8;
                     return (
                       <div
@@ -421,9 +432,7 @@ export default function SupplierReportPage() {
                         ></div>
                         <div className='text-xs text-center mt-2'>
                           <div className='font-medium'>{count}</div>
-                          <div className='text-muted-foreground'>
-                            {status}
-                          </div>
+                          <div className='text-muted-foreground'>{status}</div>
                         </div>
                       </div>
                     );
@@ -456,10 +465,15 @@ export default function SupplierReportPage() {
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
-                      <span className='text-sm font-medium'>Average Order Value</span>
+                      <span className='text-sm font-medium'>
+                        Average Order Value
+                      </span>
                       <span className='text-sm text-muted-foreground'>
-                        ${supplierAnalytics.count > 0 
-                          ? (supplierAnalytics.total / supplierAnalytics.count).toLocaleString()
+                        $
+                        {supplierAnalytics.count > 0
+                          ? (
+                              supplierAnalytics.total / supplierAnalytics.count
+                            ).toLocaleString()
                           : 0}
                       </span>
                     </div>
@@ -477,25 +491,40 @@ export default function SupplierReportPage() {
                 <CardContent>
                   <div className='space-y-4'>
                     <div className='flex justify-between items-center'>
-                      <span className='text-sm font-medium'>Total Spending</span>
+                      <span className='text-sm font-medium'>
+                        Total Spending
+                      </span>
                       <span className='text-sm text-muted-foreground'>
                         ${(supplierAnalytics.total || 0).toLocaleString()}
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
-                      <span className='text-sm font-medium'>Average Order Value</span>
+                      <span className='text-sm font-medium'>
+                        Average Order Value
+                      </span>
                       <span className='text-sm text-muted-foreground'>
-                        ${supplierAnalytics.count > 0 
-                          ? (supplierAnalytics.total / supplierAnalytics.count).toLocaleString()
+                        $
+                        {supplierAnalytics.count > 0
+                          ? (
+                              supplierAnalytics.total / supplierAnalytics.count
+                            ).toLocaleString()
                           : 0}
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
-                      <span className='text-sm font-medium'>Completion Rate</span>
+                      <span className='text-sm font-medium'>
+                        Completion Rate
+                      </span>
                       <span className='text-sm text-muted-foreground'>
                         {supplierAnalytics.count > 0
-                          ? ((supplierAnalytics.byStatusCounts?.COMPLETED || 0) / supplierAnalytics.count * 100).toFixed(1)
-                          : '0.0'}%
+                          ? (
+                              ((supplierAnalytics.byStatusCounts?.COMPLETED ||
+                                0) /
+                                supplierAnalytics.count) *
+                              100
+                            ).toFixed(1)
+                          : '0.0'}
+                        %
                       </span>
                     </div>
                   </div>
@@ -514,29 +543,54 @@ export default function SupplierReportPage() {
               <CardContent>
                 <div className='space-y-4'>
                   <div className='p-4 border rounded-lg bg-blue-50'>
-                    <h4 className='font-semibold text-blue-900 mb-2'>Order Completion Rate</h4>
+                    <h4 className='font-semibold text-blue-900 mb-2'>
+                      Order Completion Rate
+                    </h4>
                     <p className='text-sm text-blue-800'>
-                      Current completion rate: {supplierAnalytics.count > 0
-                        ? ((supplierAnalytics.byStatusCounts?.COMPLETED || 0) / supplierAnalytics.count * 100).toFixed(1)
-                        : '0.0'}%
-                      {supplierAnalytics.count > 0 && ((supplierAnalytics.byStatusCounts?.COMPLETED || 0) / supplierAnalytics.count * 100) < 80
+                      Current completion rate:{' '}
+                      {supplierAnalytics.count > 0
+                        ? (
+                            ((supplierAnalytics.byStatusCounts?.COMPLETED ||
+                              0) /
+                              supplierAnalytics.count) *
+                            100
+                          ).toFixed(1)
+                        : '0.0'}
+                      %
+                      {supplierAnalytics.count > 0 &&
+                      ((supplierAnalytics.byStatusCounts?.COMPLETED || 0) /
+                        supplierAnalytics.count) *
+                        100 <
+                        80
                         ? '. Consider reviewing supplier performance and delivery timelines.'
                         : '. Good supplier performance!'}
                     </p>
                   </div>
                   <div className='p-4 border rounded-lg bg-green-50'>
-                    <h4 className='font-semibold text-green-900 mb-2'>Spending Optimization</h4>
+                    <h4 className='font-semibold text-green-900 mb-2'>
+                      Spending Optimization
+                    </h4>
                     <p className='text-sm text-green-800'>
-                      Total spending: ${(supplierAnalytics.total || 0).toLocaleString()}
-                      {supplierAnalytics.count > 0 && (supplierAnalytics.total / supplierAnalytics.count) > 1000
+                      Total spending: $
+                      {(supplierAnalytics.total || 0).toLocaleString()}
+                      {supplierAnalytics.count > 0 &&
+                      supplierAnalytics.total / supplierAnalytics.count > 1000
                         ? '. Consider negotiating bulk discounts with suppliers.'
                         : '. Current spending levels are reasonable.'}
                     </p>
                   </div>
                   <div className='p-4 border rounded-lg bg-purple-50'>
-                    <h4 className='font-semibold text-purple-900 mb-2'>Order Volume Trends</h4>
+                    <h4 className='font-semibold text-purple-900 mb-2'>
+                      Order Volume Trends
+                    </h4>
                     <p className='text-sm text-purple-800'>
-                      Current order status breakdown: {supplierAnalytics.byStatusCounts?.PENDING || 0} pending, {supplierAnalytics.byStatusCounts?.COMPLETED || 0} completed, {supplierAnalytics.byStatusCounts?.CANCELLED || 0} cancelled. Monitor order fulfillment patterns for optimization opportunities.
+                      Current order status breakdown:{' '}
+                      {supplierAnalytics.byStatusCounts?.PENDING || 0} pending,{' '}
+                      {supplierAnalytics.byStatusCounts?.COMPLETED || 0}{' '}
+                      completed,{' '}
+                      {supplierAnalytics.byStatusCounts?.CANCELLED || 0}{' '}
+                      cancelled. Monitor order fulfillment patterns for
+                      optimization opportunities.
                     </p>
                   </div>
                 </div>
