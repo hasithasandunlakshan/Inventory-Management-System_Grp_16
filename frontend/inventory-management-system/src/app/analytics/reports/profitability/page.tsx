@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -163,11 +163,11 @@ export default function ProfitabilityReportPage() {
   };
 
   const [profitabilityLoading, setProfitabilityLoading] = useState(true);
-  const [profitabilityError, setProfitabilityError] = useState<string | null>(null);
+  const [, setProfitabilityError] = useState<string | null>(null);
   const [grossProfitAnalysis, setGrossProfitAnalysis] = useState<GrossProfitAnalysis | null>(null);
   const [discountImpactAnalysis, setDiscountImpactAnalysis] = useState<DiscountImpactAnalysis | null>(null);
   const [orderProfitability, setOrderProfitability] = useState<OrderProfitability | null>(null);
-  const [logisticsCostAnalysis, setLogisticsCostAnalysis] = useState<LogisticsCostAnalysis | null>(null);
+  const [, setLogisticsCostAnalysis] = useState<LogisticsCostAnalysis | null>(null);
   const [operationalEfficiency, setOperationalEfficiency] = useState<OperationalEfficiencyMetrics | null>(null);
 
   // Load profitability analysis data

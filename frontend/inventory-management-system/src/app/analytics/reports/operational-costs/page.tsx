@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -145,7 +145,7 @@ export default function OperationalCostsReportPage() {
   };
 
   const [operationalLoading, setOperationalLoading] = useState(true);
-  const [operationalError, setOperationalError] = useState<string | null>(null);
+  const [, setOperationalError] = useState<string | null>(null);
   const [logisticsCostAnalysis, setLogisticsCostAnalysis] = useState<LogisticsCostAnalysis | null>(null);
   const [operationalEfficiency, setOperationalEfficiency] = useState<OperationalEfficiencyMetrics | null>(null);
 

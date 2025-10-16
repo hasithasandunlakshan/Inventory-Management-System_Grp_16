@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -186,8 +185,8 @@ export default function OrdersReportPage() {
   };
 
   const [ordersLoading, setOrdersLoading] = useState(true);
-  const [ordersError, setOrdersError] = useState<string | null>(null);
-  const [allOrders, setAllOrders] = useState<any[]>([]);
+  const [, setOrdersError] = useState<string | null>(null);
+  const [allOrders, setAllOrders] = useState<unknown[]>([]);
 
   // Load orders data
   useEffect(() => {

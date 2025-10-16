@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -161,7 +161,7 @@ export default function CostAnalysisReportPage() {
   };
 
   const [costLoading, setCostLoading] = useState(true);
-  const [costError, setCostError] = useState<string | null>(null);
+  const [, setCostError] = useState<string | null>(null);
   const [inventoryCost, setInventoryCost] = useState<InventoryCostResponse | null>(null);
   const [purchaseStats, setPurchaseStats] = useState<PurchaseOrderStats | null>(null);
   const [costMetrics, setCostMetrics] = useState<CostAnalysisMetrics | null>(null);

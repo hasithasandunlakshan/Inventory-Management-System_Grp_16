@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -121,7 +120,7 @@ export default function InventoryReportPage() {
   const [openAlerts, setOpenAlerts] = useState<StockAlert[]>([]);
   const [alertHistory, setAlertHistory] = useState<StockAlert[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   // Load inventory data
   useEffect(() => {

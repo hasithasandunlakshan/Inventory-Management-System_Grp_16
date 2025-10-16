@@ -349,7 +349,7 @@ export default function AISearchPage() {
             <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No results found</h3>
             <p className="text-gray-500 mb-4">
-              Try adjusting your search terms or filters to find what you're looking for.
+              Try adjusting your search terms or filters to find what you&apos;re looking for.
             </p>
             <Button onClick={clearSearch} variant="outline">
               Clear Search
@@ -373,10 +373,10 @@ export default function AISearchPage() {
                 Use natural language to find what you need:
               </p>
               <ul className="text-sm text-gray-500 space-y-1">
-                <li>• "low stock electronics"</li>
-                <li>• "suppliers in California"</li>
-                <li>• "recent purchase orders"</li>
-                <li>• "products under $50"</li>
+                <li>• &quot;low stock electronics&quot;</li>
+                <li>• &quot;suppliers in California&quot;</li>
+                <li>• &quot;recent purchase orders&quot;</li>
+                <li>• &quot;products under $50&quot;</li>
               </ul>
             </CardContent>
           </Card>

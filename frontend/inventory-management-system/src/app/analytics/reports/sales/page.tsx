@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -192,12 +191,12 @@ export default function SalesReportPage() {
   };
 
   const [salesLoading, setSalesLoading] = useState(true);
-  const [salesError, setSalesError] = useState<string | null>(null);
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
-  const [allOrders, setAllOrders] = useState<any[]>([]);
+  const [, setSalesError] = useState<string | null>(null);
+  const [recentOrders, setRecentOrders] = useState<unknown[]>([]);
+  const [allOrders, setAllOrders] = useState<unknown[]>([]);
   const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(null);
   const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse>([]);
-  const [stripeStats, setStripeStats] = useState<StripeStatsResponse | null>(null);
+  const [, setStripeStats] = useState<StripeStatsResponse | null>(null);
 
   // Load sales data
   useEffect(() => {

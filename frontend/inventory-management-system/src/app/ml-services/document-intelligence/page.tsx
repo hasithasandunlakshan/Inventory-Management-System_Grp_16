@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +46,7 @@ export default function DocumentIntelligencePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [translations, setTranslations] = useState<(TranslationResponse | any)[]>([]);
+  const [translations, setTranslations] = useState<(TranslationResponse | unknown)[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,9 +200,11 @@ export default function DocumentIntelligencePage() {
                   <div className='mt-4'>
                     <Label className='text-sm font-medium'>Preview</Label>
                     <div className='mt-2 border rounded-lg overflow-hidden'>
-                      <img
+                      <Image
                         src={previewUrl}
                         alt='Document preview'
+                        width={400}
+                        height={192}
                         className='w-full h-48 object-contain bg-gray-50'
                       />
                     </div>
