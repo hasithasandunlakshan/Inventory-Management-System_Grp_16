@@ -169,6 +169,19 @@ public class DeliveryClusterService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<DeliveryClusterResponse> getClustersByDriverIdAndStatus(Long driverId, DeliveryCluster.ClusterStatus status) {
+        log.info("Fetching clusters for driver ID: {} with status: {}", driverId, status);
+
+        List<DeliveryCluster> clusters = deliveryClusterRepository.findByDriverIdAndStatus(driverId, status);
+        
+        log.info("Found {} clusters for driver ID: {} with status: {}", clusters.size(), driverId, status);
+        
+        return clusters.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     public DeliveryClusterResponse updateClusterStatus(Long clusterId, DeliveryCluster.ClusterStatus newStatus) {
         log.info("Updating cluster {} status to {}", clusterId, newStatus);
 

@@ -128,6 +128,33 @@ public class DeliveryClusterController {
         }
     }
 
+    @GetMapping("/driver/{driverId}/status/{status}")
+    public ResponseEntity<ApiResponse<List<DeliveryClusterResponse>>> getDriverClustersByStatus(
+            @PathVariable Long driverId,
+            @PathVariable String status) {
+        try {
+            log.info("Fetching clusters for driver ID: {} with status: {}", driverId, status);
+
+            // Convert string to ClusterStatus enum
+            DeliveryCluster.ClusterStatus clusterStatus = DeliveryCluster.ClusterStatus.valueOf(status.toUpperCase());
+
+            List<DeliveryClusterResponse> response = deliveryClusterService.getClustersByDriverIdAndStatus(driverId, clusterStatus);
+
+            return ResponseEntity.ok(ApiResponse.success(response,
+                    "Retrieved " + response.size() + " " + status + " clusters for driver"));
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid cluster status: {}", status);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Invalid cluster status", 
+                            "Valid statuses are: PENDING, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED"));
+        } catch (Exception e) {
+            log.error("Failed to fetch driver clusters by status: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch driver clusters", e.getMessage()));
+        }
+    }
+
     @GetMapping("/driver/{driverId}/delivery-sequence")
     public ResponseEntity<ApiResponse<List<DeliveryClusterResponse.ClusterOrderResponse>>> getDriverDeliverySequence(
             @PathVariable Long driverId) {

@@ -36,4 +36,12 @@ public interface DeliveryClusterRepository extends JpaRepository<DeliveryCluster
             "WHERE dc.status = 'PENDING' " +
             "ORDER BY dc.createdAt DESC")
     List<DeliveryCluster> findPendingClusters();
+
+    @Query("SELECT dc FROM DeliveryCluster dc " +
+            "LEFT JOIN FETCH dc.clusterOrders co " +
+            "WHERE dc.assignedDriverId = :driverId " +
+            "AND dc.status = :status " +
+            "ORDER BY co.deliverySequence ASC, dc.createdAt DESC")
+    List<DeliveryCluster> findByDriverIdAndStatus(@Param("driverId") Long driverId, 
+                                                   @Param("status") DeliveryCluster.ClusterStatus status);
 }
