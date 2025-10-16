@@ -48,16 +48,8 @@ jobs:
 
       - name: Test build application
         run: npm run build
-        env:
-          # Minimal env vars for build test - actual deployment uses Vercel's environment variables
-          NEXT_PUBLIC_API_GATEWAY_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/apigateway/v1.0
-          NEXT_PUBLIC_PRODUCT_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/productservice-gw/v1.0
-          NEXT_PUBLIC_RESOURCE_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/resourseservice/v1.0
-          NEXT_PUBLIC_SUPPLIER_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/supplierservice/v1.0
-          NEXT_PUBLIC_USER_SERVICE_URL: https://user-service-337812374841.us-central1.run.app
-          NEXT_PUBLIC_ORDER_SERVICE_URL: https://order.shopmindnotification.app
-          NEXT_PUBLIC_NOTIFICATION_SERVICE_URL: https://notification.shopmindnotification.app
-          NEXT_PUBLIC_INVENTORY_SERVICE_URL: https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/inventoryservice/v1.0
+        # No hardcoded env vars - Next.js will use empty/undefined for build test
+        # Actual deployment uses environment variables from Vercel dashboard
 
       - name: Verify build output
         run: |

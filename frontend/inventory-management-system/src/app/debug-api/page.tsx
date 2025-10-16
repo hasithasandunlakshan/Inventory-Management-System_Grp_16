@@ -40,6 +40,10 @@ export default function DebugApiPage() {
       process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8081';
     const supplierServiceUrl =
       process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL || 'http://localhost:8085';
+    const inventoryServiceUrl =
+      process.env.NEXT_PUBLIC_INVENTORY_SERVICE_URL || 'http://localhost:8085';
+    const resourceServiceUrl =
+      process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8086';
 
     const endpoints = {
       // Product Service
@@ -60,6 +64,17 @@ export default function DebugApiPage() {
       'Supplier Service Health (GET /actuator/health)': `${supplierServiceUrl}/actuator/health`,
       'Suppliers (GET /api/suppliers)': `${supplierServiceUrl}/api/suppliers`,
       'Purchase Orders (GET /api/purchase-orders)': `${supplierServiceUrl}/api/purchase-orders`,
+
+      // Inventory Service
+      'Inventory List (GET /api/inventory)': `${inventoryServiceUrl}/api/inventory`,
+      'Inventory by Product (GET /api/inventory/1)': `${inventoryServiceUrl}/api/inventory/1`,
+
+      // Resource Service
+      'Drivers (GET /api/resources/drivers)': `${resourceServiceUrl}/api/resources/drivers`,
+      'Available Drivers (GET /api/resources/drivers/available)': `${resourceServiceUrl}/api/resources/drivers/available`,
+      'Vehicles (GET /api/resources/vehicles)': `${resourceServiceUrl}/api/resources/vehicles`,
+      'Available Vehicles (GET /api/resources/vehicles/available)': `${resourceServiceUrl}/api/resources/vehicles/available`,
+      'Assignments (GET /api/resources/assignments)': `${resourceServiceUrl}/api/resources/assignments`,
     };
 
     const testResults: {
@@ -174,6 +189,24 @@ export default function DebugApiPage() {
               <p className='text-xs font-mono bg-gray-100 p-2 rounded'>
                 {process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL ||
                   'Not set (using localhost:8085)'}
+              </p>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600 mb-1'>
+                <strong>NEXT_PUBLIC_INVENTORY_SERVICE_URL:</strong>
+              </p>
+              <p className='text-xs font-mono bg-gray-100 p-2 rounded'>
+                {process.env.NEXT_PUBLIC_INVENTORY_SERVICE_URL ||
+                  'Not set (using localhost:8085)'}
+              </p>
+            </div>
+            <div>
+              <p className='text-sm text-gray-600 mb-1'>
+                <strong>NEXT_PUBLIC_RESOURCE_SERVICE_URL:</strong>
+              </p>
+              <p className='text-xs font-mono bg-gray-100 p-2 rounded'>
+                {process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL ||
+                  'Not set (using localhost:8086)'}
               </p>
             </div>
           </div>
