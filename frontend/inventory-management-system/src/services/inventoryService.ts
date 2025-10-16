@@ -28,7 +28,7 @@ const INVENTORY_SERVICE_URL = process.env.NEXT_PUBLIC_INVENTORY_SERVICE_URL
 export const inventoryService = {
   getInventoryCost: async (): Promise<InventoryCostResponse> => {
     try {
-      const response = await fetch(`${INVENTORY_COST_URL}/inventory/cost`, {
+      const response = await fetch(`${INVENTORY_COST_URL}/api/products/inventory/cost`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
