@@ -50,7 +50,7 @@ public interface PurchaseOrderRepository
       """)
   LocalDate findLastOrderDate(@Param("supplierId") Long supplierId);
 
-  //check this
+  // check this
 
   @Query("""
       select coalesce(sum(po.totalCost), 0.0) from PurchaseOrder po
