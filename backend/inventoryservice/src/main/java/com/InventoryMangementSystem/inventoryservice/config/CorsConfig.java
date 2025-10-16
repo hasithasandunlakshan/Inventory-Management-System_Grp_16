@@ -22,8 +22,7 @@ public class CorsConfig implements WebMvcConfigurer {
                         "https://*.vercel.app",
                         "https://*.choreoapis.dev",
                         "https://*.shopmindnotification.app",
-                        "*"
-                )
+                        "*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
                 .allowCredentials(false)
@@ -39,8 +38,7 @@ public class CorsConfig implements WebMvcConfigurer {
                 "https://*.vercel.app",
                 "https://*.choreoapis.dev",
                 "https://*.shopmindnotification.app",
-                "*"
-        ));
+                "*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(false);
@@ -51,4 +49,3 @@ public class CorsConfig implements WebMvcConfigurer {
         return source;
     }
 }
-
