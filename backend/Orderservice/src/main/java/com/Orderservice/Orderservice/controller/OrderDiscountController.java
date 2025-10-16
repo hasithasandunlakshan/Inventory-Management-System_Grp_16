@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/orders/discounts")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin(origins = "*")
 public class OrderDiscountController {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderDiscountController.class);
@@ -53,23 +53,19 @@ public class OrderDiscountController {
                     .body(DiscountCalculationResponse.failure(e.getMessage()));
         }
     }
-
     /**
-     * Remove discount from an order
      */
-    @DeleteMapping("/{orderId}/remove")
-    public ResponseEntity<?> removeDiscountFromOrder(@PathVariable Long orderId) {
-        try {
-            logger.info("Removing discount from order {}", orderId);
+    logger.info("Removing discount from order {}",orderId);
 
-            Order updatedOrder = orderService.removeDiscountFromOrder(orderId);
+    Order updatedOrder = orderService.removeDiscountFromOrder(orderId);
 
-            return ResponseEntity.ok("Discount removed successfully from order " + orderId);
-        } catch (Exception e) {
-            logger.error("Error removing discount from order: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Failed to remove discount: " + e.getMessage());
-        }
+    return ResponseEntity.ok("Discount removed successfully from order "+orderId);}catch(
+    Exception e)
+    {
+        logger.error("Error removing discount from order: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Failed to remove discount: " + e.getMessage());
+    }
     }
 
     /**

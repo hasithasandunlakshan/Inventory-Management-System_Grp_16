@@ -1,7 +1,7 @@
 import { createAuthenticatedRequestOptions } from '../utils/authUtils';
 
 const USER_SERVICE_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090';
+  process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
 const API_BASE_URL = `${USER_SERVICE_URL}/api/secure`; // Direct to User Service
 const ADMIN_API_BASE_URL = `${USER_SERVICE_URL}/api/admin`; // Admin endpoints direct to User Service
 

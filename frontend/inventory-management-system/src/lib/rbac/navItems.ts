@@ -96,6 +96,12 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
     children: [
       {
+        label: 'Suppliers',
+        href: '/operations/suppliers',
+        icon: Users,
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
+      },
+      {
         label: 'Inventory',
         href: '/operations/inventory',
         icon: Package,

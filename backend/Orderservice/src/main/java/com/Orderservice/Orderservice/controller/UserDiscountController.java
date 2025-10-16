@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/discounts")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin(origins = "*")
 public class UserDiscountController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserDiscountController.class);

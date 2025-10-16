@@ -2,8 +2,13 @@ package com.resourseservice.resourseservice.service;
 
 import com.resourseservice.resourseservice.dto.DriverProfileCreatedEvent;
 import com.resourseservice.resourseservice.dto.DriverRegistrationRequest;
+import com.resourseservice.resourseservice.dto.DriverWithVehicleResponse;
 import com.resourseservice.resourseservice.entity.DriverProfile;
+import com.resourseservice.resourseservice.entity.Assignment;
+import com.resourseservice.resourseservice.entity.Vehicle;
 import com.resourseservice.resourseservice.repository.DriverProfileRepository;
+import com.resourseservice.resourseservice.repository.AssignmentRepository;
+import com.resourseservice.resourseservice.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -12,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +26,8 @@ import java.util.Optional;
 public class DriverProfileService {
 
     private final DriverProfileRepository driverProfileRepository;
+    private final AssignmentRepository assignmentRepository;
+    private final VehicleRepository vehicleRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public DriverProfile registerDriver(DriverRegistrationRequest request) {
@@ -137,5 +145,22 @@ public class DriverProfileService {
         }
 
         driverProfileRepository.deleteById(driverId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DriverWithVehicleResponse> getAvailableDriversWithVehicles() {
+        log.info("Fetching available drivers with their vehicles using optimized single query");
+
+        // Single optimized query with JOIN
+        List<Object[]> results = driverProfileRepository.findAvailableDriversWithVehicles();
+
+        return results.stream()
+                .<DriverWithVehicleResponse>map(row -> DriverWithVehicleResponse.builder()
+                        .assignmentId(((Number) row[0]).longValue())
+                        .userId(((Number) row[1]).longValue())
+                        .driverName((String) row[2])
+                        .vehicleType((String) row[3])
+                        .build())
+                .collect(Collectors.toList());
     }
 }

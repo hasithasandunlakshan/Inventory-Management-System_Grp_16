@@ -42,6 +42,12 @@ export interface StatsSummaryDTO {
   byStatusTotals: {
     [key: string]: number;
   };
+  totalOrders: number;
+  totalValue: number;
+  averageOrderValue: number;
+  pendingOrders: number;
+  completedOrders: number;
+  cancelledOrders: number;
 }
 
 export interface PurchaseOrderStats {
