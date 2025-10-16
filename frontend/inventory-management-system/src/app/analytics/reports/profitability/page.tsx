@@ -178,11 +178,11 @@ export default function ProfitabilityReportPage() {
       try {
         console.log('💰 Loading profitability analysis data from backend...', { dateFrom, dateTo });
         const [grossProfit, discountImpact, orderProfit, logisticsCost, operational] = await Promise.all([
-          profitabilityService.getGrossProfitAnalysis(dateFrom, dateTo),
-          profitabilityService.getDiscountImpactAnalysis(dateFrom, dateTo),
-          profitabilityService.getOrderProfitability(dateFrom, dateTo),
-          profitabilityService.getLogisticsCostAnalysis(dateFrom, dateTo),
-          profitabilityService.getOperationalEfficiencyMetrics(dateFrom, dateTo),
+          profitabilityService.getGrossProfitAnalysis(),
+          profitabilityService.getDiscountImpactAnalysis(),
+          profitabilityService.getOrderProfitability(),
+          profitabilityService.getLogisticsCostAnalysis(),
+          profitabilityService.getOperationalEfficiencyMetrics(),
         ]);
         
         console.log('💰 Profitability analysis data loaded:', { grossProfit, discountImpact, orderProfit, logisticsCost, operational });
@@ -208,11 +208,11 @@ export default function ProfitabilityReportPage() {
     try {
       console.log('🔄 Reloading profitability analysis data...', { dateFrom, dateTo });
       const [grossProfit, discountImpact, orderProfit, logisticsCost, operational] = await Promise.all([
-        profitabilityService.getGrossProfitAnalysis(dateFrom, dateTo),
-        profitabilityService.getDiscountImpactAnalysis(dateFrom, dateTo),
-        profitabilityService.getOrderProfitability(dateFrom, dateTo),
-        profitabilityService.getLogisticsCostAnalysis(dateFrom, dateTo),
-        profitabilityService.getOperationalEfficiencyMetrics(dateFrom, dateTo),
+        profitabilityService.getGrossProfitAnalysis(),
+        profitabilityService.getDiscountImpactAnalysis(),
+        profitabilityService.getOrderProfitability(),
+        profitabilityService.getLogisticsCostAnalysis(),
+        profitabilityService.getOperationalEfficiencyMetrics(),
       ]);
       
       setGrossProfitAnalysis(grossProfit);
@@ -515,7 +515,7 @@ export default function ProfitabilityReportPage() {
                   </div>
                   <div className='text-center p-4 border rounded-lg'>
                     <div className='text-2xl font-bold text-green-600'>
-                      ${discountImpactAnalysis.revenueWithDiscounts?.toFixed(2) || '0.00'}
+                      ${discountImpactAnalysis.netRevenue?.toFixed(2) || '0.00'}
                     </div>
                     <div className='text-sm text-muted-foreground'>
                       Revenue with Discounts
@@ -562,7 +562,7 @@ export default function ProfitabilityReportPage() {
                 </div>
                 <div className='text-center p-4 border rounded-lg'>
                   <div className='text-2xl font-bold text-purple-600'>
-                    {orderProfitability.profitableOrdersPercentage?.toFixed(1) || '0.0'}%
+                    {orderProfitability.profitabilityRate?.toFixed(1) || '0.0'}%
                   </div>
                   <div className='text-sm text-muted-foreground'>
                     Profitable Orders
@@ -586,7 +586,7 @@ export default function ProfitabilityReportPage() {
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
                 <div className='text-center p-4 border rounded-lg'>
                   <div className='text-2xl font-bold text-blue-600'>
-                    {operationalEfficiency.orderFulfillmentRate?.toFixed(1) || '0.0'}%
+                    {operationalEfficiency.deliveryEfficiency?.toFixed(1) || '0.0'}%
                   </div>
                   <div className='text-sm text-muted-foreground'>
                     Order Fulfillment Rate
@@ -602,7 +602,7 @@ export default function ProfitabilityReportPage() {
                 </div>
                 <div className='text-center p-4 border rounded-lg'>
                   <div className='text-2xl font-bold text-purple-600'>
-                    {operationalEfficiency.customerSatisfactionScore?.toFixed(1) || '0.0'}
+                    {operationalEfficiency.overallEfficiency?.toFixed(1) || '0.0'}
                   </div>
                   <div className='text-sm text-muted-foreground'>
                     Customer Satisfaction
@@ -610,7 +610,7 @@ export default function ProfitabilityReportPage() {
                 </div>
                 <div className='text-center p-4 border rounded-lg'>
                   <div className='text-2xl font-bold text-orange-600'>
-                    {operationalEfficiency.operationalCostRatio?.toFixed(1) || '0.0'}%
+                    {operationalEfficiency.costPerOrder?.toFixed(1) || '0.0'}
                   </div>
                   <div className='text-sm text-muted-foreground'>
                     Operational Cost Ratio

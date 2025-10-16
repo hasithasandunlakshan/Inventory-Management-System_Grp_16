@@ -239,9 +239,9 @@ export default function LogisticsReportPage() {
 
   const fleetUtilization = useMemo(() => {
     const totalDrivers = drivers.length;
-    const activeDrivers = drivers.filter(d => d.status === 'active').length;
+    const activeDrivers = drivers.filter(d => d.status === 'ACTIVE').length;
     const totalVehicles = vehicles.length;
-    const assignedVehicles = assignments.filter(a => a.status === 'active').length;
+    const assignedVehicles = assignments.filter(a => a.status === 'ACTIVE').length;
     
     return {
       totalDrivers,
@@ -567,25 +567,25 @@ export default function LogisticsReportPage() {
                     {drivers.map(driver => (
                       <tr key={driver.driverId} className='hover:bg-muted/30'>
                         <td className='px-6 py-4 text-sm font-medium'>
-                          {driver.name}
+                          Driver #{driver.driverId}
                         </td>
                         <td className='px-6 py-4 text-sm'>
                           <span className={`px-2 py-1 text-xs rounded-full ${
-                            driver.status === 'active' ? 'bg-green-100 text-green-800' :
-                            driver.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
+                            driver.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                            driver.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
                             'bg-red-100 text-red-800'
                           }`}>
                             {driver.status}
                           </span>
                         </td>
                         <td className='px-6 py-4 text-sm'>
-                          {driver.totalDeliveries || 0}
+                          N/A
                         </td>
                         <td className='px-6 py-4 text-sm'>
-                          {driver.rating || 'N/A'}
+                          N/A
                         </td>
                         <td className='px-6 py-4 text-sm'>
-                          {driver.vehicleId || 'Unassigned'}
+                          {driver.assignedVehicle?.vehicleNumber || 'Unassigned'}
                         </td>
                       </tr>
                     ))}

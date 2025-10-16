@@ -31,12 +31,6 @@ export default function SupplierMLInsights({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (supplierId) {
-      loadMLData();
-    }
-  }, [supplierId, loadMLData]);
-
   const loadMLData = useCallback(async () => {
     try {
       setLoading(true);
@@ -55,6 +49,12 @@ export default function SupplierMLInsights({
       setLoading(false);
     }
   }, [supplierId]);
+
+  useEffect(() => {
+    if (supplierId) {
+      loadMLData();
+    }
+  }, [supplierId, loadMLData]);
 
   const getRiskLevel = (score: number) => {
     if (score >= 0.8) return { level: 'LOW', color: 'bg-green-100 text-green-800', icon: Shield };

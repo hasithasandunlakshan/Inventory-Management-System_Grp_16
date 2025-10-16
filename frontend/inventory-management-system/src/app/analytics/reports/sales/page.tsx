@@ -196,7 +196,7 @@ export default function SalesReportPage() {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(null);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse[]>([]);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse>([]);
   const [stripeStats, setStripeStats] = useState<StripeStatsResponse | null>(null);
 
   // Load sales data
@@ -262,7 +262,7 @@ export default function SalesReportPage() {
     const confirmed = allOrders.filter(o => o.status === 'CONFIRMED').length;
     const processed = allOrders.filter(o => o.status === 'PROCESSED').length;
     const refunds = allOrders.filter(o => o.status === 'REFUNDED').length;
-    const todaysRevenue = todayRevenue?.totalRevenue || 0;
+    const todaysRevenue = todayRevenue?.revenue || 0;
     const aov = totalOrders > 0 ? allOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / totalOrders : 0;
     
     return {

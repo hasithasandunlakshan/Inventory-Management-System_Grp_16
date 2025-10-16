@@ -172,7 +172,7 @@ export default function SearchFilters({
           <div className="space-y-2">
             <Slider
               value={priceRange}
-              onValueChange={setPriceRange}
+              onValueChange={(value) => setPriceRange(value as [number, number])}
               max={1000}
               min={0}
               step={10}
@@ -289,15 +289,15 @@ export default function SearchFilters({
                 if (!value) return null;
                 
                 let displayValue = value;
-                if (key === 'priceRange' && typeof value === 'object') {
-                  displayValue = `$${value.min} - $${value.max}`;
-                } else if (key === 'dateRange' && typeof value === 'object') {
-                  displayValue = `${value.start} to ${value.end}`;
+                if (key === 'priceRange' && Array.isArray(value)) {
+                  displayValue = `$${value[0]} - $${value[1]}`;
+                } else if (key === 'dateRange' && typeof value === 'object' && value !== null) {
+                  displayValue = `${(value as any).start} to ${(value as any).end}`;
                 }
                 
                 return (
                   <Badge key={key} variant="secondary" className="flex items-center gap-1">
-                    {key}: {displayValue}
+                    {`${key}: ${displayValue}`}
                     <Button
                       variant="ghost"
                       size="sm"

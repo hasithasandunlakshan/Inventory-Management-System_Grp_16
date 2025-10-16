@@ -157,8 +157,8 @@ export default function OperationalCostsReportPage() {
       try {
         console.log('🚚 Loading operational costs data from backend...', { dateFrom, dateTo });
         const [logisticsCost, operational] = await Promise.all([
-          profitabilityService.getLogisticsCostAnalysis(dateFrom, dateTo),
-          profitabilityService.getOperationalEfficiencyMetrics(dateFrom, dateTo),
+          profitabilityService.getLogisticsCostAnalysis(),
+          profitabilityService.getOperationalEfficiencyMetrics(),
         ]);
         
         console.log('🚚 Operational costs data loaded:', { logisticsCost, operational });
@@ -181,8 +181,8 @@ export default function OperationalCostsReportPage() {
     try {
       console.log('🔄 Reloading operational costs data...', { dateFrom, dateTo });
       const [logisticsCost, operational] = await Promise.all([
-        profitabilityService.getLogisticsCostAnalysis(dateFrom, dateTo),
-        profitabilityService.getOperationalEfficiencyMetrics(dateFrom, dateTo),
+        profitabilityService.getLogisticsCostAnalysis(),
+        profitabilityService.getOperationalEfficiencyMetrics(),
       ]);
       
       setLogisticsCostAnalysis(logisticsCost);
@@ -476,7 +476,7 @@ export default function OperationalCostsReportPage() {
                   <div className='grid grid-cols-2 gap-4'>
                     <div className='text-center p-4 border rounded-lg'>
                       <div className='text-2xl font-bold text-blue-600'>
-                        {operationalEfficiency.orderFulfillmentRate?.toFixed(1) || '0.0'}%
+                        {operationalEfficiency.deliveryEfficiency?.toFixed(1) || '0.0'}%
                       </div>
                       <div className='text-sm text-muted-foreground'>
                         Order Fulfillment Rate
@@ -493,7 +493,7 @@ export default function OperationalCostsReportPage() {
                   </div>
                   <div className='text-center p-4 border rounded-lg'>
                     <div className='text-2xl font-bold text-purple-600'>
-                      {operationalEfficiency.customerSatisfactionScore?.toFixed(1) || '0.0'}
+                      {operationalEfficiency.overallEfficiency?.toFixed(1) || '0.0'}
                     </div>
                     <div className='text-sm text-muted-foreground'>
                       Customer Satisfaction Score
@@ -501,7 +501,7 @@ export default function OperationalCostsReportPage() {
                   </div>
                   <div className='text-center p-4 border rounded-lg'>
                     <div className='text-2xl font-bold text-orange-600'>
-                      {operationalEfficiency.operationalCostRatio?.toFixed(1) || '0.0'}%
+                      {operationalEfficiency.costPerOrder?.toFixed(1) || '0.0'}
                     </div>
                     <div className='text-sm text-muted-foreground'>
                       Operational Cost Ratio

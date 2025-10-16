@@ -163,7 +163,7 @@ export default function FinancialReportPage() {
   const [financialLoading, setFinancialLoading] = useState(true);
   const [financialError, setFinancialError] = useState<string | null>(null);
   const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(null);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse[]>([]);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueResponse>([]);
   const [stripeStats, setStripeStats] = useState<StripeStatsResponse | null>(null);
 
   // Load financial data

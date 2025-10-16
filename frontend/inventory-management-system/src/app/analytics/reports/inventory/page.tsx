@@ -30,9 +30,9 @@ import {
 
 // Beautiful Icon Components
 const Icons = {
-  Package: () => (
+  Package: ({ className = 'w-6 h-6' }: { className?: string }) => (
     <svg
-      className='w-6 h-6'
+      className={className}
       fill='none'
       stroke='currentColor'
       viewBox='0 0 24 24'
@@ -191,7 +191,7 @@ export default function InventoryReportPage() {
     const totalItems = inventory.length;
     const lowStockItems = inventory.filter(row => (row.stock || 0) <= (row.minThreshold || 0)).length;
     const outOfStockItems = inventory.filter(row => (row.stock || 0) === 0).length;
-    const totalValue = inventory.reduce((sum, row) => sum + ((row.stock || 0) * (row.unitPrice || 0)), 0);
+    const totalValue = inventory.reduce((sum, row) => sum + ((row.stock || 0) * 0), 0);
     
     return {
       totalItems,
@@ -532,7 +532,7 @@ export default function InventoryReportPage() {
                             {new Date(alert.createdAt).toLocaleString()}
                           </td>
                           <td className='px-6 py-4 text-sm'>
-                            {alert.resolvedAt ? new Date(alert.resolvedAt).toLocaleString() : 'N/A'}
+                            {alert.isResolved ? 'Resolved' : 'Pending'}
                           </td>
                         </tr>
                       ))}

@@ -45,7 +45,7 @@ export default function DocumentIntelligencePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [translations, setTranslations] = useState<TranslationResponse[]>([]);
+  const [translations, setTranslations] = useState<(TranslationResponse | any)[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
