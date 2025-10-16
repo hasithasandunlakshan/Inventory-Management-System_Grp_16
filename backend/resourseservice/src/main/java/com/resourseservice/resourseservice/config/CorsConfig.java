@@ -17,15 +17,15 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOriginPatterns(
-                    "http://localhost:3000",
-                    "http://127.0.0.1:3000",
-                    "https://*.vercel.app",
-                    "https://*.choreoapis.dev",
-                    "*"  // Allow all origins for development
-                )
+                        "http://localhost:*",
+                        "http://127.0.0.1:*",
+                        "https://*.vercel.app",
+                        "https://*.choreoapis.dev",
+                        "https://*.shopmindnotification.app",
+                        "*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
-                .allowCredentials(true)
+                .allowCredentials(false) // Changed to false to allow wildcard
                 .maxAge(3600);
     }
 
@@ -33,15 +33,15 @@ public class CorsConfig implements WebMvcConfigurer {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-            "https://*.vercel.app",
-            "https://*.choreoapis.dev",
-            "*"  // Allow all origins for development
-        ));
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "https://*.vercel.app",
+                "https://*.choreoapis.dev",
+                "https://*.shopmindnotification.app",
+                "*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false); // Changed to false to allow wildcard
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -49,4 +49,3 @@ public class CorsConfig implements WebMvcConfigurer {
         return source;
     }
 }
-

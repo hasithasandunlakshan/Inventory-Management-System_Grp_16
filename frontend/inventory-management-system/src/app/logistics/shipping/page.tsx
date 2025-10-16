@@ -34,6 +34,17 @@ type ClusteredOrder = ShippingOrder & {
 function solveTSP(waypoints: { lat: number; lng: number }[]): number[] {
   if (waypoints.length <= 1) return [0];
 
+  // Check if all waypoints are identical
+  const firstPoint = waypoints[0];
+  const allSame = waypoints.every(
+    point => point.lat === firstPoint.lat && point.lng === firstPoint.lng
+  );
+
+  if (allSame) {
+    // If all points are identical, return sequential order
+    return Array.from({ length: waypoints.length }, (_, i) => i);
+  }
+
   const n = waypoints.length;
   const visited = new Array(n).fill(false);
   const route = [0]; // Start from first point
@@ -100,6 +111,28 @@ function calculateRouteMetrics(
     waypointOrder.push(waypoints[index]);
   }
 
+  // Check if all waypoints are identical
+  const firstPoint = waypoints[0];
+  const allSame = waypoints.every(
+    point => point.lat === firstPoint.lat && point.lng === firstPoint.lng
+  );
+
+  if (allSame) {
+    // For identical coordinates, estimate distance based on order count
+    // Assume each delivery takes ~2 minutes and covers ~0.5km in urban areas
+    const estimatedDistancePerDelivery = 0.5; // km
+    const estimatedTimePerDelivery = 2 / 60; // hours (2 minutes)
+
+    totalDistance = waypoints.length * estimatedDistancePerDelivery;
+    const estimatedTime = waypoints.length * estimatedTimePerDelivery;
+
+    return {
+      totalDistance: Math.round(totalDistance * 100) / 100,
+      estimatedTime: Math.round(estimatedTime * 100) / 100,
+      waypointOrder,
+    };
+  }
+
   // Calculate distances between consecutive points
   for (let i = 0; i < waypointOrder.length - 1; i++) {
     totalDistance += calculateDistance(waypointOrder[i], waypointOrder[i + 1]);
@@ -120,6 +153,38 @@ function kMeansCluster(points: number[][], k: number): number[] {
   if (points.length === 0 || k <= 0) return [];
   if (k >= points.length) {
     return points.map((_, i) => i);
+  }
+
+  // Check if all points are identical (same coordinates)
+  const firstPoint = points[0];
+  const allSame = points.every(
+    point => point[0] === firstPoint[0] && point[1] === firstPoint[1]
+  );
+
+  if (allSame) {
+    // If all points are identical, distribute them evenly across clusters
+    const assignments: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+      assignments[i] = i % k;
+    }
+    return assignments;
+  }
+
+  // Check if coordinates are too similar (within 0.001 degrees ≈ 100m)
+  const tolerance = 0.001;
+  const hasVariation = points.some(
+    point =>
+      Math.abs(point[0] - firstPoint[0]) > tolerance ||
+      Math.abs(point[1] - firstPoint[1]) > tolerance
+  );
+
+  if (!hasVariation) {
+    // If coordinates are too similar, distribute evenly
+    const assignments: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+      assignments[i] = i % k;
+    }
+    return assignments;
   }
 
   // Use k-means++ initialization for better centroids
@@ -252,6 +317,12 @@ function ShippingPage() {
   const [usingDummyData, setUsingDummyData] = useState(false);
   const [drivers, setDrivers] = useState<DriverWithVehicle[]>([]);
   const [isLoadingDrivers, setIsLoadingDrivers] = useState(true);
+  const [showDriverDialog, setShowDriverDialog] = useState(false);
+  const [selectedClusterForAssignment, setSelectedClusterForAssignment] =
+    useState<number | null>(null);
+  const [assignedOrderIds, setAssignedOrderIds] = useState<Set<number>>(
+    new Set()
+  );
   const [routeMetrics, setRouteMetrics] = useState<
     {
       totalDistance: number;
@@ -270,13 +341,6 @@ function ShippingPage() {
       };
     }[]
   >([]);
-  const [showComparison, setShowComparison] = useState(false);
-  const [comparisonMetrics, setComparisonMetrics] = useState<{
-    originalDistance: number;
-    optimizedDistance: number;
-    savings: number;
-    savingsPercentage: number;
-  } | null>(null);
 
   // Load Google Maps API
   const { isLoaded } = useJsApiLoader({
@@ -402,9 +466,12 @@ function ShippingPage() {
   const fetchDrivers = async () => {
     try {
       setIsLoadingDrivers(true);
-      const resourceServiceUrl = process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8086';
-      
-      const response = await fetch(`${resourceServiceUrl}/api/resources/drivers/available-with-vehicles`);
+      const resourceServiceUrl =
+        process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8086';
+
+      const response = await fetch(
+        `${resourceServiceUrl}/api/resources/drivers/available-with-vehicles`
+      );
       if (response.ok) {
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
@@ -433,14 +500,246 @@ function ShippingPage() {
     return () => clearInterval(intervalId);
   }, [fetchOrders]); // Include fetchOrders in dependencies
 
-  // Get the current orders to display
-  const currentOrders = realOrders;
+  // Get the current orders to display (filter out assigned orders)
+  const currentOrders = realOrders.filter(
+    order => !assignedOrderIds.has(order.id)
+  );
+
+  // Save cluster to backend with TSP-optimized sequence
+  const saveClusterToBackend = async (clusterIndex: number) => {
+    try {
+      console.log(
+        '🔍 Starting saveClusterToBackend for cluster index:',
+        clusterIndex
+      );
+
+      const cluster = clusters[clusterIndex];
+      const optimizedRoute = optimizedRoutes[clusterIndex];
+      const metrics = routeMetrics[clusterIndex];
+
+      console.log('📊 Cluster data:', {
+        clusterExists: !!cluster,
+        clusterLength: cluster?.length,
+        optimizedRouteExists: !!optimizedRoute,
+        metricsExists: !!metrics,
+        metricsData: metrics,
+      });
+
+      if (!cluster || !optimizedRoute || !metrics) {
+        throw new Error('Cluster data not available');
+      }
+
+      // Map TSP-optimized order to actual order IDs with sequence
+      const ordersWithSequence = optimizedRoute.optimizedOrder.map(
+        (orderIndex, sequencePosition) => ({
+          orderId: cluster[orderIndex].id,
+          deliverySequence: sequencePosition + 1, // 1-based sequence
+          customerLatitude: cluster[orderIndex].lat,
+          customerLongitude: cluster[orderIndex].lng,
+          customerAddress: cluster[orderIndex].address,
+        })
+      );
+
+      console.log('📦 Orders with sequence:', ordersWithSequence);
+
+      const resourceServiceUrl =
+        process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8086';
+      console.log('🌐 Resource Service URL:', resourceServiceUrl);
+
+      const requestBody = {
+        clusterName: `CLUSTER-${Date.now()}-${clusterIndex + 1}`,
+        totalDistance: metrics.totalDistance,
+        estimatedTime: metrics.estimatedTime,
+        createdBy: 1, // TODO: Get from auth context
+        orders: ordersWithSequence,
+      };
+
+      console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+      console.log(
+        '🚀 Making API call to:',
+        `${resourceServiceUrl}/api/resources/delivery-clusters`
+      );
+
+      const response = await fetch(
+        `${resourceServiceUrl}/api/resources/delivery-clusters`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      console.log('📥 Response status:', response.status);
+      console.log(
+        '📥 Response headers:',
+        Object.fromEntries(response.headers.entries())
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Error response body:', errorText);
+        throw new Error(
+          `Failed to save cluster: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      console.log('✅ Success response:', data);
+      return data.data; // Return cluster response
+    } catch (error) {
+      console.error('💥 Error in saveClusterToBackend:', error);
+      throw error;
+    }
+  };
+
+  // Assign driver to cluster
+  const assignDriverToCluster = async (
+    clusterId: number,
+    assignmentId: number
+  ) => {
+    try {
+      console.log('🔍 Starting assignDriverToCluster');
+      console.log('📊 Parameters:', {
+        clusterId,
+        assignmentId,
+        assignedBy: 1,
+      });
+
+      const resourceServiceUrl =
+        process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8086';
+      console.log('🌐 Resource Service URL:', resourceServiceUrl);
+
+      const requestBody = {
+        clusterId,
+        assignmentId,
+        assignedBy: 1, // TODO: Get from auth context
+      };
+
+      console.log(
+        '📤 Assign driver request body:',
+        JSON.stringify(requestBody, null, 2)
+      );
+      console.log(
+        '🚀 Making API call to:',
+        `${resourceServiceUrl}/api/resources/delivery-clusters/assign-driver`
+      );
+
+      const response = await fetch(
+        `${resourceServiceUrl}/api/resources/delivery-clusters/assign-driver`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      console.log('📥 Assign driver response status:', response.status);
+      console.log(
+        '📥 Assign driver response headers:',
+        Object.fromEntries(response.headers.entries())
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Assign driver error response body:', errorText);
+        throw new Error(
+          `Failed to assign driver: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      console.log('✅ Assign driver success response:', data);
+      return data.data;
+    } catch (error) {
+      console.error('💥 Error in assignDriverToCluster:', error);
+      throw error;
+    }
+  };
+
+  // Handle driver assignment confirmation
+  const handleDriverAssignmentConfirm = async () => {
+    if (selectedClusterForAssignment === null) return;
+
+    const selectedDriver = assignedDrivers[selectedClusterForAssignment];
+    if (!selectedDriver) {
+      alert('Please select a driver first');
+      return;
+    }
+
+    try {
+      // Find the driver's assignment ID
+      const driverMatch = drivers.find(
+        d => `${d.driverName} (${d.vehicleType})` === selectedDriver
+      );
+
+      if (!driverMatch) {
+        alert('Driver not found');
+        return;
+      }
+
+      // Save ONLY the selected cluster to backend with TSP-optimized sequence
+      const savedCluster = await saveClusterToBackend(
+        selectedClusterForAssignment
+      );
+
+      // Assign the driver to this cluster
+      await assignDriverToCluster(
+        savedCluster.clusterId,
+        driverMatch.assignmentId
+      );
+
+      // Mark orders in this cluster as assigned
+      const assignedIds = clusters[selectedClusterForAssignment].map(o => o.id);
+      setAssignedOrderIds(prev => new Set([...prev, ...assignedIds]));
+
+      // Reset clustering to force user to re-cluster remaining orders
+      setClusters([]);
+      setRoutes([]);
+      setShowAllOrders(true);
+      setSelectedCluster(null);
+      setAssignedDrivers({});
+      setRouteMetrics([]);
+      setOptimizedRoutes([]);
+
+      alert(
+        `✅ Successfully assigned ${driverMatch.driverName} to cluster!\n\n` +
+          `Assigned ${assignedIds.length} orders.\n` +
+          `Remaining orders: ${realOrders.length - (assignedOrderIds.size + assignedIds.length)}\n\n` +
+          `Click "Create Clusters" to cluster remaining orders.`
+      );
+
+      setShowDriverDialog(false);
+      setSelectedClusterForAssignment(null);
+    } catch (error) {
+      alert(
+        `Failed to assign driver: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  };
 
   // Cluster Orders
   const handleClustering = () => {
+    if (currentOrders.length === 0) {
+      alert('No orders available for clustering!');
+      return;
+    }
+
+    // Ensure we don't try to create more clusters than orders
+    const effectiveNumClusters = Math.min(numClusters, currentOrders.length);
+
+    if (effectiveNumClusters !== numClusters) {
+      alert(
+        `Adjusted cluster count from ${numClusters} to ${effectiveNumClusters} (only ${currentOrders.length} orders available)`
+      );
+    }
+
     const coords = currentOrders.map(o => [o.lat, o.lng]);
 
-    const clusterAssignments = kMeansCluster(coords, numClusters);
+    const clusterAssignments = kMeansCluster(coords, effectiveNumClusters);
 
     const clustered: ClusteredOrder[] = currentOrders.map((order, i) => ({
       ...order,
@@ -449,7 +748,7 @@ function ShippingPage() {
 
     // Group by cluster and filter out empty clusters
     const grouped: ClusteredOrder[][] = [];
-    for (let i = 0; i < numClusters; i++) {
+    for (let i = 0; i < effectiveNumClusters; i++) {
       const clusterOrders = clustered.filter(o => o.cluster === i);
       if (clusterOrders.length > 0) {
         grouped.push(clusterOrders);
@@ -509,53 +808,6 @@ function ShippingPage() {
 
     setOptimizedRoutes(newOptimizedRoutes);
     setRouteMetrics(newRouteMetrics);
-
-    // Calculate comparison metrics
-    calculateComparisonMetrics(clusters, newRouteMetrics);
-  };
-
-  // Calculate comparison between original and optimized routes
-  const calculateComparisonMetrics = (
-    clusters: ClusteredOrder[][],
-    optimizedMetrics: typeof routeMetrics
-  ) => {
-    let originalTotalDistance = 0;
-    let optimizedTotalDistance = 0;
-
-    clusters.forEach((cluster, idx) => {
-      if (cluster.length === 0) return;
-
-      // Calculate original route distance (sequential order)
-      const originalWaypoints = cluster.map(order => ({
-        lat: order.lat,
-        lng: order.lng,
-      }));
-      const originalOrder = Array.from(
-        { length: originalWaypoints.length },
-        (_, i) => i
-      );
-      const originalMetrics = calculateRouteMetrics(
-        originalWaypoints,
-        originalOrder
-      );
-      originalTotalDistance += originalMetrics.totalDistance;
-
-      // Get optimized distance
-      if (optimizedMetrics[idx]) {
-        optimizedTotalDistance += optimizedMetrics[idx].totalDistance;
-      }
-    });
-
-    const savings = originalTotalDistance - optimizedTotalDistance;
-    const savingsPercentage =
-      originalTotalDistance > 0 ? (savings / originalTotalDistance) * 100 : 0;
-
-    setComparisonMetrics({
-      originalDistance: Math.round(originalTotalDistance * 100) / 100,
-      optimizedDistance: Math.round(optimizedTotalDistance * 100) / 100,
-      savings: Math.round(savings * 100) / 100,
-      savingsPercentage: Math.round(savingsPercentage * 100) / 100,
-    });
   };
 
   // Get Optimized Route for Specific Cluster
@@ -627,8 +879,6 @@ function ShippingPage() {
     setSelectedCluster(null);
     setRouteMetrics([]);
     setOptimizedRoutes([]);
-    setComparisonMetrics(null);
-    setShowComparison(false);
   };
 
   // Export route details
@@ -721,13 +971,23 @@ function ShippingPage() {
               </div>
 
               <div className='text-sm text-gray-500'>
-                Total Orders:{' '}
-                <span className='font-semibold text-gray-900'>
+                Available Orders:{' '}
+                <span className='font-semibold text-green-600'>
                   {isLoadingOrders ? '...' : currentOrders.length}
                 </span>
               </div>
+
+              {assignedOrderIds.size > 0 && (
+                <div className='text-sm text-gray-500'>
+                  Assigned Orders:{' '}
+                  <span className='font-semibold text-blue-600'>
+                    {assignedOrderIds.size}
+                  </span>
+                </div>
+              )}
+
               <div className='text-sm text-gray-500'>
-                Clusters:{' '}
+                Active Clusters:{' '}
                 <span className='font-semibold text-gray-900'>
                   {clusters.length}
                 </span>
@@ -794,8 +1054,15 @@ function ShippingPage() {
               </div>
               <div className='ml-3'>
                 <p className='text-sm text-green-700'>
-                  ✅ Successfully loaded {realOrders.length} orders from database
+                  ✅ Successfully loaded {realOrders.length} total orders from
+                  database
                 </p>
+                {assignedOrderIds.size > 0 && (
+                  <p className='text-sm text-blue-700 mt-1'>
+                    📦 {assignedOrderIds.size} orders assigned |{' '}
+                    {currentOrders.length} orders available for clustering
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -900,7 +1167,12 @@ function ShippingPage() {
                       d='M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
                     />
                   </svg>
-                  All Orders
+                  Available Orders
+                  {assignedOrderIds.size > 0 && (
+                    <span className='ml-2 text-sm text-blue-600'>
+                      ({currentOrders.length} remaining)
+                    </span>
+                  )}
                 </h2>
 
                 <div className='space-y-3 max-h-96 overflow-y-auto'>
@@ -918,7 +1190,9 @@ function ShippingPage() {
                   ) : currentOrders.length === 0 ? (
                     <div className='p-3 text-center text-gray-500'>
                       <p className='text-sm'>
-                        No orders available for delivery
+                        {assignedOrderIds.size > 0
+                          ? '🎉 All orders have been assigned to drivers!'
+                          : 'No orders available for delivery'}
                       </p>
                     </div>
                   ) : (
@@ -1139,125 +1413,6 @@ function ShippingPage() {
               </div>
             )}
 
-            {/* Route Comparison */}
-            {comparisonMetrics && (
-              <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-100'>
-                <h2 className='text-xl font-semibold text-gray-900 mb-4 flex items-center'>
-                  <svg
-                    className='w-5 h-5 mr-2 text-orange-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
-                    />
-                  </svg>
-                  Route Optimization Comparison
-                </h2>
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                  {/* Original Route */}
-                  <div className='p-4 bg-red-50 rounded-lg border border-red-200'>
-                    <h3 className='font-semibold text-gray-900 mb-3 flex items-center'>
-                      <svg
-                        className='w-5 h-5 mr-2 text-red-600'
-                        fill='currentColor'
-                        viewBox='0 0 20 20'
-                      >
-                        <path
-                          fillRule='evenodd'
-                          d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z'
-                          clipRule='evenodd'
-                        />
-                      </svg>
-                      Original Route (Sequential)
-                    </h3>
-                    <div className='text-2xl font-bold text-red-600 mb-2'>
-                      {comparisonMetrics.originalDistance} km
-                    </div>
-                    <div className='text-sm text-red-700'>
-                      No optimization applied
-                    </div>
-                  </div>
-
-                  {/* Optimized Route */}
-                  <div className='p-4 bg-green-50 rounded-lg border border-green-200'>
-                    <h3 className='font-semibold text-gray-900 mb-3 flex items-center'>
-                      <svg
-                        className='w-5 h-5 mr-2 text-green-600'
-                        fill='currentColor'
-                        viewBox='0 0 20 20'
-                      >
-                        <path
-                          fillRule='evenodd'
-                          d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z'
-                          clipRule='evenodd'
-                        />
-                      </svg>
-                      Optimized Route (TSP)
-                    </h3>
-                    <div className='text-2xl font-bold text-green-600 mb-2'>
-                      {comparisonMetrics.optimizedDistance} km
-                    </div>
-                    <div className='text-sm text-green-700'>
-                      TSP algorithm applied
-                    </div>
-                  </div>
-                </div>
-
-                {/* Savings Summary */}
-                <div className='mt-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200'>
-                  <h3 className='font-semibold text-gray-900 mb-3 flex items-center'>
-                    <svg
-                      className='w-5 h-5 mr-2 text-yellow-600'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'
-                    >
-                      <path
-                        fillRule='evenodd'
-                        d='M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z'
-                        clipRule='evenodd'
-                      />
-                    </svg>
-                    Optimization Results
-                  </h3>
-                  <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                    <div className='text-center'>
-                      <div className='text-3xl font-bold text-yellow-600'>
-                        {comparisonMetrics.savings} km
-                      </div>
-                      <div className='text-sm text-gray-600'>
-                        Distance Saved
-                      </div>
-                    </div>
-                    <div className='text-center'>
-                      <div className='text-3xl font-bold text-orange-600'>
-                        {comparisonMetrics.savingsPercentage}%
-                      </div>
-                      <div className='text-sm text-gray-600'>
-                        Efficiency Gain
-                      </div>
-                    </div>
-                    <div className='text-center'>
-                      <div className='text-3xl font-bold text-green-600'>
-                        {Math.round(comparisonMetrics.savings * 0.5 * 100) /
-                          100}{' '}
-                        hrs
-                      </div>
-                      <div className='text-sm text-gray-600'>Time Saved*</div>
-                    </div>
-                  </div>
-                  <div className='mt-3 text-xs text-gray-500'>
-                    * Estimated time savings based on 30 km/h average speed
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Clusters List */}
             {clusters.length > 0 && (
               <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-100'>
@@ -1282,7 +1437,7 @@ function ShippingPage() {
                     const clusterKey =
                       cluster.map(o => o.id).join('-') || String(idx);
                     return (
-                      <button
+                      <div
                         key={clusterKey}
                         className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
                           selectedCluster === idx
@@ -1290,7 +1445,6 @@ function ShippingPage() {
                             : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                         }`}
                         onClick={() => handleClusterClick(idx)}
-                        type='button'
                       >
                         <div className='flex items-center justify-between mb-3'>
                           <h3 className='font-semibold text-gray-900 flex items-center'>
@@ -1376,7 +1530,9 @@ function ShippingPage() {
                             disabled={isLoadingDrivers}
                           >
                             <option value=''>
-                              {isLoadingDrivers ? 'Loading drivers...' : 'Select Driver'}
+                              {isLoadingDrivers
+                                ? 'Loading drivers...'
+                                : 'Select Driver'}
                             </option>
                             {drivers.map(driver => (
                               <option
@@ -1388,9 +1544,22 @@ function ShippingPage() {
                             ))}
                           </select>
                           {assignedDrivers[idx] && (
-                            <p className='text-sm text-green-600 mt-2 font-medium'>
-                              ✓ Assigned to: {assignedDrivers[idx]}
-                            </p>
+                            <div className='mt-2 space-y-2'>
+                              <p className='text-sm text-green-600 font-medium'>
+                                ✓ Selected: {assignedDrivers[idx]}
+                              </p>
+                              <Button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setSelectedClusterForAssignment(idx);
+                                  setShowDriverDialog(true);
+                                }}
+                                className='w-full bg-green-600 hover:bg-green-700 text-white'
+                                size='sm'
+                              >
+                                Confirm Assignment
+                              </Button>
+                            </div>
                           )}
                         </div>
 
@@ -1444,7 +1613,7 @@ function ShippingPage() {
                             </div>
                           </div>
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -1531,6 +1700,81 @@ function ShippingPage() {
           </div>
         </div>
       </div>
+
+      {/* Driver Assignment Confirmation Dialog */}
+      {showDriverDialog && selectedClusterForAssignment !== null && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4'>
+            <h3 className='text-xl font-bold text-gray-900 mb-4'>
+              Confirm Driver Assignment
+            </h3>
+
+            <div className='space-y-4 mb-6'>
+              <div className='p-4 bg-blue-50 rounded-lg border border-blue-200'>
+                <p className='text-sm text-gray-700 mb-2'>
+                  <span className='font-semibold'>Cluster:</span>{' '}
+                  {selectedClusterForAssignment + 1}
+                </p>
+                <p className='text-sm text-gray-700 mb-2'>
+                  <span className='font-semibold'>Orders:</span>{' '}
+                  {clusters[selectedClusterForAssignment]?.length || 0}
+                </p>
+                <p className='text-sm text-gray-700 mb-2'>
+                  <span className='font-semibold'>Driver:</span>{' '}
+                  {assignedDrivers[selectedClusterForAssignment]}
+                </p>
+                {routeMetrics[selectedClusterForAssignment] && (
+                  <>
+                    <p className='text-sm text-gray-700 mb-2'>
+                      <span className='font-semibold'>Distance:</span>{' '}
+                      {routeMetrics[selectedClusterForAssignment].totalDistance}{' '}
+                      km
+                    </p>
+                    <p className='text-sm text-gray-700'>
+                      <span className='font-semibold'>Estimated Time:</span>{' '}
+                      {routeMetrics[
+                        selectedClusterForAssignment
+                      ].estimatedTime.toFixed(1)}{' '}
+                      hrs
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className='p-4 bg-yellow-50 rounded-lg border border-yellow-200'>
+                <p className='text-sm text-yellow-800 font-medium mb-2'>
+                  ⚠️ Important Information:
+                </p>
+                <ul className='text-sm text-yellow-700 space-y-1 ml-4 list-disc'>
+                  <li>Only THIS cluster will be saved to the database</li>
+                  <li>Orders in this cluster will be marked as assigned</li>
+                  <li>Driver will be marked as BUSY</li>
+                  <li>You can re-cluster remaining orders after this</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className='flex space-x-3'>
+              <Button
+                onClick={() => {
+                  setShowDriverDialog(false);
+                  setSelectedClusterForAssignment(null);
+                }}
+                variant='outline'
+                className='flex-1'
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDriverAssignmentConfirm}
+                className='flex-1 bg-green-600 hover:bg-green-700 text-white'
+              >
+                Confirm Assignment
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
