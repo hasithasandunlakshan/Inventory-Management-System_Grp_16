@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ML_SERVICE_URL = process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8080';
+const ML_SERVICE_URL = process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8081';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { operationId: string } }
 ) {
   try {
-    const { operationId } = params;
+    const { operationId } = await params;
     
     const response = await fetch(`${ML_SERVICE_URL}/translate/document/status/${operationId}`, {
       method: 'GET',

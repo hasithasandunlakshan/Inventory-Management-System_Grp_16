@@ -48,7 +48,7 @@ export class TranslatorService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8080';
+    this.baseUrl = process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8081';
   }
 
   /**
