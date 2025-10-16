@@ -5,7 +5,7 @@ const ML_SERVICE_URL =
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { operationId: string } }
+  { params }: { params: Promise<{ operationId: string }> }
 ) {
   try {
     const { operationId } = await params;
