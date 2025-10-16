@@ -138,7 +138,8 @@ public class DeliveryClusterController {
             // Convert string to ClusterStatus enum
             DeliveryCluster.ClusterStatus clusterStatus = DeliveryCluster.ClusterStatus.valueOf(status.toUpperCase());
 
-            List<DeliveryClusterResponse> response = deliveryClusterService.getClustersByDriverIdAndStatus(driverId, clusterStatus);
+            List<DeliveryClusterResponse> response = deliveryClusterService.getClustersByDriverIdAndStatus(driverId,
+                    clusterStatus);
 
             return ResponseEntity.ok(ApiResponse.success(response,
                     "Retrieved " + response.size() + " " + status + " clusters for driver"));
@@ -146,7 +147,7 @@ public class DeliveryClusterController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid cluster status: {}", status);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Invalid cluster status", 
+                    .body(ApiResponse.error("Invalid cluster status",
                             "Valid statuses are: PENDING, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED"));
         } catch (Exception e) {
             log.error("Failed to fetch driver clusters by status: {}", e.getMessage(), e);
