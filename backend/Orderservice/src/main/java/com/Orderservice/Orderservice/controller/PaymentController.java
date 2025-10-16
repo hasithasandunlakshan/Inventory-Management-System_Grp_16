@@ -125,7 +125,7 @@ public class PaymentController {
      * @return AllPaymentsResponse containing all payments
      */
     @GetMapping("/all")
-    @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
     public ResponseEntity<AllPaymentsResponse> getAllPayments(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

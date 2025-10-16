@@ -53,11 +53,14 @@ export const orderService = {
   /**
    * Get all orders - returns confirmed orders ready for delivery
    */
-  async getAllOrders(): Promise<AllOrdersResponse> {
+  async getAllOrders(dateFrom?: string, dateTo?: string): Promise<AllOrdersResponse> {
     try {
       // Add timestamp to URL to prevent caching
       const timestamp = Date.now();
-      const url = `${API_BASE_URL}/all?_t=${timestamp}`;
+      let url = `${API_BASE_URL}/all?_t=${timestamp}`;
+      if (dateFrom && dateTo) {
+        url += `&dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
+      }
       const requestOptions = createAuthenticatedRequestOptions();
       const response = await fetch(url, requestOptions);
       if (!response.ok) {

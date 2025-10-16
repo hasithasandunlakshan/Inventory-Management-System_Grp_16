@@ -55,17 +55,43 @@ export const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
+    label: 'Suppliers',
+    href: '/suppliers',
+    icon: Users,
+    roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
+    children: [
+      {
+        label: 'Purchase Orders',
+        href: '/suppliers/purchase-orders',
+        icon: Package,
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Suppliers',
+        href: '/suppliers/suppliers',
+        icon: Users,
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Delivery Logs',
+        href: '/suppliers/delivery-logs',
+        icon: Truck,
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Analytics',
+        href: '/suppliers/analytics',
+        icon: BarChart3,
+        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
+      },
+    ],
+  },
+  {
     label: 'Operations',
     href: '/operations',
     icon: Truck,
     roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
     children: [
-      {
-        label: 'Suppliers',
-        href: '/operations/suppliers',
-        icon: Users,
-        roles: ['Store Keeper', 'MANAGER', 'ADMIN'],
-      },
       {
         label: 'Inventory',
         href: '/operations/inventory',
@@ -119,9 +145,57 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['MANAGER', 'ADMIN'],
     children: [
       {
-        label: 'Reports',
-        href: '/analytics/reports',
+        label: 'Inventory Report',
+        href: '/analytics/reports/inventory',
+        icon: Package,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Sales Report',
+        href: '/analytics/reports/sales',
+        icon: TrendingUp,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Orders Report',
+        href: '/analytics/reports/orders',
+        icon: ShoppingCart,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Logistics Report',
+        href: '/analytics/reports/logistics',
+        icon: Truck,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Financial Report',
+        href: '/analytics/reports/financial',
         icon: BarChart3,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Cost Analysis',
+        href: '/analytics/reports/cost-analysis',
+        icon: Package,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Profitability Report',
+        href: '/analytics/reports/profitability',
+        icon: TrendingUp,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Operational Costs',
+        href: '/analytics/reports/operational-costs',
+        icon: Truck,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'Supplier Report',
+        href: '/analytics/reports/supplier',
+        icon: Users,
         roles: ['MANAGER', 'ADMIN'],
       },
       {

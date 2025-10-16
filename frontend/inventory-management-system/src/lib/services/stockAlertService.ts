@@ -16,9 +16,14 @@ export interface StockAlert {
 }
 
 export const stockAlertService = {
-  async listUnresolved(): Promise<StockAlert[]> {
+  async listUnresolved(dateFrom?: string, dateTo?: string): Promise<StockAlert[]> {
+    let url = API_BASE_URL;
+    if (dateFrom && dateTo) {
+      url += `?dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
+    }
+    
     const res = await fetch(
-      API_BASE_URL,
+      url,
       createAuthenticatedRequestOptions('GET')
     );
     if (!res.ok) {
@@ -27,9 +32,14 @@ export const stockAlertService = {
     return res.json();
   },
 
-  async listHistory(): Promise<StockAlert[]> {
+  async listHistory(dateFrom?: string, dateTo?: string): Promise<StockAlert[]> {
+    let url = `${API_BASE_URL}/history`;
+    if (dateFrom && dateTo) {
+      url += `?dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
+    }
+    
     const res = await fetch(
-      `${API_BASE_URL}/history`,
+      url,
       createAuthenticatedRequestOptions('GET')
     );
     if (!res.ok) {

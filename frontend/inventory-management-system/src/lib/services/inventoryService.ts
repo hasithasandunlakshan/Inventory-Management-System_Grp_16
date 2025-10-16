@@ -16,9 +16,14 @@ export interface InventoryRow {
 }
 
 export const inventoryService = {
-  async listAll(): Promise<InventoryRow[]> {
+  async listAll(dateFrom?: string, dateTo?: string): Promise<InventoryRow[]> {
+    let url = API_BASE_URL;
+    if (dateFrom && dateTo) {
+      url += `?dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
+    }
+    
     const res = await fetch(
-      API_BASE_URL,
+      url,
       createAuthenticatedRequestOptions('GET')
     );
     if (!res.ok) {
