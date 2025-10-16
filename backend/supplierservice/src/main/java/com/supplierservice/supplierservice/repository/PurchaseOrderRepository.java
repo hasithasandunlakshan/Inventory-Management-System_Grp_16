@@ -50,21 +50,22 @@ public interface PurchaseOrderRepository
       """)
   LocalDate findLastOrderDate(@Param("supplierId") Long supplierId);
 
-  // check this
-
+  // ===== ML Metrics methods =====
   @Query("""
-      select coalesce(sum(po.totalCost), 0.0) from PurchaseOrder po
+      select coalesce(sum(poi.quantity * poi.unitPrice), 0.0)
+      from PurchaseOrder po
+      join po.items poi
       where po.supplier.supplierId = :supplierId
-        and po.date between :start and :end
+        and po.date between :startDate and :endDate
       """)
   Double calculateTotalSpendBySupplier(@Param("supplierId") Long supplierId,
-      @Param("start") LocalDate start,
-      @Param("end") LocalDate end);
+      @Param("startDate") LocalDate startDate,
+      @Param("endDate") LocalDate endDate);
 
   @Query("""
       select count(po) from PurchaseOrder po
       where po.supplier.supplierId = :supplierId
-        and po.status in ('PENDING', 'ORDERED', 'PROCESSING')
+        and po.status in ('PENDING', 'APPROVED', 'ORDERED', 'SHIPPED')
       """)
   Integer countOpenPurchaseOrdersBySupplier(@Param("supplierId") Long supplierId);
 }

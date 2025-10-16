@@ -34,6 +34,14 @@ export interface SupplierSpendDTO {
 }
 
 export interface StatsSummaryDTO {
+  count: number;
+  total: number;
+  byStatusCounts: {
+    [key: string]: number;
+  };
+  byStatusTotals: {
+    [key: string]: number;
+  };
   totalOrders: number;
   totalValue: number;
   averageOrderValue: number;

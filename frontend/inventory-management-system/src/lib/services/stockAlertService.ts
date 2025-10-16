@@ -16,22 +16,29 @@ export interface StockAlert {
 }
 
 export const stockAlertService = {
-  async listUnresolved(): Promise<StockAlert[]> {
-    const res = await fetch(
-      API_BASE_URL,
-      createAuthenticatedRequestOptions('GET')
-    );
+  async listUnresolved(
+    dateFrom?: string,
+    dateTo?: string
+  ): Promise<StockAlert[]> {
+    let url = API_BASE_URL;
+    if (dateFrom && dateTo) {
+      url += `?dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
+    }
+
+    const res = await fetch(url, createAuthenticatedRequestOptions('GET'));
     if (!res.ok) {
       throw new Error('Failed to fetch stock alerts');
     }
     return res.json();
   },
 
-  async listHistory(): Promise<StockAlert[]> {
-    const res = await fetch(
-      `${API_BASE_URL}/history`,
-      createAuthenticatedRequestOptions('GET')
-    );
+  async listHistory(dateFrom?: string, dateTo?: string): Promise<StockAlert[]> {
+    let url = `${API_BASE_URL}/history`;
+    if (dateFrom && dateTo) {
+      url += `?dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
+    }
+
+    const res = await fetch(url, createAuthenticatedRequestOptions('GET'));
     if (!res.ok) {
       throw new Error('Failed to fetch stock alerts history');
     }
