@@ -1,6 +1,6 @@
 // Authentication service for JWT token management
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+  process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090';
 
 export interface LoginRequest {
   username: string;

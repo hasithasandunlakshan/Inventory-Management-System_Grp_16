@@ -2,8 +2,9 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Brain, FileImage, ArrowRight, Sparkles } from 'lucide-react';
+import { Brain, FileImage, ArrowRight, Sparkles, Users, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import SupplierPredictionCard from '@/components/ml/SupplierPredictionCard';
 
 export default function MLServicesPage() {
   const features = [
@@ -18,6 +19,32 @@ export default function MLServicesPage() {
         'Receipt analysis',
         'Form data extraction',
         'Table recognition'
+      ]
+    },
+    {
+      title: 'Supplier Predictions',
+      description: 'AI-powered supplier performance and reliability predictions',
+      icon: Users,
+      href: '/ml-services/supplier-predictions',
+      color: 'bg-green-500',
+      features: [
+        'Reliability scoring',
+        'Risk assessment',
+        'Performance predictions',
+        'Delivery forecasting'
+      ]
+    },
+    {
+      title: 'AI Search',
+      description: 'Intelligent search across all your data using Azure Cognitive Search',
+      icon: TrendingUp,
+      href: '/ml-services/ai-search',
+      color: 'bg-purple-500',
+      features: [
+        'Semantic search',
+        'Multi-entity search',
+        'Faceted filtering',
+        'Real-time indexing'
       ]
     },
   ];
@@ -76,6 +103,41 @@ export default function MLServicesPage() {
             </Card>
           );
         })}
+      </div>
+
+      {/* Quick Preview Section */}
+      <div className='mt-8'>
+        <h2 className='text-2xl font-bold mb-4'>Quick Preview</h2>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+          <SupplierPredictionCard />
+          <Card>
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2'>
+                <Brain className='h-5 w-5 text-blue-600' />
+                ML Services Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className='text-gray-600 mb-4'>
+                Our ML services provide intelligent insights and automation for your inventory management system.
+              </p>
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2'>
+                  <div className='w-2 h-2 bg-green-500 rounded-full'></div>
+                  <span className='text-sm'>Document Intelligence - Active</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <div className='w-2 h-2 bg-green-500 rounded-full'></div>
+                  <span className='text-sm'>Supplier Predictions - Active</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <div className='w-2 h-2 bg-green-500 rounded-full'></div>
+                  <span className='text-sm'>AI Search - Active</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <Card className='bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'>

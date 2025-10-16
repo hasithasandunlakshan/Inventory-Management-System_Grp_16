@@ -268,6 +268,12 @@ export const NAV_ITEMS: NavItem[] = [
         roles: ['MANAGER', 'ADMIN'],
       },
       {
+        label: 'Supplier Predictions',
+        href: '/ml-services/supplier-predictions',
+        icon: Brain,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
         label: 'AI Search',
         href: '/ml-services/ai-search',
         icon: Search,

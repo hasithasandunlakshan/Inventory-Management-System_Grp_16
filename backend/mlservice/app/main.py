@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import forecast_routes, document_intelligence_routes
+from app.routes import forecast_routes, document_intelligence_routes, translator_routes
 from app.services.cache_service import cache_service
 import logging
 import os
@@ -17,13 +17,30 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware
+# Add CORS middleware with explicit configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000", 
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "https://*.vercel.app",
+        "https://*.choreoapis.dev"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Accept",
+        "Accept-Language",
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "Origin",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers"
+    ],
 )
 
 @app.on_event("startup")
@@ -47,7 +64,9 @@ def read_root():
             "health": "/",
             "docs": "/docs",
             "redoc": "/redoc",
-            "forecast": "/forecast/{product_id}"
+            "forecast": "/forecast/{product_id}",
+            "translation": "/translate/text",
+            "document_translation": "/translate/document"
         }
     }
 
@@ -58,7 +77,8 @@ async def health_check():
     return {
         "status": "healthy", 
         "service": "ml-forecasting",
-        "cache_status": cache_stats
+        "cache_status": cache_stats,
+        "cors_enabled": True
     }
 
 @app.get("/cache/stats")
@@ -90,3 +110,4 @@ async def clear_all_cache():
 
 app.include_router(forecast_routes.router, prefix="/forecast")
 app.include_router(document_intelligence_routes.router)
+app.include_router(translator_routes.router)

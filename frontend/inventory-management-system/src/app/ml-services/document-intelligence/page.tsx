@@ -18,9 +18,13 @@ import {
   AlertCircle,
   FileText,
   Table,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Languages
 } from 'lucide-react';
 import { DocumentIntelligenceService } from '@/lib/services/documentIntelligenceService';
+import DocumentTranslatorCard from '@/components/ml/DocumentTranslatorCard';
+import { TranslationResponse } from '@/lib/services/translatorService';
+import { Badge } from '@/components/ui/badge';
 
 interface ExtractedData {
   text?: string;
@@ -41,6 +45,7 @@ export default function DocumentIntelligencePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [translations, setTranslations] = useState<TranslationResponse[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +132,14 @@ export default function DocumentIntelligencePage() {
         </div>
       </div>
 
-      <div className='grid gap-6 lg:grid-cols-2'>
+      <Tabs defaultValue="document" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="document">Document Analysis</TabsTrigger>
+          <TabsTrigger value="translation">Translation</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="document" className="space-y-4">
+          <div className='grid gap-6 lg:grid-cols-2'>
         {/* Upload Section */}
         <Card>
           <CardHeader>
@@ -346,7 +358,70 @@ export default function DocumentIntelligencePage() {
             )}
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
+
+                <TabsContent value="translation" className="space-y-4">
+                  <div className="grid grid-cols-1 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Languages className="h-5 w-5" />
+                          Document Translation
+                        </CardTitle>
+                        <CardDescription>
+                          Translate entire documents using Azure Document Translation service
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <DocumentTranslatorCard 
+                          onTranslationComplete={(translation) => {
+                            setTranslations(prev => [...prev, translation]);
+                          }}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+          
+          {translations.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Languages className="h-5 w-5" />
+                  Recent Translations
+                </CardTitle>
+                <CardDescription>
+                  History of your recent translations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {translations.slice(-5).reverse().map((translation, index) => (
+                    <div key={index} className="p-3 bg-gray-50 rounded border">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline">
+                          {translation.source_language} → {translation.target_language}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {new Date(translation.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-700">
+                          <strong>Original:</strong> {translation.original_text}
+                        </p>
+                        <p className="text-sm text-gray-900 font-medium">
+                          <strong>Translated:</strong> {translation.translated_text}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
