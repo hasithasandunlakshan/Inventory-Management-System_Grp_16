@@ -399,7 +399,7 @@ export default function DocumentIntelligencePage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {translations.slice(-5).reverse().map((translation, index) => (
+                  {translations.slice(-5).reverse().map((translation: any, index) => (
                     <div key={index} className="p-3 bg-gray-50 rounded border">
                       <div className="flex items-center justify-between mb-2">
                         <Badge variant="outline">

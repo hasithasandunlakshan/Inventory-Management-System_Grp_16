@@ -258,11 +258,11 @@ export default function SalesReportPage() {
 
   const salesKpis = useMemo(() => {
     const totalOrders = allOrders.length;
-    const confirmed = allOrders.filter(o => o.status === 'CONFIRMED').length;
-    const processed = allOrders.filter(o => o.status === 'PROCESSED').length;
-    const refunds = allOrders.filter(o => o.status === 'REFUNDED').length;
+    const confirmed = allOrders.filter((o: any) => o.status === 'CONFIRMED').length;
+    const processed = allOrders.filter((o: any) => o.status === 'PROCESSED').length;
+    const refunds = allOrders.filter((o: any) => o.status === 'REFUNDED').length;
     const todaysRevenue = todayRevenue?.revenue || 0;
-    const aov = totalOrders > 0 ? allOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / totalOrders : 0;
+    const aov = totalOrders > 0 ? (allOrders.reduce((sum, o: any) => sum + (o.totalAmount || 0), 0) as number) / totalOrders : 0;
     
     return {
       totalOrders,
@@ -276,7 +276,7 @@ export default function SalesReportPage() {
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    allOrders.forEach(order => {
+    allOrders.forEach((order: any) => {
       counts[order.status] = (counts[order.status] || 0) + 1;
     });
     return counts;
@@ -571,7 +571,7 @@ export default function SalesReportPage() {
                   </tr>
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200'>
-                  {(salesLoading ? [] : recentOrders).map(order => (
+                  {(salesLoading ? [] : recentOrders).map((order: any) => (
                     <tr
                       key={order.orderId}
                       className='hover:bg-muted/30'

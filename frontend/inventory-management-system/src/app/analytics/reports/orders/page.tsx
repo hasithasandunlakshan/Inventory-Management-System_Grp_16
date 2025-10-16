@@ -228,13 +228,13 @@ export default function OrdersReportPage() {
 
   const ordersKpis = useMemo(() => {
     const totalOrders = allOrders.length;
-    const confirmed = allOrders.filter(o => o.status === 'CONFIRMED').length;
-    const processed = allOrders.filter(o => o.status === 'PROCESSED').length;
-    const shipped = allOrders.filter(o => o.status === 'SHIPPED').length;
-    const cancelled = allOrders.filter(o => o.status === 'CANCELLED').length;
-    const pending = allOrders.filter(o => o.status === 'PENDING').length;
-    const totalRevenue = allOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const confirmed = allOrders.filter((o: any) => o.status === 'CONFIRMED').length;
+    const processed = allOrders.filter((o: any) => o.status === 'PROCESSED').length;
+    const shipped = allOrders.filter((o: any) => o.status === 'SHIPPED').length;
+    const cancelled = allOrders.filter((o: any) => o.status === 'CANCELLED').length;
+    const pending = allOrders.filter((o: any) => o.status === 'PENDING').length;
+    const totalRevenue = allOrders.reduce((sum, o: any) => sum + (o.totalAmount || 0), 0);
+    const avgOrderValue = totalOrders > 0 ? (totalRevenue as number) / totalOrders : 0;
     
     return {
       totalOrders,
@@ -250,7 +250,7 @@ export default function OrdersReportPage() {
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    allOrders.forEach(order => {
+    allOrders.forEach((order: any) => {
       counts[order.status] = (counts[order.status] || 0) + 1;
     });
     return counts;
@@ -263,7 +263,7 @@ export default function OrdersReportPage() {
   const filteredOrders = useMemo(() => {
     const from = new Date(dateFrom).getTime();
     const to = new Date(dateTo).getTime();
-    return allOrders.filter(order => {
+    return allOrders.filter((order: any) => {
       const orderDate = new Date(order.createdAt).getTime();
       return (
         (!Number.isNaN(from) ? orderDate >= from : true) &&
@@ -420,7 +420,7 @@ export default function OrdersReportPage() {
             </CardHeader>
             <CardContent>
               <div className='text-3xl font-bold'>
-                ${ordersLoading ? '—' : ordersKpis.totalRevenue.toFixed(2)}
+                ${ordersLoading ? '—' : (ordersKpis.totalRevenue as number).toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -530,7 +530,7 @@ export default function OrdersReportPage() {
                   </tr>
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200'>
-                  {(ordersLoading ? [] : filteredOrders).map(order => (
+                  {(ordersLoading ? [] : filteredOrders).map((order: any) => (
                     <tr
                       key={order.orderId}
                       className='hover:bg-muted/30'
