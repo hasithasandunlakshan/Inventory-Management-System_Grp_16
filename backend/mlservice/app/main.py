@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import forecast_routes
+from app.routes import forecast_routes, document_intelligence_routes
 from app.services.cache_service import cache_service
 import logging
 import os
@@ -89,3 +89,4 @@ async def clear_all_cache():
         raise HTTPException(status_code=500, detail=f"Cache clearing failed: {str(e)}")
 
 app.include_router(forecast_routes.router, prefix="/forecast")
+app.include_router(document_intelligence_routes.router)

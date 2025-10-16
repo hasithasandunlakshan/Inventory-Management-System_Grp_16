@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import com.example.productservice.dto.ProductDTO;
 import com.example.productservice.dto.ProductWithCategoryDTO;
@@ -30,6 +32,8 @@ import com.example.productservice.service.ProductService;
  */
 @RestController
 @RequestMapping("/api/products")
+@CrossOrigin(origins = "*", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE,
+        RequestMethod.OPTIONS, RequestMethod.HEAD })
 public final class ProductController {
 
     /**
@@ -233,15 +237,15 @@ public final class ProductController {
                         "success", true,
                         "message", "Product found successfully",
                         "product", Map.of(
-                        "productId", product.getProductId(),
-                        "name", product.getName(),
-                        "description", product.getDescription(),
-                        "imageUrl", product.getImageUrl(),
-                        "price", product.getPrice(),
-                        "currentStock", product.getStock(),
-                        "reservedStock", product.getReserved(),
-                        "availableStock", product.getAvailableStock(),
-                        "barcode", product.getBarcode(),
+                                "productId", product.getProductId(),
+                                "name", product.getName(),
+                                "description", product.getDescription(),
+                                "imageUrl", product.getImageUrl(),
+                                "price", product.getPrice(),
+                                "currentStock", product.getStock(),
+                                "reservedStock", product.getReserved(),
+                                "availableStock", product.getAvailableStock(),
+                                "barcode", product.getBarcode(),
                                 "categoryName", product.getCategoryName())));
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(

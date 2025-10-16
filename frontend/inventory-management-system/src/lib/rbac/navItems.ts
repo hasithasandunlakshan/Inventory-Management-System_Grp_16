@@ -11,6 +11,9 @@ import {
   Truck,
   UserCheck,
   Users,
+  Brain,
+  FileImage,
+  Search,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -249,6 +252,26 @@ export const NAV_ITEMS: NavItem[] = [
         href: '/assignments',
         icon: Route,
         roles: ['MANAGER', 'ADMIN', 'DRIVER'],
+      },
+    ],
+  },
+  {
+    label: 'ML Services',
+    href: '/ml-services',
+    icon: Brain,
+    roles: ['MANAGER', 'ADMIN'],
+    children: [
+      {
+        label: 'Document Intelligence',
+        href: '/ml-services/document-intelligence',
+        icon: FileImage,
+        roles: ['MANAGER', 'ADMIN'],
+      },
+      {
+        label: 'AI Search',
+        href: '/ml-services/ai-search',
+        icon: Search,
+        roles: ['MANAGER', 'ADMIN'],
       },
     ],
   },
