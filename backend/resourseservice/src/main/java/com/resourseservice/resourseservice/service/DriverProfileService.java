@@ -4,11 +4,7 @@ import com.resourseservice.resourseservice.dto.DriverProfileCreatedEvent;
 import com.resourseservice.resourseservice.dto.DriverRegistrationRequest;
 import com.resourseservice.resourseservice.dto.DriverWithVehicleResponse;
 import com.resourseservice.resourseservice.entity.DriverProfile;
-import com.resourseservice.resourseservice.entity.Assignment;
-import com.resourseservice.resourseservice.entity.Vehicle;
 import com.resourseservice.resourseservice.repository.DriverProfileRepository;
-import com.resourseservice.resourseservice.repository.AssignmentRepository;
-import com.resourseservice.resourseservice.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -26,8 +22,6 @@ import java.util.stream.Collectors;
 public class DriverProfileService {
 
     private final DriverProfileRepository driverProfileRepository;
-    private final AssignmentRepository assignmentRepository;
-    private final VehicleRepository vehicleRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public DriverProfile registerDriver(DriverRegistrationRequest request) {
