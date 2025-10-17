@@ -21,7 +21,6 @@ const baseUrl =
   process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
 const PRODUCTS_API_URL = `${baseUrl}/api/products`;
 
-
 export const discountService = {
   /**
    * Create a new discount (Admin)

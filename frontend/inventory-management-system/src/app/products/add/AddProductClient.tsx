@@ -15,11 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Plus, Loader2, X } from 'lucide-react';
 import axios from 'axios';
 import { CreateProductRequest, Category } from '@/lib/types/product';
 
 interface AddProductClientProps {
-  categories: Category[];
+  readonly categories: Category[];
 }
 
 export default function AddProductClient({
@@ -48,7 +49,7 @@ export default function AddProductClient({
   const handleCategoryChange = (categoryId: string) => {
     setNewProduct(prev => ({
       ...prev,
-      categoryId: parseInt(categoryId),
+      categoryId: Number.parseInt(categoryId),
     }));
   };
 
@@ -117,10 +118,13 @@ export default function AddProductClient({
   };
 
   return (
-    <div className='container mx-auto py-8 px-4'>
-      <Card className='max-w-2xl mx-auto'>
+    <div className='container mx-auto py-8 px-4 max-w-7xl'>
+      <Card>
         <CardHeader>
-          <CardTitle className='text-2xl font-bold'>Add New Product</CardTitle>
+          <CardTitle className='text-3xl font-bold'>Add New Product</CardTitle>
+          <p className='text-gray-500 text-sm mt-2'>
+            Fill in the details to create a new product
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className='space-y-6'>
@@ -130,18 +134,45 @@ export default function AddProductClient({
               </div>
             )}
 
-            <div className='space-y-2'>
-              <Label htmlFor='name'>Product Name *</Label>
-              <Input
-                id='name'
-                name='name'
-                value={newProduct.name}
-                onChange={handleInputChange}
-                placeholder='Enter product name'
-                required
-              />
+            {/* Row 1: Product Name and Category */}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div className='space-y-2'>
+                <Label htmlFor='name'>Product Name *</Label>
+                <Input
+                  id='name'
+                  name='name'
+                  value={newProduct.name}
+                  onChange={handleInputChange}
+                  placeholder='Enter product name'
+                  required
+                  className='h-11'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='categoryId'>Category *</Label>
+                <Select
+                  value={newProduct.categoryId.toString()}
+                  onValueChange={handleCategoryChange}
+                >
+                  <SelectTrigger className='h-11'>
+                    <SelectValue placeholder='Select a category' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem
+                        key={category.id}
+                        value={category.id.toString()}
+                      >
+                        {category.categoryName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
+            {/* Row 2: Description (Full Width) */}
             <div className='space-y-2'>
               <Label htmlFor='description'>Description</Label>
               <Input
@@ -150,10 +181,12 @@ export default function AddProductClient({
                 value={newProduct.description}
                 onChange={handleInputChange}
                 placeholder='Enter product description'
+                className='h-11'
               />
             </div>
 
-            <div className='grid grid-cols-2 gap-4'>
+            {/* Row 3: Price and Stock */}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <div className='space-y-2'>
                 <Label htmlFor='price'>Price (LKR) *</Label>
                 <Input
@@ -165,6 +198,7 @@ export default function AddProductClient({
                   onChange={handleInputChange}
                   placeholder='0.00'
                   required
+                  className='h-11'
                 />
               </div>
 
@@ -178,32 +212,12 @@ export default function AddProductClient({
                   onChange={handleInputChange}
                   placeholder='0'
                   required
+                  className='h-11'
                 />
               </div>
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='categoryId'>Category *</Label>
-              <Select
-                value={newProduct.categoryId.toString()}
-                onValueChange={handleCategoryChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Select a category' />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(category => (
-                    <SelectItem
-                      key={category.id}
-                      value={category.id.toString()}
-                    >
-                      {category.categoryName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
+            {/* Row 4: Image Upload */}
             <div className='space-y-2'>
               <Label htmlFor='image'>Product Image</Label>
               <Input
@@ -211,30 +225,53 @@ export default function AddProductClient({
                 type='file'
                 accept='image/*'
                 onChange={handleImageChange}
+                className='h-11 cursor-pointer'
               />
               {newProduct.imageUrl && (
-                <div className='mt-2'>
-                  <Image
-                    src={newProduct.imageUrl}
-                    alt='Product preview'
-                    width={200}
-                    height={200}
-                    className='rounded-lg object-cover'
-                  />
+                <div className='mt-4 flex justify-center'>
+                  <div className='relative w-48 h-48 border-2 border-gray-200 rounded-lg overflow-hidden'>
+                    <Image
+                      src={newProduct.imageUrl}
+                      alt='Product preview'
+                      fill
+                      className='object-cover'
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className='flex gap-4'>
-              <Button type='submit' disabled={isSubmitting} className='flex-1'>
-                {isSubmitting ? 'Creating...' : 'Create Product'}
+            {/* Action Buttons */}
+            <div className='flex gap-4 pt-4'>
+              <Button
+                type='submit'
+                disabled={isSubmitting}
+                className='flex-1 h-11 text-sm font-semibold text-white shadow-md hover:shadow-lg transform hover:scale-[1.01] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
+                style={{
+                  background:
+                    'linear-gradient(135deg, #2A7CC7 0%, #245e91ff 100%)',
+                }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                    Creating Product...
+                  </>
+                ) : (
+                  <>
+                    <Plus className='w-4 h-4 mr-2' />
+                    Create Product
+                  </>
+                )}
               </Button>
               <Button
                 type='button'
                 variant='outline'
                 onClick={() => router.push('/products')}
                 disabled={isSubmitting}
+                className='h-11 px-6 text-sm font-semibold border-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200'
               >
+                <X className='w-4 h-4 mr-2' />
                 Cancel
               </Button>
             </div>

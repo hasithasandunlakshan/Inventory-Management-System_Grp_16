@@ -67,14 +67,7 @@ export default function DashboardPage() {
     <div className='min-h-screen bg-background flex items-center justify-center p-4'>
       <div className='w-full max-w-4xl mx-auto'>
         <div className='text-center mb-8'>
-          <div className='flex items-center justify-center space-x-3 mb-4'>
-            <div className='w-10 h-10 bg-brand-gradient rounded-full flex items-center justify-center shadow-lg'>
-              <span className='text-white font-bold text-lg'>S</span>
-            </div>
-            <span className='text-3xl font-bold text-foreground'>
-              Shop Mind
-            </span>
-          </div>
+          <div className='flex items-center justify-center space-x-3 mb-4'></div>
           <Skeleton className='h-6 w-64 mx-auto mb-2' />
           <Skeleton className='h-4 w-48 mx-auto' />
         </div>

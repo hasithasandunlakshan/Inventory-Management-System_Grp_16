@@ -15,7 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Save, Package, X, Image as ImageIcon } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  Package,
+  X,
+  Image as ImageIcon,
+  Loader2,
+} from 'lucide-react';
 import { productService } from '@/lib/services/productService';
 import { categoryService } from '@/lib/services/categoryService';
 import axios from 'axios';
@@ -48,7 +55,7 @@ export default function EditProductPage() {
       try {
         setLoading(true);
         const [productData, categoriesData] = await Promise.all([
-          productService.getProductById(parseInt(productId)),
+          productService.getProductById(Number.parseInt(productId)),
           categoryService.getAllCategories(),
         ]);
 
@@ -163,7 +170,10 @@ export default function EditProductPage() {
         imageUrl: formData.imageUrl,
         categoryId: formData.categoryId,
       };
-      await productService.updateProduct(parseInt(productId), updateData);
+      await productService.updateProduct(
+        Number.parseInt(productId),
+        updateData
+      );
       toast.success('Product updated successfully');
       router.push('/products');
     } catch {
@@ -205,29 +215,32 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className='container mx-auto p-6 max-w-4xl'>
+    <div className='container mx-auto py-8 px-4 max-w-7xl'>
       <div className='mb-6'>
-        <Button variant='ghost' onClick={() => router.back()} className='mb-4'>
+        <Button
+          variant='ghost'
+          onClick={() => router.back()}
+          className='mb-4 hover:bg-gray-100'
+        >
           <ArrowLeft className='h-4 w-4 mr-2' />
           Back
         </Button>
-        <h1 className='text-3xl font-bold'>Edit Product</h1>
-        <p className='text-muted-foreground'>
-          Update product information and details
-        </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
-            <Package className='h-5 w-5' />
-            Product Details
+          <CardTitle className='text-3xl font-bold flex items-center gap-2'>
+            <Package className='h-7 w-7' />
+            Edit Product
           </CardTitle>
+          <p className='text-gray-500 text-sm mt-2'>
+            Update product information and details
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className='space-y-6'>
+            {/* Row 1: Product Name and Category */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-              {/* Product Name */}
               <div className='space-y-2'>
                 <Label htmlFor='name'>Product Name *</Label>
                 <Input
@@ -236,52 +249,19 @@ export default function EditProductPage() {
                   onChange={e => handleInputChange('name', e.target.value)}
                   placeholder='Enter product name'
                   required
+                  className='h-11'
                 />
               </div>
 
-              {/* Price */}
-              <div className='space-y-2'>
-                <Label htmlFor='price'>Price *</Label>
-                <Input
-                  id='price'
-                  type='number'
-                  step='0.01'
-                  min='0'
-                  value={formData.price}
-                  onChange={e =>
-                    handleInputChange('price', parseFloat(e.target.value) || 0)
-                  }
-                  placeholder='0.00'
-                  required
-                />
-              </div>
-
-              {/* Stock */}
-              <div className='space-y-2'>
-                <Label htmlFor='stock'>Stock Quantity *</Label>
-                <Input
-                  id='stock'
-                  type='number'
-                  min='0'
-                  value={formData.stock}
-                  onChange={e =>
-                    handleInputChange('stock', parseInt(e.target.value) || 0)
-                  }
-                  placeholder='0'
-                  required
-                />
-              </div>
-
-              {/* Category */}
               <div className='space-y-2'>
                 <Label htmlFor='category'>Category *</Label>
                 <Select
                   value={formData.categoryId.toString()}
                   onValueChange={value =>
-                    handleInputChange('categoryId', parseInt(value))
+                    handleInputChange('categoryId', Number.parseInt(value))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className='h-11'>
                     <SelectValue placeholder='Select a category' />
                   </SelectTrigger>
                   <SelectContent>
@@ -298,7 +278,7 @@ export default function EditProductPage() {
               </div>
             </div>
 
-            {/* Description */}
+            {/* Row 2: Description (Full Width) */}
             <div className='space-y-2'>
               <Label htmlFor='description'>Description *</Label>
               <Textarea
@@ -306,16 +286,58 @@ export default function EditProductPage() {
                 value={formData.description}
                 onChange={e => handleInputChange('description', e.target.value)}
                 placeholder='Enter product description'
-                rows={4}
+                rows={3}
                 required
+                className='resize-none'
               />
             </div>
 
-            {/* Image Upload */}
+            {/* Row 3: Price and Stock */}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div className='space-y-2'>
+                <Label htmlFor='price'>Price (LKR) *</Label>
+                <Input
+                  id='price'
+                  type='number'
+                  step='0.01'
+                  min='0'
+                  value={formData.price}
+                  onChange={e =>
+                    handleInputChange(
+                      'price',
+                      Number.parseFloat(e.target.value) || 0
+                    )
+                  }
+                  placeholder='0.00'
+                  required
+                  className='h-11'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='stock'>Stock Quantity *</Label>
+                <Input
+                  id='stock'
+                  type='number'
+                  min='0'
+                  value={formData.stock}
+                  onChange={e =>
+                    handleInputChange(
+                      'stock',
+                      Number.parseInt(e.target.value) || 0
+                    )
+                  }
+                  placeholder='0'
+                  required
+                  className='h-11'
+                />
+              </div>
+            </div>
+
+            {/* Row 4: Image Upload */}
             <div className='space-y-2'>
               <Label>Product Image</Label>
 
-              {/* Image Upload Area */}
               <div className='space-y-4'>
                 <input
                   ref={fileInputRef}
@@ -326,14 +348,13 @@ export default function EditProductPage() {
                 />
 
                 {formData.imageUrl ? (
-                  <div className='space-y-4'>
-                    <div className='relative inline-block'>
+                  <div className='flex justify-center'>
+                    <div className='relative w-48 h-48 border-2 border-gray-200 rounded-lg overflow-hidden'>
                       <Image
                         src={formData.imageUrl}
                         alt='Product preview'
-                        width={200}
-                        height={200}
-                        className='w-48 h-48 object-cover rounded-lg mx-auto border'
+                        fill
+                        className='object-cover'
                         onError={e => {
                           e.currentTarget.style.display = 'none';
                         }}
@@ -342,72 +363,80 @@ export default function EditProductPage() {
                         type='button'
                         variant='destructive'
                         size='icon'
-                        className='absolute -top-2 -right-2 h-6 w-6'
+                        className='absolute top-2 right-2 h-8 w-8 shadow-md'
                         onClick={removeImage}
                       >
-                        <X className='h-3 w-3' />
-                      </Button>
-                    </div>
-                    <div className='text-center'>
-                      <Button
-                        type='button'
-                        variant='outline'
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                      >
-                        {uploading ? 'Uploading...' : 'Change Image'}
+                        <X className='h-4 w-4' />
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center'>
-                    <ImageIcon className='h-12 w-12 mx-auto text-gray-400 mb-4' />
+                  <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors'>
+                    <ImageIcon className='h-12 w-12 mx-auto text-gray-400 mb-3' />
                     <div className='text-sm text-gray-600 mb-4'>
                       No image selected
                     </div>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                    >
-                      {uploading ? 'Uploading...' : 'Select Image'}
-                    </Button>
                   </div>
                 )}
 
-                {uploading && (
-                  <div className='text-center'>
-                    <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2' />
-                    <div className='text-sm text-gray-600'>
-                      Uploading to Cloudinary...
-                    </div>
-                  </div>
-                )}
-              </div>
+                <div className='flex justify-center gap-3'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className='h-10'
+                  >
+                    {(() => {
+                      if (uploading) {
+                        return (
+                          <>
+                            <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                            Uploading...
+                          </>
+                        );
+                      }
+                      if (formData.imageUrl) {
+                        return 'Change Image';
+                      }
+                      return 'Select Image';
+                    })()}
+                  </Button>
+                </div>
 
-              {/* Manual URL Input */}
-              <div className='space-y-2'>
-                <Label htmlFor='imageUrl' className='text-sm text-gray-500'>
-                  Or enter image URL manually:
-                </Label>
-                <Input
-                  id='imageUrl'
-                  value={formData.imageUrl}
-                  onChange={e => handleInputChange('imageUrl', e.target.value)}
-                  placeholder='https://example.com/image.jpg'
-                  className='text-sm'
-                />
+                {/* Manual URL Input */}
+                <div className='space-y-2'>
+                  <Label htmlFor='imageUrl' className='text-xs text-gray-500'>
+                    Or enter image URL:
+                  </Label>
+                  <Input
+                    id='imageUrl'
+                    value={formData.imageUrl}
+                    onChange={e =>
+                      handleInputChange('imageUrl', e.target.value)
+                    }
+                    placeholder='https://example.com/image.jpg'
+                    className='text-sm h-10'
+                  />
+                </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className='flex gap-4 pt-6'>
-              <Button type='submit' disabled={saving} className='flex-1'>
+            <div className='flex gap-4 pt-4'>
+              <Button
+                type='submit'
+                disabled={saving}
+                className='flex-1 h-11 text-sm font-semibold text-white shadow-md hover:shadow-lg transform hover:scale-[1.01] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
+                style={{
+                  background:
+                    'linear-gradient(135deg, #2A7CC7 0%, #245e91ff 100%)',
+                }}
+              >
                 {saving ? (
                   <>
-                    <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2' />
-                    Saving...
+                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                    Saving Changes...
                   </>
                 ) : (
                   <>
@@ -420,8 +449,10 @@ export default function EditProductPage() {
                 type='button'
                 variant='outline'
                 onClick={() => router.back()}
-                className='flex-1'
+                disabled={saving}
+                className='h-11 px-6 text-sm font-semibold border-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all duration-200'
               >
+                <X className='w-4 h-4 mr-2' />
                 Cancel
               </Button>
             </div>

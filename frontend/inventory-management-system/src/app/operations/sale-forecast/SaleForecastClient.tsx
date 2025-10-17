@@ -19,13 +19,7 @@ import {
 import { forecastService } from '@/lib/services/forecastService';
 import { ForecastResponse, LegacyForecastData } from '@/lib/types/forecast';
 import { Product } from '@/lib/types/product';
-import {
-  AlertCircle,
-  Loader2,
-  Package,
-  RefreshCw,
-  TrendingUp,
-} from 'lucide-react';
+import { AlertCircle, Loader2, RefreshCw, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import {
   CartesianGrid,
@@ -39,7 +33,7 @@ import {
 } from 'recharts';
 
 interface SaleForecastClientProps {
-  initialProducts: Product[];
+  readonly initialProducts: Product[];
 }
 
 export default function SaleForecastClient({
@@ -238,35 +232,38 @@ export default function SaleForecastClient({
   const stockOutInfo = getStockOutInfo();
 
   return (
-    <div className='container mx-auto p-6'>
-      <div className='mb-6'>
-        <h1 className='text-3xl font-bold tracking-tight'>Sales Forecast</h1>
-        <p className='text-muted-foreground'>
-          Predict future sales and stock requirements for your products
-        </p>
-      </div>
+    <div className='space-y-6'>
+      {/* Header Card */}
+      <Card
+        className='shadow-lg border-0'
+        style={{
+          background: 'linear-gradient(135deg, #2A7CC7 0%, #245e91ff 100%)',
+        }}
+      >
+        <CardContent className='p-6'>
+          <div className='flex items-center justify-between mb-4'>
+            <div className='flex items-center gap-3'>
+              <TrendingUp className='h-8 w-8 text-white' />
+              <div>
+                <h1 className='text-2xl font-bold text-white'>
+                  Sales Forecast
+                </h1>
+                <p className='text-sm text-white/80'>
+                  Predict future sales and stock requirements
+                </p>
+              </div>
+            </div>
+          </div>
 
-      {/* Product Selection */}
-      <Card className='mb-6'>
-        <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
-            <Package className='h-5 w-5' />
-            Select Product
-          </CardTitle>
-          <CardDescription>
-            Choose a product to view its sales forecast (cached for 30 minutes
-            to avoid model retraining)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className='flex items-center gap-4'>
-            <div className='max-w-md flex-1'>
+          <div className='flex flex-col sm:flex-row gap-4 pt-2 border-t border-white/20'>
+            {/* Product Selection */}
+            <div className='flex-1'>
               <Select
                 value={selectedProductId}
                 onValueChange={handleProductSelect}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder='Select a product' />
+                <SelectTrigger className='h-11 bg-white/95 border-white/20 hover:bg-white'>
+                  <SelectValue placeholder='Select a product to forecast' />
                 </SelectTrigger>
                 <SelectContent>
                   {products.map(product => (
@@ -284,9 +281,9 @@ export default function SaleForecastClient({
             {/* Force Refresh Button */}
             {selectedProductId && (
               <Button
-                variant='outline'
                 onClick={handleForceRefresh}
                 disabled={loading}
+                className='bg-white text-blue-700 hover:bg-blue-50 shadow-md h-11 px-6'
               >
                 <RefreshCw
                   className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
@@ -294,6 +291,10 @@ export default function SaleForecastClient({
                 Force Refresh
               </Button>
             )}
+          </div>
+
+          <div className='mt-3 text-xs text-white/70'>
+            * Cached for 30 minutes to avoid model retraining
           </div>
         </CardContent>
       </Card>
@@ -341,74 +342,78 @@ export default function SaleForecastClient({
 
           {/* Metrics Cards */}
           {forecastResponse && (
-            <div className='grid md:grid-cols-4 gap-4 mb-6'>
-              <Card>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-6'>
+              <Card className='border shadow-sm hover:shadow-md transition-shadow'>
                 <CardHeader className='pb-2'>
-                  <CardTitle className='text-sm font-medium text-muted-foreground'>
+                  <CardTitle className='text-xs font-medium text-gray-500'>
                     Current Stock
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className='text-2xl font-bold'>
+                  <p className='text-3xl font-bold text-gray-900'>
                     {forecastResponse.metrics.current_stock}
                   </p>
+                  <p className='text-xs text-gray-500 mt-1'>units</p>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className='border shadow-sm hover:shadow-md transition-shadow'>
                 <CardHeader className='pb-2'>
-                  <CardTitle className='text-sm font-medium text-muted-foreground'>
+                  <CardTitle className='text-xs font-medium text-gray-500'>
                     Avg Daily Demand
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className='text-2xl font-bold'>
+                  <p className='text-3xl font-bold text-blue-600'>
                     {forecastResponse.metrics.average_daily_demand.toFixed(1)}
                   </p>
+                  <p className='text-xs text-gray-500 mt-1'>units/day</p>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className='border shadow-sm hover:shadow-md transition-shadow'>
                 <CardHeader className='pb-2'>
-                  <CardTitle className='text-sm font-medium text-muted-foreground'>
+                  <CardTitle className='text-xs font-medium text-gray-500'>
                     30-Day Forecast
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className='text-2xl font-bold text-orange-600'>
+                  <p className='text-3xl font-bold text-orange-600'>
                     {forecastResponse.metrics.total_forecast_30_days}
                   </p>
+                  <p className='text-xs text-gray-500 mt-1'>units</p>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className='border shadow-sm hover:shadow-md transition-shadow'>
                 <CardHeader className='pb-2'>
-                  <CardTitle className='text-sm font-medium text-muted-foreground'>
+                  <CardTitle className='text-xs font-medium text-gray-500'>
                     Reorder Quantity
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className='text-2xl font-bold text-green-600'>
+                  <p className='text-3xl font-bold text-green-600'>
                     {forecastResponse.metrics.reorder_quantity}
                   </p>
+                  <p className='text-xs text-gray-500 mt-1'>units</p>
                 </CardContent>
               </Card>
             </div>
           )}
 
           {/* Forecast Chart */}
-          <Card>
+          <Card className='shadow-md'>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <TrendingUp className='h-5 w-5' />
+              <CardTitle className='text-xl font-bold flex items-center gap-2'>
+                <TrendingUp className='h-6 w-6 text-blue-600' />
                 Sales Forecast (30 Days)
               </CardTitle>
-              <CardDescription>
+              <CardDescription className='text-sm'>
                 Predicted sales with confidence intervals
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className='h-[400px] w-full'>
+              <div className='h-[450px] w-full'>
                 <ResponsiveContainer width='100%' height='100%'>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray='3 3' />
@@ -465,13 +470,20 @@ export default function SaleForecastClient({
 
       {/* Empty State */}
       {!loading && !forecastResponse && legacyForecastData.length === 0 && (
-        <Card>
-          <CardContent className='flex flex-col items-center justify-center py-12'>
-            <Package className='h-12 w-12 text-muted-foreground mb-4' />
-            <p className='text-muted-foreground text-center'>
+        <Card className='shadow-md'>
+          <CardContent className='flex flex-col items-center justify-center py-16'>
+            <div className='bg-blue-50 p-6 rounded-full mb-4'>
+              <TrendingUp className='h-12 w-12 text-blue-600' />
+            </div>
+            <h3 className='text-lg font-semibold text-gray-900 mb-2'>
               {products.length === 0
-                ? 'No products available'
-                : 'Select a product to view sales forecast'}
+                ? 'No Products Available'
+                : 'Select a Product'}
+            </h3>
+            <p className='text-gray-500 text-center max-w-md'>
+              {products.length === 0
+                ? 'Add products to your inventory to start forecasting sales'
+                : 'Choose a product from the dropdown above to view its sales forecast and insights'}
             </p>
           </CardContent>
         </Card>

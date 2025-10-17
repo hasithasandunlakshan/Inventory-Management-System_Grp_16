@@ -8,8 +8,6 @@ import {
   Edit,
   Eye,
   Package,
-  DollarSign,
-  Tag,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -69,19 +67,18 @@ export default function ProductCard({
   };
 
   const stockStatus = getStockStatus();
-  const StockIcon = stockStatus.icon;
 
   return (
-    <Card className='group hover:shadow-lg transition-all duration-200 border-0 shadow-md'>
+    <Card className='group hover:shadow-xl transition-all duration-300 border rounded-lg overflow-hidden bg-white h-full flex flex-col'>
       <CardHeader className='p-0'>
-        {/* Image Section */}
-        <div className='relative w-full h-48 overflow-hidden rounded-t-lg'>
+        {/* Image Section - Compact */}
+        <div className='relative w-full h-32 overflow-hidden bg-gray-50'>
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={name}
               fill
-              className='object-cover group-hover:scale-105 transition-transform duration-200'
+              className='object-contain group-hover:scale-110 transition-transform duration-300 p-1'
               sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
               onError={e => {
                 // Hide the image and show placeholder if it fails to load
@@ -95,20 +92,17 @@ export default function ProductCard({
             />
           ) : null}
 
-          {/* Fallback placeholder - always present but hidden when image loads */}
+          {/* Fallback placeholder */}
           <div
-            className={`w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center ${
+            className={`w-full h-full bg-gray-50 flex items-center justify-center ${
               imageUrl ? 'hidden' : 'flex'
             }`}
           >
-            <div className='text-center'>
-              <Package className='h-12 w-12 text-gray-400 mx-auto mb-2' />
-              <p className='text-xs text-gray-500'>No Image</p>
-            </div>
+            <Package className='h-8 w-8 text-gray-300' />
           </div>
 
-          {/* Stock Status Badge */}
-          <div className='absolute top-2 right-2'>
+          {/* Stock Status Badge - Top Right */}
+          <div className='absolute top-1 right-1'>
             <Badge
               variant={
                 stockStatus.color as
@@ -117,9 +111,8 @@ export default function ProductCard({
                   | 'destructive'
                   | 'outline'
               }
-              className='flex items-center gap-1'
+              className='text-[10px] px-1.5 py-0 shadow-sm leading-tight'
             >
-              <StockIcon className='h-3 w-3' />
               {(() => {
                 switch (stockStatus.status) {
                   case 'out':
@@ -133,11 +126,13 @@ export default function ProductCard({
             </Badge>
           </div>
 
-          {/* Category Badge */}
+          {/* Category Badge - Top Left */}
           {categoryName && (
-            <div className='absolute top-2 left-2'>
-              <Badge variant='secondary' className='flex items-center gap-1'>
-                <Tag className='h-3 w-3' />
+            <div className='absolute top-1 left-1'>
+              <Badge
+                variant='secondary'
+                className='text-[10px] px-1.5 py-0 bg-white/90 backdrop-blur-sm shadow-sm leading-tight'
+              >
                 {categoryName}
               </Badge>
             </div>
@@ -145,61 +140,60 @@ export default function ProductCard({
         </div>
       </CardHeader>
 
-      <CardContent className='p-4'>
-        {/* Product Name */}
-        <h3 className='font-bold text-lg mb-2 line-clamp-1 group-hover:text-gray-800 transition-colors'>
+      <CardContent className='p-2 flex-1 flex flex-col'>
+        {/* Product Name - Compact */}
+        <h3 className='font-semibold text-sm mb-0.5 line-clamp-2 text-gray-900 leading-tight min-h-[2rem]'>
           {name}
         </h3>
 
-        {/* Description */}
-        <p className='text-gray-600 mb-3 line-clamp-2 text-sm'>{description}</p>
+        {/* Description - Minimal space */}
+        <p className='text-gray-500 mb-1 line-clamp-1 text-xs'>{description}</p>
 
-        {/* Price */}
-        <div className='flex items-center gap-2 mb-3'>
-          <DollarSign className='h-4 w-4 text-black' />
-          <span className='text-xl font-bold text-black'>
-            {price.toFixed(2)}
+        {/* Price - Prominent but compact */}
+        <div className='mb-1'>
+          <span className='text-xl font-bold text-gray-900'>
+            ${price.toFixed(2)}
           </span>
         </div>
 
-        {/* Stock Information */}
-        <div className='mb-4'>
-          <div className='flex items-center justify-between text-sm'>
-            <span className='text-gray-600'>Available Stock:</span>
-            <span className='font-semibold text-black'>
-              {availableStock || stock}
-            </span>
-          </div>
+        {/* Stock Information - Compact inline */}
+        <div className='flex items-center gap-1 mb-1 text-xs'>
+          <Package className='h-3 w-3 text-gray-400' />
+          <span className='text-gray-600'>
+            Stock: {availableStock || stock}
+          </span>
         </div>
 
-        {/* Barcode */}
-        <div className='text-xs text-gray-500 mb-4 p-2 bg-gray-50 rounded'>
-          <span className='font-semibold'>Barcode:</span> {barcode}
+        {/* Barcode - Minimal space */}
+        <div className='text-[10px] text-gray-400 mb-2 font-mono'>
+          {barcode}
         </div>
 
-        {/* Action Buttons */}
-        {showActions && (
-          <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleViewClick}
-              className='flex-1 border-black text-black hover:bg-black hover:text-white'
-            >
-              <Eye className='h-4 w-4 mr-1' />
-              View
-            </Button>
-            <Button
-              variant='default'
-              size='sm'
-              onClick={handleEditClick}
-              className='flex-1 bg-black text-white hover:bg-gray-800'
-            >
-              <Edit className='h-4 w-4 mr-1' />
-              Edit
-            </Button>
-          </div>
-        )}
+        {/* Action Buttons - Compact */}
+        <div className='mt-auto'>
+          {showActions && (
+            <div className='flex gap-1.5'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleViewClick}
+                className='flex-1 h-7 text-[11px] border-gray-300 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200'
+              >
+                <Eye className='h-3 w-3 mr-1 transition-transform group-hover:scale-110' />
+                View
+              </Button>
+              <Button
+                variant='default'
+                size='sm'
+                onClick={handleEditClick}
+                className='flex-1 h-7 text-[11px] bg-gray-900 hover:bg-gray-800 hover:shadow-md transition-all duration-200'
+              >
+                <Edit className='h-3 w-3 mr-1 transition-transform group-hover:scale-110' />
+                Edit
+              </Button>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
