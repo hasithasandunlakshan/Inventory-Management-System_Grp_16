@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -62,19 +64,53 @@ export default function DashboardPage() {
   }, [user, isAuthenticated, isLoading, router, hasRedirected]);
 
   return (
-    <div className='min-h-screen flex items-center justify-center'>
-      <div className='text-center'>
-        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto'></div>
-        <p className='mt-2 text-sm text-muted-foreground'>
-          Redirecting to your dashboard...
-        </p>
-        <p className='mt-1 text-xs text-muted-foreground'>
-          {(() => {
-            if (isLoading) return 'Loading...';
-            if (user?.role) return `Role: ${user.role}`;
-            return 'Checking authentication...';
-          })()}
-        </p>
+    <div className='min-h-screen bg-background flex items-center justify-center p-4'>
+      <div className='w-full max-w-4xl mx-auto'>
+        <div className='text-center mb-8'>
+          <div className='flex items-center justify-center space-x-3 mb-4'>
+            <div className='w-10 h-10 bg-brand-gradient rounded-full flex items-center justify-center shadow-lg'>
+              <span className='text-white font-bold text-lg'>S</span>
+            </div>
+            <span className='text-3xl font-bold text-foreground'>
+              Shop Mind
+            </span>
+          </div>
+          <Skeleton className='h-6 w-64 mx-auto mb-2' />
+          <Skeleton className='h-4 w-48 mx-auto' />
+        </div>
+
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i} className='bg-card border-border card-shadow'>
+              <CardHeader className='pb-2'>
+                <Skeleton className='h-4 w-24' />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className='h-8 w-16' />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+          <Card className='bg-card border-border card-shadow'>
+            <CardHeader>
+              <Skeleton className='h-6 w-32' />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className='h-64 w-full' />
+            </CardContent>
+          </Card>
+
+          <Card className='bg-card border-border card-shadow'>
+            <CardHeader>
+              <Skeleton className='h-6 w-32' />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className='h-64 w-full' />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

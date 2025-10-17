@@ -74,13 +74,20 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
   return (
     <>
       <aside className='hidden md:fixed md:inset-y-0 md:left-0 md:flex md:w-60 md:flex-col md:border-r md:bg-background'>
-        <div className='h-14 border-b px-4 flex items-center justify-between'>
-          <div className='text-lg font-semibold tracking-tight'>{title}</div>
+        <div className='h-16 px-6 flex items-center justify-between bg-brand-gradient shadow-lg'>
+          <div className='flex items-center space-x-3'>
+            <div className='w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm'>
+              <span className='text-white font-bold text-sm'>S</span>
+            </div>
+            <div className='text-xl font-bold tracking-tight text-white'>
+              {title}
+            </div>
+          </div>
           <Button
             variant='ghost'
             size='icon'
             onClick={() => setOpen(true)}
-            className='md:hidden'
+            className='md:hidden text-white hover:bg-white/20 rounded-lg transition-colors duration-200'
           >
             <Menu className='h-5 w-5' />
           </Button>
@@ -97,8 +104,8 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                   <button
                     onClick={() => toggleExpanded(label)}
                     className={cn(
-                      'w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                      itemIsActive && 'bg-accent text-accent-foreground'
+                      'w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary/10 hover:text-primary',
+                      itemIsActive && 'bg-primary/15 text-primary font-medium'
                     )}
                   >
                     <div className='flex items-center gap-3'>
@@ -128,9 +135,9 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                             >
                               <div
                                 className={cn(
-                                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+                                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary/10 hover:text-primary',
                                   childIsActive &&
-                                    'bg-accent text-accent-foreground'
+                                    'bg-primary/15 text-primary font-medium'
                                 )}
                               >
                                 <child.icon className='h-4 w-4' />
@@ -150,8 +157,8 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
               <Link key={href} href={href!} className='block'>
                 <div
                   className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                    itemIsActive && 'bg-accent text-accent-foreground'
+                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary/10 hover:text-primary',
+                    itemIsActive && 'bg-primary/15 text-primary font-medium'
                   )}
                 >
                   <Icon className='h-4 w-4' />
@@ -185,7 +192,7 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
               variant='ghost'
               size='sm'
               onClick={logout}
-              className='w-full justify-start text-muted-foreground hover:text-foreground'
+              className='w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 rounded-lg'
             >
               <LogOut className='h-4 w-4 mr-2' />
               Logout
@@ -203,12 +210,19 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
           />
           <div
             ref={panelRef}
-            className='absolute inset-y-0 left-0 w-72 translate-x-0 transform bg-background p-2 shadow-xl transition-transform'
+            className='absolute inset-y-0 left-0 w-72 translate-x-0 transform bg-background shadow-xl transition-transform'
           >
-            <div className='h-14 border-b px-3 flex items-center text-base font-semibold tracking-tight'>
-              {title}
+            <div className='h-16 px-6 flex items-center bg-brand-gradient shadow-lg'>
+              <div className='flex items-center space-x-3'>
+                <div className='w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm'>
+                  <span className='text-white font-bold text-sm'>S</span>
+                </div>
+                <div className='text-xl font-bold tracking-tight text-white'>
+                  {title}
+                </div>
+              </div>
             </div>
-            <nav className='mt-2 space-y-1'>
+            <nav className='mt-2 space-y-1 p-2'>
               {filteredNavItems.map(item => {
                 const { href, label, icon: Icon, children } = item;
                 const itemIsActive = isActive(item);
@@ -220,8 +234,9 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                       <button
                         onClick={() => toggleExpanded(label)}
                         className={cn(
-                          'w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                          itemIsActive && 'bg-accent text-accent-foreground'
+                          'w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary/10 hover:text-primary',
+                          itemIsActive &&
+                            'bg-primary/15 text-primary font-medium'
                         )}
                       >
                         <div className='flex items-center gap-3'>
@@ -252,9 +267,9 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                                 >
                                   <div
                                     className={cn(
-                                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+                                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary/10 hover:text-primary',
                                       childIsActive &&
-                                        'bg-accent text-accent-foreground'
+                                        'bg-primary/15 text-primary font-medium'
                                     )}
                                   >
                                     <child.icon className='h-4 w-4' />
@@ -279,8 +294,8 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                   >
                     <div
                       className={cn(
-                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                        itemIsActive && 'bg-accent text-accent-foreground'
+                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-primary/10 hover:text-primary',
+                        itemIsActive && 'bg-primary/15 text-primary font-medium'
                       )}
                     >
                       <Icon className='h-4 w-4' />
@@ -320,7 +335,7 @@ export default function Sidebar({ title = 'IMS' }: SidebarProps) {
                   variant='ghost'
                   size='sm'
                   onClick={logout}
-                  className='w-full justify-start text-muted-foreground hover:text-foreground'
+                  className='w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 rounded-lg'
                 >
                   <LogOut className='h-4 w-4 mr-2' />
                   Logout

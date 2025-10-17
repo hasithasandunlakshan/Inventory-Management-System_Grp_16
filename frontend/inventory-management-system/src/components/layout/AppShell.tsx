@@ -35,7 +35,7 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className='min-h-dvh overflow-hidden'>
-      <Sidebar title='Inventory' />
+      <Sidebar title='Shop Mind' />
       <main className='md:ml-60 p-2 md:p-4 overflow-hidden'>
         <MobileMenuButton />
         {children}

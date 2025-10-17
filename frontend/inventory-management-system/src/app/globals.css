@@ -3,48 +3,97 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.9%;
+  /* Background Colors - from ManagerDashboardClient */
+  --background: 210 40% 98%;
+  --foreground: 210 60% 8%;
+
+  /* Card Colors */
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 3.9%;
+  --card-foreground: 210 60% 8%;
+
+  /* Popover Colors */
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 3.9%;
-  --primary: 0 0% 9%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 96.1%;
-  --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --accent: 0 0% 96.1%;
-  --accent-foreground: 0 0% 9%;
-  --destructive: 0 84.2% 60.2%;
+  --popover-foreground: 210 60% 8%;
+
+  /* Primary Brand Colors - from ManagerDashboardClient */
+  --primary: 205 65% 47%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary Brand Colors - from ManagerDashboardClient */
+  --secondary: 207 60% 36%;
+  --secondary-foreground: 0 0% 100%;
+
+  /* Muted Colors */
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 220 9% 46%;
+
+  /* Accent Colors - from ManagerDashboardClient */
+  --accent: 243 75% 59%;
+  --accent-foreground: 0 0% 100%;
+
+  /* Destructive/Error Colors */
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 0 0% 3.9%;
+
+  /* Success Colors */
+  --success: 160 84% 39%;
+  --success-foreground: 0 0% 100%;
+
+  /* Warning Colors */
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 100%;
+
+  /* Border & Input */
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 205 65% 47%;
+
+  /* Radius */
   --radius: 0.5rem;
+
+  /* Custom Brand Variables - EXACT colors from ManagerDashboardClient */
+  --brand-blue: #2a7cc7;
+  --brand-dark: #072033ff;
+  --brand-medium: #245e91ff;
+  --accent-blue: #6366f1;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-light: #f8f9fa;
+  --bg-gray: #f1f5f9;
+  --border-default: #e2e8f0;
+  --border-light: #f1f3f5;
+  --success-bg: #d1fae5;
+  --error-bg: #fee2e2;
+  --warning-bg: #fef3c7;
 }
 
 .dark {
-  --background: 0 0% 3.9%;
+  --background: 210 60% 8%;
   --foreground: 0 0% 98%;
-  --card: 0 0% 3.9%;
+  --card: 210 60% 10%;
   --card-foreground: 0 0% 98%;
-  --popover: 0 0% 3.9%;
+  --popover: 210 60% 10%;
   --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 0 0% 9%;
-  --secondary: 0 0% 14.9%;
+  --primary: 205 65% 55%;
+  --primary-foreground: 210 60% 8%;
+  --secondary: 207 60% 45%;
   --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 14.9%;
-  --muted-foreground: 0 0% 63.9%;
-  --accent: 0 0% 14.9%;
+  --muted: 210 40% 20%;
+  --muted-foreground: 220 9% 65%;
+  --accent: 243 75% 65%;
   --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 84% 50%;
   --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 14.9%;
-  --input: 0 0% 14.9%;
-  --ring: 0 0% 83.1%;
+  --success: 160 84% 45%;
+  --success-foreground: 0 0% 98%;
+  --warning: 38 92% 55%;
+  --warning-foreground: 0 0% 98%;
+  --border: 214 32% 25%;
+  --input: 214 32% 25%;
+  --ring: 205 65% 55%;
 }
 
 @layer base {
@@ -66,5 +115,56 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .bg-brand-gradient {
+    background: linear-gradient(
+      135deg,
+      var(--brand-blue) 0%,
+      var(--brand-medium) 100%
+    );
+  }
+
+  .bg-brand-gradient-reverse {
+    background: linear-gradient(
+      135deg,
+      var(--brand-medium) 0%,
+      var(--brand-blue) 100%
+    );
+  }
+
+  .bg-success-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      var(--success-bg) 100%
+    );
+  }
+
+  .bg-accent-gradient {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, #e0e7ff 100%);
+  }
+
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-elevated {
+    box-shadow: 0 4px 6px -1px rgba(42, 124, 199, 0.3);
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .bg-header-gradient {
+    background: linear-gradient(
+      135deg,
+      var(--brand-dark) 0%,
+      var(--brand-blue) 50%,
+      var(--brand-medium) 100%
+    );
   }
 }

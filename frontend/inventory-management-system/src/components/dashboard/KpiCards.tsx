@@ -8,6 +8,8 @@ import {
   InventoryCostResponse,
 } from '@/lib/services/inventoryService';
 import { TodayRevenueResponse } from '@/lib/types/revenue';
+import { DollarSign, ShoppingCart, Package, TrendingUp } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function KpiCards() {
   const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(
@@ -47,66 +49,88 @@ export default function KpiCards() {
     fetchData();
   }, []);
 
+  if (loading) {
+    return (
+      <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
+        {[1, 2, 3, 4].map(i => (
+          <Card key={i} className='bg-card border-border card-shadow'>
+            <CardHeader className='pb-2'>
+              <Skeleton className='h-4 w-24' />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className='h-8 w-32' />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   const kpis = [
     {
       label: "Today's Revenue",
-      value: loading
-        ? 'Loading...'
-        : todayRevenue
-          ? `$${todayRevenue.revenue.toFixed(2)}`
-          : 'Login Required',
-      error: !todayRevenue && !loading,
+      value: todayRevenue
+        ? `$${todayRevenue.revenue.toFixed(2)}`
+        : 'Login Required',
+      error: !todayRevenue,
+      icon: DollarSign,
+      gradient: true,
     },
     {
       label: "Today's Orders",
-      value: loading
-        ? 'Loading...'
-        : todayRevenue
-          ? todayRevenue.count.toString()
-          : 'Login Required',
-      error: !todayRevenue && !loading,
+      value: todayRevenue ? todayRevenue.count.toString() : 'Login Required',
+      error: !todayRevenue,
+      icon: ShoppingCart,
     },
     {
       label: 'Inventory Value',
-      value: loading
-        ? 'Loading...'
-        : inventoryCost
-          ? `$${inventoryCost.totalAvailableInventoryCost.toFixed(2)}`
-          : 'Login Required',
-      error: !inventoryCost && !loading,
+      value: inventoryCost
+        ? `$${inventoryCost.totalAvailableInventoryCost.toFixed(2)}`
+        : 'Login Required',
+      error: !inventoryCost,
+      icon: Package,
     },
     {
       label: 'Products in Stock',
-      value: loading
-        ? 'Loading...'
-        : inventoryCost
-          ? inventoryCost.totalProductsWithStock.toString()
-          : 'Login Required',
-      error: !inventoryCost && !loading,
+      value: inventoryCost
+        ? inventoryCost.totalProductsWithStock.toString()
+        : 'Login Required',
+      error: !inventoryCost,
+      icon: TrendingUp,
+      gradient: true,
     },
   ];
 
   return (
-    <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-      {kpis.map(kpi => (
-        <Card key={kpi.label}>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>{kpi.label}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${kpi.error ? 'text-red-500' : ''}`}
-            >
-              {kpi.value}
-            </div>
-            {kpi.error && (
-              <div className='text-xs text-red-500 mt-1'>
-                Please log in as Manager
+    <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
+      {kpis.map(kpi => {
+        const Icon = kpi.icon;
+        return (
+          <Card
+            key={kpi.label}
+            className={`border-border card-shadow ${kpi.gradient ? 'bg-success-gradient' : 'bg-card'}`}
+          >
+            <CardHeader className='pb-2'>
+              <CardTitle className='text-sm font-medium flex items-center text-muted-foreground'>
+                <Icon className='h-4 w-4 mr-2 text-primary' />
+                {kpi.label}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`text-3xl font-bold ${kpi.error ? 'text-destructive' : 'text-foreground'}`}
+              >
+                {kpi.value}
               </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+              {kpi.error && (
+                <div className='text-xs mt-1 text-destructive'>
+                  Please log in as Manager
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -112,11 +112,19 @@ class AuthService {
 
   // Get stored token
   getToken(): string | null {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      return null; // Server-side, no token available
+    }
     return localStorage.getItem(this.tokenKey);
   }
 
   // Get stored user info
   getUser(): UserInfo | null {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      return null; // Server-side, no user available
+    }
     const userStr = localStorage.getItem(this.userKey);
     return userStr ? JSON.parse(userStr) : null;
   }

@@ -1,58 +1,39 @@
-'use client';
+import ManagerDashboardClient from './ManagerDashboardClient';
+import { analyticsService } from '@/lib/services/analyticsService';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { FilterProvider } from '@/contexts/FilterContext';
-import FiltersControls from '../../../components/dashboard/FiltersControls';
-import KpiCards from '../../../components/dashboard/KpiCards';
-import AlertsTasks from '../../../components/dashboard/AlertsTasks';
-import NotificationBell from '@/components/NotificationBell';
-import QuickActions from '../../../components/dashboard/QuickActions';
-import RevenueDashboard from '../../../components/dashboard/RevenueDashboard';
-import InventoryAnalytics from '../../../components/dashboard/InventoryAnalytics';
-import SalesTrendsChart from '../../../components/dashboard/SalesTrendsChart';
-import SupplierPerformanceChart from '../../../components/dashboard/SupplierPerformanceChart';
+// This is a Server Component that fetches data at build time
+export const revalidate = 300; // Revalidate every 5 minutes (ISR)
 
-export default function ManagerDashboard() {
-  const { user } = useAuth();
+async function fetchDashboardData() {
+  try {
+    // Only fetch analytics data on the server (inventory and sales)
+    // Logistics data will be fetched on the client side due to auth requirements
+    const [inventoryAnalytics, salesAnalytics] = await Promise.allSettled([
+      analyticsService.getInventoryAnalytics().catch(() => null),
+      analyticsService.getSalesAnalytics().catch(() => null),
+    ]);
 
-  return (
-    <FilterProvider>
-      <div className='space-y-6'>
-        <div className='space-y-2'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <h1 className='text-2xl font-semibold tracking-tight'>
-                Manager Dashboard
-              </h1>
-              <p className='text-sm text-muted-foreground'>
-                Welcome back, {user?.fullName || user?.username}!
-              </p>
-            </div>
-            <NotificationBell />
-          </div>
-        </div>
+    return {
+      inventoryData:
+        inventoryAnalytics.status === 'fulfilled'
+          ? inventoryAnalytics.value
+          : null,
+      salesData:
+        salesAnalytics.status === 'fulfilled' ? salesAnalytics.value : null,
+      logisticsData: null, // Will be fetched client-side
+    };
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    return {
+      inventoryData: null,
+      salesData: null,
+      logisticsData: null,
+    };
+  }
+}
 
-        <FiltersControls />
-        <KpiCards />
+export default async function ManagerDashboard() {
+  const dashboardData = await fetchDashboardData();
 
-        {/* Revenue Dashboard - Full Width */}
-        <RevenueDashboard />
-
-        {/* Inventory Analytics - Full Width */}
-        <InventoryAnalytics />
-
-        {/* Sales Trends - Full Width */}
-        <SalesTrendsChart />
-
-        {/* Supplier Performance - Full Width */}
-        <SupplierPerformanceChart />
-
-        {/* Quick Actions - Bottom of Page */}
-        <QuickActions />
-
-        {/* Alerts and Tasks - Bottom of Page */}
-        <AlertsTasks />
-      </div>
-    </FilterProvider>
-  );
+  return <ManagerDashboardClient initialData={dashboardData} />;
 }
