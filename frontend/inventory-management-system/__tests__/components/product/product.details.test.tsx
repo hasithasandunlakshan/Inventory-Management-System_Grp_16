@@ -10,13 +10,13 @@ jest.mock('next/image', () => ({
   default: (props: any) => <img alt={props.alt} />,
 }));
 
-jest.mock('@/lib/utils/productUtils', () => ({
+jest.mock('@/lib/utils/product/productUtils', () => ({
   productUtils: {
     editProduct: jest.fn(),
   },
 }));
 
-const { productUtils } = jest.requireMock('@/lib/utils/productUtils');
+const { productUtils } = jest.requireMock('@/lib/utils/product/productUtils');
 
 const product = {
   id: 'p1',

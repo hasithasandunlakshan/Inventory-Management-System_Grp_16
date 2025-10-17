@@ -1,4 +1,4 @@
-import { createAuthenticatedRequestOptions } from '../utils/authUtils';
+import { createAuthenticatedRequestOptions } from '../utils/auth/authUtils';
 
 // Profitability Analysis Service
 const ORDER_SERVICE_URL =

@@ -5,7 +5,7 @@ import {
   DriverStatus,
   DriverStats,
   DriverFilters,
-} from '@/types/driver';
+} from '@/lib/types/driver';
 
 /**
  * Validates the driver registration form

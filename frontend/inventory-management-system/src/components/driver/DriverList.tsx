@@ -4,8 +4,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, UserCheck, AlertCircle } from 'lucide-react';
-import { DriverProfile, DriverFilters } from '@/types/driver';
-import { filterDrivers } from '@/utils/driverUtils';
+import { DriverProfile, DriverFilters } from '@/lib/types/driver';
+import { filterDrivers } from '@/lib/utils/driver/driverUtils';
 import DriverCard from './DriverCard';
 
 interface DriverListProps {

@@ -95,7 +95,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { PurchaseOrderStats } from '@/components/PurchaseOrderStats';
 import { SupplierPageStats } from '@/components/SupplierPageStats';
 import { userService, UserInfo } from '@/lib/services/userService';
-import { getDistinctColor } from '@/lib/utils/colorUtils';
+import { getDistinctColor } from '@/lib/utils/color/colorUtils';
 
 // Define DeliveryLogCreateRequest to match the imported type
 interface DeliveryLogCreateRequest {

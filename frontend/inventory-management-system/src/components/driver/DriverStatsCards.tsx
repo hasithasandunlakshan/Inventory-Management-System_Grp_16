@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, AlertCircle } from 'lucide-react';
-import { DriverStats } from '@/types/driver';
+import { DriverStats } from '@/lib/types/driver';
 
 interface DriverStatsCardsProps {
   stats: DriverStats;

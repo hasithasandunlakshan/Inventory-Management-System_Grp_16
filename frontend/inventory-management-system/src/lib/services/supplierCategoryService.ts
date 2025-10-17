@@ -2,7 +2,7 @@ import {
   SupplierCategory,
   SupplierCategoryCreateRequest,
 } from '../types/supplier';
-import { createAuthenticatedRequestOptions } from '../utils/authUtils';
+import { createAuthenticatedRequestOptions } from '../utils/auth/authUtils';
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8082'}/api/supplier-categories`; // Through API Gateway
 

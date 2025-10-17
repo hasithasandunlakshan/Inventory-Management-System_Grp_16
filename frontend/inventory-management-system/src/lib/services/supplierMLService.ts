@@ -1,4 +1,4 @@
-import { createAuthenticatedRequestOptions } from '../utils/authUtils';
+import { createAuthenticatedRequestOptions } from '../utils/auth/authUtils';
 
 // Types for ML prediction data
 export interface SupplierPredictionRequest {

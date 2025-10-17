@@ -1,4 +1,4 @@
-import { MonthlyRevenueData } from '@/types/revenue';
+import { MonthlyRevenueData } from '@/lib/types/revenue';
 
 export const formatCurrency = (
   amount: number,

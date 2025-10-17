@@ -1,5 +1,5 @@
 import { Category, CreateCategoryRequest } from '../types/product';
-import { createAuthenticatedRequestOptions } from '../utils/authUtils';
+import { createAuthenticatedRequestOptions } from '../utils/auth/authUtils';
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083'}/api/categories`;
 

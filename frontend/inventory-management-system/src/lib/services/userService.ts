@@ -1,4 +1,4 @@
-import { createAuthenticatedRequestOptions } from '../utils/authUtils';
+import { createAuthenticatedRequestOptions } from '../utils/auth/authUtils';
 
 const USER_SERVICE_URL =
   process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';

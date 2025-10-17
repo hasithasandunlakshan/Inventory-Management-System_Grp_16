@@ -14,7 +14,7 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
-import { productUtils } from '@/lib/utils/productUtils';
+import { productUtils } from '@/lib/utils/product/productUtils';
 
 interface ProductCardProps {
   readonly id: number;

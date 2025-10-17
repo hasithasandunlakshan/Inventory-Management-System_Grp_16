@@ -1,4 +1,4 @@
-import { authService } from '../services/authService';
+import { authService } from '../../services/authService';
 
 /**
  * Create authenticated fetch request options for file uploads

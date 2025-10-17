@@ -8,8 +8,8 @@ import {
   DriverProfile,
   UserDropdownInfo,
 } from '@/lib/services/driverService';
-import { DriverFilters, DriverStats } from '@/types/driver';
-import { calculateDriverStats } from '@/utils/driverUtils';
+import { DriverFilters, DriverStats } from '@/lib/types/driver';
+import { calculateDriverStats } from '@/lib/utils/driver/driverUtils';
 import DriverRegistrationModal from '@/components/driver/DriverRegistrationModal';
 import DriverStatsCards from '@/components/driver/DriverStatsCards';
 import DriverSearch from '@/components/driver/DriverSearch';

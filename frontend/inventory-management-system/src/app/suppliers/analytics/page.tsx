@@ -44,7 +44,7 @@ import { enhancedSupplierService } from '@/lib/services/enhancedSupplierService'
 import { supplierCategoryService } from '@/lib/services/supplierCategoryService';
 import { purchaseOrderService } from '@/lib/services/purchaseOrderService';
 import { useAuth } from '@/contexts/AuthContext';
-import { getDistinctColor } from '@/lib/utils/colorUtils';
+import { getDistinctColor } from '@/lib/utils/color/colorUtils';
 import {
   EnhancedSupplier,
   SupplierCategory,

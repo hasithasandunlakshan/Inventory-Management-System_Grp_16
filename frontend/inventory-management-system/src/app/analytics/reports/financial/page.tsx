@@ -24,7 +24,7 @@ import type {
   TodayRevenueResponse,
   MonthlyRevenueResponse,
   StripeStatsResponse,
-} from '@/types/revenue';
+} from '@/lib/types/revenue';
 
 // Beautiful Icon Components
 const Icons = {

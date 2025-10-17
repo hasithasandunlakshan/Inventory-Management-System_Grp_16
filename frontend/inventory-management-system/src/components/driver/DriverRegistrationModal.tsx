@@ -25,14 +25,14 @@ import {
   DriverRegistrationForm,
   FormErrors,
   DriverRegistrationRequest,
-} from '@/types/driver';
+} from '@/lib/types/driver';
 import {
   validateDriverForm,
   getInitialDriverForm,
   getMinLicenseExpiryDate,
   handleFormFieldChange,
   handleUserSelectionChange,
-} from '@/utils/driverUtils';
+} from '@/lib/utils/driver/driverUtils';
 import { driverService } from '@/lib/services/driverService';
 
 interface DriverRegistrationModalProps {
