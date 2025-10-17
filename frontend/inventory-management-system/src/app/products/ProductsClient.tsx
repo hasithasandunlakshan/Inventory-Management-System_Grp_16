@@ -293,10 +293,10 @@ export default function ProductsClient({
         </div>
       </div>
 
-      {/* Products Grid */}
-      <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-4'>
+      {/* Products Grid - More compact, more items per row */}
+      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3'>
         {products.length === 0 ? (
-          <p className='col-span-full text-center text-gray-500'>
+          <p className='col-span-full text-center text-gray-500 py-8'>
             {selectedCategory
               ? 'No products found in this category'
               : 'No products available'}
