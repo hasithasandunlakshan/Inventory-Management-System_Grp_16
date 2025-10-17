@@ -5,7 +5,11 @@ import OrderFilters from '@/components/orders/OrderFilters';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Order, orderService, OrdersResponse } from '@/services/orderService';
+import {
+  Order,
+  orderService,
+  OrdersResponse,
+} from '@/lib/services/orderService';
 import {
   CheckCircle,
   DollarSign,
@@ -44,10 +48,10 @@ export default function OrdersPage() {
     try {
       setLoading(true);
       setError(null);
-      const response: OrdersResponse = await orderService.getAllOrders(
+      const response = (await orderService.getAllOrders(
         currentPage,
         pageSize
-      );
+      )) as OrdersResponse;
 
       if (response.success) {
         setOrders(response.orders);

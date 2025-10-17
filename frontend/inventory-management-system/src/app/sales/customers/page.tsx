@@ -13,7 +13,11 @@ import {
   CheckCircle,
   UserCheck,
 } from 'lucide-react';
-import { userService, UserInfo, UsersResponse } from '@/services/userService';
+import {
+  userService,
+  UserInfo,
+  UsersResponse,
+} from '@/lib/services/userService';
 import CustomerDetailsModal from '@/components/customers/CustomerDetailsModal';
 import CustomerFilters from '@/components/customers/CustomerFilters';
 
@@ -298,7 +302,7 @@ export default function CustomersPage() {
                         {customer.phoneNumber || 'N/A'}
                       </td>
                       <td className='py-3 px-4'>
-                        {getStatusBadge(customer.accountStatus)}
+                        {getStatusBadge(customer.accountStatus || 'ACTIVE')}
                       </td>
                       <td className='py-3 px-4'>
                         {customer.emailVerified ? (
@@ -311,7 +315,9 @@ export default function CustomersPage() {
                         )}
                       </td>
                       <td className='py-3 px-4 text-gray-600'>
-                        {formatDate(customer.createdAt)}
+                        {formatDate(
+                          customer.createdAt || new Date().toISOString()
+                        )}
                       </td>
                       <td className='py-3 px-4'>
                         <Button

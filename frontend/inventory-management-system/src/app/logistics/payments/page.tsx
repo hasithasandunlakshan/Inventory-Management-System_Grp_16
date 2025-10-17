@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PaymentData, paymentService } from '@/services/paymentService';
+import { PaymentData, paymentService } from '@/lib/services/paymentService';
 import {
   Activity,
   AlertCircle,

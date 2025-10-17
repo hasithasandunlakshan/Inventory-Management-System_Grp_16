@@ -11,15 +11,22 @@ export interface UserInfo {
   email: string;
   fullName: string;
   role: string;
-  phoneNumber?: string;
-  profileImageUrl?: string;
+  phoneNumber?: string | null;
+  profileImageUrl?: string | null;
   latitude?: number;
   longitude?: number;
-  formattedAddress?: string;
+  formattedAddress?: string | null;
   accountStatus?: string;
   emailVerified?: boolean;
   createdAt?: string;
-  dateOfBirth?: string;
+  dateOfBirth?: string | null;
+}
+
+export interface UsersResponse {
+  success: boolean;
+  message: string;
+  users: UserInfo[];
+  totalUsers: number;
 }
 
 export const userService = {
@@ -207,5 +214,132 @@ export const userService = {
       }
       throw new Error('Failed to fetch all users - backend not available');
     }
+  },
+
+  /**
+   * Get users with "USER" role (for customer management)
+   */
+  async getUsersWithUserRole(): Promise<UsersResponse> {
+    try {
+      const USER_AUTH_BASE_URL = `${USER_SERVICE_URL}/api/auth`;
+      const token = localStorage.getItem('inventory_auth_token');
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${USER_AUTH_BASE_URL}/users`, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch users: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Filter users client-side
+   */
+  filterUsers(
+    users: UserInfo[],
+    filters: {
+      status?: string;
+      searchTerm?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    }
+  ): UserInfo[] {
+    return users.filter(user => {
+      // Status filter
+      if (
+        filters.status &&
+        filters.status !== 'all' &&
+        user.accountStatus?.toLowerCase() !== filters.status.toLowerCase()
+      ) {
+        return false;
+      }
+
+      // Date filters
+      if (filters.dateFrom || filters.dateTo) {
+        if (user.createdAt) {
+          const userDate = new Date(user.createdAt);
+          if (filters.dateFrom && userDate < new Date(filters.dateFrom)) {
+            return false;
+          }
+          if (filters.dateTo && userDate > new Date(filters.dateTo)) {
+            return false;
+          }
+        }
+      }
+
+      // Search term (search in username, email, full name, phone)
+      if (filters.searchTerm) {
+        const searchLower = filters.searchTerm.toLowerCase();
+        const matchesUsername = user.username
+          .toLowerCase()
+          .includes(searchLower);
+        const matchesEmail = user.email.toLowerCase().includes(searchLower);
+        const matchesName = user.fullName?.toLowerCase().includes(searchLower);
+        const matchesPhone = user.phoneNumber
+          ?.toLowerCase()
+          .includes(searchLower);
+
+        if (
+          !matchesUsername &&
+          !matchesEmail &&
+          !matchesName &&
+          !matchesPhone
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  },
+
+  /**
+   * Get user statistics
+   */
+  getUserStats(users: UserInfo[]) {
+    const totalUsers = users.length;
+    const activeUsers = users.filter(u => u.accountStatus === 'ACTIVE').length;
+    const verifiedUsers = users.filter(u => u.emailVerified).length;
+
+    // Get recent signups (last 7 days)
+    const lastWeek = new Date();
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    const recentSignups = users.filter(u => {
+      if (!u.createdAt) return false;
+      return new Date(u.createdAt) > lastWeek;
+    }).length;
+
+    // Get users by month
+    const thisMonth = new Date();
+    thisMonth.setDate(1);
+    const thisMonthSignups = users.filter(u => {
+      if (!u.createdAt) return false;
+      return new Date(u.createdAt) > thisMonth;
+    }).length;
+
+    return {
+      totalUsers,
+      activeUsers,
+      verifiedUsers,
+      recentSignups,
+      thisMonthSignups,
+      verificationRate: totalUsers > 0 ? (verifiedUsers / totalUsers) * 100 : 0,
+    };
   },
 };

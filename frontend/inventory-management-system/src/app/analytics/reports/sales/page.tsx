@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 
 import { orderService } from '@/lib/services/orderService';
-import { revenueService } from '@/services/revenueService';
+import { revenueService } from '@/lib/services/revenueService';
 import type {
   TodayRevenueResponse,
   MonthlyRevenueResponse,

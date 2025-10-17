@@ -1,13 +1,20 @@
 // Notification Service for API calls
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL || 'http://34.136.119.127:8087'}/api`;
 
+export interface Notification {
+  notificationId: number;
+  userId: number;
+  message: string;
+  type: string;
+  read: boolean;
+  createdAt: string;
+}
+
 export const notificationService = {
   /**
    * Get notification history for a specific user
-   * @param {number} userId - The user ID
-   * @returns {Promise} - Promise with notification history
    */
-  async getUserNotifications(userId) {
+  async getUserNotifications(userId: number): Promise<Notification[]> {
     try {
       const response = await fetch(
         `${API_BASE_URL}/notifications/user/${userId}`,
@@ -34,10 +41,8 @@ export const notificationService = {
 
   /**
    * Mark a notification as read
-   * @param {number} notificationId - The notification ID
-   * @returns {Promise} - Promise with updated notification
    */
-  async markAsRead(notificationId) {
+  async markAsRead(notificationId: number): Promise<Notification> {
     try {
       const response = await fetch(
         `${API_BASE_URL}/notifications/${notificationId}/read`,
@@ -62,9 +67,8 @@ export const notificationService = {
 
   /**
    * Get all notifications (admin function)
-   * @returns {Promise} - Promise with all notifications
    */
-  async getAllNotifications() {
+  async getAllNotifications(): Promise<Notification[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/notifications`, {
         method: 'GET',

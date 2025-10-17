@@ -10,7 +10,7 @@ import {
 import { useEffect, useState } from 'react';
 import { LineChart, BarChart, AreaChart } from '@/components/charts';
 import { TrendingUp, DollarSign, ShoppingCart, Users } from 'lucide-react';
-import { analyticsService } from '@/services/analyticsService';
+import { analyticsService } from '@/lib/services/analyticsService';
 
 interface SalesData {
   date: string;

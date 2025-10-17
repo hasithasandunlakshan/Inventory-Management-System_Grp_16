@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { revenueService } from '@/services/revenueService';
+import { revenueService } from '@/lib/services/revenueService';
 import type {
   TodayRevenueResponse,
   MonthlyRevenueResponse,

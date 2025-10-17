@@ -10,7 +10,7 @@ import {
 import { useEffect, useState } from 'react';
 import { BarChart, DonutChart, LineChart } from '@/components/charts';
 import { Package } from 'lucide-react';
-import { analyticsService } from '@/services/analyticsService';
+import { analyticsService } from '@/lib/services/analyticsService';
 
 interface InventoryData {
   lowStock: number;

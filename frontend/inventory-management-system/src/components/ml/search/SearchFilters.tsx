@@ -183,7 +183,9 @@ export default function SearchFilters({
           <div className='space-y-2'>
             <Slider
               value={priceRange}
-              onValueChange={value => setPriceRange(value as [number, number])}
+              onValueChange={(value: number[]) =>
+                setPriceRange(value as [number, number])
+              }
               max={1000}
               min={0}
               step={10}

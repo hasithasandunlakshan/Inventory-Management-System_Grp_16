@@ -10,7 +10,7 @@ import {
 import { useEffect, useState } from 'react';
 import { BarChart, LineChart } from '@/components/charts';
 import { Truck, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import { analyticsService } from '@/services/analyticsService';
+import { analyticsService } from '@/lib/services/analyticsService';
 
 interface SupplierData {
   name: string;
