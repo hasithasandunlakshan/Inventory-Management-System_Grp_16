@@ -197,7 +197,7 @@ export default function RevenueDashboard() {
               dataKey='revenue'
               xAxisKey='name'
               height={400}
-              color='#3b82f6'
+              color='#2A7CC7'
               label='Revenue ($)'
             />
           </div>
@@ -213,7 +213,7 @@ export default function RevenueDashboard() {
               dataKey='orders'
               xAxisKey='name'
               height={400}
-              color='#10b981'
+              color='#245e91ff'
               label='Orders'
             />
           </div>
