@@ -14,7 +14,7 @@ jest.mock('next/image', () => ({
 }));
 
 // Mock productUtils
-jest.mock('@/lib/utils/productUtils', () => ({
+jest.mock('@/lib/utils/product/productUtils', () => ({
   productUtils: {
     viewProductDetails: jest.fn(),
   },
@@ -30,7 +30,7 @@ const baseProps = {
   barcode: 'ABC-123',
 };
 
-const { productUtils } = jest.requireMock('@/lib/utils/productUtils');
+const { productUtils } = jest.requireMock('@/lib/utils/product/productUtils');
 
 describe('ProductCard', () => {
   beforeEach(() => {
