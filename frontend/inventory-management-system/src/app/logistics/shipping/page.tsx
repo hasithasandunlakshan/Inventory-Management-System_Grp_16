@@ -269,8 +269,8 @@ function kMeansCluster(points: number[][], k: number): number[] {
 
 // Default fallback coordinates for orders without location data
 const DEFAULT_LOCATION = {
-  lat: 6.9271,
-  lng: 79.8612,
+    lat: 6.9271,
+    lng: 79.8612,
   address: 'Colombo, Sri Lanka (Default)',
 };
 
@@ -834,9 +834,9 @@ function ShippingPage() {
     } else {
       // Fallback to original order
       waypoints = cluster.map(order => ({
-        location: { lat: order.lat, lng: order.lng },
-        stopover: true,
-      }));
+      location: { lat: order.lat, lng: order.lng },
+      stopover: true,
+    }));
     }
 
     // Route: Store -> Optimized Order -> Back to Store
@@ -983,7 +983,7 @@ function ShippingPage() {
                   <span className='font-semibold text-blue-600'>
                     {assignedOrderIds.size}
                   </span>
-                </div>
+              </div>
               )}
 
               <div className='text-sm text-gray-500'>
