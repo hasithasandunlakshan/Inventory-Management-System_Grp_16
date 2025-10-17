@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AlertTriangle,
@@ -83,15 +83,67 @@ export default function InventoryTabClient({
   initialStockMovement,
   initialCategoryData,
 }: InventoryTabProps) {
-  const [inventoryData] = useState<InventoryAnalytics | null>(
+  const [inventoryData, setInventoryData] = useState<InventoryAnalytics | null>(
     initialInventoryData
   );
-  const [stockMovement] = useState<StockMovementData[]>(initialStockMovement);
-  const [categoryData] =
+  const [stockMovement, setStockMovement] =
+    useState<StockMovementData[]>(initialStockMovement);
+  const [categoryData, setCategoryData] =
     useState<Array<{ category: string; count: number; value: number }>>(
       initialCategoryData
     );
-  const error = initialInventoryData ? null : 'Failed to load initial data';
+  const [loading, setLoading] = useState(!initialInventoryData);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // If no initial data, fetch it
+    if (!initialInventoryData) {
+      fetchInventoryData();
+    }
+  }, [initialInventoryData]);
+
+  const fetchInventoryData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch inventory analytics (adjust the URL based on your API)
+      const response = await fetch('/api/analytics/inventory', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch inventory data');
+
+      const data = await response.json();
+      setInventoryData(data.inventoryData || null);
+      setStockMovement(data.stockMovement || []);
+      setCategoryData(data.categoryData || []);
+    } catch (err) {
+      setError('Failed to load inventory data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card
+        style={{
+          backgroundColor: CustomerColors.bgCard,
+          border: `1px solid ${CustomerColors.borderDefault}`,
+        }}
+      >
+        <CardContent className='p-6'>
+          <div className='text-center'>
+            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
+            <p className='text-gray-600'>Loading inventory data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (error || !inventoryData) {
     return (

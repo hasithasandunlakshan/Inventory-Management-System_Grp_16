@@ -21,15 +21,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Route,
-  Plus,
-  Eye,
-  Search,
-  UserCheck,
-  Car,
-  Calendar,
-} from 'lucide-react';
+import { Route, Plus, Search, UserCheck, Car, RefreshCw } from 'lucide-react';
 import {
   driverService,
   DriverProfile,
@@ -39,6 +31,7 @@ import {
 } from '@/lib/services/driverService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import AssignmentCard from '@/components/assignment/AssignmentCard';
 
 interface AssignmentsClientProps {
   initialDrivers: DriverProfile[];
@@ -183,6 +176,10 @@ export default function AssignmentsClient({
     window.location.href = `/assignments/${assignmentId}`;
   };
 
+  const handleUnassign = async (assignment: MinimalAssignment) => {
+    toast.info('Unassign feature coming soon!');
+  };
+
   if (loading) {
     return (
       <div className='flex items-center justify-center h-64'>
@@ -193,133 +190,184 @@ export default function AssignmentsClient({
 
   return (
     <div className='space-y-6'>
-      {/* Header */}
-      <div className='flex justify-between items-center'>
-        <div>
-          <h1 className='text-3xl font-bold'>Driver-Vehicle Assignments</h1>
-          <p className='text-gray-600'>Manage driver and vehicle assignments</p>
-        </div>
-        {canManageAssignments && (
-          <Dialog
-            open={showAssignmentModal}
-            onOpenChange={setShowAssignmentModal}
-          >
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className='h-4 w-4 mr-2' />
-                Create Assignment
-              </Button>
-            </DialogTrigger>
-            <DialogContent className='max-w-lg'>
-              <DialogHeader>
-                <DialogTitle>Create New Assignment</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreateAssignment} className='space-y-4'>
-                <div>
-                  <Label htmlFor='driverId'>Select Driver</Label>
-                  <Select
-                    value={assignmentForm.driverId.toString()}
-                    onValueChange={value =>
-                      setAssignmentForm({
-                        ...assignmentForm,
-                        driverId: Number(value),
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder='Choose an available driver' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableDrivers.map(driver => (
-                        <SelectItem
-                          key={driver.driverId}
-                          value={driver.driverId.toString()}
-                        >
-                          License: {driver.licenseNumber} (Class:{' '}
-                          {driver.licenseClass})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {availableDrivers.length === 0 && (
-                    <p className='text-sm text-gray-500 mt-1'>
-                      No available drivers
-                    </p>
-                  )}
-                </div>
+      {/* Blue Header Card */}
+      <Card
+        className='border-0 shadow-lg'
+        style={{
+          background: 'linear-gradient(135deg, #2A7CC7 0%, #245e91ff 100%)',
+        }}
+      >
+        <CardContent className='p-6'>
+          <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
+            {/* Title Section */}
+            <div className='flex items-center gap-3'>
+              <div className='p-2 bg-white/20 rounded-lg'>
+                <Route className='h-6 w-6 text-white' />
+              </div>
+              <div>
+                <h1 className='text-2xl font-bold text-white'>
+                  Driver-Vehicle Assignments
+                </h1>
+                <p className='text-white/90 text-sm'>
+                  Manage driver and vehicle assignments •{' '}
+                  {activeAssignments.length} active assignments
+                </p>
+              </div>
+            </div>
 
-                <div>
-                  <Label htmlFor='vehicleId'>Select Vehicle</Label>
-                  <Select
-                    value={assignmentForm.vehicleId.toString()}
-                    onValueChange={value =>
-                      setAssignmentForm({
-                        ...assignmentForm,
-                        vehicleId: Number(value),
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder='Choose an available vehicle' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableVehicles.map(vehicle => (
-                        <SelectItem
-                          key={vehicle.vehicleId}
-                          value={vehicle.vehicleId.toString()}
-                        >
-                          {vehicle.vehicleNumber} - {vehicle.vehicleType} (
-                          {vehicle.capacity}kg)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {availableVehicles.length === 0 && (
-                    <p className='text-sm text-gray-500 mt-1'>
-                      No available vehicles
-                    </p>
-                  )}
-                </div>
+            {/* Controls Section */}
+            <div className='flex flex-col sm:flex-row gap-3'>
+              {/* Search Input */}
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/70' />
+                <Input
+                  placeholder='Search assignments...'
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className='pl-10 h-11 bg-white/95 border-white/20 hover:bg-white text-gray-900 placeholder:text-gray-500 focus:border-white/40 focus:ring-white/20'
+                />
+              </div>
 
-                <div>
-                  <Label htmlFor='notes'>Notes (Optional)</Label>
-                  <Textarea
-                    id='notes'
-                    value={assignmentForm.notes}
-                    onChange={e =>
-                      setAssignmentForm({
-                        ...assignmentForm,
-                        notes: e.target.value,
-                      })
-                    }
-                    placeholder='Add any assignment notes...'
-                    rows={3}
-                  />
-                </div>
+              {/* Action Buttons */}
+              <div className='flex gap-2'>
+                <Button
+                  onClick={loadData}
+                  variant='outline'
+                  size='sm'
+                  className='h-11 px-4 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40'
+                >
+                  <RefreshCw className='h-4 w-4 mr-2' />
+                  Refresh
+                </Button>
 
-                <div className='flex justify-end space-x-2'>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={() => setShowAssignmentModal(false)}
+                {canManageAssignments && (
+                  <Dialog
+                    open={showAssignmentModal}
+                    onOpenChange={setShowAssignmentModal}
                   >
-                    Cancel
-                  </Button>
-                  <Button
-                    type='submit'
-                    disabled={
-                      availableDrivers.length === 0 ||
-                      availableVehicles.length === 0
-                    }
-                  >
-                    Create Assignment
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
+                    <DialogTrigger asChild>
+                      <Button className='h-11 px-4 bg-white text-blue-700 hover:bg-blue-50 shadow-md'>
+                        <Plus className='h-4 w-4 mr-2' />
+                        New Assignment
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className='max-w-lg'>
+                      <DialogHeader>
+                        <DialogTitle>Create New Assignment</DialogTitle>
+                      </DialogHeader>
+                      <form
+                        onSubmit={handleCreateAssignment}
+                        className='space-y-4'
+                      >
+                        <div>
+                          <Label htmlFor='driverId'>Select Driver</Label>
+                          <Select
+                            value={assignmentForm.driverId.toString()}
+                            onValueChange={value =>
+                              setAssignmentForm({
+                                ...assignmentForm,
+                                driverId: Number(value),
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Choose an available driver' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableDrivers.map(driver => (
+                                <SelectItem
+                                  key={driver.driverId}
+                                  value={driver.driverId.toString()}
+                                >
+                                  License: {driver.licenseNumber} (Class:{' '}
+                                  {driver.licenseClass})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {availableDrivers.length === 0 && (
+                            <p className='text-sm text-gray-500 mt-1'>
+                              No available drivers
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor='vehicleId'>Select Vehicle</Label>
+                          <Select
+                            value={assignmentForm.vehicleId.toString()}
+                            onValueChange={value =>
+                              setAssignmentForm({
+                                ...assignmentForm,
+                                vehicleId: Number(value),
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Choose an available vehicle' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableVehicles.map(vehicle => (
+                                <SelectItem
+                                  key={vehicle.vehicleId}
+                                  value={vehicle.vehicleId.toString()}
+                                >
+                                  {vehicle.vehicleNumber} -{' '}
+                                  {vehicle.vehicleType} ({vehicle.capacity}kg)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {availableVehicles.length === 0 && (
+                            <p className='text-sm text-gray-500 mt-1'>
+                              No available vehicles
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor='notes'>Notes (Optional)</Label>
+                          <Textarea
+                            id='notes'
+                            value={assignmentForm.notes}
+                            onChange={e =>
+                              setAssignmentForm({
+                                ...assignmentForm,
+                                notes: e.target.value,
+                              })
+                            }
+                            placeholder='Add any assignment notes...'
+                            rows={3}
+                          />
+                        </div>
+
+                        <div className='flex justify-end space-x-2'>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            onClick={() => setShowAssignmentModal(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type='submit'
+                            disabled={
+                              availableDrivers.length === 0 ||
+                              availableVehicles.length === 0
+                            }
+                          >
+                            Create Assignment
+                          </Button>
+                        </div>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
@@ -410,60 +458,17 @@ export default function AssignmentsClient({
                 )}
               </div>
             ) : (
-              <div className='space-y-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 {activeAssignments.map(assignment => (
-                  <div
+                  <AssignmentCard
                     key={assignment.assignmentId}
-                    className='p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer'
-                    onClick={() =>
+                    assignment={assignment}
+                    onViewDetails={() =>
                       handleViewAssignment(assignment.assignmentId)
                     }
-                  >
-                    <div className='flex items-center justify-between mb-2'>
-                      <div className='flex items-center space-x-2'>
-                        <Badge variant='default'>ACTIVE</Badge>
-                        <span className='text-sm text-gray-500'>
-                          #{assignment.assignmentId}
-                        </span>
-                      </div>
-                      <Button variant='outline' size='sm'>
-                        <Eye className='h-4 w-4' />
-                      </Button>
-                    </div>
-                    <div className='space-y-1'>
-                      <div className='flex items-center space-x-2'>
-                        <UserCheck className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm font-medium'>
-                          {assignment.driverName}
-                        </span>
-                      </div>
-                      <div className='flex items-center space-x-2'>
-                        <Car className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm font-medium'>
-                          {assignment.vehicleNumber}
-                        </span>
-                      </div>
-                      <div className='flex items-center space-x-2'>
-                        <Calendar className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm'>
-                          Assigned: {formatDate(assignment.assignedAt)}
-                        </span>
-                      </div>
-                      {assignment.assignedByName && (
-                        <div className='flex items-center space-x-2'>
-                          <UserCheck className='h-4 w-4 text-gray-400' />
-                          <span className='text-sm text-gray-600'>
-                            Assigned by: {assignment.assignedByName}
-                          </span>
-                        </div>
-                      )}
-                      {assignment.notes && (
-                        <p className='text-sm text-gray-600 mt-2'>
-                          Notes: {assignment.notes}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                    onUnassign={() => handleUnassign(assignment)}
+                    showActions={canManageAssignments}
+                  />
                 ))}
               </div>
             )}
@@ -485,72 +490,17 @@ export default function AssignmentsClient({
                 <p className='text-gray-500'>No assignments found</p>
               </div>
             ) : (
-              <div className='space-y-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 {filteredAssignments.map(assignment => (
-                  <div
+                  <AssignmentCard
                     key={assignment.assignmentId}
-                    className='p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer'
-                    onClick={() =>
+                    assignment={assignment}
+                    onViewDetails={() =>
                       handleViewAssignment(assignment.assignmentId)
                     }
-                  >
-                    <div className='flex items-center justify-between mb-2'>
-                      <div className='flex items-center space-x-2'>
-                        <Badge
-                          variant={getStatusBadgeVariant(assignment.status)}
-                        >
-                          {assignment.status}
-                        </Badge>
-                        <span className='text-sm text-gray-500'>
-                          #{assignment.assignmentId}
-                        </span>
-                      </div>
-                      <Button variant='outline' size='sm'>
-                        <Eye className='h-4 w-4' />
-                      </Button>
-                    </div>
-                    <div className='space-y-1'>
-                      <div className='flex items-center space-x-2'>
-                        <UserCheck className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm font-medium'>
-                          {assignment.driverName}
-                        </span>
-                      </div>
-                      <div className='flex items-center space-x-2'>
-                        <Car className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm font-medium'>
-                          {assignment.vehicleNumber}
-                        </span>
-                      </div>
-                      <div className='flex items-center space-x-2'>
-                        <Calendar className='h-4 w-4 text-gray-400' />
-                        <span className='text-sm'>
-                          Assigned: {formatDate(assignment.assignedAt)}
-                        </span>
-                      </div>
-                      {assignment.unassignedAt && (
-                        <div className='flex items-center space-x-2'>
-                          <Calendar className='h-4 w-4 text-gray-400' />
-                          <span className='text-sm'>
-                            Unassigned: {formatDate(assignment.unassignedAt)}
-                          </span>
-                        </div>
-                      )}
-                      {assignment.assignedByName && (
-                        <div className='flex items-center space-x-2'>
-                          <UserCheck className='h-4 w-4 text-gray-400' />
-                          <span className='text-sm text-gray-600'>
-                            Assigned by: {assignment.assignedByName}
-                          </span>
-                        </div>
-                      )}
-                      {assignment.notes && (
-                        <p className='text-sm text-gray-600 mt-2'>
-                          Notes: {assignment.notes}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                    onUnassign={() => handleUnassign(assignment)}
+                    showActions={canManageAssignments}
+                  />
                 ))}
               </div>
             )}

@@ -9,11 +9,10 @@ import { filterDrivers } from '@/lib/utils/driver/driverUtils';
 import DriverCard from './DriverCard';
 
 interface DriverListProps {
-  drivers: DriverProfile[];
-  availableDrivers: DriverProfile[];
-  filters: DriverFilters;
-  canManageDrivers: boolean;
-  onViewDriverDetails?: (driver: DriverProfile) => void;
+  readonly drivers: DriverProfile[];
+  readonly availableDrivers: DriverProfile[];
+  readonly filters: DriverFilters;
+  readonly canManageDrivers: boolean;
 }
 
 interface EmptyStateProps {
@@ -35,7 +34,6 @@ export default function DriverList({
   availableDrivers,
   filters,
   canManageDrivers,
-  onViewDriverDetails,
 }: DriverListProps) {
   const filteredDrivers = filterDrivers(drivers, filters);
   const busyDrivers = drivers.filter(d => d.availabilityStatus === 'BUSY');
@@ -68,13 +66,9 @@ export default function DriverList({
                 }
               />
             ) : (
-              <div className='space-y-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
                 {filteredDrivers.map(driver => (
-                  <DriverCard
-                    key={driver.driverId}
-                    driver={driver}
-                    onViewDetails={onViewDriverDetails}
-                  />
+                  <DriverCard key={driver.driverId} driver={driver} />
                 ))}
               </div>
             )}
@@ -91,13 +85,9 @@ export default function DriverList({
             {availableDrivers.length === 0 ? (
               <EmptyState icon={UserCheck} message='No available drivers' />
             ) : (
-              <div className='space-y-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
                 {availableDrivers.map(driver => (
-                  <DriverCard
-                    key={driver.driverId}
-                    driver={driver}
-                    onViewDetails={onViewDriverDetails}
-                  />
+                  <DriverCard key={driver.driverId} driver={driver} />
                 ))}
               </div>
             )}
@@ -114,12 +104,11 @@ export default function DriverList({
             {filteredBusyDrivers.length === 0 ? (
               <EmptyState icon={AlertCircle} message='No busy drivers' />
             ) : (
-              <div className='space-y-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
                 {filteredBusyDrivers.map(driver => (
                   <DriverCard
                     key={driver.driverId}
                     driver={driver}
-                    onViewDetails={onViewDriverDetails}
                     showVehicleInfo={true}
                   />
                 ))}

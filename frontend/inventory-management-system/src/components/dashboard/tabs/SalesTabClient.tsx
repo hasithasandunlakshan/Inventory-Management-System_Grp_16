@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -53,8 +53,59 @@ interface Props {
 }
 
 export default function SalesTabClient({ initialSalesData }: Props) {
-  const [salesData] = useState<SalesAnalytics | null>(initialSalesData);
-  const error = initialSalesData ? null : 'Failed to load sales data';
+  const [salesData, setSalesData] = useState<SalesAnalytics | null>(
+    initialSalesData
+  );
+  const [loading, setLoading] = useState(!initialSalesData);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // If no initial data, fetch it
+    if (!initialSalesData) {
+      fetchSalesData();
+    }
+  }, [initialSalesData]);
+
+  const fetchSalesData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch sales analytics (adjust the URL based on your API)
+      const response = await fetch('/api/analytics/sales', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch sales data');
+
+      const data = await response.json();
+      setSalesData(data || null);
+    } catch (err) {
+      setError('Failed to load sales data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card
+        style={{
+          backgroundColor: CustomerColors.bgCard,
+          border: `1px solid ${CustomerColors.borderDefault}`,
+        }}
+      >
+        <CardContent className='p-6'>
+          <div className='text-center'>
+            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
+            <p className='text-gray-600'>Loading sales data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (error || !salesData) {
     return (

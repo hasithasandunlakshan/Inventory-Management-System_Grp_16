@@ -1,44 +1,45 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, User, Mail, Phone, MapPin, Shield } from 'lucide-react';
-import { DriverProfile } from '@/lib/types/driver';
 import {
-  getStatusBadgeVariant,
-  formatDriverStatus,
-} from '@/lib/utils/driver/driverUtils';
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Shield,
+  Car,
+  Clock,
+  AlertCircle,
+} from 'lucide-react';
+import { DriverProfile } from '@/lib/types/driver';
+import { formatDriverStatus } from '@/lib/utils/driver/driverUtils';
 import { userService, UserInfo } from '@/lib/services/userService';
 
 interface DriverCardProps {
   readonly driver: DriverProfile;
-  readonly onViewDetails?: (driver: DriverProfile) => void;
   readonly showVehicleInfo?: boolean;
 }
 
 export default function DriverCard({
   driver,
-  onViewDetails,
   showVehicleInfo = false,
 }: DriverCardProps) {
   const [driverUserDetails, setDriverUserDetails] = useState<UserInfo | null>(
     null
   );
-  const [loadingUserDetails, setLoadingUserDetails] = useState(false);
-
   useEffect(() => {
     const loadDriverUserDetails = async () => {
       if (driver.userId) {
         try {
-          setLoadingUserDetails(true);
           const userResponse = await userService.getUserById(driver.userId);
           if (userResponse) {
             setDriverUserDetails(userResponse);
           }
-        } catch (error) {
-        } finally {
-          setLoadingUserDetails(false);
+        } catch {
+          // Handle error silently
         }
       }
     };
@@ -46,99 +47,148 @@ export default function DriverCard({
     loadDriverUserDetails();
   }, [driver.userId]);
 
-  const handleViewDetails = () => {
-    if (onViewDetails) {
-      onViewDetails(driver);
+  const getStatusColor = () => {
+    switch (driver.availabilityStatus) {
+      case 'AVAILABLE':
+        return 'bg-green-100 text-green-800';
+      case 'BUSY':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'OFF_DUTY':
+        return 'bg-gray-100 text-gray-800';
+      case 'ON_LEAVE':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const renderPersonalInformation = () => {
-    if (driverUserDetails) {
-      return (
-        <div className='space-y-1'>
-          <div className='flex items-center space-x-2'>
-            <User className='h-4 w-4 text-gray-400' />
-            <span className='font-medium'>{driverUserDetails.fullName}</span>
-          </div>
-          <div className='flex items-center space-x-2'>
-            <Mail className='h-4 w-4 text-gray-400' />
-            <span className='text-sm text-gray-600'>
-              {driverUserDetails.email}
-            </span>
-          </div>
-          {driverUserDetails.phoneNumber && (
-            <div className='flex items-center space-x-2'>
-              <Phone className='h-4 w-4 text-gray-400' />
-              <span className='text-sm text-gray-600'>
-                {driverUserDetails.phoneNumber}
-              </span>
-            </div>
-          )}
-          {driverUserDetails.formattedAddress && (
-            <div className='flex items-center space-x-2'>
-              <MapPin className='h-4 w-4 text-gray-400' />
-              <span className='text-sm text-gray-600'>
-                {driverUserDetails.formattedAddress}
-              </span>
-            </div>
-          )}
-        </div>
-      );
+  const getStatusIcon = () => {
+    switch (driver.availabilityStatus) {
+      case 'AVAILABLE':
+        return '🟢';
+      case 'BUSY':
+        return '🟡';
+      case 'OFF_DUTY':
+        return '⚫';
+      case 'ON_LEAVE':
+        return '🔴';
+      default:
+        return '⚫';
     }
-
-    if (loadingUserDetails) {
-      return (
-        <div className='text-sm text-gray-500'>
-          Loading driver information...
-        </div>
-      );
-    }
-
-    return (
-      <div className='text-sm text-gray-500'>Driver ID: {driver.driverId}</div>
-    );
   };
 
   return (
-    <div className='flex items-center justify-between p-4 border rounded-lg'>
-      <div className='flex items-center space-x-4'>
-        <div className='flex-1'>
-          {/* Personal Information */}
-          <div className='mb-3'>{renderPersonalInformation()}</div>
+    <Card className='group hover:shadow-xl transition-all duration-300 border rounded-lg overflow-hidden bg-white h-full flex flex-col'>
+      <CardHeader className='p-0'>
+        {/* Driver Image Section - Compact */}
+        <div className='relative w-full h-32 overflow-hidden bg-gray-50'>
+          <Image
+            src='/Delivery.png'
+            alt='Driver'
+            fill
+            className='object-contain group-hover:scale-110 transition-transform duration-300 p-2'
+            sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+          />
 
-          {/* License Information */}
-          <div className='space-y-1'>
-            <div className='flex items-center space-x-2'>
-              <Shield className='h-4 w-4 text-gray-400' />
-              <span className='text-sm text-gray-600'>
-                <strong>License:</strong> {driver.licenseNumber} (
-                {driver.licenseClass})
-              </span>
-            </div>
-            <div className='text-sm text-gray-500'>
-              Expiry: {driver.licenseExpiry}
-            </div>
-            {driver.emergencyContact && (
-              <div className='text-sm text-gray-500'>
-                Emergency: {driver.emergencyContact}
-              </div>
-            )}
-            {showVehicleInfo && driver.assignedVehicleId && (
-              <div className='text-sm text-gray-500'>
-                Vehicle ID: {driver.assignedVehicleId}
-              </div>
-            )}
+          {/* Status Badge - Top Right */}
+          <div className='absolute top-1 right-1'>
+            <Badge
+              variant='secondary'
+              className={`text-[10px] px-1.5 py-0 shadow-sm leading-tight ${getStatusColor()}`}
+            >
+              {getStatusIcon()} {formatDriverStatus(driver.availabilityStatus)}
+            </Badge>
+          </div>
+
+          {/* Driver ID Badge - Top Left */}
+          <div className='absolute top-1 left-1'>
+            <Badge
+              variant='secondary'
+              className='text-[10px] px-1.5 py-0 bg-white/90 backdrop-blur-sm shadow-sm leading-tight'
+            >
+              ID: {driver.driverId}
+            </Badge>
           </div>
         </div>
-      </div>
-      <div className='flex items-center space-x-2'>
-        <Badge variant={getStatusBadgeVariant(driver.availabilityStatus)}>
-          {formatDriverStatus(driver.availabilityStatus)}
-        </Badge>
-        <Button variant='outline' size='sm' onClick={handleViewDetails}>
-          <Eye className='h-4 w-4' />
-        </Button>
-      </div>
-    </div>
+      </CardHeader>
+
+      <CardContent className='p-3 flex-1 flex flex-col space-y-2'>
+        {/* Driver Name - Centered */}
+        <div className='text-center'>
+          <h3 className='font-semibold text-base text-gray-900'>
+            {driverUserDetails?.fullName || `Driver ${driver.driverId}`}
+          </h3>
+          <p className='text-sm text-gray-600 mt-1'>{driver.licenseClass}</p>
+        </div>
+
+        {/* Email */}
+        {driverUserDetails?.email && (
+          <div className='flex items-center gap-2'>
+            <Mail className='h-4 w-4 text-gray-400' />
+            <span className='text-sm text-gray-600 truncate'>
+              {driverUserDetails.email}
+            </span>
+          </div>
+        )}
+
+        {/* Phone */}
+        {driverUserDetails?.phoneNumber && (
+          <div className='flex items-center gap-2'>
+            <Phone className='h-4 w-4 text-gray-400' />
+            <span className='text-sm text-gray-600'>
+              {driverUserDetails.phoneNumber}
+            </span>
+          </div>
+        )}
+
+        {/* Address */}
+        {driverUserDetails?.formattedAddress && (
+          <div className='flex items-center gap-2'>
+            <MapPin className='h-4 w-4 text-gray-400' />
+            <span className='text-sm text-gray-600 truncate'>
+              {driverUserDetails.formattedAddress}
+            </span>
+          </div>
+        )}
+
+        {/* License Information */}
+        <div className='border-t pt-2 space-y-1'>
+          <div className='flex items-center gap-2'>
+            <Shield className='h-4 w-4 text-gray-400' />
+            <span className='text-sm text-gray-600'>
+              <strong>License:</strong> {driver.licenseNumber}
+            </span>
+          </div>
+
+          <div className='flex items-center gap-2'>
+            <Clock className='h-4 w-4 text-gray-400' />
+            <span className='text-sm text-gray-600'>
+              <strong>Expires:</strong>{' '}
+              {new Date(driver.licenseExpiry).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+
+        {/* Emergency Contact */}
+        {driver.emergencyContact && (
+          <div className='flex items-center gap-2'>
+            <AlertCircle className='h-4 w-4 text-gray-400' />
+            <span className='text-sm text-gray-600'>
+              <strong>Emergency:</strong> {driver.emergencyContact}
+            </span>
+          </div>
+        )}
+
+        {/* Vehicle Assignment */}
+        {showVehicleInfo && driver.assignedVehicleId && (
+          <div className='flex items-center gap-2'>
+            <Car className='h-4 w-4 text-gray-400' />
+            <span className='text-sm text-gray-600'>
+              <strong>Assigned Vehicle:</strong> {driver.assignedVehicleId}
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

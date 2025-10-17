@@ -29,6 +29,7 @@ import {
   Search,
   AlertTriangle,
   Wrench,
+  RefreshCw,
 } from 'lucide-react';
 import {
   driverService,
@@ -37,6 +38,7 @@ import {
 } from '@/lib/services/driverService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import VehicleCard from '@/components/vehicle/VehicleCard';
 
 interface VehiclesClientProps {
   initialVehicles: Vehicle[];
@@ -175,173 +177,229 @@ export default function VehiclesClient({
 
   return (
     <div className='space-y-6'>
-      {/* Header */}
-      <div className='flex justify-between items-center'>
-        <div>
-          <h1 className='text-3xl font-bold'>Vehicle Management</h1>
-          <p className='text-gray-600'>Manage vehicle fleet and maintenance</p>
-        </div>
-        {canManageVehicles && (
-          <Dialog
-            open={showRegistrationModal}
-            onOpenChange={setShowRegistrationModal}
-          >
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className='h-4 w-4 mr-2' />
-                Add Vehicle
-              </Button>
-            </DialogTrigger>
-            <DialogContent className='max-w-2xl'>
-              <DialogHeader>
-                <DialogTitle>Add New Vehicle</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleRegistration} className='space-y-4'>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <Label htmlFor='vehicleNumber'>Vehicle Number</Label>
-                    <Input
-                      id='vehicleNumber'
-                      value={registrationForm.vehicleNumber}
-                      onChange={e =>
-                        setRegistrationForm({
-                          ...registrationForm,
-                          vehicleNumber: e.target.value,
-                        })
-                      }
-                      placeholder='e.g., ABC-1234'
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor='vehicleType'>Vehicle Type</Label>
-                    <Select
-                      value={registrationForm.vehicleType}
-                      onValueChange={(value: string) =>
-                        setRegistrationForm({
-                          ...registrationForm,
-                          vehicleType: value as
-                            | 'TRUCK'
-                            | 'VAN'
-                            | 'MOTORCYCLE'
-                            | 'CAR',
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='CAR'>Car</SelectItem>
-                        <SelectItem value='VAN'>Van</SelectItem>
-                        <SelectItem value='TRUCK'>Truck</SelectItem>
-                        <SelectItem value='MOTORCYCLE'>Motorcycle</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor='capacity'>Capacity (kg)</Label>
-                    <Input
-                      id='capacity'
-                      type='number'
-                      value={registrationForm.capacity}
-                      onChange={e =>
-                        setRegistrationForm({
-                          ...registrationForm,
-                          capacity: Number(e.target.value),
-                        })
-                      }
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor='make'>Make</Label>
-                    <Input
-                      id='make'
-                      value={registrationForm.make}
-                      onChange={e =>
-                        setRegistrationForm({
-                          ...registrationForm,
-                          make: e.target.value,
-                        })
-                      }
-                      placeholder='e.g., Toyota'
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor='model'>Model</Label>
-                    <Input
-                      id='model'
-                      value={registrationForm.model}
-                      onChange={e =>
-                        setRegistrationForm({
-                          ...registrationForm,
-                          model: e.target.value,
-                        })
-                      }
-                      placeholder='e.g., Camry'
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor='year'>Year</Label>
-                    <Input
-                      id='year'
-                      type='number'
-                      value={registrationForm.year}
-                      onChange={e =>
-                        setRegistrationForm({
-                          ...registrationForm,
-                          year: Number(e.target.value),
-                        })
-                      }
-                      min='1900'
-                      max={new Date().getFullYear() + 1}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor='lastMaintenance'>Last Maintenance</Label>
-                    <Input
-                      id='lastMaintenance'
-                      type='date'
-                      value={registrationForm.lastMaintenance}
-                      onChange={e =>
-                        setRegistrationForm({
-                          ...registrationForm,
-                          lastMaintenance: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor='nextMaintenance'>Next Maintenance</Label>
-                    <Input
-                      id='nextMaintenance'
-                      type='date'
-                      value={registrationForm.nextMaintenance}
-                      onChange={e =>
-                        setRegistrationForm({
-                          ...registrationForm,
-                          nextMaintenance: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-                <div className='flex justify-end space-x-2'>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={() => setShowRegistrationModal(false)}
+      {/* Blue Header Card */}
+      <Card
+        className='border-0 shadow-lg'
+        style={{
+          background: 'linear-gradient(135deg, #2A7CC7 0%, #245e91ff 100%)',
+        }}
+      >
+        <CardContent className='p-6'>
+          <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
+            {/* Title Section */}
+            <div className='flex items-center gap-3'>
+              <div className='p-2 bg-white/20 rounded-lg'>
+                <Truck className='h-6 w-6 text-white' />
+              </div>
+              <div>
+                <h1 className='text-2xl font-bold text-white'>
+                  Vehicle Management
+                </h1>
+                <p className='text-white/90 text-sm'>
+                  Manage vehicles, maintenance, and assignments •{' '}
+                  {vehicles.length} total vehicles
+                </p>
+              </div>
+            </div>
+
+            {/* Controls Section */}
+            <div className='flex flex-col sm:flex-row gap-3'>
+              {/* Search Input */}
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/70' />
+                <Input
+                  placeholder='Search vehicles...'
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className='pl-10 h-11 bg-white/95 border-white/20 hover:bg-white text-gray-900 placeholder:text-gray-500 focus:border-white/40 focus:ring-white/20'
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className='flex gap-2'>
+                <Button
+                  onClick={loadVehicles}
+                  variant='outline'
+                  size='sm'
+                  className='h-11 px-4 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/40'
+                >
+                  <RefreshCw className='h-4 w-4 mr-2' />
+                  Refresh
+                </Button>
+
+                {canManageVehicles && (
+                  <Dialog
+                    open={showRegistrationModal}
+                    onOpenChange={setShowRegistrationModal}
                   >
-                    Cancel
-                  </Button>
-                  <Button type='submit'>Add Vehicle</Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
+                    <DialogTrigger asChild>
+                      <Button className='h-11 px-4 bg-white text-blue-700 hover:bg-blue-50 shadow-md'>
+                        <Plus className='h-4 w-4 mr-2' />
+                        Add Vehicle
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className='max-w-2xl'>
+                      <DialogHeader>
+                        <DialogTitle>Add New Vehicle</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleRegistration} className='space-y-4'>
+                        <div className='grid grid-cols-2 gap-4'>
+                          <div>
+                            <Label htmlFor='vehicleNumber'>
+                              Vehicle Number
+                            </Label>
+                            <Input
+                              id='vehicleNumber'
+                              value={registrationForm.vehicleNumber}
+                              onChange={e =>
+                                setRegistrationForm({
+                                  ...registrationForm,
+                                  vehicleNumber: e.target.value,
+                                })
+                              }
+                              placeholder='e.g., ABC-1234'
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor='vehicleType'>Vehicle Type</Label>
+                            <Select
+                              value={registrationForm.vehicleType}
+                              onValueChange={(value: string) =>
+                                setRegistrationForm({
+                                  ...registrationForm,
+                                  vehicleType: value as
+                                    | 'TRUCK'
+                                    | 'VAN'
+                                    | 'MOTORCYCLE'
+                                    | 'CAR',
+                                })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value='CAR'>Car</SelectItem>
+                                <SelectItem value='VAN'>Van</SelectItem>
+                                <SelectItem value='TRUCK'>Truck</SelectItem>
+                                <SelectItem value='MOTORCYCLE'>
+                                  Motorcycle
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor='capacity'>Capacity (kg)</Label>
+                            <Input
+                              id='capacity'
+                              type='number'
+                              value={registrationForm.capacity}
+                              onChange={e =>
+                                setRegistrationForm({
+                                  ...registrationForm,
+                                  capacity: Number(e.target.value),
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor='make'>Make</Label>
+                            <Input
+                              id='make'
+                              value={registrationForm.make}
+                              onChange={e =>
+                                setRegistrationForm({
+                                  ...registrationForm,
+                                  make: e.target.value,
+                                })
+                              }
+                              placeholder='e.g., Toyota'
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor='model'>Model</Label>
+                            <Input
+                              id='model'
+                              value={registrationForm.model}
+                              onChange={e =>
+                                setRegistrationForm({
+                                  ...registrationForm,
+                                  model: e.target.value,
+                                })
+                              }
+                              placeholder='e.g., Camry'
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor='year'>Year</Label>
+                            <Input
+                              id='year'
+                              type='number'
+                              value={registrationForm.year}
+                              onChange={e =>
+                                setRegistrationForm({
+                                  ...registrationForm,
+                                  year: Number(e.target.value),
+                                })
+                              }
+                              min='1900'
+                              max={new Date().getFullYear() + 1}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor='lastMaintenance'>
+                              Last Maintenance
+                            </Label>
+                            <Input
+                              id='lastMaintenance'
+                              type='date'
+                              value={registrationForm.lastMaintenance}
+                              onChange={e =>
+                                setRegistrationForm({
+                                  ...registrationForm,
+                                  lastMaintenance: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor='nextMaintenance'>
+                              Next Maintenance
+                            </Label>
+                            <Input
+                              id='nextMaintenance'
+                              type='date'
+                              value={registrationForm.nextMaintenance}
+                              onChange={e =>
+                                setRegistrationForm({
+                                  ...registrationForm,
+                                  nextMaintenance: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className='flex justify-end space-x-2'>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            onClick={() => setShowRegistrationModal(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type='submit'>Add Vehicle</Button>
+                        </div>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
@@ -443,41 +501,9 @@ export default function VehiclesClient({
                   )}
                 </div>
               ) : (
-                <div className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
                   {filteredVehicles.map(vehicle => (
-                    <div
-                      key={vehicle.vehicleId}
-                      className='flex items-center justify-between p-4 border rounded-lg'
-                    >
-                      <div className='flex items-center space-x-4'>
-                        <div className='p-2 bg-gray-100 rounded-lg'>
-                          {getVehicleIcon(vehicle.vehicleType)}
-                        </div>
-                        <div>
-                          <p className='font-medium'>{vehicle.vehicleNumber}</p>
-                          <p className='text-sm text-gray-500'>
-                            {vehicle.year} {vehicle.make} {vehicle.model}
-                          </p>
-                          <p className='text-sm text-gray-500'>
-                            {vehicle.vehicleType} | Capacity: {vehicle.capacity}
-                            kg
-                          </p>
-                          {vehicle.assignedDriverId && (
-                            <p className='text-sm text-gray-500'>
-                              Driver ID: {vehicle.assignedDriverId}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className='flex items-center space-x-2'>
-                        <Badge variant={getStatusBadgeVariant(vehicle.status)}>
-                          {vehicle.status}
-                        </Badge>
-                        <Button variant='outline' size='sm'>
-                          <Eye className='h-4 w-4' />
-                        </Button>
-                      </div>
-                    </div>
+                    <VehicleCard key={vehicle.vehicleId} vehicle={vehicle} />
                   ))}
                 </div>
               )}
@@ -497,33 +523,9 @@ export default function VehiclesClient({
                   <p className='text-gray-500'>No available vehicles</p>
                 </div>
               ) : (
-                <div className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
                   {availableVehicles.map(vehicle => (
-                    <div
-                      key={vehicle.vehicleId}
-                      className='flex items-center justify-between p-4 border rounded-lg'
-                    >
-                      <div className='flex items-center space-x-4'>
-                        <div className='p-2 bg-green-100 rounded-lg'>
-                          {getVehicleIcon(vehicle.vehicleType)}
-                        </div>
-                        <div>
-                          <p className='font-medium'>{vehicle.vehicleNumber}</p>
-                          <p className='text-sm text-gray-500'>
-                            {vehicle.year} {vehicle.make} {vehicle.model}
-                          </p>
-                          <p className='text-sm text-gray-500'>
-                            Ready for assignment
-                          </p>
-                        </div>
-                      </div>
-                      <div className='flex items-center space-x-2'>
-                        <Badge variant='default'>AVAILABLE</Badge>
-                        <Button variant='outline' size='sm'>
-                          <Eye className='h-4 w-4' />
-                        </Button>
-                      </div>
-                    </div>
+                    <VehicleCard key={vehicle.vehicleId} vehicle={vehicle} />
                   ))}
                 </div>
               )}
@@ -543,39 +545,11 @@ export default function VehiclesClient({
                   <p className='text-gray-500'>No assigned vehicles</p>
                 </div>
               ) : (
-                <div className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
                   {vehicles
                     .filter(v => v.status === 'ASSIGNED')
                     .map(vehicle => (
-                      <div
-                        key={vehicle.vehicleId}
-                        className='flex items-center justify-between p-4 border rounded-lg'
-                      >
-                        <div className='flex items-center space-x-4'>
-                          <div className='p-2 bg-blue-100 rounded-lg'>
-                            {getVehicleIcon(vehicle.vehicleType)}
-                          </div>
-                          <div>
-                            <p className='font-medium'>
-                              {vehicle.vehicleNumber}
-                            </p>
-                            <p className='text-sm text-gray-500'>
-                              {vehicle.year} {vehicle.make} {vehicle.model}
-                            </p>
-                            {vehicle.assignedDriverId && (
-                              <p className='text-sm text-gray-500'>
-                                Driver ID: {vehicle.assignedDriverId}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className='flex items-center space-x-2'>
-                          <Badge variant='secondary'>ASSIGNED</Badge>
-                          <Button variant='outline' size='sm'>
-                            <Eye className='h-4 w-4' />
-                          </Button>
-                        </div>
-                      </div>
+                      <VehicleCard key={vehicle.vehicleId} vehicle={vehicle} />
                     ))}
                 </div>
               )}
@@ -595,39 +569,11 @@ export default function VehiclesClient({
                   <p className='text-gray-500'>No vehicles in maintenance</p>
                 </div>
               ) : (
-                <div className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
                   {vehicles
                     .filter(v => v.status === 'MAINTENANCE')
                     .map(vehicle => (
-                      <div
-                        key={vehicle.vehicleId}
-                        className='flex items-center justify-between p-4 border rounded-lg'
-                      >
-                        <div className='flex items-center space-x-4'>
-                          <div className='p-2 bg-red-100 rounded-lg'>
-                            {getVehicleIcon(vehicle.vehicleType)}
-                          </div>
-                          <div>
-                            <p className='font-medium'>
-                              {vehicle.vehicleNumber}
-                            </p>
-                            <p className='text-sm text-gray-500'>
-                              {vehicle.year} {vehicle.make} {vehicle.model}
-                            </p>
-                            {vehicle.nextMaintenance && (
-                              <p className='text-sm text-gray-500'>
-                                Next: {vehicle.nextMaintenance}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className='flex items-center space-x-2'>
-                          <Badge variant='destructive'>MAINTENANCE</Badge>
-                          <Button variant='outline' size='sm'>
-                            <Eye className='h-4 w-4' />
-                          </Button>
-                        </div>
-                      </div>
+                      <VehicleCard key={vehicle.vehicleId} vehicle={vehicle} />
                     ))}
                 </div>
               )}
