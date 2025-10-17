@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  User,
-  Calendar,
-  Eye,
-  Users,
-  CheckCircle,
-  UserCheck,
-} from 'lucide-react';
-import {
-  userService,
-  UserInfo,
-  UsersResponse,
-} from '@/lib/services/userService';
 import CustomerDetailsModal from '@/components/customers/CustomerDetailsModal';
 import CustomerFilters from '@/components/customers/CustomerFilters';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  UserInfo,
+  userService,
+  UsersResponse,
+} from '@/lib/services/userService';
+import {
+  Calendar,
+  CheckCircle,
+  Eye,
+  User,
+  UserCheck,
+  Users,
+} from 'lucide-react';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 // Color scheme from dashboard
 const CustomerColors = {
@@ -211,416 +211,418 @@ export default function CustomersPage() {
           </div>
         </div>
 
-      {/* Stats Cards */}
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-5'>
-        <Card
-          className='border-0'
-          style={{
-            backgroundColor: CustomerColors.bgCard,
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle
-              className='text-sm font-medium'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              Total Customers
-            </CardTitle>
-            <Users
-              className='h-4 w-4'
-              style={{ color: CustomerColors.textSecondary }}
-            />
-          </CardHeader>
-          <CardContent>
-            <div
-              className='text-2xl font-bold'
-              style={{ color: CustomerColors.textPrimary }}
-            >
-              {stats.totalUsers}
-            </div>
-            <p
-              className='text-xs'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              {filteredCustomers.length !== customers.length
-                ? `${filteredCustomers.length} filtered`
-                : 'All customers'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className='border-0'
-          style={{
-            backgroundColor: CustomerColors.bgCard,
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle
-              className='text-sm font-medium'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              Active Customers
-            </CardTitle>
-            <UserCheck
-              className='h-4 w-4'
-              style={{ color: CustomerColors.textSecondary }}
-            />
-          </CardHeader>
-          <CardContent>
-            <div
-              className='text-2xl font-bold'
-              style={{ color: CustomerColors.textPrimary }}
-            >
-              {stats.activeUsers}
-            </div>
-            <p
-              className='text-xs'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              {((stats.activeUsers / stats.totalUsers) * 100).toFixed(1)}% of
-              total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className='border-0'
-          style={{
-            backgroundColor: CustomerColors.bgCard,
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle
-              className='text-sm font-medium'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              Verified Emails
-            </CardTitle>
-            <CheckCircle
-              className='h-4 w-4'
-              style={{ color: CustomerColors.textSecondary }}
-            />
-          </CardHeader>
-          <CardContent>
-            <div
-              className='text-2xl font-bold'
-              style={{ color: CustomerColors.textPrimary }}
-            >
-              {stats.verifiedUsers}
-            </div>
-            <p
-              className='text-xs'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              {stats.verificationRate.toFixed(1)}% verification rate
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className='border-0'
-          style={{
-            backgroundColor: CustomerColors.bgCard,
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle
-              className='text-sm font-medium'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              This Month
-            </CardTitle>
-            <Calendar
-              className='h-4 w-4'
-              style={{ color: CustomerColors.textSecondary }}
-            />
-          </CardHeader>
-          <CardContent>
-            <div
-              className='text-2xl font-bold'
-              style={{ color: CustomerColors.textPrimary }}
-            >
-              {stats.thisMonthSignups}
-            </div>
-            <p
-              className='text-xs'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              New signups
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className='border-0'
-          style={{
-            backgroundColor: CustomerColors.bgCard,
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle
-              className='text-sm font-medium'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              Recent Signups
-            </CardTitle>
-            <User
-              className='h-4 w-4'
-              style={{ color: CustomerColors.textSecondary }}
-            />
-          </CardHeader>
-          <CardContent>
-            <div
-              className='text-2xl font-bold'
-              style={{ color: CustomerColors.textPrimary }}
-            >
-              {stats.recentSignups}
-            </div>
-            <p
-              className='text-xs'
-              style={{ color: CustomerColors.textSecondary }}
-            >
-              Last 7 days
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <CustomerFilters
-        onFiltersChange={handleFiltersChange}
-        onRefresh={fetchCustomers}
-        isLoading={loading}
-      />
-
-      {/* Customers Table */}
-      <Card
-        className='border-0'
-        style={{
-          backgroundColor: CustomerColors.bgCard,
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <CardHeader>
-          <CardTitle
-            className='flex items-center justify-between'
-            style={{ color: CustomerColors.textPrimary }}
+        {/* Stats Cards */}
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-5'>
+          <Card
+            className='border-0'
+            style={{
+              backgroundColor: CustomerColors.bgCard,
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
           >
-            Customers ({filteredCustomers.length})
-            {loading && (
-              <div
-                className='animate-spin rounded-full h-4 w-4 border-b-2'
-                style={{ borderColor: CustomerColors.brandBlue }}
-              ></div>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className='flex items-center justify-center h-64'>
-              <div
-                className='animate-spin rounded-full h-8 w-8 border-b-2'
-                style={{ borderColor: CustomerColors.brandBlue }}
-              ></div>
-            </div>
-          ) : filteredCustomers.length === 0 ? (
-            <div className='text-center py-8'>
-              <User
-                className='mx-auto h-12 w-12'
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle
+                className='text-sm font-medium'
+                style={{ color: CustomerColors.textSecondary }}
+              >
+                Total Customers
+              </CardTitle>
+              <Users
+                className='h-4 w-4'
                 style={{ color: CustomerColors.textSecondary }}
               />
-              <h3
-                className='mt-2 text-sm font-semibold'
+            </CardHeader>
+            <CardContent>
+              <div
+                className='text-2xl font-bold'
                 style={{ color: CustomerColors.textPrimary }}
               >
-                No customers found
-              </h3>
+                {stats.totalUsers}
+              </div>
               <p
-                className='mt-1 text-sm'
+                className='text-xs'
                 style={{ color: CustomerColors.textSecondary }}
               >
-                {customers.length === 0
-                  ? 'No customers have signed up yet.'
-                  : 'Try adjusting your filters.'}
+                {filteredCustomers.length !== customers.length
+                  ? `${filteredCustomers.length} filtered`
+                  : 'All customers'}
               </p>
-            </div>
-          ) : (
-            <div className='overflow-x-auto'>
-              <table className='min-w-full text-sm'>
-                <thead>
-                  <tr
-                    className='border-b'
-                    style={{ borderColor: CustomerColors.borderDefault }}
-                  >
-                    <th
-                      className='py-3 px-4 text-left font-medium'
-                      style={{ color: CustomerColors.textSecondary }}
-                    >
-                      Customer ID
-                    </th>
-                    <th
-                      className='py-3 px-4 text-left font-medium'
-                      style={{ color: CustomerColors.textSecondary }}
-                    >
-                      Name
-                    </th>
-                    <th
-                      className='py-3 px-4 text-left font-medium'
-                      style={{ color: CustomerColors.textSecondary }}
-                    >
-                      Email
-                    </th>
-                    <th
-                      className='py-3 px-4 text-left font-medium'
-                      style={{ color: CustomerColors.textSecondary }}
-                    >
-                      Phone
-                    </th>
-                    <th
-                      className='py-3 px-4 text-left font-medium'
-                      style={{ color: CustomerColors.textSecondary }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className='py-3 px-4 text-left font-medium'
-                      style={{ color: CustomerColors.textSecondary }}
-                    >
-                      Verified
-                    </th>
-                    <th
-                      className='py-3 px-4 text-left font-medium'
-                      style={{ color: CustomerColors.textSecondary }}
-                    >
-                      Joined
-                    </th>
-                    <th
-                      className='py-3 px-4 text-left font-medium'
-                      style={{ color: CustomerColors.textSecondary }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCustomers.map(customer => (
+            </CardContent>
+          </Card>
+
+          <Card
+            className='border-0'
+            style={{
+              backgroundColor: CustomerColors.bgCard,
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle
+                className='text-sm font-medium'
+                style={{ color: CustomerColors.textSecondary }}
+              >
+                Active Customers
+              </CardTitle>
+              <UserCheck
+                className='h-4 w-4'
+                style={{ color: CustomerColors.textSecondary }}
+              />
+            </CardHeader>
+            <CardContent>
+              <div
+                className='text-2xl font-bold'
+                style={{ color: CustomerColors.textPrimary }}
+              >
+                {stats.activeUsers}
+              </div>
+              <p
+                className='text-xs'
+                style={{ color: CustomerColors.textSecondary }}
+              >
+                {((stats.activeUsers / stats.totalUsers) * 100).toFixed(1)}% of
+                total
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className='border-0'
+            style={{
+              backgroundColor: CustomerColors.bgCard,
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle
+                className='text-sm font-medium'
+                style={{ color: CustomerColors.textSecondary }}
+              >
+                Verified Emails
+              </CardTitle>
+              <CheckCircle
+                className='h-4 w-4'
+                style={{ color: CustomerColors.textSecondary }}
+              />
+            </CardHeader>
+            <CardContent>
+              <div
+                className='text-2xl font-bold'
+                style={{ color: CustomerColors.textPrimary }}
+              >
+                {stats.verifiedUsers}
+              </div>
+              <p
+                className='text-xs'
+                style={{ color: CustomerColors.textSecondary }}
+              >
+                {stats.verificationRate.toFixed(1)}% verification rate
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className='border-0'
+            style={{
+              backgroundColor: CustomerColors.bgCard,
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle
+                className='text-sm font-medium'
+                style={{ color: CustomerColors.textSecondary }}
+              >
+                This Month
+              </CardTitle>
+              <Calendar
+                className='h-4 w-4'
+                style={{ color: CustomerColors.textSecondary }}
+              />
+            </CardHeader>
+            <CardContent>
+              <div
+                className='text-2xl font-bold'
+                style={{ color: CustomerColors.textPrimary }}
+              >
+                {stats.thisMonthSignups}
+              </div>
+              <p
+                className='text-xs'
+                style={{ color: CustomerColors.textSecondary }}
+              >
+                New signups
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className='border-0'
+            style={{
+              backgroundColor: CustomerColors.bgCard,
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle
+                className='text-sm font-medium'
+                style={{ color: CustomerColors.textSecondary }}
+              >
+                Recent Signups
+              </CardTitle>
+              <User
+                className='h-4 w-4'
+                style={{ color: CustomerColors.textSecondary }}
+              />
+            </CardHeader>
+            <CardContent>
+              <div
+                className='text-2xl font-bold'
+                style={{ color: CustomerColors.textPrimary }}
+              >
+                {stats.recentSignups}
+              </div>
+              <p
+                className='text-xs'
+                style={{ color: CustomerColors.textSecondary }}
+              >
+                Last 7 days
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <CustomerFilters
+          onFiltersChange={handleFiltersChange}
+          onRefresh={fetchCustomers}
+          isLoading={loading}
+        />
+
+        {/* Customers Table */}
+        <Card
+          className='border-0'
+          style={{
+            backgroundColor: CustomerColors.bgCard,
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <CardHeader>
+            <CardTitle
+              className='flex items-center justify-between'
+              style={{ color: CustomerColors.textPrimary }}
+            >
+              Customers ({filteredCustomers.length})
+              {loading && (
+                <div
+                  className='animate-spin rounded-full h-4 w-4 border-b-2'
+                  style={{ borderColor: CustomerColors.brandBlue }}
+                ></div>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className='flex items-center justify-center h-64'>
+                <div
+                  className='animate-spin rounded-full h-8 w-8 border-b-2'
+                  style={{ borderColor: CustomerColors.brandBlue }}
+                ></div>
+              </div>
+            ) : filteredCustomers.length === 0 ? (
+              <div className='text-center py-8'>
+                <User
+                  className='mx-auto h-12 w-12'
+                  style={{ color: CustomerColors.textSecondary }}
+                />
+                <h3
+                  className='mt-2 text-sm font-semibold'
+                  style={{ color: CustomerColors.textPrimary }}
+                >
+                  No customers found
+                </h3>
+                <p
+                  className='mt-1 text-sm'
+                  style={{ color: CustomerColors.textSecondary }}
+                >
+                  {customers.length === 0
+                    ? 'No customers have signed up yet.'
+                    : 'Try adjusting your filters.'}
+                </p>
+              </div>
+            ) : (
+              <div className='overflow-x-auto'>
+                <table className='min-w-full text-sm'>
+                  <thead>
                     <tr
-                      key={customer.id}
-                      className='border-b hover:bg-gray-50 transition-colors'
+                      className='border-b'
                       style={{ borderColor: CustomerColors.borderDefault }}
                     >
-                      <td
-                        className='py-3 px-4 font-medium'
-                        style={{ color: CustomerColors.textPrimary }}
-                      >
-                        #{customer.id}
-                      </td>
-                      <td className='py-3 px-4'>
-                        <div className='flex items-center space-x-3'>
-                          <div className='w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden'>
-                            {customer.profileImageUrl ? (
-                              <Image
-                                src={customer.profileImageUrl}
-                                alt={customer.fullName}
-                                width={32}
-                                height={32}
-                                className='w-full h-full object-cover'
-                              />
-                            ) : (
-                              <User
-                                className='h-4 w-4'
-                                style={{ color: CustomerColors.textSecondary }}
-                              />
-                            )}
-                          </div>
-                          <div>
-                            <p
-                              className='font-medium'
-                              style={{ color: CustomerColors.textPrimary }}
-                            >
-                              {customer.fullName}
-                            </p>
-                            <p
-                              className='text-xs'
-                              style={{ color: CustomerColors.textSecondary }}
-                            >
-                              @{customer.username}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td
-                        className='py-3 px-4'
+                      <th
+                        className='py-3 px-4 text-left font-medium'
                         style={{ color: CustomerColors.textSecondary }}
                       >
-                        {customer.email}
-                      </td>
-                      <td
-                        className='py-3 px-4'
+                        Customer ID
+                      </th>
+                      <th
+                        className='py-3 px-4 text-left font-medium'
                         style={{ color: CustomerColors.textSecondary }}
                       >
-                        {customer.phoneNumber || 'N/A'}
-                      </td>
-                      <td className='py-3 px-4'>
-                        {getStatusBadge(customer.accountStatus || 'ACTIVE')}
-                      </td>
-                      <td className='py-3 px-4'>
-                        {customer.emailVerified ? (
-                          <Badge className='bg-green-100 text-green-800'>
-                            <CheckCircle className='w-3 h-3 mr-1' />
-                            Yes
-                          </Badge>
-                        ) : (
-                          <Badge variant='outline'>No</Badge>
-                        )}
-                      </td>
-                      <td
-                        className='py-3 px-4'
+                        Name
+                      </th>
+                      <th
+                        className='py-3 px-4 text-left font-medium'
                         style={{ color: CustomerColors.textSecondary }}
                       >
-                        {formatDate(
-                          customer.createdAt || new Date().toISOString()
-                        )}
-                      </td>
-                      <td className='py-3 px-4'>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => handleViewCustomer(customer)}
-                          className='flex items-center gap-1'
-                          style={{
-                            borderColor: CustomerColors.brandBlue,
-                            color: CustomerColors.brandBlue,
-                          }}
-                        >
-                          <Eye className='h-3 w-3' />
-                          View
-                        </Button>
-                      </td>
+                        Email
+                      </th>
+                      <th
+                        className='py-3 px-4 text-left font-medium'
+                        style={{ color: CustomerColors.textSecondary }}
+                      >
+                        Phone
+                      </th>
+                      <th
+                        className='py-3 px-4 text-left font-medium'
+                        style={{ color: CustomerColors.textSecondary }}
+                      >
+                        Status
+                      </th>
+                      <th
+                        className='py-3 px-4 text-left font-medium'
+                        style={{ color: CustomerColors.textSecondary }}
+                      >
+                        Verified
+                      </th>
+                      <th
+                        className='py-3 px-4 text-left font-medium'
+                        style={{ color: CustomerColors.textSecondary }}
+                      >
+                        Joined
+                      </th>
+                      <th
+                        className='py-3 px-4 text-left font-medium'
+                        style={{ color: CustomerColors.textSecondary }}
+                      >
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </thead>
+                  <tbody>
+                    {filteredCustomers.map(customer => (
+                      <tr
+                        key={customer.id}
+                        className='border-b hover:bg-gray-50 transition-colors'
+                        style={{ borderColor: CustomerColors.borderDefault }}
+                      >
+                        <td
+                          className='py-3 px-4 font-medium'
+                          style={{ color: CustomerColors.textPrimary }}
+                        >
+                          #{customer.id}
+                        </td>
+                        <td className='py-3 px-4'>
+                          <div className='flex items-center space-x-3'>
+                            <div className='w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden'>
+                              {customer.profileImageUrl ? (
+                                <Image
+                                  src={customer.profileImageUrl}
+                                  alt={customer.fullName}
+                                  width={32}
+                                  height={32}
+                                  className='w-full h-full object-cover'
+                                />
+                              ) : (
+                                <User
+                                  className='h-4 w-4'
+                                  style={{
+                                    color: CustomerColors.textSecondary,
+                                  }}
+                                />
+                              )}
+                            </div>
+                            <div>
+                              <p
+                                className='font-medium'
+                                style={{ color: CustomerColors.textPrimary }}
+                              >
+                                {customer.fullName}
+                              </p>
+                              <p
+                                className='text-xs'
+                                style={{ color: CustomerColors.textSecondary }}
+                              >
+                                @{customer.username}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td
+                          className='py-3 px-4'
+                          style={{ color: CustomerColors.textSecondary }}
+                        >
+                          {customer.email}
+                        </td>
+                        <td
+                          className='py-3 px-4'
+                          style={{ color: CustomerColors.textSecondary }}
+                        >
+                          {customer.phoneNumber || 'N/A'}
+                        </td>
+                        <td className='py-3 px-4'>
+                          {getStatusBadge(customer.accountStatus || 'ACTIVE')}
+                        </td>
+                        <td className='py-3 px-4'>
+                          {customer.emailVerified ? (
+                            <Badge className='bg-green-100 text-green-800'>
+                              <CheckCircle className='w-3 h-3 mr-1' />
+                              Yes
+                            </Badge>
+                          ) : (
+                            <Badge variant='outline'>No</Badge>
+                          )}
+                        </td>
+                        <td
+                          className='py-3 px-4'
+                          style={{ color: CustomerColors.textSecondary }}
+                        >
+                          {formatDate(
+                            customer.createdAt || new Date().toISOString()
+                          )}
+                        </td>
+                        <td className='py-3 px-4'>
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => handleViewCustomer(customer)}
+                            className='flex items-center gap-1'
+                            style={{
+                              borderColor: CustomerColors.brandBlue,
+                              color: CustomerColors.brandBlue,
+                            }}
+                          >
+                            <Eye className='h-3 w-3' />
+                            View
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Customer Details Modal */}
-      <CustomerDetailsModal
-        customer={selectedCustomer}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedCustomer(null);
-        }}
-      />
+        {/* Customer Details Modal */}
+        <CustomerDetailsModal
+          customer={selectedCustomer}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedCustomer(null);
+          }}
+        />
       </div>
     </div>
   );
