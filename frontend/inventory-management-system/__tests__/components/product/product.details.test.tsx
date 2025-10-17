@@ -35,11 +35,11 @@ describe('ProductDetails', () => {
     expect(screen.getAllByText(/Deluxe Rice 5kg/)[0]).toBeInTheDocument();
     expect(screen.getAllByText(/Premium quality rice/)[0]).toBeInTheDocument();
     expect(screen.getByText(/\$2500.00/)).toBeInTheDocument();
-    expect(screen.getByText('30')).toBeInTheDocument();
+    expect(screen.getAllByText(/30 units/i)[0]).toBeInTheDocument();
     expect(screen.getByText('RICE-555')).toBeInTheDocument();
   });
 
-  it('calls edit on button click and onBack on back button', () => {
+  it('calls edit on button click', () => {
     const onBack = jest.fn();
     render(<ProductDetails product={product as any} onBack={onBack} />);
 
@@ -48,8 +48,14 @@ describe('ProductDetails', () => {
       expect.objectContaining(product),
       expect.any(Object)
     );
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: /View All Products/i }));
+  it('calls onBack when back button is clicked', () => {
+    const onBack = jest.fn();
+    render(<ProductDetails product={product as any} onBack={onBack} />);
+
+    // Click the back button at the top
+    fireEvent.click(screen.getByRole('button', { name: /Back to Products/i }));
     expect(onBack).toHaveBeenCalled();
   });
 });
