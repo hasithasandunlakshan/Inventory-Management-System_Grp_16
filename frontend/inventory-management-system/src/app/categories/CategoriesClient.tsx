@@ -5,9 +5,17 @@ import { categoryService } from '@/lib/services/categoryService';
 import { Category } from '@/lib/types/product';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  Tag,
+  Loader2,
+  FolderOpen,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -31,7 +39,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 interface CategoriesClientProps {
-  initialCategories: Category[];
+  readonly initialCategories: Category[];
 }
 
 export default function CategoriesClient({
@@ -42,11 +50,15 @@ export default function CategoriesClient({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleCreateCategory = async () => {
     if (!categoryName.trim()) return;
 
     try {
+      setIsCreating(true);
       const newCategory = await categoryService.createCategory({
         categoryName: categoryName.trim(),
       });
@@ -56,6 +68,8 @@ export default function CategoriesClient({
       toast.success('Category created successfully!');
     } catch {
       toast.error('Failed to create category. Please try again.');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -63,6 +77,7 @@ export default function CategoriesClient({
     if (!editingCategory || !categoryName.trim()) return;
 
     try {
+      setIsUpdating(true);
       const updatedCategory = await categoryService.updateCategory(
         editingCategory.id,
         {
@@ -80,6 +95,8 @@ export default function CategoriesClient({
       toast.success('Category updated successfully!');
     } catch {
       toast.error('Failed to update category. Please try again.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -99,69 +116,159 @@ export default function CategoriesClient({
     setIsEditDialogOpen(true);
   };
 
+  // Filter categories based on search
+  const filteredCategories = categories.filter(category =>
+    category.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className='space-y-6'>
-      <div className='flex justify-between items-center'>
-        <h1 className='text-2xl font-bold'>Categories</h1>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className='w-4 h-4 mr-2' />
-              Add Category
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Category</DialogTitle>
-              <DialogDescription>
-                Add a new product category to organize your inventory.
-              </DialogDescription>
-            </DialogHeader>
-            <div className='space-y-4'>
+      {/* Header Card with Search and Add Button */}
+      <Card
+        className='shadow-lg border-0'
+        style={{
+          background: 'linear-gradient(135deg, #2A7CC7 0%, #245e91ff 100%)',
+        }}
+      >
+        <CardContent className='p-6'>
+          <div className='flex flex-col sm:flex-row gap-4 items-center'>
+            {/* Search */}
+            <div className='flex-1 w-full relative'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 h-5 w-5' />
               <Input
-                placeholder='Category name'
-                value={categoryName}
-                onChange={e => setCategoryName(e.target.value)}
+                type='text'
+                placeholder='Search categories...'
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className='pl-10 h-11 bg-white/95 border-white/20 focus:bg-white placeholder:text-gray-400'
               />
             </div>
-            <DialogFooter>
-              <Button
-                variant='outline'
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleCreateCategory}>Create Category</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
 
-      <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-4'>
-        {categories.length === 0 ? (
-          <div className='col-span-full text-center text-gray-500 py-8'>
-            No categories available. Create your first category to get started.
+            {/* Add Category Button */}
+            <Dialog
+              open={isCreateDialogOpen}
+              onOpenChange={setIsCreateDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button className='h-11 px-6 font-semibold bg-white text-blue-700 hover:bg-blue-50 shadow-md hover:shadow-lg transition-all duration-200 whitespace-nowrap'>
+                  <Plus className='w-5 h-5 mr-2' />
+                  Add Category
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className='text-2xl font-bold flex items-center gap-2'>
+                    <Tag className='h-6 w-6' />
+                    Create New Category
+                  </DialogTitle>
+                  <DialogDescription>
+                    Add a new product category to organize your inventory.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className='space-y-4 py-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='create-category-name'>Category Name</Label>
+                    <Input
+                      id='create-category-name'
+                      placeholder='Enter category name'
+                      value={categoryName}
+                      onChange={e => setCategoryName(e.target.value)}
+                      className='h-11'
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !isCreating) {
+                          handleCreateCategory();
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant='outline'
+                    onClick={() => {
+                      setIsCreateDialogOpen(false);
+                      setCategoryName('');
+                    }}
+                    disabled={isCreating}
+                    className='h-10'
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCreateCategory}
+                    disabled={isCreating || !categoryName.trim()}
+                    className='h-10 font-semibold'
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #2A7CC7 0%, #245e91ff 100%)',
+                    }}
+                  >
+                    {isCreating ? (
+                      <>
+                        <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className='w-4 h-4 mr-2' />
+                        Create Category
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Stats */}
+          <div className='mt-4 pt-4 border-t border-white/20'>
+            <div className='flex items-center gap-2 text-white'>
+              <FolderOpen className='h-5 w-5' />
+              <span className='text-sm font-medium'>
+                {filteredCategories.length}{' '}
+                {filteredCategories.length === 1 ? 'category' : 'categories'}
+                {searchQuery && ` found matching "${searchQuery}"`}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Categories Grid */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4'>
+        {filteredCategories.length === 0 ? (
+          <div className='col-span-full text-center py-12'>
+            <FolderOpen className='h-16 w-16 mx-auto text-gray-300 mb-4' />
+            <p className='text-gray-500 mb-2'>
+              {searchQuery
+                ? 'No categories found matching your search'
+                : 'No categories available'}
+            </p>
+            {!searchQuery && (
+              <p className='text-sm text-gray-400'>
+                Create your first category to get started.
+              </p>
+            )}
           </div>
         ) : (
-          categories.map(category => (
+          filteredCategories.map(category => (
             <Card
               key={category.id}
-              className='hover:shadow-md transition-shadow'
+              className='group hover:shadow-xl transition-all duration-300 border bg-white'
             >
               <CardHeader className='pb-3'>
-                <div className='flex justify-between items-start'>
-                  <CardTitle className='text-lg'>
-                    {category.categoryName}
-                  </CardTitle>
-                  <Badge variant='secondary'>ID: {category.id}</Badge>
-                </div>
+                <CardTitle className='text-lg font-bold text-gray-900 flex items-center gap-2'>
+                  <Tag className='h-5 w-5 text-blue-600' />
+                  {category.categoryName}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className='flex space-x-2'>
+                <div className='flex gap-2'>
                   <Button
                     variant='outline'
                     size='sm'
                     onClick={() => openEditDialog(category)}
+                    className='flex-1 h-9 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 transition-all'
                   >
                     <Edit className='w-4 h-4 mr-1' />
                     Edit
@@ -171,7 +278,7 @@ export default function CategoriesClient({
                       <Button
                         variant='outline'
                         size='sm'
-                        className='text-red-600 hover:text-red-700'
+                        className='flex-1 h-9 text-red-600 hover:bg-red-50 hover:border-red-400 transition-all'
                       >
                         <Trash2 className='w-4 h-4 mr-1' />
                         Delete
@@ -208,24 +315,63 @@ export default function CategoriesClient({
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
+            <DialogTitle className='text-2xl font-bold flex items-center gap-2'>
+              <Edit className='h-6 w-6' />
+              Edit Category
+            </DialogTitle>
             <DialogDescription>Update the category name.</DialogDescription>
           </DialogHeader>
-          <div className='space-y-4'>
-            <Input
-              placeholder='Category name'
-              value={categoryName}
-              onChange={e => setCategoryName(e.target.value)}
-            />
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='edit-category-name'>Category Name</Label>
+              <Input
+                id='edit-category-name'
+                placeholder='Enter category name'
+                value={categoryName}
+                onChange={e => setCategoryName(e.target.value)}
+                className='h-11'
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !isUpdating) {
+                    handleEditCategory();
+                  }
+                }}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
               variant='outline'
-              onClick={() => setIsEditDialogOpen(false)}
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setCategoryName('');
+                setEditingCategory(null);
+              }}
+              disabled={isUpdating}
+              className='h-10'
             >
               Cancel
             </Button>
-            <Button onClick={handleEditCategory}>Update Category</Button>
+            <Button
+              onClick={handleEditCategory}
+              disabled={isUpdating || !categoryName.trim()}
+              className='h-10 font-semibold'
+              style={{
+                background:
+                  'linear-gradient(135deg, #2A7CC7 0%, #245e91ff 100%)',
+              }}
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Edit className='w-4 h-4 mr-2' />
+                  Update Category
+                </>
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
