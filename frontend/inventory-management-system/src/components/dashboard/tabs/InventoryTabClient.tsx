@@ -86,7 +86,8 @@ export default function InventoryTabClient({
   const [inventoryData, setInventoryData] = useState<InventoryAnalytics | null>(
     initialInventoryData
   );
-  const [stockMovement, setStockMovement] = useState<StockMovementData[]>(initialStockMovement);
+  const [stockMovement, setStockMovement] =
+    useState<StockMovementData[]>(initialStockMovement);
   const [categoryData, setCategoryData] =
     useState<Array<{ category: string; count: number; value: number }>>(
       initialCategoryData
@@ -105,16 +106,16 @@ export default function InventoryTabClient({
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch inventory analytics (adjust the URL based on your API)
       const response = await fetch('/api/analytics/inventory', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      
+
       if (!response.ok) throw new Error('Failed to fetch inventory data');
-      
+
       const data = await response.json();
       setInventoryData(data.inventoryData || null);
       setStockMovement(data.stockMovement || []);

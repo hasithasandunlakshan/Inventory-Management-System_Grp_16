@@ -53,7 +53,9 @@ interface Props {
 }
 
 export default function SalesTabClient({ initialSalesData }: Props) {
-  const [salesData, setSalesData] = useState<SalesAnalytics | null>(initialSalesData);
+  const [salesData, setSalesData] = useState<SalesAnalytics | null>(
+    initialSalesData
+  );
   const [loading, setLoading] = useState(!initialSalesData);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,16 +70,16 @@ export default function SalesTabClient({ initialSalesData }: Props) {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch sales analytics (adjust the URL based on your API)
       const response = await fetch('/api/analytics/sales', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      
+
       if (!response.ok) throw new Error('Failed to fetch sales data');
-      
+
       const data = await response.json();
       setSalesData(data || null);
     } catch (err) {
