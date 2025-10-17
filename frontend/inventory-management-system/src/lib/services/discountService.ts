@@ -17,9 +17,10 @@ const ORDER_SERVICE_BASE =
   'https://order.shopmindnotification.app';
 const ADMIN_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/admin/discounts`;
 const PUBLIC_API_BASE_URL = `${ORDER_SERVICE_BASE}/api/discounts`;
-const PRODUCTS_API_URL =
-  process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL ||
-  'http://localhost:8083/api/products';
+const baseUrl =
+  process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
+const PRODUCTS_API_URL = `${baseUrl}/api/products`;
+
 
 export const discountService = {
   /**
