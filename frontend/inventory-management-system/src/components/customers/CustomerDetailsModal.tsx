@@ -100,8 +100,10 @@ export default function CustomerDetailsModal({
               <h3 className='text-xl font-semibold'>{customer.fullName}</h3>
               <p className='text-gray-600'>@{customer.username}</p>
               <div className='flex items-center gap-2 mt-2'>
-                <Badge className={getStatusColor(customer.accountStatus)}>
-                  {customer.accountStatus}
+                <Badge
+                  className={getStatusColor(customer.accountStatus || 'ACTIVE')}
+                >
+                  {customer.accountStatus || 'ACTIVE'}
                 </Badge>
                 {customer.emailVerified && (
                   <Badge className='bg-blue-100 text-blue-800'>
@@ -193,7 +195,9 @@ export default function CustomerDetailsModal({
                   <div>
                     <p className='text-sm text-gray-500'>Joined Date</p>
                     <p className='font-medium'>
-                      {formatDateTime(customer.createdAt)}
+                      {formatDateTime(
+                        customer.createdAt || new Date().toISOString()
+                      )}
                     </p>
                   </div>
                 </div>

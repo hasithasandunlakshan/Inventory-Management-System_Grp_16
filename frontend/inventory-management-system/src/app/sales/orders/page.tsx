@@ -48,10 +48,10 @@ export default function OrdersPage() {
     try {
       setLoading(true);
       setError(null);
-      const response: OrdersResponse = await orderService.getAllOrders(
+      const response = (await orderService.getAllOrders(
         currentPage,
         pageSize
-      );
+      )) as OrdersResponse;
 
       if (response.success) {
         setOrders(response.orders);

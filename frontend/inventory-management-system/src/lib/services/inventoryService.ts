@@ -41,33 +41,9 @@ export interface InventoryItem {
 
 export const inventoryService = {
   /**
-   * Get all inventory items with optional date filtering
+   * Get all inventory rows with optional date filtering
    */
-  async listAll(
-    dateFrom?: string,
-    dateTo?: string
-  ): Promise<InventoryRow[] | InventoryItem[]> {
-    // Check if requesting full inventory items or just rows
-    // If no dates provided, try to get full items from Product Service
-    if (!dateFrom && !dateTo) {
-      try {
-        const response = await fetch(`${INVENTORY_BASE}/api/inventory`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return data;
-        }
-      } catch (error) {
-        // Fall through to regular list
-      }
-    }
-
-    // Regular inventory rows with date filtering
+  async listAll(dateFrom?: string, dateTo?: string): Promise<InventoryRow[]> {
     let url = API_BASE_URL;
     if (dateFrom && dateTo) {
       url += `?dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`;
@@ -81,16 +57,45 @@ export const inventoryService = {
   },
 
   /**
-   * Get inventory cost (total value of all available stock)
+   * Get all inventory items (with category details)
    */
-  async getInventoryCost(): Promise<InventoryCostResponse> {
+  async listAllItems(): Promise<InventoryItem[]> {
     try {
-      const response = await fetch(`${INVENTORY_COST_URL}/api/products/inventory/cost`, {
+      const response = await fetch(`${INVENTORY_BASE}/api/inventory`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get inventory cost (total value of all available stock)
+   */
+  async getInventoryCost(): Promise<InventoryCostResponse> {
+    try {
+      const response = await fetch(
+        `${INVENTORY_COST_URL}/api/products/inventory/cost`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();

@@ -47,10 +47,10 @@ export const enhancedSupplierService = {
               userDetails: {
                 email: userDetails.email,
                 fullName: userDetails.fullName,
-                phoneNumber: userDetails.phoneNumber,
-                formattedAddress: userDetails.formattedAddress,
+                phoneNumber: userDetails.phoneNumber || undefined,
+                formattedAddress: userDetails.formattedAddress || undefined,
                 accountStatus: userDetails.accountStatus,
-                profileImageUrl: userDetails.profileImageUrl,
+                profileImageUrl: userDetails.profileImageUrl || undefined,
               },
             };
           } catch (error) {
@@ -98,10 +98,10 @@ export const enhancedSupplierService = {
           userDetails: {
             email: userDetails.email,
             fullName: userDetails.fullName,
-            phoneNumber: userDetails.phoneNumber,
-            formattedAddress: userDetails.formattedAddress,
+            phoneNumber: userDetails.phoneNumber || undefined,
+            formattedAddress: userDetails.formattedAddress || undefined,
             accountStatus: userDetails.accountStatus,
-            profileImageUrl: userDetails.profileImageUrl,
+            profileImageUrl: userDetails.profileImageUrl || undefined,
           },
         };
       } catch (userError) {
