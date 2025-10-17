@@ -1,26 +1,26 @@
 import { render, screen } from '@testing-library/react';
 import ProductLayout from '@/app/products/layout';
 
-jest.mock('next/link', () => ({
-  __esModule: true,
-  default: ({ href, children, ...rest }: any) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-}));
-
 describe('ProductLayout (root __tests__)', () => {
-  it('renders search and add product button', () => {
+  it('renders children correctly', () => {
     render(
       <ProductLayout>
         <div>content</div>
       </ProductLayout>
     );
-    expect(screen.getByPlaceholderText(/Search products/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /Add Product/i })
-    ).toBeInTheDocument();
+    // Layout should render the children
     expect(screen.getByText('content')).toBeInTheDocument();
+  });
+
+  it('wraps children in a main element', () => {
+    const { container } = render(
+      <ProductLayout>
+        <div>test content</div>
+      </ProductLayout>
+    );
+    // Check that main element exists
+    const main = container.querySelector('main');
+    expect(main).toBeInTheDocument();
+    expect(main).toContainHTML('test content');
   });
 });
