@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { revenueService } from '@/services/revenueService';
+import { revenueService } from '@/lib/services/revenueService';
 
 export default function ApiTestComponent() {
   const [testData, setTestData] = useState<Record<string, unknown> | null>(

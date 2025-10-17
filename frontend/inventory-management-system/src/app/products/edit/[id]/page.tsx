@@ -92,7 +92,7 @@ export default function EditProductPage() {
     const productServiceUrl =
       process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
     const cloudinaryUrl = `${productServiceUrl}/api/cloudinary/signature`;
-    
+
     const sigRes = await axios.get(cloudinaryUrl);
     const { timestamp, signature, apiKey, cloudName } = sigRes.data;
 

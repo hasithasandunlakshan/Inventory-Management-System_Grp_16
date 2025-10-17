@@ -13,7 +13,11 @@ import {
   CheckCircle,
   UserCheck,
 } from 'lucide-react';
-import { userService, UserInfo, UsersResponse } from '@/services/userService';
+import {
+  userService,
+  UserInfo,
+  UsersResponse,
+} from '@/lib/services/userService';
 import CustomerDetailsModal from '@/components/customers/CustomerDetailsModal';
 import CustomerFilters from '@/components/customers/CustomerFilters';
 

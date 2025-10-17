@@ -20,7 +20,7 @@ import {
   CheckCircle,
   X,
 } from 'lucide-react';
-import { UserInfo } from '@/services/userService';
+import { UserInfo } from '@/lib/services/userService';
 
 interface CustomerDetailsModalProps {
   customer: UserInfo | null;

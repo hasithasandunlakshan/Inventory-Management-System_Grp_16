@@ -1,4 +1,4 @@
-import { authService } from '../lib/services/authService';
+import { authService } from './authService';
 
 const PAYMENT_API_BASE_URL = `${process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084'}/api/payments`;
 

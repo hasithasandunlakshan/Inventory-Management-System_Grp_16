@@ -28,7 +28,7 @@ import {
   type StockAlert,
 } from '@/lib/services/stockAlertService';
 import { orderService } from '@/lib/services/orderService';
-import { revenueService } from '@/services/revenueService';
+import { revenueService } from '@/lib/services/revenueService';
 import {
   logisticsService,
   type LogisticsMetrics,

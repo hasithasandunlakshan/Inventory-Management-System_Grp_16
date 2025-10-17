@@ -2,11 +2,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
-import { revenueService } from '@/services/revenueService';
+import { revenueService } from '@/lib/services/revenueService';
 import {
   inventoryService,
   InventoryCostResponse,
-} from '@/services/inventoryService';
+} from '@/lib/services/inventoryService';
 import { TodayRevenueResponse } from '@/types/revenue';
 
 export default function KpiCards() {

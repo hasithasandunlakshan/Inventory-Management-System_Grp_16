@@ -20,7 +20,7 @@ import {
   X,
   RefreshCw,
 } from 'lucide-react';
-import { Order, OrderItem, orderService } from '@/services/orderService';
+import { Order, OrderItem, orderService } from '@/lib/services/orderService';
 import { toast } from 'sonner';
 
 interface OrderDetailsModalProps {

@@ -3,7 +3,7 @@ import {
   MonthlyRevenueResponse,
   StripeStatsResponse,
 } from '@/types/revenue';
-import { authService } from '@/lib/services/authService';
+import { authService } from './authService';
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084'}/api/revenue`; // Direct to local Order Service
 
