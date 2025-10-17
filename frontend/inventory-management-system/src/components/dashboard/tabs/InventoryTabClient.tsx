@@ -107,16 +107,12 @@ export default function InventoryTabClient({
       setLoading(true);
       setError(null);
 
-      // Fetch inventory analytics (adjust the URL based on your API)
-      const response = await fetch('/api/analytics/inventory', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Use analytics service
+      const { analyticsService } = await import(
+        '@/lib/services/analyticsService'
+      );
+      const data = await analyticsService.getInventoryAnalytics();
 
-      if (!response.ok) throw new Error('Failed to fetch inventory data');
-
-      const data = await response.json();
       setInventoryData(data.inventoryData || null);
       setStockMovement(data.stockMovement || []);
       setCategoryData(data.categoryData || []);

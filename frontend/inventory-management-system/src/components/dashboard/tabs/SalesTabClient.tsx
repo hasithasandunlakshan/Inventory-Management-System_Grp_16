@@ -71,16 +71,12 @@ export default function SalesTabClient({ initialSalesData }: Props) {
       setLoading(true);
       setError(null);
 
-      // Fetch sales analytics (adjust the URL based on your API)
-      const response = await fetch('/api/analytics/sales', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Use analytics service
+      const { analyticsService } = await import(
+        '@/lib/services/analyticsService'
+      );
+      const data = await analyticsService.getSalesAnalytics();
 
-      if (!response.ok) throw new Error('Failed to fetch sales data');
-
-      const data = await response.json();
       setSalesData(data || null);
     } catch (err) {
       setError('Failed to load sales data');
