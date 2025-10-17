@@ -1,20 +1,34 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import {
-  GoogleMap,
+  Order,
+  orderService,
+  OrderWithCustomer,
+} from '@/lib/services/orderService';
+import {
   DirectionsRenderer,
+  GoogleMap,
   Marker,
   useJsApiLoader,
 } from '@react-google-maps/api';
-import {
-  orderService,
-  Order,
-  OrderWithCustomer,
-} from '@/lib/services/orderService';
+
+// Color scheme from dashboard
+const CustomerColors = {
+  brandBlue: '#2A7CC7',
+  brandDark: '#072033ff',
+  brandMedium: '#245e91ff',
+  accentBlue: '#6366F1',
+  textPrimary: '#1F2937',
+  textSecondary: '#6B7280',
+  bgPage: '#F8FAFC',
+  bgCard: '#FFFFFF',
+  borderDefault: '#E2E8F0',
+};
 
 type ShippingOrder = {
   id: number;
@@ -666,7 +680,7 @@ function ShippingPage() {
 
     const selectedDriver = assignedDrivers[selectedClusterForAssignment];
     if (!selectedDriver) {
-      alert('Please select a driver first');
+      toast.warning('Please select a driver first');
       return;
     }
 
@@ -677,7 +691,7 @@ function ShippingPage() {
       );
 
       if (!driverMatch) {
-        alert('Driver not found');
+        toast.error('Driver not found');
         return;
       }
 
@@ -705,26 +719,28 @@ function ShippingPage() {
       setRouteMetrics([]);
       setOptimizedRoutes([]);
 
-      alert(
-        `✅ Successfully assigned ${driverMatch.driverName} to cluster!\n\n` +
-          `Assigned ${assignedIds.length} orders.\n` +
-          `Remaining orders: ${realOrders.length - (assignedOrderIds.size + assignedIds.length)}\n\n` +
-          `Click "Create Clusters" to cluster remaining orders.`
+      toast.success(
+        `Successfully assigned ${driverMatch.driverName} to cluster!`,
+        {
+          description: `Assigned ${assignedIds.length} orders. Remaining: ${realOrders.length - (assignedOrderIds.size + assignedIds.length)}. Click "Create Clusters" to cluster remaining orders.`,
+          duration: 5000,
+        }
       );
 
       setShowDriverDialog(false);
       setSelectedClusterForAssignment(null);
     } catch (error) {
-      alert(
-        `Failed to assign driver: ${error instanceof Error ? error.message : String(error)}`
-      );
+      toast.error('Failed to assign driver', {
+        description: error instanceof Error ? error.message : String(error),
+        duration: 4000,
+      });
     }
   };
 
   // Cluster Orders
   const handleClustering = () => {
     if (currentOrders.length === 0) {
-      alert('No orders available for clustering!');
+      toast.warning('No orders available for clustering!');
       return;
     }
 
@@ -732,9 +748,10 @@ function ShippingPage() {
     const effectiveNumClusters = Math.min(numClusters, currentOrders.length);
 
     if (effectiveNumClusters !== numClusters) {
-      alert(
-        `Adjusted cluster count from ${numClusters} to ${effectiveNumClusters} (only ${currentOrders.length} orders available)`
-      );
+      toast.info('Cluster count adjusted', {
+        description: `Adjusted from ${numClusters} to ${effectiveNumClusters} (only ${currentOrders.length} orders available)`,
+        duration: 4000,
+      });
     }
 
     const coords = currentOrders.map(o => [o.lat, o.lng]);
@@ -762,6 +779,12 @@ function ShippingPage() {
 
     // Calculate optimized routes for each cluster
     calculateOptimizedRoutes(grouped);
+
+    // Show success toast
+    toast.success('Clusters created successfully!', {
+      description: `Created ${effectiveNumClusters} clusters with ${currentOrders.length} orders`,
+      duration: 3000,
+    });
   };
 
   // Calculate optimized routes for all clusters
@@ -883,7 +906,10 @@ function ShippingPage() {
 
   // Export route details
   const exportRoutes = () => {
-    if (routeMetrics.length === 0) return;
+    if (routeMetrics.length === 0) {
+      toast.warning('No route data available to export');
+      return;
+    }
 
     const exportData = {
       timestamp: new Date().toISOString(),
@@ -921,6 +947,11 @@ function ShippingPage() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    toast.success('Route details exported successfully!', {
+      description: `${clusters.length} clusters with ${clusters.reduce((sum, c) => sum + c.length, 0)} orders exported`,
+      duration: 3000,
+    });
   };
 
   // Get status color
@@ -939,56 +970,74 @@ function ShippingPage() {
 
   if (!isLoaded) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
+      <div
+        className='min-h-screen flex items-center justify-center'
+        style={{ backgroundColor: CustomerColors.bgPage }}
+      >
         <div className='text-center'>
-          <div className='h-10 w-10 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent mx-auto mb-4' />
-          <p className='text-gray-600'>Loading Google Maps...</p>
+          <div
+            className='h-10 w-10 animate-spin rounded-full border-2 border-t-transparent mx-auto mb-4'
+            style={{ borderColor: CustomerColors.brandBlue }}
+          />
+          <p style={{ color: CustomerColors.textSecondary }}>
+            Loading Google Maps...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen'>
+    <div
+      className='min-h-screen'
+      style={{ backgroundColor: CustomerColors.bgPage }}
+    >
       {/* Header */}
-      <div className='bg-white shadow-lg border-b border-gray-200'>
+      <div
+        className='shadow-lg mb-8 rounded-2xl overflow-hidden mx-4 sm:mx-6 lg:mx-8 mt-6'
+        style={{
+          background: `linear-gradient(135deg, ${CustomerColors.brandBlue} 0%, ${CustomerColors.brandMedium} 100%)`,
+          boxShadow:
+            '0 10px 25px -5px rgba(42, 124, 199, 0.3), 0 8px 10px -6px rgba(42, 124, 199, 0.2)',
+        }}
+      >
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-6'>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>
+              <h1 className='text-2xl font-bold text-white'>
                 Shipping Management
               </h1>
-              <p className='text-gray-600 mt-1'>
+              <p className='text-white/85 text-sm mt-1'>
                 Optimize delivery routes and manage orders
               </p>
             </div>
             <div className='flex items-center space-x-4'>
-              <div className='text-sm text-gray-500'>
+              <div className='text-sm text-white/90'>
                 Store:{' '}
-                <span className='font-semibold text-gray-900'>
+                <span className='font-semibold text-white'>
                   {storeLocation.address}
                 </span>
               </div>
 
-              <div className='text-sm text-gray-500'>
+              <div className='text-sm text-white/90'>
                 Available Orders:{' '}
-                <span className='font-semibold text-green-600'>
+                <span className='font-semibold text-white'>
                   {isLoadingOrders ? '...' : currentOrders.length}
                 </span>
               </div>
 
               {assignedOrderIds.size > 0 && (
-                <div className='text-sm text-gray-500'>
+                <div className='text-sm text-white/90'>
                   Assigned Orders:{' '}
-                  <span className='font-semibold text-blue-600'>
+                  <span className='font-semibold text-white'>
                     {assignedOrderIds.size}
                   </span>
                 </div>
               )}
 
-              <div className='text-sm text-gray-500'>
+              <div className='text-sm text-white/90'>
                 Active Clusters:{' '}
-                <span className='font-semibold text-gray-900'>
+                <span className='font-semibold text-white'>
                   {clusters.length}
                 </span>
               </div>
@@ -1000,11 +1049,19 @@ function ShippingPage() {
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Status and Error Messages */}
         {ordersError && (
-          <div className='mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
+          <div
+            className='mb-6 rounded-lg p-4'
+            style={{
+              backgroundColor: '#FEF3C7',
+              borderColor: '#FCD34D',
+              border: '1px solid',
+            }}
+          >
             <div className='flex'>
               <div className='flex-shrink-0'>
                 <svg
-                  className='h-5 w-5 text-yellow-400'
+                  className='h-5 w-5'
+                  style={{ color: '#F59E0B' }}
                   fill='currentColor'
                   viewBox='0 0 20 20'
                 >
@@ -1016,20 +1073,35 @@ function ShippingPage() {
                 </svg>
               </div>
               <div className='ml-3'>
-                <h3 className='text-sm font-medium text-yellow-800'>
+                <h3
+                  className='text-sm font-medium'
+                  style={{ color: '#92400E' }}
+                >
                   Error Loading Orders
                 </h3>
-                <p className='mt-1 text-sm text-yellow-700'>{ordersError}</p>
+                <p className='mt-1 text-sm' style={{ color: '#B45309' }}>
+                  {ordersError}
+                </p>
               </div>
             </div>
           </div>
         )}
 
         {isLoadingOrders && (
-          <div className='mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4'>
+          <div
+            className='mb-6 rounded-lg p-4'
+            style={{
+              backgroundColor: '#DBEAFE',
+              borderColor: '#93C5FD',
+              border: '1px solid',
+            }}
+          >
             <div className='flex items-center'>
-              <div className='h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent mr-3' />
-              <p className='text-sm text-blue-700'>
+              <div
+                className='h-4 w-4 animate-spin rounded-full border-2 border-t-transparent mr-3'
+                style={{ borderColor: CustomerColors.brandBlue }}
+              />
+              <p className='text-sm' style={{ color: '#1E40AF' }}>
                 Loading orders from database...
               </p>
             </div>
@@ -1037,11 +1109,19 @@ function ShippingPage() {
         )}
 
         {!isLoadingOrders && !ordersError && realOrders.length > 0 && (
-          <div className='mb-6 bg-green-50 border border-green-200 rounded-lg p-4'>
+          <div
+            className='mb-6 rounded-lg p-4'
+            style={{
+              backgroundColor: '#D1FAE5',
+              borderColor: '#6EE7B7',
+              border: '1px solid',
+            }}
+          >
             <div className='flex'>
               <div className='flex-shrink-0'>
                 <svg
-                  className='h-5 w-5 text-green-400'
+                  className='h-5 w-5'
+                  style={{ color: '#10B981' }}
                   fill='currentColor'
                   viewBox='0 0 20 20'
                 >
@@ -1053,12 +1133,12 @@ function ShippingPage() {
                 </svg>
               </div>
               <div className='ml-3'>
-                <p className='text-sm text-green-700'>
-                  ✅ Successfully loaded {realOrders.length} total orders from
+                <p className='text-sm' style={{ color: '#282a9bff' }}>
+                  Successfully loaded {realOrders.length} total orders from
                   database
                 </p>
                 {assignedOrderIds.size > 0 && (
-                  <p className='text-sm text-blue-700 mt-1'>
+                  <p className='text-sm mt-1' style={{ color: '#1E40AF' }}>
                     📦 {assignedOrderIds.size} orders assigned |{' '}
                     {currentOrders.length} orders available for clustering
                   </p>
@@ -1072,10 +1152,20 @@ function ShippingPage() {
           {/* Control Panel */}
           <div className='lg:col-span-1 space-y-6'>
             {/* Clustering Controls */}
-            <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-100'>
-              <h2 className='text-xl font-semibold text-gray-900 mb-4 flex items-center'>
+            <div
+              className='rounded-xl shadow-lg p-6 border-0'
+              style={{
+                backgroundColor: CustomerColors.bgCard,
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <h2
+                className='text-xl font-semibold mb-4 flex items-center'
+                style={{ color: CustomerColors.textPrimary }}
+              >
                 <svg
-                  className='w-5 h-5 mr-2 text-blue-600'
+                  className='w-5 h-5 mr-2'
+                  style={{ color: CustomerColors.brandBlue }}
                   fill='none'
                   stroke='currentColor'
                   viewBox='0 0 24 24'
@@ -1094,7 +1184,8 @@ function ShippingPage() {
                 <div>
                   <label
                     htmlFor='num-clusters'
-                    className='block text-sm font-medium text-gray-700 mb-2'
+                    className='block text-sm font-medium mb-2'
+                    style={{ color: CustomerColors.textSecondary }}
                   >
                     Number of Clusters
                   </label>
@@ -1152,10 +1243,20 @@ function ShippingPage() {
 
             {/* Orders List */}
             {showAllOrders && (
-              <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-100'>
-                <h2 className='text-xl font-semibold text-gray-900 mb-4 flex items-center'>
+              <div
+                className='rounded-xl shadow-lg p-6 border-0'
+                style={{
+                  backgroundColor: CustomerColors.bgCard,
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <h2
+                  className='text-xl font-semibold mb-4 flex items-center'
+                  style={{ color: CustomerColors.textPrimary }}
+                >
                   <svg
-                    className='w-5 h-5 mr-2 text-green-600'
+                    className='w-5 h-5 mr-2'
+                    style={{ color: '#10B981' }}
                     fill='none'
                     stroke='currentColor'
                     viewBox='0 0 24 24'
@@ -1169,7 +1270,10 @@ function ShippingPage() {
                   </svg>
                   Available Orders
                   {assignedOrderIds.size > 0 && (
-                    <span className='ml-2 text-sm text-blue-600'>
+                    <span
+                      className='ml-2 text-sm'
+                      style={{ color: CustomerColors.brandBlue }}
+                    >
                       ({currentOrders.length} remaining)
                     </span>
                   )}
@@ -1249,10 +1353,20 @@ function ShippingPage() {
 
             {/* Route Optimization Summary */}
             {routeMetrics.length > 0 && (
-              <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-100'>
-                <h2 className='text-xl font-semibold text-gray-900 mb-4 flex items-center'>
+              <div
+                className='rounded-xl shadow-lg p-6 border-0'
+                style={{
+                  backgroundColor: CustomerColors.bgCard,
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <h2
+                  className='text-xl font-semibold mb-4 flex items-center'
+                  style={{ color: CustomerColors.textPrimary }}
+                >
                   <svg
-                    className='w-5 h-5 mr-2 text-green-600'
+                    className='w-5 h-5 mr-2'
+                    style={{ color: '#10B981' }}
                     fill='none'
                     stroke='currentColor'
                     viewBox='0 0 24 24'
@@ -1271,10 +1385,18 @@ function ShippingPage() {
                   {routeMetrics.map((metrics, idx) => (
                     <div
                       key={idx}
-                      className='p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200'
+                      className='p-4 rounded-lg'
+                      style={{
+                        background:
+                          'linear-gradient(to right, #EFF6FF, #ECFDF5)',
+                        border: '1px solid #BFDBFE',
+                      }}
                     >
                       <div className='flex items-center justify-between mb-3'>
-                        <h3 className='font-semibold text-gray-900 flex items-center'>
+                        <h3
+                          className='font-semibold flex items-center'
+                          style={{ color: CustomerColors.textPrimary }}
+                        >
                           <div
                             className='w-4 h-4 rounded-full mr-2'
                             style={{
@@ -1284,25 +1406,52 @@ function ShippingPage() {
                           ></div>
                           Cluster {idx + 1} Route
                         </h3>
-                        <span className='text-sm text-gray-500'>
+                        <span
+                          className='text-sm'
+                          style={{ color: CustomerColors.textSecondary }}
+                        >
                           {clusters[idx]?.length || 0} deliveries
                         </span>
                       </div>
 
                       <div className='grid grid-cols-2 gap-4 mb-3'>
-                        <div className='bg-white p-3 rounded-lg border border-gray-200'>
-                          <div className='text-sm text-gray-600'>
+                        <div
+                          className='p-3 rounded-lg'
+                          style={{
+                            backgroundColor: CustomerColors.bgCard,
+                            border: `1px solid ${CustomerColors.borderDefault}`,
+                          }}
+                        >
+                          <div
+                            className='text-sm'
+                            style={{ color: CustomerColors.textSecondary }}
+                          >
                             Total Distance
                           </div>
-                          <div className='text-lg font-semibold text-blue-600'>
+                          <div
+                            className='text-lg font-semibold'
+                            style={{ color: CustomerColors.brandBlue }}
+                          >
                             {metrics.totalDistance} km
                           </div>
                         </div>
-                        <div className='bg-white p-3 rounded-lg border border-gray-200'>
-                          <div className='text-sm text-gray-600'>
+                        <div
+                          className='p-3 rounded-lg'
+                          style={{
+                            backgroundColor: CustomerColors.bgCard,
+                            border: `1px solid ${CustomerColors.borderDefault}`,
+                          }}
+                        >
+                          <div
+                            className='text-sm'
+                            style={{ color: CustomerColors.textSecondary }}
+                          >
                             Estimated Time
                           </div>
-                          <div className='text-lg font-semibold text-green-600'>
+                          <div
+                            className='text-lg font-semibold'
+                            style={{ color: '#10B981' }}
+                          >
                             {metrics.estimatedTime.toFixed(1)} hrs
                           </div>
                         </div>
@@ -1361,9 +1510,23 @@ function ShippingPage() {
                           km
                         </div>
                       </div>
-                      <div className='bg-white p-3 rounded-lg border border-gray-200'>
-                        <div className='text-sm text-gray-600'>Total Time</div>
-                        <div className='text-xl font-bold text-pink-600'>
+                      <div
+                        className='p-3 rounded-lg'
+                        style={{
+                          backgroundColor: CustomerColors.bgCard,
+                          border: `1px solid ${CustomerColors.borderDefault}`,
+                        }}
+                      >
+                        <div
+                          className='text-sm'
+                          style={{ color: CustomerColors.textSecondary }}
+                        >
+                          Total Time
+                        </div>
+                        <div
+                          className='text-xl font-bold'
+                          style={{ color: '#EC4899' }}
+                        >
                           {routeMetrics
                             .reduce((sum, m) => sum + m.estimatedTime, 0)
                             .toFixed(1)}{' '}
@@ -1389,7 +1552,10 @@ function ShippingPage() {
                       </div>
                       <Button
                         onClick={() => exportRoutes()}
-                        className='w-full bg-purple-600 hover:bg-purple-700 text-white'
+                        className='w-full text-white'
+                        style={{
+                          background: `linear-gradient(135deg, ${CustomerColors.brandBlue} 0%, ${CustomerColors.brandMedium} 100%)`,
+                        }}
                         size='sm'
                       >
                         <svg
@@ -1415,10 +1581,20 @@ function ShippingPage() {
 
             {/* Clusters List */}
             {clusters.length > 0 && (
-              <div className='bg-white rounded-xl shadow-lg p-6 border border-gray-100'>
-                <h2 className='text-xl font-semibold text-gray-900 mb-4 flex items-center'>
+              <div
+                className='rounded-xl shadow-lg p-6 border-0'
+                style={{
+                  backgroundColor: CustomerColors.bgCard,
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <h2
+                  className='text-xl font-semibold mb-4 flex items-center'
+                  style={{ color: CustomerColors.textPrimary }}
+                >
                   <svg
-                    className='w-5 h-5 mr-2 text-purple-600'
+                    className='w-5 h-5 mr-2'
+                    style={{ color: '#8B5CF6' }}
                     fill='none'
                     stroke='currentColor'
                     viewBox='0 0 24 24'
@@ -1623,7 +1799,13 @@ function ShippingPage() {
 
           {/* Map */}
           <div className='lg:col-span-2'>
-            <div className='bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100'>
+            <div
+              className='rounded-xl shadow-lg overflow-hidden border-0'
+              style={{
+                backgroundColor: CustomerColors.bgCard,
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+              }}
+            >
               <div className='h-96 lg:h-[600px]'>
                 <GoogleMap
                   center={{ lat: storeLocation.lat, lng: storeLocation.lng }}
@@ -1704,18 +1886,32 @@ function ShippingPage() {
       {/* Driver Assignment Confirmation Dialog */}
       {showDriverDialog && selectedClusterForAssignment !== null && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-          <div className='bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4'>
-            <h3 className='text-xl font-bold text-gray-900 mb-4'>
+          <div
+            className='rounded-xl shadow-2xl p-6 max-w-md w-full mx-4'
+            style={{
+              backgroundColor: CustomerColors.bgCard,
+            }}
+          >
+            <h3
+              className='text-xl font-bold mb-4'
+              style={{ color: CustomerColors.textPrimary }}
+            >
               Confirm Driver Assignment
             </h3>
 
             <div className='space-y-4 mb-6'>
-              <div className='p-4 bg-blue-50 rounded-lg border border-blue-200'>
-                <p className='text-sm text-gray-700 mb-2'>
+              <div
+                className='p-4 rounded-lg'
+                style={{
+                  backgroundColor: '#DBEAFE',
+                  border: '1px solid #93C5FD',
+                }}
+              >
+                <p className='text-sm mb-2' style={{ color: '#374151' }}>
                   <span className='font-semibold'>Cluster:</span>{' '}
                   {selectedClusterForAssignment + 1}
                 </p>
-                <p className='text-sm text-gray-700 mb-2'>
+                <p className='text-sm mb-2' style={{ color: '#374151' }}>
                   <span className='font-semibold'>Orders:</span>{' '}
                   {clusters[selectedClusterForAssignment]?.length || 0}
                 </p>
