@@ -1,4 +1,4 @@
-import { createAuthenticatedRequestOptions } from '../utils/authUtils';
+import { createAuthenticatedRequestOptions } from '../utils/auth/authUtils';
 
 // Prefer direct Inventory Service when API Gateway is unavailable
 // Usage: set NEXT_PUBLIC_INVENTORY_SERVICE_URL (e.g., http://localhost:8080)

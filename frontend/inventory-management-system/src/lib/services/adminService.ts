@@ -1,5 +1,5 @@
 // Admin service for role management
-import { authService } from './services/authService';
+import { authService } from './authService';
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080'}/api`;
 

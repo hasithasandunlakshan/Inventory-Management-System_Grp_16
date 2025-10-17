@@ -14,12 +14,12 @@ import {
   TodayRevenueResponse,
   MonthlyRevenueResponse,
   StripeStatsResponse,
-} from '@/types/revenue';
+} from '@/lib/types/revenue';
 import {
   formatCurrency,
   formatMonth,
   getCurrentMonth,
-} from '@/utils/revenueUtils';
+} from '@/lib/utils/revenue/revenueUtils';
 import { SimpleBarChart } from '@/components/charts';
 
 export default function RevenueDashboard() {

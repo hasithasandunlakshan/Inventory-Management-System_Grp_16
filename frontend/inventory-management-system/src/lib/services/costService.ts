@@ -1,4 +1,4 @@
-import { createAuthenticatedRequestOptions } from '../utils/authUtils';
+import { createAuthenticatedRequestOptions } from '../utils/auth/authUtils';
 
 // Cost Analysis Service
 const API_GATEWAY_URL =

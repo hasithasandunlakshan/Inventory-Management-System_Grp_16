@@ -7,7 +7,7 @@ import {
   inventoryService,
   InventoryCostResponse,
 } from '@/lib/services/inventoryService';
-import { TodayRevenueResponse } from '@/types/revenue';
+import { TodayRevenueResponse } from '@/lib/types/revenue';
 
 export default function KpiCards() {
   const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(

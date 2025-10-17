@@ -1,4 +1,4 @@
-import { productUtils } from '@/lib/utils/productUtils';
+import { productUtils } from '@/lib/utils/product/productUtils';
 
 jest.mock('sonner', () => ({
   toast: {

@@ -4,8 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, User, Mail, Phone, MapPin, Shield } from 'lucide-react';
-import { DriverProfile } from '@/types/driver';
-import { getStatusBadgeVariant, formatDriverStatus } from '@/utils/driverUtils';
+import { DriverProfile } from '@/lib/types/driver';
+import {
+  getStatusBadgeVariant,
+  formatDriverStatus,
+} from '@/lib/utils/driver/driverUtils';
 import { userService, UserInfo } from '@/lib/services/userService';
 
 interface DriverCardProps {

@@ -16,7 +16,7 @@ import {
   Tag,
   Info,
 } from 'lucide-react';
-import { productUtils } from '@/lib/utils/productUtils';
+import { productUtils } from '@/lib/utils/product/productUtils';
 
 interface ProductDetailsProps {
   product: Product;
