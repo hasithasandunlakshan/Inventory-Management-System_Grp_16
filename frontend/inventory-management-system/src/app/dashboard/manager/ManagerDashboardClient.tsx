@@ -69,7 +69,7 @@ export default function ManagerDashboardClient({ initialData }: Props) {
         >
           {/* Beautiful Tab Bar with Integrated Header */}
           <div
-            className='w-full mb-8 rounded-2xl overflow-hidden transition-all duration-500'
+            className='w-full mb-8 rounded-2xl transition-all duration-500 relative'
             style={{
               background: `linear-gradient(135deg, ${CustomerColors.brandBlue} 0%, ${CustomerColors.brandMedium} 100%)`,
               boxShadow:
@@ -77,7 +77,7 @@ export default function ManagerDashboardClient({ initialData }: Props) {
             }}
           >
             {/* Header Section */}
-            <div className='px-6 pt-6 pb-4 flex items-center justify-between'>
+            <div className='px-6 pt-6 pb-4 flex items-center justify-between relative z-50'>
               <div>
                 <h1
                   className='text-2xl font-bold tracking-tight'
@@ -92,13 +92,13 @@ export default function ManagerDashboardClient({ initialData }: Props) {
                   Welcome back, {user?.fullName || user?.username}!
                 </p>
               </div>
-              <div style={{ filter: 'brightness(0) invert(1)' }}>
+              <div className='relative z-[100]'>
                 <NotificationBell />
               </div>
             </div>
 
             {/* Tab Navigation */}
-            <div className='px-4 pb-3'>
+            <div className='px-4 pb-3 overflow-hidden rounded-b-2xl'>
               <TabsList
                 className='grid w-full grid-cols-4 p-1.5 gap-2'
                 style={{
