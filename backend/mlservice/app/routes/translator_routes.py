@@ -6,10 +6,11 @@ Provides endpoints for document and text translation
 from fastapi import APIRouter, HTTPException, Form, File, UploadFile, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict
 import logging
 
 from app.services.azure_translator_service import get_translator_service
+from app.services.pdf_translator_service import get_pdf_translator_service
 
 router = APIRouter(prefix="/translate", tags=["Translation"])
 
@@ -38,6 +39,13 @@ class DocumentTranslationRequest(BaseModel):
     source_url: str = Field(..., description="URL or path to source document")
     target_language: str = Field(..., description="Target language code")
     source_language: Optional[str] = Field(None, description="Source language code")
+
+class BatchTranslationInput(BaseModel):
+    source: Dict[str, str] = Field(..., description="Source document configuration")
+    targets: List[Dict[str, str]] = Field(..., description="Target language configurations")
+
+class BatchTranslationRequest(BaseModel):
+    inputs: List[BatchTranslationInput] = Field(..., description="List of translation inputs")
 
 class TranslationResponse(BaseModel):
     original_text: str
@@ -110,34 +118,75 @@ async def translate_text_batch(request: BatchTranslationRequest):
         logger.error(f"Batch text translation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/document/sync")
+async def translate_document_sync(request: DocumentTranslationRequest):
+    """
+    Synchronously translate a single document
+    Following Azure API: POST /translator/document:translate
+    
+    - **source_url**: URL or path to source document
+    - **target_language**: Target language code
+    - **source_language**: Source language code (optional)
+    """
+    try:
+        logger.info(f"Synchronous document translation: {request.source_url} -> {request.target_language}")
+        
+        translator_service = get_translator_service()
+        result = await translator_service.translate_document_sync(
+            source_url=request.source_url,
+            target_language=request.target_language,
+            source_language=request.source_language
+        )
+        
+        return JSONResponse(content=result)
+        
+    except Exception as e:
+        logger.error(f"Synchronous document translation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/document/batch")
+async def start_batch_translation(request: BatchTranslationRequest):
+    """
+    Start a batch document translation job
+    Following Azure API: POST /translator/document/batches
+    
+    - **inputs**: List of translation inputs with source and target configurations
+    """
+    try:
+        logger.info(f"Batch document translation request: {len(request.inputs)} inputs")
+        
+        translator_service = get_translator_service()
+        result = await translator_service.start_batch_translation(
+            inputs=[input.dict() for input in request.inputs]
+        )
+        
+        return JSONResponse(content=result)
+        
+    except Exception as e:
+        logger.error(f"Batch document translation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/document")
-async def translate_document(
+async def translate_document_upload(
     file: UploadFile = File(...),
     target_language: str = Form(...),
     source_language: str = Form(None)
 ):
     """
-    Translate a document from one language to another
+    Upload and translate a document (legacy endpoint for file uploads)
     
     - **file**: Uploaded document file
     - **target_language**: Target language code
     - **source_language**: Source language code (optional)
     """
     try:
-        logger.info(f"Document translation request: {file.filename} -> {target_language}")
+        logger.info(f"Document upload translation: {file.filename} -> {target_language}")
         
-        # For now, we'll simulate the document translation process
-        # In a real implementation, you would:
-        # 1. Save the uploaded file to temporary storage
-        # 2. Upload it to Azure Blob Storage
-        # 3. Submit translation job to Azure Document Translation
-        # 4. Return operation ID for status tracking
-        
-        # Simulate processing time
+        # For file uploads, we'll simulate the process
+        # In production, you would upload to Azure Blob Storage first
         import asyncio
         await asyncio.sleep(1)
         
-        # Generate a mock operation ID
         import uuid
         operation_id = str(uuid.uuid4())
         
@@ -157,13 +206,134 @@ async def translate_document(
         return JSONResponse(content=result)
         
     except Exception as e:
-        logger.error(f"Document translation failed: {str(e)}")
+        logger.error(f"Document upload translation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/document/pdf")
+async def translate_pdf_document(
+    file: UploadFile = File(...),
+    target_language: str = Form(...),
+    source_language: str = Form(None)
+):
+    """
+    Upload and translate a PDF document page by page using OpenAI
+    
+    - **file**: Uploaded PDF file
+    - **target_language**: Target language code
+    - **source_language**: Source language code (optional)
+    """
+    try:
+        logger.info(f"PDF document translation: {file.filename} -> {target_language}")
+        
+        # Validate file type
+        if not file.filename.lower().endswith('.pdf'):
+            raise HTTPException(
+                status_code=400,
+                detail="Only PDF files are supported for this endpoint"
+            )
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Get PDF translator service
+        pdf_translator = get_pdf_translator_service()
+        
+        # Translate PDF
+        result = await pdf_translator.translate_pdf_document(
+            pdf_file=file_content,
+            target_language=target_language,
+            source_language=source_language if source_language != 'auto' else None
+        )
+        
+        return JSONResponse(content=result)
+        
+    except Exception as e:
+        logger.error(f"PDF document translation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/document/jobs")
+async def get_all_translation_jobs():
+    """
+    Get status for all translation jobs submitted by the user
+    Following Azure API: GET /translator/document/batches
+    """
+    try:
+        logger.info("Getting all translation jobs")
+        
+        translator_service = get_translator_service()
+        result = await translator_service.get_all_translation_jobs()
+        
+        return JSONResponse(content=result)
+        
+    except Exception as e:
+        logger.error(f"Get all translation jobs failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/document/jobs/{job_id}")
+async def get_translation_job_status(job_id: str):
+    """
+    Get status for a specific translation job
+    Following Azure API: GET /translator/document/batches/{id}
+    
+    - **job_id**: The job ID returned from batch translation
+    """
+    try:
+        logger.info(f"Getting translation job status: {job_id}")
+        
+        translator_service = get_translator_service()
+        result = await translator_service.get_translation_job_status(job_id)
+        
+        return JSONResponse(content=result)
+        
+    except Exception as e:
+        logger.error(f"Get translation job status failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/document/jobs/{job_id}/documents")
+async def get_job_documents_status(job_id: str):
+    """
+    Get status for all documents in a translation job
+    Following Azure API: GET /translator/document/batches/{id}/documents
+    
+    - **job_id**: The job ID returned from batch translation
+    """
+    try:
+        logger.info(f"Getting job documents status: {job_id}")
+        
+        translator_service = get_translator_service()
+        result = await translator_service.get_job_documents_status(job_id)
+        
+        return JSONResponse(content=result)
+        
+    except Exception as e:
+        logger.error(f"Get job documents status failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/document/jobs/{job_id}/documents/{document_id}")
+async def get_document_status(job_id: str, document_id: str):
+    """
+    Get status for a specific document in a job
+    Following Azure API: GET /translator/document/batches/{id}/documents/{documentId}
+    
+    - **job_id**: The job ID returned from batch translation
+    - **document_id**: The document ID within the job
+    """
+    try:
+        logger.info(f"Getting document status: {job_id}/{document_id}")
+        
+        translator_service = get_translator_service()
+        result = await translator_service.get_document_status(job_id, document_id)
+        
+        return JSONResponse(content=result)
+        
+    except Exception as e:
+        logger.error(f"Get document status failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/document/status/{operation_id}")
 async def check_document_translation_status(operation_id: str):
     """
-    Check the status of a document translation operation
+    Check the status of a document translation operation (legacy endpoint)
     
     - **operation_id**: The operation ID returned from document translation
     """
@@ -249,16 +419,34 @@ async def translator_health_check():
     """Health check for Azure Translator service"""
     try:
         translator_service = get_translator_service()
-        validation_result = translator_service.validate_credentials()
+        pdf_translator_service = get_pdf_translator_service()
+        
+        translator_validation = translator_service.validate_credentials()
+        pdf_validation = pdf_translator_service.validate_credentials()
+        
         return {
             "service": "azure-translator",
-            "status": "healthy" if validation_result.get('status') in ['valid', 'mock'] else "unhealthy",
-            "validation": validation_result,
+            "status": "healthy" if translator_validation.get('status') in ['valid', 'mock'] else "unhealthy",
+            "validation": translator_validation,
+            "pdf_translator": {
+                "status": "healthy" if pdf_validation.get('status') in ['valid', 'mock'] else "unhealthy",
+                "validation": pdf_validation
+            },
             "cors_enabled": True,
             "endpoints": {
                 "text_translation": "/translate/text",
-                "document_translation": "/translate/document",
-                "languages": "/translate/languages"
+                "text_batch_translation": "/translate/text/batch",
+                "document_sync_translation": "/translate/document/sync",
+                "document_batch_translation": "/translate/document/batch",
+                "document_upload": "/translate/document",
+                "document_pdf_translation": "/translate/document/pdf",
+                "all_translation_jobs": "/translate/document/jobs",
+                "translation_job_status": "/translate/document/jobs/{job_id}",
+                "job_documents_status": "/translate/document/jobs/{job_id}/documents",
+                "document_status": "/translate/document/jobs/{job_id}/documents/{document_id}",
+                "legacy_status_check": "/translate/document/status/{operation_id}",
+                "languages": "/translate/languages",
+                "language_detection": "/translate/detect"
             }
         }
     except Exception as e:

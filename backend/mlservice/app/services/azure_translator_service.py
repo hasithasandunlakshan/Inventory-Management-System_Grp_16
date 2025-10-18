@@ -44,57 +44,40 @@ class AzureTranslatorService:
         
         logger.info("Azure Translator service initialized with REST API")
     
-    async def translate_document(
+    async def translate_document_sync(
         self,
         source_url: str,
         target_language: str,
-        source_language: Optional[str] = None,
-        storage_type: str = "File"
+        source_language: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Translate a document using Azure Document Translation service
+        Synchronously translate a single document using Azure Document Translation service
+        Following: POST {document-translation-endpoint}/translator/document:translate?targetLanguage={target_language}&api-version={date}
         
         Args:
             source_url: URL or path to the source document
             target_language: Target language code (e.g., 'es', 'fr', 'de')
             source_language: Source language code (auto-detect if None)
-            storage_type: Type of storage (File, Blob, etc.)
         
         Returns:
             Dict containing translation results
         """
         try:
-            logger.info(f"Starting document translation to {target_language}")
+            logger.info(f"Starting synchronous document translation to {target_language}")
             
-            # Prepare document translation request
-            request_data = {
-                "inputs": [
-                    {
-                        "source": {
-                            "sourceUrl": source_url
-                        },
-                        "targets": [
-                            {
-                                "targetUrl": f"{source_url}_translated_{target_language}",
-                                "language": target_language
-                            }
-                        ]
-                    }
-                ]
-            }
-            
-            # Build URL for document translation
-            url = f"{self.endpoint}translator/document/batch"
+            # Build URL for synchronous document translation
+            url = f"{self.endpoint}translator/document:translate"
             params = {
-                'api-version': '1.0'
+                'targetLanguage': target_language,
+                'api-version': '2023-11-01'
             }
+            if source_language:
+                params['sourceLanguage'] = source_language
             
-            # For Project Translator, the endpoint might be different
-            if 'projecttranslate' in self.endpoint:
-                url = f"{self.endpoint}translator/document/batch"
-            else:
-                # For regular Azure Translator, use the document translation endpoint
-                url = f"{self.endpoint}translator/document/batch"
+            # Prepare request body for document translation
+            request_data = {
+                "sourceUrl": source_url
+            }
             
             # Make API request to Azure Document Translation
             async with httpx.AsyncClient() as client:
@@ -103,18 +86,14 @@ class AzureTranslatorService:
                     headers=self.headers,
                     params=params,
                     json=request_data,
-                    timeout=60.0  # Document translation can take longer
+                    timeout=60.0
                 )
                 
-                if response.status_code == 202:  # Accepted for processing
-                    # Document translation is asynchronous
-                    operation_location = response.headers.get('Operation-Location')
-                    
+                if response.status_code == 200:
+                    result = response.json()
                     return {
-                        "status": "accepted",
-                        "operation_id": operation_location.split('/')[-1] if operation_location else None,
-                        "operation_location": operation_location,
-                        "message": "Document translation job started. Use operation_id to check status.",
+                        "status": "completed",
+                        "translations": result.get('translations', []),
                         "metadata": {
                             "timestamp": datetime.utcnow().isoformat(),
                             "service": "azure-document-translation",
@@ -122,22 +101,8 @@ class AzureTranslatorService:
                             "target_language": target_language
                         }
                     }
-                elif response.status_code == 200:
-                    # Immediate result
-                    result = response.json()
-                    return {
-                        "status": "completed",
-                        "translations": result.get('value', []),
-                        "metadata": {
-                            "timestamp": datetime.utcnow().isoformat(),
-                            "service": "azure-document-translation"
-                        }
-                    }
                 else:
                     logger.error(f"Azure Document Translation API error: {response.status_code} - {response.text}")
-                    logger.error(f"Request URL: {url}")
-                    logger.error(f"Request headers: {self.headers}")
-                    logger.error(f"Request data: {request_data}")
                     raise HTTPException(
                         status_code=response.status_code,
                         detail=f"Azure Document Translation API error: {response.text}"
@@ -154,6 +119,78 @@ class AzureTranslatorService:
             raise HTTPException(
                 status_code=500,
                 detail=f"Document translation failed: {str(e)}"
+            )
+
+    async def start_batch_translation(
+        self,
+        inputs: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Start a batch document translation job
+        Following: POST {document-translation-endpoint}/translator/document/batches?api-version={date}
+        
+        Args:
+            inputs: List of translation inputs with source and target configurations
+        
+        Returns:
+            Dict containing batch job information
+        """
+        try:
+            logger.info("Starting batch document translation job")
+            
+            # Build URL for batch translation
+            url = f"{self.endpoint}translator/document/batches"
+            params = {
+                'api-version': '2023-11-01'
+            }
+            
+            # Prepare request body
+            request_data = {
+                "inputs": inputs
+            }
+            
+            # Make API request to Azure Document Translation
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    url,
+                    headers=self.headers,
+                    params=params,
+                    json=request_data,
+                    timeout=60.0
+                )
+                
+                if response.status_code == 202:  # Accepted for processing
+                    operation_location = response.headers.get('Operation-Location')
+                    job_id = operation_location.split('/')[-1] if operation_location else None
+                    
+                    return {
+                        "status": "accepted",
+                        "job_id": job_id,
+                        "operation_location": operation_location,
+                        "message": "Batch translation job started. Use job_id to check status.",
+                        "metadata": {
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "service": "azure-document-translation"
+                        }
+                    }
+                else:
+                    logger.error(f"Azure Document Translation API error: {response.status_code} - {response.text}")
+                    raise HTTPException(
+                        status_code=response.status_code,
+                        detail=f"Azure Document Translation API error: {response.text}"
+                    )
+            
+        except httpx.RequestError as e:
+            logger.error(f"Request error: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Batch translation request failed: {str(e)}"
+            )
+        except Exception as e:
+            logger.error(f"Batch translation failed: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Batch translation failed: {str(e)}"
             )
     
     async def translate_text(
@@ -231,19 +268,17 @@ class AzureTranslatorService:
                 detail=f"Text translation failed: {str(e)}"
             )
     
-    async def check_document_translation_status(self, operation_id: str) -> Dict[str, Any]:
+    async def get_all_translation_jobs(self) -> Dict[str, Any]:
         """
-        Check the status of a document translation operation
-        
-        Args:
-            operation_id: The operation ID returned from translate_document
+        Get status for all translation jobs submitted by the user
+        Following: GET {document-translation-endpoint}/translator/document/batches?api-version={date}
         
         Returns:
-            Dict containing operation status and results
+            Dict containing all translation jobs and their status
         """
         try:
-            url = f"{self.endpoint}translator/document/batch/{operation_id}"
-            params = {'api-version': '1.0'}
+            url = f"{self.endpoint}translator/document/batches"
+            params = {'api-version': '2023-11-01'}
             
             async with httpx.AsyncClient() as client:
                 response = await client.get(
@@ -256,7 +291,54 @@ class AzureTranslatorService:
                 if response.status_code == 200:
                     result = response.json()
                     return {
-                        "operation_id": operation_id,
+                        "jobs": result.get('value', []),
+                        "count": len(result.get('value', [])),
+                        "metadata": {
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "service": "azure-document-translation"
+                        }
+                    }
+                else:
+                    logger.error(f"Get all jobs error: {response.status_code} - {response.text}")
+                    raise HTTPException(
+                        status_code=response.status_code,
+                        detail=f"Get all jobs failed: {response.text}"
+                    )
+                    
+        except Exception as e:
+            logger.error(f"Get all jobs failed: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Get all jobs failed: {str(e)}"
+            )
+
+    async def get_translation_job_status(self, job_id: str) -> Dict[str, Any]:
+        """
+        Get status for a specific translation job
+        Following: GET {document-translation-endpoint}/translator/document/batches/{id}?api-version={date}
+        
+        Args:
+            job_id: The job ID returned from start_batch_translation
+        
+        Returns:
+            Dict containing job status and results
+        """
+        try:
+            url = f"{self.endpoint}translator/document/batches/{job_id}"
+            params = {'api-version': '2023-11-01'}
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    url,
+                    headers=self.headers,
+                    params=params,
+                    timeout=30.0
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    return {
+                        "job_id": job_id,
                         "status": result.get('status', 'unknown'),
                         "created_date_time": result.get('createdDateTimeUtc'),
                         "last_action_date_time": result.get('lastActionDateTimeUtc'),
@@ -268,17 +350,117 @@ class AzureTranslatorService:
                         }
                     }
                 else:
-                    logger.error(f"Status check error: {response.status_code} - {response.text}")
+                    logger.error(f"Job status check error: {response.status_code} - {response.text}")
                     raise HTTPException(
                         status_code=response.status_code,
-                        detail=f"Status check failed: {response.text}"
+                        detail=f"Job status check failed: {response.text}"
                     )
                     
         except Exception as e:
-            logger.error(f"Status check failed: {str(e)}")
+            logger.error(f"Job status check failed: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Status check failed: {str(e)}"
+                detail=f"Job status check failed: {str(e)}"
+            )
+
+    async def get_job_documents_status(self, job_id: str) -> Dict[str, Any]:
+        """
+        Get status for all documents in a translation job
+        Following: GET {document-translation-endpoint}/translator/document/batches/{id}/documents?api-version={date}
+        
+        Args:
+            job_id: The job ID returned from start_batch_translation
+        
+        Returns:
+            Dict containing status of all documents in the job
+        """
+        try:
+            url = f"{self.endpoint}translator/document/batches/{job_id}/documents"
+            params = {'api-version': '2023-11-01'}
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    url,
+                    headers=self.headers,
+                    params=params,
+                    timeout=30.0
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    return {
+                        "job_id": job_id,
+                        "documents": result.get('value', []),
+                        "count": len(result.get('value', [])),
+                        "metadata": {
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "service": "azure-document-translation"
+                        }
+                    }
+                else:
+                    logger.error(f"Get job documents error: {response.status_code} - {response.text}")
+                    raise HTTPException(
+                        status_code=response.status_code,
+                        detail=f"Get job documents failed: {response.text}"
+                    )
+                    
+        except Exception as e:
+            logger.error(f"Get job documents failed: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Get job documents failed: {str(e)}"
+            )
+
+    async def get_document_status(self, job_id: str, document_id: str) -> Dict[str, Any]:
+        """
+        Get status for a specific document in a job
+        Following: GET {document-translation-endpoint}/translator/document/batches/{id}/documents/{documentId}?api-version={date}
+        
+        Args:
+            job_id: The job ID returned from start_batch_translation
+            document_id: The document ID within the job
+        
+        Returns:
+            Dict containing document status and results
+        """
+        try:
+            url = f"{self.endpoint}translator/document/batches/{job_id}/documents/{document_id}"
+            params = {'api-version': '2023-11-01'}
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    url,
+                    headers=self.headers,
+                    params=params,
+                    timeout=30.0
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    return {
+                        "job_id": job_id,
+                        "document_id": document_id,
+                        "status": result.get('status', 'unknown'),
+                        "source_url": result.get('sourcePath'),
+                        "target_url": result.get('path'),
+                        "characters_charged": result.get('charactersCharged', 0),
+                        "metadata": {
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "service": "azure-document-translation"
+                        }
+                    }
+                else:
+                    logger.error(f"Document status check error: {response.status_code} - {response.text}")
+                    raise HTTPException(
+                        status_code=response.status_code,
+                        detail=f"Document status check failed: {response.text}"
+                    )
+                    
+        except Exception as e:
+            logger.error(f"Document status check failed: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Document status check failed: {str(e)}"
             )
     
     def _process_translation_results(self, translation_result) -> Dict[str, Any]:
@@ -401,8 +583,8 @@ class MockTranslatorService:
             "confidence": 0.95
         }
     
-    async def translate_document(self, source_url: str, target_language: str, source_language: Optional[str] = None) -> Dict[str, Any]:
-        """Mock document translation for development"""
+    async def translate_document_sync(self, source_url: str, target_language: str, source_language: Optional[str] = None) -> Dict[str, Any]:
+        """Mock synchronous document translation for development"""
         return {
             "status": "completed",
             "translations": [{
@@ -411,6 +593,72 @@ class MockTranslatorService:
                 "status": "Succeeded",
                 "characters_charged": 0
             }],
+            "metadata": {
+                "timestamp": datetime.utcnow().isoformat(),
+                "service": "mock-translator"
+            }
+        }
+    
+    async def start_batch_translation(self, inputs: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Mock batch translation start for development"""
+        return {
+            "status": "accepted",
+            "job_id": f"mock-job-{uuid.uuid4().hex[:8]}",
+            "operation_location": f"https://mock-endpoint.com/operations/mock-job-{uuid.uuid4().hex[:8]}",
+            "message": "Mock batch translation job started",
+            "metadata": {
+                "timestamp": datetime.utcnow().isoformat(),
+                "service": "mock-translator"
+            }
+        }
+    
+    async def get_all_translation_jobs(self) -> Dict[str, Any]:
+        """Mock get all translation jobs for development"""
+        return {
+            "jobs": [],
+            "count": 0,
+            "metadata": {
+                "timestamp": datetime.utcnow().isoformat(),
+                "service": "mock-translator"
+            }
+        }
+    
+    async def get_translation_job_status(self, job_id: str) -> Dict[str, Any]:
+        """Mock get translation job status for development"""
+        return {
+            "job_id": job_id,
+            "status": "Succeeded",
+            "created_date_time": datetime.utcnow().isoformat(),
+            "last_action_date_time": datetime.utcnow().isoformat(),
+            "summary": {"total": 1, "failed": 0, "success": 1},
+            "results": [],
+            "metadata": {
+                "timestamp": datetime.utcnow().isoformat(),
+                "service": "mock-translator"
+            }
+        }
+    
+    async def get_job_documents_status(self, job_id: str) -> Dict[str, Any]:
+        """Mock get job documents status for development"""
+        return {
+            "job_id": job_id,
+            "documents": [],
+            "count": 0,
+            "metadata": {
+                "timestamp": datetime.utcnow().isoformat(),
+                "service": "mock-translator"
+            }
+        }
+    
+    async def get_document_status(self, job_id: str, document_id: str) -> Dict[str, Any]:
+        """Mock get document status for development"""
+        return {
+            "job_id": job_id,
+            "document_id": document_id,
+            "status": "Succeeded",
+            "source_url": f"mock-source-{document_id}",
+            "target_url": f"mock-target-{document_id}",
+            "characters_charged": 0,
             "metadata": {
                 "timestamp": datetime.utcnow().isoformat(),
                 "service": "mock-translator"

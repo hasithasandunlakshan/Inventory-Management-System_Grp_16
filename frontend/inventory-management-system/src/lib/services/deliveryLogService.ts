@@ -2,7 +2,7 @@ import { DeliveryLog, DeliveryLogCreateRequest } from '../types/supplier';
 import { authService } from './authService';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8082'; // Use API Gateway
+  process.env.NEXT_PUBLIC_SUPPLIER_SERVICE_URL || 'http://localhost:8082';
 
 // Response type for delivery log creation
 interface DeliveryLogResponse {
