@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import DriversClient from './DriversClient';
 import type { Metadata } from 'next';
 
+import type { DriverProfile } from '@/lib/services/driverService';
+
 // Define types for SSG
 interface User {
   id: string;
@@ -15,42 +17,59 @@ interface UserDropdownInfo {
 }
 
 // Server-side data fetching function
-async function fetchAvailableUsers(): Promise<UserDropdownInfo[]> {
+async function fetchDriversData(): Promise<{
+  availableUsers: UserDropdownInfo[];
+  drivers: DriverProfile[];
+  availableDrivers: DriverProfile[];
+}> {
   try {
     const userServiceUrl =
       process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8081';
+    const resourceServiceUrl =
+      process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8086';
 
-    const response = await fetch(
-      `${userServiceUrl}/api/auth/users/by-role?role=USER`,
-      {
-        next: {
-          revalidate: 300, // Revalidate every 5 minutes
-        },
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const [usersResponse, driversResponse, availableDriversResponse] =
+      await Promise.all([
+        fetch(`${userServiceUrl}/api/auth/users/by-role?role=USER`, {
+          next: { revalidate: 300 },
+          headers: { 'Content-Type': 'application/json' },
+        }),
+        fetch(`${resourceServiceUrl}/api/resources/drivers`, {
+          next: { revalidate: 300 },
+          headers: { 'Content-Type': 'application/json' },
+        }),
+        fetch(`${resourceServiceUrl}/api/resources/drivers/available`, {
+          next: { revalidate: 300 },
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ]);
 
-    if (!response.ok) {
-      return [];
-    }
+    const availableUsers: UserDropdownInfo[] = usersResponse.ok
+      ? (await usersResponse.json()).map((user: User) => ({
+          userId: Number.parseInt(user.id, 10),
+          username: user.username,
+        }))
+      : [];
 
-    const users: User[] = await response.json();
+    const drivers: DriverProfile[] = driversResponse.ok
+      ? (await driversResponse.json()).data || []
+      : [];
 
-    return users.map(user => ({
-      userId: parseInt(user.id),
-      username: user.username,
-    }));
-  } catch (error) {
-    return [];
+    const availableDrivers: DriverProfile[] = availableDriversResponse.ok
+      ? (await availableDriversResponse.json()).data || []
+      : [];
+
+    return { availableUsers, drivers, availableDrivers };
+  } catch {
+    return { availableUsers: [], drivers: [], availableDrivers: [] };
   }
 }
 
 // Main Server Component
 export default async function DriversPage() {
   // Fetch data on server at build time
-  const availableUsers = await fetchAvailableUsers();
+  const { availableUsers, drivers, availableDrivers } =
+    await fetchDriversData();
 
   return (
     <Suspense
@@ -60,7 +79,11 @@ export default async function DriversPage() {
         </div>
       }
     >
-      <DriversClient initialAvailableUsers={availableUsers} />
+      <DriversClient
+        initialAvailableUsers={availableUsers}
+        initialDrivers={drivers}
+        initialAvailableDrivers={availableDrivers}
+      />
     </Suspense>
   );
 }
