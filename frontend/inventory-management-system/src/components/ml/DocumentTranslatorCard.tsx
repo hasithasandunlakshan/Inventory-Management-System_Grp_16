@@ -74,7 +74,9 @@ interface PDFTranslationResult {
 }
 
 interface DocumentTranslatorCardProps {
-  onTranslationComplete: (result: DocumentTranslationResult | PDFTranslationResult) => void;
+  onTranslationComplete: (
+    result: DocumentTranslationResult | PDFTranslationResult
+  ) => void;
 }
 
 const COMMON_LANGUAGES = [
@@ -109,7 +111,8 @@ export default function DocumentTranslatorCard({
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [jobDocuments, setJobDocuments] = useState<any[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
-  const [pdfTranslationResult, setPdfTranslationResult] = useState<PDFTranslationResult | null>(null);
+  const [pdfTranslationResult, setPdfTranslationResult] =
+    useState<PDFTranslationResult | null>(null);
   const [usePdfTranslation, setUsePdfTranslation] = useState(true);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,7 +175,8 @@ export default function DocumentTranslatorCard({
 
     const poll = async () => {
       try {
-        const statusResult = await translatorService.checkDocumentTranslationStatus(operationId);
+        const statusResult =
+          await translatorService.checkDocumentTranslationStatus(operationId);
         setOperationStatus(statusResult.status);
 
         if (
@@ -253,8 +257,8 @@ export default function DocumentTranslatorCard({
   const refreshJobStatus = async (jobId: string) => {
     try {
       const result = await translatorService.getTranslationJobStatus(jobId);
-      setTranslationJobs(prev => 
-        prev.map(job => job.id === jobId ? { ...job, ...result } : job)
+      setTranslationJobs(prev =>
+        prev.map(job => (job.id === jobId ? { ...job, ...result } : job))
       );
     } catch (err) {
       setError('Failed to refresh job status');
@@ -450,30 +454,40 @@ export default function DocumentTranslatorCard({
             <CardContent className='space-y-4'>
               <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-sm'>
                 <div className='text-center p-3 bg-blue-50 rounded-lg'>
-                  <div className='font-semibold text-blue-600'>{pdfTranslationResult.total_pages}</div>
+                  <div className='font-semibold text-blue-600'>
+                    {pdfTranslationResult.total_pages}
+                  </div>
                   <div className='text-blue-500'>Total Pages</div>
                 </div>
                 <div className='text-center p-3 bg-green-50 rounded-lg'>
-                  <div className='font-semibold text-green-600'>{pdfTranslationResult.translated_pages}</div>
+                  <div className='font-semibold text-green-600'>
+                    {pdfTranslationResult.translated_pages}
+                  </div>
                   <div className='text-green-500'>Translated</div>
                 </div>
                 <div className='text-center p-3 bg-purple-50 rounded-lg'>
-                  <div className='font-semibold text-purple-600'>{pdfTranslationResult.metadata.total_characters}</div>
+                  <div className='font-semibold text-purple-600'>
+                    {pdfTranslationResult.metadata.total_characters}
+                  </div>
                   <div className='text-purple-500'>Characters</div>
                 </div>
                 <div className='text-center p-3 bg-orange-50 rounded-lg'>
-                  <div className='font-semibold text-orange-600'>{pdfTranslationResult.target_language.toUpperCase()}</div>
+                  <div className='font-semibold text-orange-600'>
+                    {pdfTranslationResult.target_language.toUpperCase()}
+                  </div>
                   <div className='text-orange-500'>Target Lang</div>
                 </div>
               </div>
 
               <Tabs defaultValue='combined' className='w-full'>
                 <TabsList className='grid w-full grid-cols-3'>
-                  <TabsTrigger value='combined'>Combined Translation</TabsTrigger>
+                  <TabsTrigger value='combined'>
+                    Combined Translation
+                  </TabsTrigger>
                   <TabsTrigger value='pages'>Page by Page</TabsTrigger>
                   <TabsTrigger value='download'>Download</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value='combined' className='space-y-4'>
                   <div className='space-y-2'>
                     <div className='flex items-center justify-between'>
@@ -482,7 +496,9 @@ export default function DocumentTranslatorCard({
                         size='sm'
                         variant='outline'
                         onClick={() => {
-                          navigator.clipboard.writeText(pdfTranslationResult.combined_translation);
+                          navigator.clipboard.writeText(
+                            pdfTranslationResult.combined_translation
+                          );
                         }}
                       >
                         <Copy className='h-4 w-4 mr-2' />
@@ -497,52 +513,70 @@ export default function DocumentTranslatorCard({
                     />
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value='pages' className='space-y-4'>
                   <div className='space-y-4 max-h-96 overflow-y-auto'>
-                    {pdfTranslationResult.pages.map((page: any, index: number) => (
-                      <div key={index} className='border rounded-lg p-4 space-y-3'>
-                        <div className='flex items-center justify-between'>
-                          <Badge variant='outline'>Page {page.page_number}</Badge>
-                          <span className='text-sm text-gray-500'>{page.character_count} characters</span>
-                        </div>
-                        
-                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                          <div className='space-y-2'>
-                            <Label className='text-sm font-medium text-gray-600'>Original Text</Label>
-                            <Textarea
-                              value={page.original_text}
-                              readOnly
-                              className='min-h-[100px] text-sm'
-                              placeholder='Original text...'
-                            />
+                    {pdfTranslationResult.pages.map(
+                      (page: any, index: number) => (
+                        <div
+                          key={index}
+                          className='border rounded-lg p-4 space-y-3'
+                        >
+                          <div className='flex items-center justify-between'>
+                            <Badge variant='outline'>
+                              Page {page.page_number}
+                            </Badge>
+                            <span className='text-sm text-gray-500'>
+                              {page.character_count} characters
+                            </span>
                           </div>
-                          <div className='space-y-2'>
-                            <Label className='text-sm font-medium text-gray-600'>Translated Text</Label>
-                            <Textarea
-                              value={page.translated_text}
-                              readOnly
-                              className='min-h-[100px] text-sm'
-                              placeholder='Translated text...'
-                            />
+
+                          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                            <div className='space-y-2'>
+                              <Label className='text-sm font-medium text-gray-600'>
+                                Original Text
+                              </Label>
+                              <Textarea
+                                value={page.original_text}
+                                readOnly
+                                className='min-h-[100px] text-sm'
+                                placeholder='Original text...'
+                              />
+                            </div>
+                            <div className='space-y-2'>
+                              <Label className='text-sm font-medium text-gray-600'>
+                                Translated Text
+                              </Label>
+                              <Textarea
+                                value={page.translated_text}
+                                readOnly
+                                className='min-h-[100px] text-sm'
+                                placeholder='Translated text...'
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value='download' className='space-y-4'>
                   <div className='text-center space-y-4'>
                     <div className='p-6 border-2 border-dashed border-gray-300 rounded-lg'>
                       <Download className='h-12 w-12 mx-auto text-gray-400 mb-4' />
-                      <h3 className='text-lg font-medium mb-2'>Download Translation</h3>
+                      <h3 className='text-lg font-medium mb-2'>
+                        Download Translation
+                      </h3>
                       <p className='text-gray-600 mb-4'>
                         Download the complete translation as a text file
                       </p>
                       <Button
                         onClick={() => {
-                          const blob = new Blob([pdfTranslationResult.combined_translation], { type: 'text/plain' });
+                          const blob = new Blob(
+                            [pdfTranslationResult.combined_translation],
+                            { type: 'text/plain' }
+                          );
                           const url = URL.createObjectURL(blob);
                           const a = document.createElement('a');
                           a.href = url;

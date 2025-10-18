@@ -141,7 +141,9 @@ export class TranslatorService {
   /**
    * Synchronously translate a single document
    */
-  async translateDocumentSync(request: DocumentTranslationRequest): Promise<any> {
+  async translateDocumentSync(
+    request: DocumentTranslationRequest
+  ): Promise<any> {
     try {
       const response = await fetch(`${this.baseUrl}/translate/document/sync`, {
         method: 'POST',
@@ -152,7 +154,9 @@ export class TranslatorService {
       });
 
       if (!response.ok) {
-        throw new Error(`Synchronous document translation failed: ${response.statusText}`);
+        throw new Error(
+          `Synchronous document translation failed: ${response.statusText}`
+        );
       }
 
       return await response.json();
@@ -165,7 +169,9 @@ export class TranslatorService {
   /**
    * Start a batch document translation job
    */
-  async startBatchDocumentTranslation(request: DocumentBatchTranslationRequest): Promise<{
+  async startBatchDocumentTranslation(
+    request: DocumentBatchTranslationRequest
+  ): Promise<{
     status: string;
     job_id: string;
     operation_location?: string;
@@ -185,7 +191,9 @@ export class TranslatorService {
       });
 
       if (!response.ok) {
-        throw new Error(`Batch document translation failed: ${response.statusText}`);
+        throw new Error(
+          `Batch document translation failed: ${response.statusText}`
+        );
       }
 
       return await response.json();
@@ -210,7 +218,9 @@ export class TranslatorService {
       const response = await fetch(`${this.baseUrl}/translate/document/jobs`);
 
       if (!response.ok) {
-        throw new Error(`Failed to get translation jobs: ${response.statusText}`);
+        throw new Error(
+          `Failed to get translation jobs: ${response.statusText}`
+        );
       }
 
       return await response.json();
@@ -236,7 +246,9 @@ export class TranslatorService {
     };
   }> {
     try {
-      const response = await fetch(`${this.baseUrl}/translate/document/jobs/${jobId}`);
+      const response = await fetch(
+        `${this.baseUrl}/translate/document/jobs/${jobId}`
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to get job status: ${response.statusText}`);
@@ -262,10 +274,14 @@ export class TranslatorService {
     };
   }> {
     try {
-      const response = await fetch(`${this.baseUrl}/translate/document/jobs/${jobId}/documents`);
+      const response = await fetch(
+        `${this.baseUrl}/translate/document/jobs/${jobId}/documents`
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to get job documents status: ${response.statusText}`);
+        throw new Error(
+          `Failed to get job documents status: ${response.statusText}`
+        );
       }
 
       return await response.json();
@@ -278,12 +294,19 @@ export class TranslatorService {
   /**
    * Get status of a specific document in a job
    */
-  async getDocumentStatus(jobId: string, documentId: string): Promise<DocumentStatus> {
+  async getDocumentStatus(
+    jobId: string,
+    documentId: string
+  ): Promise<DocumentStatus> {
     try {
-      const response = await fetch(`${this.baseUrl}/translate/document/jobs/${jobId}/documents/${documentId}`);
+      const response = await fetch(
+        `${this.baseUrl}/translate/document/jobs/${jobId}/documents/${documentId}`
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to get document status: ${response.statusText}`);
+        throw new Error(
+          `Failed to get document status: ${response.statusText}`
+        );
       }
 
       return await response.json();
@@ -315,7 +338,9 @@ export class TranslatorService {
       });
 
       if (!response.ok) {
-        throw new Error(`Document upload translation failed: ${response.statusText}`);
+        throw new Error(
+          `Document upload translation failed: ${response.statusText}`
+        );
       }
 
       return await response.json();
@@ -365,7 +390,9 @@ export class TranslatorService {
       });
 
       if (!response.ok) {
-        throw new Error(`PDF document translation failed: ${response.statusText}`);
+        throw new Error(
+          `PDF document translation failed: ${response.statusText}`
+        );
       }
 
       return await response.json();
@@ -380,10 +407,14 @@ export class TranslatorService {
    */
   async checkDocumentTranslationStatus(operationId: string): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/translate/document/status/${operationId}`);
+      const response = await fetch(
+        `${this.baseUrl}/translate/document/status/${operationId}`
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to check document status: ${response.statusText}`);
+        throw new Error(
+          `Failed to check document status: ${response.statusText}`
+        );
       }
 
       return await response.json();
