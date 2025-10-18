@@ -1,6 +1,7 @@
 # IDE
 .idea/
 .vscode/
+
 *.iml
 
 # OS
@@ -24,3 +25,4 @@ node_modules/
 
 
 .fake
+docs

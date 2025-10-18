@@ -21,14 +21,20 @@ import DriverList from '@/components/driver/DriverList';
 // Props interface - receives SSG data
 interface DriversClientProps {
   readonly initialAvailableUsers: UserDropdownInfo[];
+  readonly initialDrivers: DriverProfile[];
+  readonly initialAvailableDrivers: DriverProfile[];
 }
 
 export default function DriversClient({
   initialAvailableUsers,
+  initialDrivers,
+  initialAvailableDrivers,
 }: DriversClientProps) {
-  const [drivers, setDrivers] = useState<DriverProfile[]>([]);
-  const [availableDrivers, setAvailableDrivers] = useState<DriverProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [drivers, setDrivers] = useState<DriverProfile[]>(initialDrivers);
+  const [availableDrivers, setAvailableDrivers] = useState<DriverProfile[]>(
+    initialAvailableDrivers
+  );
+  const [loading, setLoading] = useState(false); // Start with false since we have SSG data
   const [searchTerm, setSearchTerm] = useState('');
 
   // Use SSG data as initial state
@@ -56,7 +62,11 @@ export default function DriversClient({
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    loadDrivers();
+
+    // Only load drivers if SSG data is empty
+    if (drivers.length === 0) {
+      loadDrivers();
+    }
 
     // Only refresh users if SSG data is empty
     if (canManageDrivers && availableUsers.length === 0) {
