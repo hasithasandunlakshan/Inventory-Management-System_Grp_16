@@ -58,80 +58,145 @@ The Inventory Management System is a complete solution for managing inventory, o
 
 ## 👥 User Roles & Permissions
 
-### Role Hierarchy
+### Role Hierarchy (Priority Order)
 
 ```
-ADMIN > MANAGER > STORE KEEPER > USER > SUPPLIER
+ADMIN > MANAGER > Supplier > Store Keeper > Driver > USER
 ```
 
-### Role Permissions
+### Role Descriptions
 
-| Role             | Dashboard | Products | Orders | Analytics | Settings | Suppliers |
-| ---------------- | --------- | -------- | ------ | --------- | -------- | --------- |
-| **ADMIN**        | ✅        | ✅       | ✅     | ✅        | ✅       | ✅        |
-| **MANAGER**      | ✅        | ✅       | ✅     | ✅        | ❌       | ✅        |
-| **STORE KEEPER** | ✅        | ✅       | ✅     | ❌        | ❌       | ✅        |
-| **USER**         | ✅        | ❌       | ❌     | ❌        | ❌       | ❌        |
-| **SUPPLIER**     | ✅        | ❌       | ❌     | ❌        | ❌       | ❌        |
+| Role | Description | Access |
+| ---- | ----------- | ------ |
+| **ADMIN** | Full system access, user management, system settings | Web App - Full Access |
+| **MANAGER** | Business operations, analytics, inventory, orders, drivers, vehicles | Web App - Manager Dashboard |
+| **Supplier** | View orders, manage deliveries, update inventory | Web App - Supplier Dashboard |
+| **Store Keeper** | Manage products, categories, inventory, stock updates | Web/Mobile - QR Stock Updates |
+| **Driver** | View assignments, update delivery status | Mobile App Only |
+| **USER** | Basic access, view own orders | Mobile App - Customer |
+
+### Detailed Permissions
+
+| Feature | ADMIN | MANAGER | Supplier | Store Keeper | Driver | USER |
+| ------- | ----- | ------- | -------- | ------------ | ------ | ---- |
+| Dashboard Overview | ✅ | ✅ | ✅ | ✅ | Mobile | Mobile |
+| Products (Add/Edit/Delete) | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Categories | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Inventory Management | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Sales Analytics | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Sales Forecast | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Orders | ✅ | ✅ | ✅ | ✅ | Mobile | Mobile |
+| Suppliers | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Drivers Management | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Vehicles Management | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Assignments | ✅ | ✅ | ❌ | ❌ | Mobile | ❌ |
+| QR Stock Updates | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Mobile Shopping | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Java 17+
-- MySQL 8.0+
-- Docker (optional)
+- **Node.js** 18+ and npm
+- **Java** 17+
+- **Maven** 3.8+
+- **MySQL** 8.0+
+- **Git**
+- **Docker** (optional, for containerized deployment)
 
-### Installation
+### 📦 Installation & Setup
 
-1. **Clone the repository**
+#### 1. Clone the Repository
 
-   ```bash
-   git clone <repository-url>
-   cd inventory-management-system
-   ```
+```bash
+git clone <repository-url>
+cd inventory-management-system
+```
 
-2. **Install frontend dependencies**
+#### 2. Database Setup
 
-   ```bash
-   cd frontend/inventory-management-system
-   npm install
-   ```
+```bash
+# Create MySQL databases for each service
+mysql -u root -p
 
-3. **Start the development server**
+CREATE DATABASE userservice_db;
+CREATE DATABASE productservice_db;
+CREATE DATABASE orderservice_db;
+CREATE DATABASE supplierservice_db;
+CREATE DATABASE resourceservice_db;
+```
 
-   ```bash
-   npm run dev
-   ```
+#### 3. Backend Setup
 
-4. **Start backend services**
+**Start each backend service in a separate terminal:**
 
-   ```bash
-   # Start API Gateway
-   cd backend/ApiGateway
-   mvn spring-boot:run
+```bash
+# Terminal 1: API Gateway (Port 8090)
+cd backend/ApiGateway
+mvn clean install
+mvn spring-boot:run
 
-   # Start other services in separate terminals
-   cd backend/userservice
-   mvn spring-boot:run
+# Terminal 2: User Service (Port 8081)
+cd backend/userservice
+mvn clean install
+mvn spring-boot:run
 
-   cd backend/productservice
-   mvn spring-boot:run
-   ```
+# Terminal 3: Product Service (Port 8083)
+cd backend/productservice
+mvn clean install
+mvn spring-boot:run
 
-5. **Access the application**
-   - Web App: http://localhost:3000
-   - API Gateway: http://localhost:8090
+# Terminal 4: Order Service (Port 8084)
+cd backend/Orderservice
+mvn clean install
+mvn spring-boot:run
 
-### Default Login Credentials
+# Terminal 5: Supplier Service (Port 8082)
+cd backend/supplierservice
+mvn clean install
+mvn spring-boot:run
 
-| Role         | Username       | Password    |
-| ------------ | -------------- | ----------- |
-| Admin        | admin123       | password123 |
-| Manager      | manager123     | password123 |
-| Store Keeper | storekeeper123 | password123 |
-| User         | user123        | password123 |
+# Terminal 6: Resource Service (Port 8086)
+cd backend/resourseservice
+mvn clean install
+mvn spring-boot:run
+```
+
+#### 4. Frontend Setup
+
+```bash
+cd frontend/inventory-management-system
+
+# Install dependencies
+npm install
+
+# Create .env.local file
+cp .env.example .env.local
+
+# Edit .env.local with your configuration
+# NEXT_PUBLIC_API_BASE_URL=http://localhost:8090
+# NEXT_PUBLIC_RESOURCE_SERVICE_URL=http://localhost:8086
+# NEXT_PUBLIC_USER_SERVICE_URL=http://localhost:8081
+
+# Start development server
+npm run dev
+```
+
+#### 5. Access the Application
+
+- **Web App**: http://localhost:3000
+- **API Gateway**: http://localhost:8090
+
+### 🔑 Default Login Credentials
+
+| Role | Username | Password | Dashboard |
+| ---- | -------- | -------- | --------- |
+| **ADMIN** | admin123 | password123 | /dashboard/manager |
+| **MANAGER** | manager123 | password123 | /dashboard/manager |
+| **Supplier** | supplier123 | password123 | /dashboard/supplier |
+| **Store Keeper** | storekeeper123 | password123 | /dashboard/store-keeper |
+| **Driver** | driver123 | password123 | Mobile App |
+| **USER** | user123 | password123 | Mobile App |
 
 ## 📱 Features
 
@@ -240,17 +305,53 @@ NEXT_PUBLIC_CLOUDINARY_API_KEY=your_api_key
 ### Frontend Testing
 
 ```bash
-npm run test         # Run Jest tests
-npm run test:watch   # Run tests in watch mode
-npm run test:coverage # Run tests with coverage
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm test -- --watch
+
+# Run specific test file
+npm test -- ProductCard.test.tsx
+
+# Run tests with coverage
+npm test -- --coverage
+
+# Run tests for specific pattern
+npm test -- --testPathPattern="product"
 ```
+
+**Test Files Location:** `frontend/inventory-management-system/__tests__/`
+
+**What's Tested:**
+- Component rendering and UI
+- User interactions (clicks, form submissions)
+- Data display and formatting
+- Role-based visibility
+- Error handling
 
 ### Backend Testing
 
 ```bash
-mvn test            # Run all tests
-mvn test -Dtest=ClassName # Run specific test class
+# Run all tests for a service
+cd backend/userservice
+mvn test
+
+# Run specific test class
+mvn test -Dtest=UserServiceTest
+
+# Run all tests and skip on failure
+mvn test -DfailIfNoTests=false
+
+# Clean, install, and test
+mvn clean install
 ```
+
+**Test Coverage:**
+- Unit tests for services
+- Integration tests for controllers
+- Repository tests
+- Security/authentication tests
 
 ## 📊 API Documentation
 
@@ -284,33 +385,122 @@ mvn test -Dtest=ClassName # Run specific test class
 
 ## 🚀 Deployment
 
+### Local Development
+
+**Prerequisites Checklist:**
+- ✅ MySQL running on port 3306
+- ✅ All 6 backend services running (ports 8081-8086, 8090)
+- ✅ Frontend running on port 3000
+- ✅ Environment variables configured
+
+### Production Build
+
+#### Frontend (Next.js)
+
+```bash
+cd frontend/inventory-management-system
+
+# Build for production
+npm run build
+
+# Test production build locally
+npm start
+
+# Production build will be in .next/ folder
+```
+
+#### Backend (Spring Boot)
+
+```bash
+# Build JAR files for each service
+cd backend/userservice
+mvn clean package -DskipTests
+
+# Repeat for all services:
+# - ApiGateway
+# - userservice
+# - productservice
+# - Orderservice
+# - supplierservice
+# - resourseservice
+
+# JAR files will be in target/ folder of each service
+```
+
 ### Docker Deployment
 
-1. **Build and start all services**
+```bash
+# Build and start all services with Docker Compose
+docker-compose up -d
 
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Rebuild after changes
+docker-compose up -d --build
+```
+
+**Access:**
+- Web App: http://localhost:3000
+- API Gateway: http://localhost:8090
+
+### Cloud Deployment
+
+#### Recommended Platforms:
+
+**Frontend (Next.js):**
+- **Vercel** (Recommended): Automatic Next.js optimization
+- **Netlify**: Easy deployment with Git integration
+- **AWS Amplify**: Full-stack deployment
+
+**Backend (Spring Boot):**
+- **AWS EC2/ECS**: Scalable container hosting
+- **Google Cloud Run**: Serverless containers
+- **Azure App Service**: Managed Java hosting
+- **Railway**: Simple deployment for microservices
+
+**Database:**
+- **AWS RDS**: Managed MySQL
+- **Google Cloud SQL**: Managed databases
+- **PlanetScale**: Serverless MySQL
+
+#### Deployment Steps (Example: Vercel + AWS):
+
+1. **Deploy Frontend to Vercel:**
    ```bash
-   docker-compose up -d
+   vercel --prod
    ```
 
-2. **Access the application**
-   - Web App: http://localhost:3000
-   - API Gateway: http://localhost:8090
+2. **Deploy Backend to AWS ECS:**
+   - Create Docker images for each service
+   - Push to Amazon ECR
+   - Deploy to ECS with load balancer
 
-### Production Deployment
+3. **Configure Environment Variables:**
+   - Update `NEXT_PUBLIC_API_BASE_URL` to production API Gateway URL
+   - Set database connection strings in backend services
+   - Configure CORS for production domains
 
-1. **Build frontend**
+### Environment Variables
 
-   ```bash
-   npm run build
-   ```
+**Frontend (.env.local):**
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8090
+NEXT_PUBLIC_RESOURCE_SERVICE_URL=http://localhost:8086
+NEXT_PUBLIC_USER_SERVICE_URL=http://localhost:8081
+NEXT_PUBLIC_SUPPLIER_SERVICE_URL=http://localhost:8082
+```
 
-2. **Build backend services**
-
-   ```bash
-   mvn clean package -DskipTests
-   ```
-
-3. **Deploy to your preferred cloud platform**
+**Backend (application.properties):**
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/[service]_db
+spring.datasource.username=root
+spring.datasource.password=your_password
+jwt.secret=your_jwt_secret_key
+```
 
 ## 🔒 Security
 
@@ -368,6 +558,38 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Mobile Development**: React Native
 - **DevOps**: Docker, Docker Compose
 
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**"Error loading initial data" in Dashboard:**
+- Ensure all backend services are running
+- Check environment variables are set correctly
+- Verify API Gateway is accessible
+
+**Supplier/Store Keeper login redirects incorrectly:**
+- Role must match exactly: "Supplier" or "Store Keeper" (case-sensitive)
+- Check database role names match priority array
+
+**CORS errors:**
+- Verify CORS configuration in API Gateway
+- Check allowed origins include your frontend URL
+
+**Database connection failed:**
+- Ensure MySQL is running on port 3306
+- Verify database names match application.properties
+- Check username/password in configuration
+
+**Port already in use:**
+```bash
+# Windows
+netstat -ano | findstr :[PORT]
+taskkill /PID [PID] /F
+
+# Linux/Mac
+lsof -ti:[PORT] | xargs kill -9
+```
+
 ## 📞 Support
 
 For support, email support@inventorysystem.com or create an issue in the repository.
@@ -378,11 +600,27 @@ For support, email support@inventorysystem.com or create an issue in the reposit
 
 - Initial release
 - Complete inventory management system
-- Role-based authentication
+- Role-based authentication (ADMIN, MANAGER, Supplier, Store Keeper, Driver, USER)
 - Real-time analytics dashboard
-- Mobile application support
+- Mobile application support (React Native)
+- QR code stock updates
+- Driver and vehicle management
+- Assignment coordination with area clustering
+- Sales forecasting
 - Cloudinary image integration
+- Modern UI with Inter font and blue theme
+
+## 📸 Screenshots
+
+See `docs/images/` folder for application screenshots and `docs/User_Manual.md` for detailed guides.
+
+## 📄 Documentation
+
+- **User Manual**: `docs/User_Manual.md` - Role-based user guide with screenshot references
+- **Presentation**: `docs/Presentation.md` - Slide deck for demos and presentations
+- **API Documentation**: See API sections above
+- **Architecture**: See System Architecture diagram above
 
 ---
 
-**Built with ❤️ using modern web technologies**
+**Built with ❤️ by Group 16 using modern web technologies**
