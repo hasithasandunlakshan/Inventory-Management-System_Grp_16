@@ -66,32 +66,32 @@ ADMIN > MANAGER > Supplier > Store Keeper > Driver > USER
 
 ### Role Descriptions
 
-| Role | Description | Access |
-| ---- | ----------- | ------ |
-| **ADMIN** | Full system access, user management, system settings | Web App - Full Access |
-| **MANAGER** | Business operations, analytics, inventory, orders, drivers, vehicles | Web App - Manager Dashboard |
-| **Supplier** | View orders, manage deliveries, update inventory | Web App - Supplier Dashboard |
-| **Store Keeper** | Manage products, categories, inventory, stock updates | Web/Mobile - QR Stock Updates |
-| **Driver** | View assignments, update delivery status | Mobile App Only |
-| **USER** | Basic access, view own orders | Mobile App - Customer |
+| Role             | Description                                                          | Access                        |
+| ---------------- | -------------------------------------------------------------------- | ----------------------------- |
+| **ADMIN**        | Full system access, user management, system settings                 | Web App - Full Access         |
+| **MANAGER**      | Business operations, analytics, inventory, orders, drivers, vehicles | Web App - Manager Dashboard   |
+| **Supplier**     | View orders, manage deliveries, update inventory                     | Web App - Supplier Dashboard  |
+| **Store Keeper** | Manage products, categories, inventory, stock updates                | Web/Mobile - QR Stock Updates |
+| **Driver**       | View assignments, update delivery status                             | Mobile App Only               |
+| **USER**         | Basic access, view own orders                                        | Mobile App - Customer         |
 
 ### Detailed Permissions
 
-| Feature | ADMIN | MANAGER | Supplier | Store Keeper | Driver | USER |
-| ------- | ----- | ------- | -------- | ------------ | ------ | ---- |
-| Dashboard Overview | ✅ | ✅ | ✅ | ✅ | Mobile | Mobile |
-| Products (Add/Edit/Delete) | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| Categories | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| Inventory Management | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Sales Analytics | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Sales Forecast | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Orders | ✅ | ✅ | ✅ | ✅ | Mobile | Mobile |
-| Suppliers | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| Drivers Management | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Vehicles Management | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Assignments | ✅ | ✅ | ❌ | ❌ | Mobile | ❌ |
-| QR Stock Updates | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Mobile Shopping | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Feature                    | ADMIN | MANAGER | Supplier | Store Keeper | Driver | USER   |
+| -------------------------- | ----- | ------- | -------- | ------------ | ------ | ------ |
+| Dashboard Overview         | ✅    | ✅      | ✅       | ✅           | Mobile | Mobile |
+| Products (Add/Edit/Delete) | ✅    | ✅      | ❌       | ✅           | ❌     | ❌     |
+| Categories                 | ✅    | ✅      | ❌       | ✅           | ❌     | ❌     |
+| Inventory Management       | ✅    | ✅      | ✅       | ✅           | ❌     | ❌     |
+| Sales Analytics            | ✅    | ✅      | ❌       | ❌           | ❌     | ❌     |
+| Sales Forecast             | ✅    | ✅      | ❌       | ❌           | ❌     | ❌     |
+| Orders                     | ✅    | ✅      | ✅       | ✅           | Mobile | Mobile |
+| Suppliers                  | ✅    | ✅      | ❌       | ✅           | ❌     | ❌     |
+| Drivers Management         | ✅    | ✅      | ❌       | ❌           | ❌     | ❌     |
+| Vehicles Management        | ✅    | ✅      | ❌       | ❌           | ❌     | ❌     |
+| Assignments                | ✅    | ✅      | ❌       | ❌           | Mobile | ❌     |
+| QR Stock Updates           | ✅    | ✅      | ✅       | ✅           | ❌     | ❌     |
+| Mobile Shopping            | ❌    | ❌      | ❌       | ❌           | ❌     | ✅     |
 
 ## 🚀 Quick Start
 
@@ -189,14 +189,14 @@ npm run dev
 
 ### 🔑 Default Login Credentials
 
-| Role | Username | Password | Dashboard |
-| ---- | -------- | -------- | --------- |
-| **ADMIN** | admin123 | password123 | /dashboard/manager |
-| **MANAGER** | manager123 | password123 | /dashboard/manager |
-| **Supplier** | supplier123 | password123 | /dashboard/supplier |
+| Role             | Username       | Password    | Dashboard               |
+| ---------------- | -------------- | ----------- | ----------------------- |
+| **ADMIN**        | admin123       | password123 | /dashboard/manager      |
+| **MANAGER**      | manager123     | password123 | /dashboard/manager      |
+| **Supplier**     | supplier123    | password123 | /dashboard/supplier     |
 | **Store Keeper** | storekeeper123 | password123 | /dashboard/store-keeper |
-| **Driver** | driver123 | password123 | Mobile App |
-| **USER** | user123 | password123 | Mobile App |
+| **Driver**       | driver123      | password123 | Mobile App              |
+| **USER**         | user123        | password123 | Mobile App              |
 
 ## 📱 Features
 
@@ -324,6 +324,7 @@ npm test -- --testPathPattern="product"
 **Test Files Location:** `frontend/inventory-management-system/__tests__/`
 
 **What's Tested:**
+
 - Component rendering and UI
 - User interactions (clicks, form submissions)
 - Data display and formatting
@@ -348,6 +349,7 @@ mvn clean install
 ```
 
 **Test Coverage:**
+
 - Unit tests for services
 - Integration tests for controllers
 - Repository tests
@@ -388,6 +390,7 @@ mvn clean install
 ### Local Development
 
 **Prerequisites Checklist:**
+
 - ✅ MySQL running on port 3306
 - ✅ All 6 backend services running (ports 8081-8086, 8090)
 - ✅ Frontend running on port 3000
@@ -444,6 +447,7 @@ docker-compose up -d --build
 ```
 
 **Access:**
+
 - Web App: http://localhost:3000
 - API Gateway: http://localhost:8090
 
@@ -452,17 +456,20 @@ docker-compose up -d --build
 #### Recommended Platforms:
 
 **Frontend (Next.js):**
+
 - **Vercel** (Recommended): Automatic Next.js optimization
 - **Netlify**: Easy deployment with Git integration
 - **AWS Amplify**: Full-stack deployment
 
 **Backend (Spring Boot):**
+
 - **AWS EC2/ECS**: Scalable container hosting
 - **Google Cloud Run**: Serverless containers
 - **Azure App Service**: Managed Java hosting
 - **Railway**: Simple deployment for microservices
 
 **Database:**
+
 - **AWS RDS**: Managed MySQL
 - **Google Cloud SQL**: Managed databases
 - **PlanetScale**: Serverless MySQL
@@ -470,6 +477,7 @@ docker-compose up -d --build
 #### Deployment Steps (Example: Vercel + AWS):
 
 1. **Deploy Frontend to Vercel:**
+
    ```bash
    vercel --prod
    ```
@@ -487,6 +495,7 @@ docker-compose up -d --build
 ### Environment Variables
 
 **Frontend (.env.local):**
+
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8090
 NEXT_PUBLIC_RESOURCE_SERVICE_URL=http://localhost:8086
@@ -495,6 +504,7 @@ NEXT_PUBLIC_SUPPLIER_SERVICE_URL=http://localhost:8082
 ```
 
 **Backend (application.properties):**
+
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/[service]_db
 spring.datasource.username=root
@@ -563,24 +573,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Common Issues
 
 **"Error loading initial data" in Dashboard:**
+
 - Ensure all backend services are running
 - Check environment variables are set correctly
 - Verify API Gateway is accessible
 
 **Supplier/Store Keeper login redirects incorrectly:**
+
 - Role must match exactly: "Supplier" or "Store Keeper" (case-sensitive)
 - Check database role names match priority array
 
 **CORS errors:**
+
 - Verify CORS configuration in API Gateway
 - Check allowed origins include your frontend URL
 
 **Database connection failed:**
+
 - Ensure MySQL is running on port 3306
 - Verify database names match application.properties
 - Check username/password in configuration
 
 **Port already in use:**
+
 ```bash
 # Windows
 netstat -ano | findstr :[PORT]
