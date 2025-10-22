@@ -2,7 +2,6 @@ package com.Orderservice.Orderservice.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,17 +14,16 @@ import com.Orderservice.Orderservice.dto.AllOrdersResponse;
 import com.Orderservice.Orderservice.dto.AllPaymentsResponse;
 import com.Orderservice.Orderservice.dto.CreatePaymentIntentRequest;
 import com.Orderservice.Orderservice.dto.OrderDetailResponse;
+import com.Orderservice.Orderservice.dto.OrderStatusRequest;
 import com.Orderservice.Orderservice.dto.PaymentConfirmationRequest;
 import com.Orderservice.Orderservice.dto.PaymentConfirmationResponse;
 import com.Orderservice.Orderservice.dto.PaymentIntentResponse;
 import com.Orderservice.Orderservice.dto.UpdateOrderStatusRequest;
-import com.Orderservice.Orderservice.dto.OrderStatusRequest;
 import com.Orderservice.Orderservice.service.OrderService;
 import com.Orderservice.Orderservice.service.PaymentService;
 
 @RestController
 @RequestMapping("/api/payments")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class PaymentController {
     @PostMapping("/update-order-status")
     public ResponseEntity<String> updateOrderStatus(@RequestBody UpdateOrderStatusRequest request) {
@@ -88,6 +86,20 @@ public class PaymentController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+    
+    @PostMapping("/failure/{orderId}")
+    public ResponseEntity<String> handlePaymentFailure(@PathVariable Long orderId) {
+        System.out.println("=== PAYMENT FAILURE ENDPOINT CALLED ===");
+        System.out.println("Order ID: " + orderId);
+        
+        boolean handled = paymentService.handlePaymentFailure(orderId);
+        
+        if (handled) {
+            return ResponseEntity.ok("Payment failure handled successfully. Order cancelled and stock restored.");
+        } else {
+            return ResponseEntity.badRequest().body("Failed to handle payment failure. Order may not be in PENDING status.");
+        }
+    }
 
     @GetMapping("/health")
     public ResponseEntity<String> health() {
@@ -125,7 +137,6 @@ public class PaymentController {
      * @return AllPaymentsResponse containing all payments
      */
     @GetMapping("/all")
-    @CrossOrigin(origins = "*")
     public ResponseEntity<AllPaymentsResponse> getAllPayments(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

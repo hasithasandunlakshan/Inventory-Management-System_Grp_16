@@ -35,6 +35,12 @@ public class Product {
     @Column(name = "stock_quantity")
     private Integer stockQuantity;
     
+    @Column(name = "available_stock")
+    private Integer availableStock;
+    
+    @Column(name = "reserved")
+    private Integer reserved;
+    
     @Column(name = "category_id")
     private Long categoryId;
 

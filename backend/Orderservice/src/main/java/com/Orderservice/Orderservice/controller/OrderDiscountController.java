@@ -1,22 +1,27 @@
 package com.Orderservice.Orderservice.controller;
 
-import com.Orderservice.Orderservice.dto.ApplyDiscountRequest;
-import com.Orderservice.Orderservice.dto.DiscountCalculationResponse;
-import com.Orderservice.Orderservice.entity.Order;
-import com.Orderservice.Orderservice.repository.OrderRepository;
-import com.Orderservice.Orderservice.service.OrderService;
-
 import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.Orderservice.Orderservice.dto.DiscountCalculationResponse;
+import com.Orderservice.Orderservice.entity.Order;
+import com.Orderservice.Orderservice.repository.OrderRepository;
+import com.Orderservice.Orderservice.service.OrderService;
 
 @RestController
 @RequestMapping("/api/orders/discounts")
-@CrossOrigin(origins = "*")
 public class OrderDiscountController {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderDiscountController.class);
@@ -53,19 +58,23 @@ public class OrderDiscountController {
                     .body(DiscountCalculationResponse.failure(e.getMessage()));
         }
     }
+    
     /**
+     * Remove discount from order
      */
-    logger.info("Removing discount from order {}",orderId);
+    @DeleteMapping("/{orderId}/remove")
+    public ResponseEntity<?> removeDiscountFromOrder(@PathVariable Long orderId) {
+        try {
+            logger.info("Removing discount from order {}", orderId);
 
-    Order updatedOrder = orderService.removeDiscountFromOrder(orderId);
+            Order updatedOrder = orderService.removeDiscountFromOrder(orderId);
 
-    return ResponseEntity.ok("Discount removed successfully from order "+orderId);}catch(
-    Exception e)
-    {
-        logger.error("Error removing discount from order: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Failed to remove discount: " + e.getMessage());
-    }
+            return ResponseEntity.ok("Discount removed successfully from order " + orderId);
+        } catch (Exception e) {
+            logger.error("Error removing discount from order: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Failed to remove discount: " + e.getMessage());
+        }
     }
 
     /**

@@ -21,7 +21,6 @@ import com.stripe.param.ChargeListParams;
 
 @RestController
 @RequestMapping("/api/revenue")
-@CrossOrigin(origins = "http://localhost:3000")
 public class RevenueController {
 
     public RevenueController(@Value("${stripe.api.key}") String stripeApiKey) {

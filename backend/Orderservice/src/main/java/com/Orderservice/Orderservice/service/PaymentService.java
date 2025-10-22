@@ -134,6 +134,7 @@ public class PaymentService {
             orderRepository.save(order);
 
             System.out.println("Order confirmed successfully!");
+            System.out.println("Stock was already reserved during order creation.");
             
             // Publish order notification event
             try {
@@ -168,27 +169,7 @@ public class PaymentService {
                 e.printStackTrace();
             }
             
-            System.out.println("Publishing inventory reservation request to Kafka...");
-            System.out.println("Items to reserve:");
-            for (var item : order.getOrderItems()) {
-                System.out.println("  - Product ID: " + item.getProductId() + 
-                                 ", Barcode: " + item.getBarcode() + 
-                                 ", Quantity: " + item.getQuantity());
-            }
-
-            // Publish inventory reservation event
-            try {
-                eventPublisherService.publishInventoryReservationRequest(
-                    order.getOrderId(), 
-                    order.getCustomerId(), 
-                    order.getOrderItems()
-                );
-                System.out.println("✅ Inventory reservation request sent to Kafka successfully!");
-            } catch (Exception e) {
-                // Log the error but don't fail the payment confirmation
-                System.err.println("❌ Failed to publish inventory reservation event: " + e.getMessage());
-                e.printStackTrace();
-            }            // Update invoice status
+            System.out.println("===============================");            // Update invoice status
             Invoice invoice = invoiceRepository.findByOrder(order)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
             invoice.setPaymentStatus(PaymentStatus.PAID);
@@ -313,6 +294,18 @@ public class PaymentService {
             System.err.println("❌ Failed to publish order notifications: " + e.getMessage());
             // Don't fail the order creation if notification fails
             e.printStackTrace();
+        }
+        
+        // Reserve stock immediately when order is created
+        try {
+            System.out.println("🔒 Reserving stock for order items...");
+            reserveStockForOrder(savedOrder);
+            System.out.println("✅ Stock reserved successfully for all items!");
+        } catch (Exception e) {
+            System.err.println("❌ Failed to reserve stock: " + e.getMessage());
+            // Delete the order if stock reservation fails
+            orderRepository.delete(savedOrder);
+            throw new RuntimeException("Failed to create order: " + e.getMessage(), e);
         }
         
         System.out.println("------------------------------------");
@@ -469,6 +462,176 @@ public class PaymentService {
                 .payments(new ArrayList<>())
                 .totalPayments(0)
                 .build();
+        }
+    }
+    
+    /**
+     * Reserve stock for order items when order is confirmed
+     * Uses pessimistic locking to ensure only one transaction modifies stock at a time
+     * @param order The confirmed order
+     * @throws RuntimeException if stock is insufficient or product not found
+     */
+    private void reserveStockForOrder(Order order) {
+        System.out.println("=== RESERVING STOCK FOR ORDER ===");
+        System.out.println("Order ID: " + order.getOrderId());
+        System.out.println("Number of items: " + order.getOrderItems().size());
+        
+        for (OrderItem orderItem : order.getOrderItems()) {
+            Long productId = orderItem.getProductId();
+            Integer quantityToReserve = orderItem.getQuantity();
+            
+            System.out.println("Processing Product ID: " + productId + ", Quantity: " + quantityToReserve);
+            
+            // Fetch product with pessimistic lock to prevent concurrent modifications
+            Product product = productRepository.findByIdWithLock(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+            
+            // Initialize fields if null
+            if (product.getAvailableStock() == null) {
+                product.setAvailableStock(product.getStockQuantity() != null ? product.getStockQuantity() : 0);
+            }
+            if (product.getReserved() == null) {
+                product.setReserved(0);
+            }
+            
+            System.out.println("Product: " + product.getName());
+            System.out.println("Current Available Stock: " + product.getAvailableStock());
+            System.out.println("Current Reserved: " + product.getReserved());
+            
+            // Check if sufficient stock is available
+            if (product.getAvailableStock() < quantityToReserve) {
+                String errorMsg = String.format(
+                    "Insufficient stock for product '%s' (ID: %d). Required: %d, Available: %d",
+                    product.getName(), productId, quantityToReserve, product.getAvailableStock()
+                );
+                System.err.println("❌ " + errorMsg);
+                throw new RuntimeException(errorMsg);
+            }
+            
+            // Reduce available stock and increase reserved quantity
+            product.setAvailableStock(product.getAvailableStock() - quantityToReserve);
+            product.setReserved(product.getReserved() + quantityToReserve);
+            
+            // Save the updated product
+            productRepository.save(product);
+            
+            System.out.println("✅ Stock reserved successfully!");
+            System.out.println("New Available Stock: " + product.getAvailableStock());
+            System.out.println("New Reserved: " + product.getReserved());
+            System.out.println("---");
+        }
+        
+        System.out.println("=== STOCK RESERVATION COMPLETED ===");
+    }
+    
+    /**
+     * Restore stock for order items when payment fails
+     * Uses pessimistic locking to ensure only one transaction modifies stock at a time
+     * @param order The order whose stock needs to be restored
+     */
+    private void restoreStockForOrder(Order order) {
+        System.out.println("=== RESTORING STOCK FOR ORDER ===");
+        System.out.println("Order ID: " + order.getOrderId());
+        System.out.println("Number of items: " + order.getOrderItems().size());
+        
+        for (OrderItem orderItem : order.getOrderItems()) {
+            Long productId = orderItem.getProductId();
+            Integer quantityToRestore = orderItem.getQuantity();
+            
+            System.out.println("Processing Product ID: " + productId + ", Quantity: " + quantityToRestore);
+            
+            // Fetch product with pessimistic lock to prevent concurrent modifications
+            Product product = productRepository.findByIdWithLock(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+            
+            // Initialize fields if null
+            if (product.getAvailableStock() == null) {
+                product.setAvailableStock(0);
+            }
+            if (product.getReserved() == null) {
+                product.setReserved(0);
+            }
+            
+            System.out.println("Product: " + product.getName());
+            System.out.println("Current Available Stock: " + product.getAvailableStock());
+            System.out.println("Current Reserved: " + product.getReserved());
+            
+            // Restore: increase available stock and decrease reserved quantity
+            product.setAvailableStock(product.getAvailableStock() + quantityToRestore);
+            product.setReserved(Math.max(0, product.getReserved() - quantityToRestore)); // Ensure reserved doesn't go negative
+            
+            // Save the updated product
+            productRepository.save(product);
+            
+            System.out.println("✅ Stock restored successfully!");
+            System.out.println("New Available Stock: " + product.getAvailableStock());
+            System.out.println("New Reserved: " + product.getReserved());
+            System.out.println("---");
+        }
+        
+        System.out.println("=== STOCK RESTORATION COMPLETED ===");
+    }
+    
+    /**
+     * Handle payment failure - restore stock and update order status to CANCELLED
+     * @param orderId The order ID for which payment failed
+     * @return true if successfully handled, false otherwise
+     */
+    public boolean handlePaymentFailure(Long orderId) {
+        try {
+            System.out.println("=== HANDLING PAYMENT FAILURE ===");
+            System.out.println("Order ID: " + orderId);
+            
+            // Fetch the order
+            Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+            
+            System.out.println("Current Order Status: " + order.getStatus());
+            
+            // Only handle payment failure for PENDING orders (orders where payment hasn't been confirmed yet)
+            if (order.getStatus() == OrderStatus.PENDING) {
+                // Restore stock
+                restoreStockForOrder(order);
+                
+                // Update order status to CANCELLED
+                order.setStatus(OrderStatus.CANCELLED);
+                orderRepository.save(order);
+                
+                System.out.println("✅ Payment failure handled successfully");
+                System.out.println("Order status updated to CANCELLED");
+                System.out.println("Stock restored successfully");
+                
+                // Publish notification about order cancellation
+                try {
+                    String customerMessage = String.format(
+                        "Your order #%d has been cancelled due to payment failure. Stock has been restored.",
+                        orderId
+                    );
+                    eventPublisherService.publishOrderNotification(
+                        orderId,
+                        order.getCustomerId(),
+                        "ORDER_CANCELLED",
+                        order.getTotalAmount().doubleValue(),
+                        customerMessage
+                    );
+                    System.out.println("✅ Cancellation notification sent");
+                } catch (Exception e) {
+                    System.err.println("❌ Failed to send cancellation notification: " + e.getMessage());
+                    // Don't fail the cancellation if notification fails
+                }
+                
+                return true;
+            } else {
+                System.out.println("⚠️ Order status is " + order.getStatus() + ", not PENDING. No action taken.");
+                return false;
+            }
+            
+        } catch (Exception e) {
+            System.err.println("❌ Failed to handle payment failure: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            System.out.println("=== PAYMENT FAILURE HANDLING COMPLETED ===");
         }
     }
 }
