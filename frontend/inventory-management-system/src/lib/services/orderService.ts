@@ -36,6 +36,10 @@ export interface Order {
   discountId?: number | null;
   refundReason?: string | null;
   refundProcessedAt?: string | null;
+  // Order delivery location fields
+  latitude?: number;
+  longitude?: number;
+  formattedAddress?: string;
 }
 
 export interface OrderWithCustomer extends Order {

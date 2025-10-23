@@ -364,54 +364,16 @@ function ShippingPage() {
   // Convert real order data to shipping order format
   const convertToShippingOrders = (orders: Order[]): ShippingOrder[] => {
     return orders.map((order, index) => {
-      // Use real customer address from the order data
-      let lat = 6.9271; // Default to Colombo coordinates
-      let lng = 79.8612;
-      let address = 'Address not available';
+      // Use latitude, longitude, and formattedAddress directly from the API response
+      let lat = DEFAULT_LOCATION.lat; // Default to Colombo coordinates
+      let lng = DEFAULT_LOCATION.lng;
+      let address = DEFAULT_LOCATION.address;
 
-      // Check if order has customer address information
-      if (
-        order.customerAddress &&
-        order.customerAddress !== 'Address not available' &&
-        order.customerAddress !== 'Address not provided'
-      ) {
-        address = order.customerAddress;
-        // Use customer coordinates if available
-        if (order.customerLatitude && order.customerLongitude) {
-          lat = order.customerLatitude;
-          lng = order.customerLongitude;
-        } else {
-          // If no coordinates but have address, try to assign reasonable Sri Lankan coordinates
-          // Based on common city patterns in addresses
-          if (address.toLowerCase().includes('kandy')) {
-            lat = 7.2906;
-            lng = 80.6337;
-          } else if (address.toLowerCase().includes('galle')) {
-            lat = 6.0535;
-            lng = 80.221;
-          } else if (address.toLowerCase().includes('negombo')) {
-            lat = 7.2083;
-            lng = 79.8358;
-          } else if (address.toLowerCase().includes('matara')) {
-            lat = 5.9549;
-            lng = 80.555;
-          } else if (address.toLowerCase().includes('anuradhapura')) {
-            lat = 7.8731;
-            lng = 80.7718;
-          } else if (address.toLowerCase().includes('batticaloa')) {
-            lat = 6.9534;
-            lng = 81.0077;
-          } else if (address.toLowerCase().includes('kurunegala')) {
-            lat = 8.3114;
-            lng = 80.4037;
-          }
-          // Default to Colombo for other addresses
-        }
-      } else {
-        // Use default location if no address available
-        lat = DEFAULT_LOCATION.lat;
-        lng = DEFAULT_LOCATION.lng;
-        address = DEFAULT_LOCATION.address;
+      // Check if order has latitude, longitude, and formattedAddress from API
+      if (order.latitude && order.longitude) {
+        lat = order.latitude;
+        lng = order.longitude;
+        address = order.formattedAddress || address;
       }
 
       return {
