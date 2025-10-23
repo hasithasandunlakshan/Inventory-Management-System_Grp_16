@@ -44,8 +44,8 @@ export interface TranslationJob {
   status: string;
   created_date_time?: string;
   last_action_date_time?: string;
-  summary?: Record<string, any>;
-  results?: any[];
+  summary?: Record<string, unknown>;
+  results?: unknown[];
 }
 
 export interface DocumentStatus {
@@ -71,7 +71,7 @@ export interface SupportedLanguages {
 export interface HealthCheck {
   service: string;
   status: string;
-  validation: any;
+  validation: Record<string, unknown>;
   endpoints: Record<string, string>;
 }
 
@@ -143,7 +143,7 @@ export class TranslatorService {
    */
   async translateDocumentSync(
     request: DocumentTranslationRequest
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
       const response = await fetch(`${this.baseUrl}/translate/document/sync`, {
         method: 'POST',
@@ -238,8 +238,8 @@ export class TranslatorService {
     status: string;
     created_date_time?: string;
     last_action_date_time?: string;
-    summary?: Record<string, any>;
-    results?: any[];
+    summary?: Record<string, unknown>;
+    results?: unknown[];
     metadata: {
       timestamp: string;
       service: string;
@@ -266,7 +266,7 @@ export class TranslatorService {
    */
   async getJobDocumentsStatus(jobId: string): Promise<{
     job_id: string;
-    documents: any[];
+    documents: unknown[];
     count: number;
     metadata: {
       timestamp: string;
@@ -323,7 +323,7 @@ export class TranslatorService {
     file: File,
     targetLanguage: string,
     sourceLanguage?: string
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -405,7 +405,9 @@ export class TranslatorService {
   /**
    * Check document translation status (legacy method)
    */
-  async checkDocumentTranslationStatus(operationId: string): Promise<any> {
+  async checkDocumentTranslationStatus(
+    operationId: string
+  ): Promise<Record<string, unknown>> {
     try {
       const response = await fetch(
         `${this.baseUrl}/translate/document/status/${operationId}`

@@ -27,7 +27,7 @@ export default function InventoryPerformanceChart() {
         const mockData = generateMockInventoryData();
         setInventoryData(mockData);
         setTotalValue(mockData.reduce((sum, item) => sum + item.totalValue, 0));
-      } catch (error) {
+      } catch {
       } finally {
         setLoading(false);
       }

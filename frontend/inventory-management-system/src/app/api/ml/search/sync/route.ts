@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 interface Product {
   productId: number;
@@ -37,7 +37,7 @@ interface SearchDocument {
   createdDate?: string;
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(): Promise<NextResponse> {
   try {
     console.log('Starting data sync to Azure Search...');
 
@@ -57,7 +57,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     console.log('Fetching data from existing services...');
 
     const searchDocuments: SearchDocument[] = [];
-    let totalFetched = 0;
 
     try {
       // Fetch products from product service
@@ -102,7 +101,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             createdDate: new Date().toISOString(),
           });
         });
-        totalFetched += products.length;
       } else {
         console.warn(`Failed to fetch products: ${productsResponse.status}`);
       }
@@ -140,7 +138,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             createdDate: supplier.createdDate || new Date().toISOString(),
           });
         });
-        totalFetched += suppliers.length;
       } else {
         console.warn(`Failed to fetch suppliers: ${suppliersResponse.status}`);
       }
@@ -201,8 +198,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         supplier: 'Sample Game Gear',
         createdDate: new Date().toISOString(),
       });
-
-      totalFetched = searchDocuments.length;
       console.log(
         `Added ${searchDocuments.length} sample documents for testing`
       );
@@ -238,7 +233,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const result = await response.json();
+    await response.json();
     console.log('Successfully synced data to Azure Search');
 
     const syncResponse = NextResponse.json({

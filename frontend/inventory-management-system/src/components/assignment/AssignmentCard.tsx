@@ -177,7 +177,9 @@ export default function AssignmentCard({
         {/* Notes */}
         {assignment.notes && (
           <div className='border-t pt-2'>
-            <p className='text-xs text-gray-500 italic'>"{assignment.notes}"</p>
+            <p className='text-xs text-gray-500 italic'>
+              &quot;{assignment.notes}&quot;
+            </p>
           </div>
         )}
 

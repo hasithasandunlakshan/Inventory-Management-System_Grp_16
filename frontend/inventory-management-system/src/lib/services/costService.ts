@@ -1,8 +1,4 @@
-import { createAuthenticatedRequestOptions } from '../utils/auth/authUtils';
-
 // Cost Analysis Service
-const API_GATEWAY_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090';
 const PRODUCT_SERVICE_URL =
   process.env.NEXT_PUBLIC_PRODUCT_SERVICE_URL || 'http://localhost:8083';
 const SUPPLIER_SERVICE_URL =
@@ -49,10 +45,7 @@ export interface CostAnalysisMetrics {
 
 export const costService = {
   // Get inventory cost analysis
-  async getInventoryCost(
-    dateFrom?: string,
-    dateTo?: string
-  ): Promise<InventoryCostResponse> {
+  async getInventoryCost(): Promise<InventoryCostResponse> {
     try {
       // Make direct request to Product Service backend (bypassing API Gateway)
       const response = await fetch(
@@ -85,10 +78,7 @@ export const costService = {
   },
 
   // Get purchase order statistics
-  async getPurchaseOrderStats(
-    dateFrom?: string,
-    dateTo?: string
-  ): Promise<PurchaseOrderStats> {
+  async getPurchaseOrderStats(): Promise<PurchaseOrderStats> {
     try {
       // Make direct request to Supplier Service backend (bypassing API Gateway)
       const response = await fetch(
@@ -189,14 +179,11 @@ export const costService = {
   },
 
   // Calculate cost analysis metrics
-  async getCostAnalysisMetrics(
-    dateFrom?: string,
-    dateTo?: string
-  ): Promise<CostAnalysisMetrics> {
+  async getCostAnalysisMetrics(): Promise<CostAnalysisMetrics> {
     try {
       const [inventoryCost, purchaseStats] = await Promise.all([
-        this.getInventoryCost(dateFrom, dateTo),
-        this.getPurchaseOrderStats(dateFrom, dateTo),
+        this.getInventoryCost(),
+        this.getPurchaseOrderStats(),
       ]);
 
       const totalCosts =

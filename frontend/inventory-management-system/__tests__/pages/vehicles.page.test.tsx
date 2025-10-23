@@ -383,4 +383,3 @@ describe('VehiclesPage (Server Component)', () => {
     });
   });
 });
-

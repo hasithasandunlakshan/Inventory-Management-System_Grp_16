@@ -137,7 +137,7 @@ export const orderService = {
       // Add fetch timestamp to response for debugging
       data.fetchedAt = new Date().toISOString();
       return data;
-    } catch (error) {
+    } catch {
       throw new Error('Failed to fetch orders - backend not available');
     }
   },
@@ -168,7 +168,7 @@ export const orderService = {
             ...order,
             customerInfo,
           });
-        } catch (error) {
+        } catch {
           // Add order without customer info
           ordersWithCustomers.push({
             ...order,
@@ -183,7 +183,7 @@ export const orderService = {
         orders: ordersWithCustomers,
         totalOrders: ordersWithCustomers.length,
       };
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to fetch orders with customers - backend not available'
       );
@@ -205,7 +205,7 @@ export const orderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to fetch orders by status - backend not available'
       );
@@ -227,7 +227,7 @@ export const orderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error('Failed to fetch order - backend not available');
     }
   },
@@ -250,7 +250,7 @@ export const orderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error('Failed to update order status - backend not available');
     }
   },
@@ -270,7 +270,7 @@ export const orderService = {
       }
 
       return response.json();
-    } catch (error) {
+    } catch {
       throw new Error('Failed to fetch orders count - backend not available');
     }
   },

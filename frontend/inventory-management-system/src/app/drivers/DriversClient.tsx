@@ -72,6 +72,9 @@ export default function DriversClient({
     if (canManageDrivers && availableUsers.length === 0) {
       loadAvailableUsers();
     }
+    // Intentionally omitting availableUsers.length and drivers.length from dependencies
+    // to prevent infinite loops - these are state values updated by the functions called above
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, canManageDrivers]);
 
   // Optional: Refresh users from API (only when needed)

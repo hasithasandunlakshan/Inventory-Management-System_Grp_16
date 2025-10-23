@@ -183,9 +183,9 @@ export default function CostAnalysisReportPage() {
         });
         const [inventoryCostData, purchaseStatsData, costMetricsData] =
           await Promise.all([
-            costService.getInventoryCost(dateFrom, dateTo),
-            costService.getPurchaseOrderStats(dateFrom, dateTo),
-            costService.getCostAnalysisMetrics(dateFrom, dateTo),
+            costService.getInventoryCost(),
+            costService.getPurchaseOrderStats(),
+            costService.getCostAnalysisMetrics(),
           ]);
 
         console.log('💰 Cost analysis data loaded:', {
@@ -214,9 +214,9 @@ export default function CostAnalysisReportPage() {
       console.log('🔄 Reloading cost analysis data...', { dateFrom, dateTo });
       const [inventoryCostData, purchaseStatsData, costMetricsData] =
         await Promise.all([
-          costService.getInventoryCost(dateFrom, dateTo),
-          costService.getPurchaseOrderStats(dateFrom, dateTo),
-          costService.getCostAnalysisMetrics(dateFrom, dateTo),
+          costService.getInventoryCost(),
+          costService.getPurchaseOrderStats(),
+          costService.getCostAnalysisMetrics(),
         ]);
 
       setInventoryCost(inventoryCostData);

@@ -12,8 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Brain,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle,
   Loader2,

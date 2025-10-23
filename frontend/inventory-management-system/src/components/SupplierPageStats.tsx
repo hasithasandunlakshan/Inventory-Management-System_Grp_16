@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Package,
@@ -45,7 +45,7 @@ export function SupplierPageStats({ refreshTrigger }: SupplierPageStatsProps) {
       setMonthlyStats(monthlyData);
       setGeneralStats(generalData);
       setSupplierCount(suppliers.length);
-    } catch (error) {
+    } catch {
       setError('Failed to load statistics');
     } finally {
       setLoading(false);

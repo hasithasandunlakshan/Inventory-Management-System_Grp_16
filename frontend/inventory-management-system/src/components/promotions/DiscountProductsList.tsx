@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +51,7 @@ export default function DiscountProductsList({
       setError(null);
       const data = await discountService.getDiscountProducts(discountId);
       setProductsData(data);
-    } catch (error) {
+    } catch {
       setError('Failed to load products');
       toast.error('Failed to load associated products');
     } finally {

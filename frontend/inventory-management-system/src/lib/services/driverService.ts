@@ -394,7 +394,7 @@ class DriverService {
       }
     );
     if (!response.ok) {
-      const errorText = await response.text();
+      await response.text();
       throw new Error('Failed to fetch users');
     }
 

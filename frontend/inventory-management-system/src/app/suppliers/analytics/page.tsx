@@ -8,15 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   BarChart3,
   TrendingUp,
   Users,
   Package,
   DollarSign,
-  Calendar,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -29,9 +26,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  LineChart,
-  Line,
 } from 'recharts';
 import {
   Select,
@@ -115,8 +109,8 @@ function AnalyticsPageContent() {
 
         setSupplierCategoryData(categoryCounts);
         setTotalSuppliers(suppliers.length);
-      } catch (error) {
-        console.error('Error loading supplier category data:', error);
+      } catch {
+        console.error('Error loading supplier category data');
       } finally {
         setLoadingCategory(false);
       }
@@ -175,7 +169,7 @@ function AnalyticsPageContent() {
                 supplierId: order.supplierId,
                 total: totalResponse.total,
               };
-            } catch (error) {
+            } catch {
               return {
                 supplierId: order.supplierId,
                 total: order.total || 0,
@@ -211,8 +205,8 @@ function AnalyticsPageContent() {
         setTotalSpend(
           sortedSpendData.reduce((sum, supplier) => sum + supplier.spend, 0)
         );
-      } catch (error) {
-        console.error('Error loading supplier spend data:', error);
+      } catch {
+        console.error('Error loading supplier spend data');
       } finally {
         setLoadingSpend(false);
       }
@@ -276,8 +270,8 @@ function AnalyticsPageContent() {
           .filter(item => item.value > 0);
 
         setPoStatusData(chartData);
-      } catch (error) {
-        console.error('Error loading PO status data:', error);
+      } catch {
+        console.error('Error loading PO status data');
       } finally {
         setLoadingPoStatus(false);
       }

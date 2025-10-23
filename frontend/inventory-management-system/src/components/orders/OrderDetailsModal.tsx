@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
@@ -104,7 +104,7 @@ export default function OrderDetailsModal({
       } else {
         toast.error(response.message || 'Failed to process refund');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to process refund. Please try again.');
     } finally {
       setIsProcessingRefund(false);

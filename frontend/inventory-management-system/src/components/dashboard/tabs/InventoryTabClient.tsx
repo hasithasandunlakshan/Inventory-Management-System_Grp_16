@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,15 +59,6 @@ const CustomerColors = {
   bgPage: '#F8FAFC',
 };
 
-const CHART_COLORS = [
-  CustomerColors.brandBlue,
-  CustomerColors.accentBlue,
-  CustomerColors.success,
-  CustomerColors.warning,
-  CustomerColors.error,
-  CustomerColors.brandMedium,
-];
-
 interface InventoryTabProps {
   initialInventoryData: InventoryAnalytics | null;
   initialStockMovement: StockMovementData[];
@@ -116,7 +107,7 @@ export default function InventoryTabClient({
       setInventoryData(data.inventoryData || null);
       setStockMovement(data.stockMovement || []);
       setCategoryData(data.categoryData || []);
-    } catch (err) {
+    } catch {
       setError('Failed to load inventory data');
     } finally {
       setLoading(false);

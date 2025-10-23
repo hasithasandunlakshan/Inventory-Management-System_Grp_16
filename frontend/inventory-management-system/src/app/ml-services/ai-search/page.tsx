@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, AlertCircle, Loader2, Brain, Sparkles } from 'lucide-react';
 
 import SearchBar from '@/components/ml/search/SearchBar';
@@ -14,7 +13,6 @@ import SearchStats from '@/components/ml/search/SearchStats';
 import {
   AzureSearchService,
   SearchResult,
-  SearchResponse,
   SearchFilters as SearchFiltersType,
 } from '@/lib/services/azureSearchService';
 import {
@@ -33,7 +31,6 @@ export default function AISearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<SearchFiltersType>({});
-  const [activeTab, setActiveTab] = useState('search');
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [backendServices, setBackendServices] = useState<{
@@ -334,7 +331,7 @@ export default function AISearchPage() {
             totalResults={totalCount}
             searchTime={searchTime}
             facets={facets}
-            activeFilters={filters}
+            activeFilters={filters as { [key: string]: unknown }}
           />
 
           {/* Results and Filters */}
@@ -344,7 +341,7 @@ export default function AISearchPage() {
               <SearchFilters
                 facets={facets}
                 onFiltersChange={handleFiltersChange}
-                currentFilters={filters}
+                currentFilters={filters as Record<string, unknown>}
               />
             </div>
 

@@ -19,39 +19,14 @@ import {
   Eye,
   Edit,
   Trash2,
-  Truck,
   Package,
   Calendar,
-  Phone,
-  Mail,
-  MapPin,
-  User,
   Building2,
-  Tag,
-  X,
   CheckCircle,
   AlertCircle,
-  FileText,
   Paperclip,
-  Send,
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  LineChart,
-  Line,
-} from 'recharts';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -66,44 +41,18 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { deliveryLogService } from '@/lib/services/deliveryLogService';
-import { supplierService } from '@/lib/services/supplierService';
 import { purchaseOrderService } from '@/lib/services/purchaseOrderService';
-
-import { supplierCategoryService } from '@/lib/services/supplierCategoryService';
-import { enhancedSupplierService } from '@/lib/services/enhancedSupplierService';
 import {
-  DeliveryLog,
-  EnhancedSupplier,
-  SupplierCreateRequest,
-  SupplierCategory,
-  SupplierCategoryCreateRequest,
   PurchaseOrderSummary,
-  PurchaseOrderStatus,
-  PurchaseOrderCreateRequest,
   PurchaseOrder,
   PurchaseOrderNote,
   PurchaseOrderAttachment,
   PurchaseOrderAudit,
-  PurchaseOrderItem,
-  NoteCreateRequest,
 } from '@/lib/types/supplier';
 import { useAuth } from '@/contexts/AuthContext';
 import { PurchaseOrderStats } from '@/components/PurchaseOrderStats';
-import { SupplierPageStats } from '@/components/SupplierPageStats';
-import { userService, UserInfo } from '@/lib/services/userService';
-import { getDistinctColor } from '@/lib/utils/color/colorUtils';
-
-// Define DeliveryLogCreateRequest to match the imported type
-interface DeliveryLogCreateRequest {
-  poId: number;
-  itemID: number;
-  receivedDate: string;
-  receivedQuantity: number;
-}
 
 // Main component wrapped with authentication
 function PurchaseOrdersPageContent() {
@@ -129,13 +78,9 @@ function PurchaseOrdersPageContent() {
   >([]);
   const [orderAudit, setOrderAudit] = useState<PurchaseOrderAudit[]>([]);
   const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
-  const [isEditOrderOpen, setIsEditOrderOpen] = useState(false);
-  const [editingPurchaseOrder, setEditingPurchaseOrder] =
-    useState<PurchaseOrder | null>(null);
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
-  const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
 
   const { isAuthenticated } = useAuth();
 
@@ -157,7 +102,7 @@ function PurchaseOrdersPageContent() {
       setOrderAttachments(attachments);
       setOrderAudit(audit);
       setIsViewOrderOpen(true);
-    } catch (error) {
+    } catch {
       setError('Failed to load purchase order details');
     } finally {
       setLoadingOrderDetails(false);
@@ -177,7 +122,7 @@ function PurchaseOrdersPageContent() {
         attachmentId,
         filename
       );
-    } catch (error) {
+    } catch {
       setError('Failed to download attachment');
     }
   };
@@ -200,7 +145,7 @@ function PurchaseOrdersPageContent() {
       await loadPurchaseOrders();
 
       // Show success message (you might want to add a toast notification here)
-    } catch (error) {
+    } catch {
       setError('Failed to delete purchase order');
     } finally {
       setDeletingOrderId(null);
@@ -212,8 +157,6 @@ function PurchaseOrdersPageContent() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Debug: Read the file content to see what we're actually sending
-    const text = await file.text();
     // Reset any previous success message
     setImportSuccess(null);
 
@@ -235,13 +178,11 @@ function PurchaseOrdersPageContent() {
 
       // Show errors/warnings if any
       if (result.errors && result.errors.length > 0) {
-        result.errors.forEach((error, index) => {});
-
         const errorMessages = result.errors.slice(0, 3).join('; ');
         if (result.created === 0) {
           // Check if it's a header format error and provide helpful message
-          const isHeaderError = result.errors.some(error =>
-            error.includes('Invalid header')
+          const isHeaderError = result.errors.some(err =>
+            err.includes('Invalid header')
           );
           if (isHeaderError) {
             setError(
@@ -254,11 +195,9 @@ function PurchaseOrdersPageContent() {
           // Just show as info if some succeeded
         }
       }
-    } catch (error) {
+    } catch (err) {
       setError(
-        error instanceof Error
-          ? error.message
-          : 'Failed to import purchase orders'
+        err instanceof Error ? err.message : 'Failed to import purchase orders'
       );
     } finally {
       setImporting(false);
@@ -282,7 +221,7 @@ function PurchaseOrdersPageContent() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch {
       setError('Failed to export purchase orders');
     } finally {
       setExporting(false);
@@ -313,11 +252,9 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
   const handleEditOrder = async (orderId: number) => {
     try {
       setLoadingOrderDetails(true);
-      const orderDetails =
-        await purchaseOrderService.getPurchaseOrderById(orderId);
-      setEditingPurchaseOrder(orderDetails);
-      setIsEditOrderOpen(true);
-    } catch (error) {
+      await purchaseOrderService.getPurchaseOrderById(orderId);
+      // Note: Edit order modal implementation is pending
+    } catch {
       setError('Failed to load purchase order for editing');
     } finally {
       setLoadingOrderDetails(false);
@@ -333,7 +270,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
 
       // Load totals for each order
       await loadOrderTotals(orders);
-    } catch (error) {
+    } catch {
       setError('Failed to load purchase orders. Please try again.');
     } finally {
       setLoading(false);
@@ -372,16 +309,16 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
             const totalResponse =
               await purchaseOrderService.getPurchaseOrderTotal(order.id);
             totalsMap.set(order.id, totalResponse.total);
-          } catch (error) {
-            console.error(`Failed to load total for order ${order.id}:`, error);
+          } catch (err) {
+            console.error(`Failed to load total for order ${order.id}:`, err);
             totalsMap.set(order.id, 0);
           }
         })
       );
 
       setOrderTotals(totalsMap);
-    } catch (error) {
-      console.error('Failed to load order totals:', error);
+    } catch (err) {
+      console.error('Failed to load order totals:', err);
     } finally {
       setLoadingTotals(false);
     }
@@ -430,7 +367,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
         </div>
         <div className='flex gap-2'>
           <Button
-            onClick={() => setIsAddOrderOpen(true)}
+            onClick={() => alert('Add order feature coming soon!')}
             className='flex items-center gap-2'
           >
             <Plus className='h-4 w-4' />
@@ -601,7 +538,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                   : 'Try adjusting your search or filter criteria.'}
               </p>
               {purchaseOrders.length === 0 && (
-                <Button onClick={() => setIsAddOrderOpen(true)}>
+                <Button onClick={() => alert('Add order feature coming soon!')}>
                   <Plus className='h-4 w-4 mr-2' />
                   Create Purchase Order
                 </Button>

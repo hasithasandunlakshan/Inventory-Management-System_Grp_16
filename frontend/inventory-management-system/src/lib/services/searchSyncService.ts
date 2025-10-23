@@ -69,7 +69,7 @@ export class SearchSyncService {
   /**
    * Get sync status and information
    */
-  public static async getSyncInfo(): Promise<any> {
+  public static async getSyncInfo(): Promise<Record<string, unknown>> {
     try {
       const response = await fetch(
         `${this.API_BASE_URL}${this.SYNC_ENDPOINT}`,

@@ -23,7 +23,7 @@ export interface DocumentAnalysisResult {
 export interface AnalysisError {
   code: string;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export class DocumentIntelligenceService {
@@ -149,7 +149,9 @@ export class DocumentIntelligenceService {
   /**
    * Sanitizes and validates API response
    */
-  private static sanitizeResponse(result: any): DocumentAnalysisResult {
+  private static sanitizeResponse(
+    result: Record<string, unknown>
+  ): DocumentAnalysisResult {
     const sanitized: DocumentAnalysisResult = {};
 
     // Sanitize text content
@@ -159,35 +161,43 @@ export class DocumentIntelligenceService {
 
     // Sanitize tables
     if (result.tables && Array.isArray(result.tables)) {
-      sanitized.tables = result.tables.map((table: any) => ({
-        headers: Array.isArray(table.headers)
-          ? table.headers.map((h: any) => String(h).trim())
-          : [],
-        rows: Array.isArray(table.rows)
-          ? table.rows.map((row: any) =>
-              Array.isArray(row)
-                ? row.map((cell: any) => String(cell).trim())
-                : []
-            )
-          : [],
-      }));
+      sanitized.tables = result.tables.map((table: unknown) => {
+        const t = table as Record<string, unknown>;
+        return {
+          headers: Array.isArray(t.headers)
+            ? t.headers.map((h: unknown) => String(h).trim())
+            : [],
+          rows: Array.isArray(t.rows)
+            ? t.rows.map((row: unknown) =>
+                Array.isArray(row)
+                  ? row.map((cell: unknown) => String(cell).trim())
+                  : []
+              )
+            : [],
+        };
+      });
     }
 
     // Sanitize key-value pairs
     if (result.keyValuePairs && Array.isArray(result.keyValuePairs)) {
       sanitized.keyValuePairs = result.keyValuePairs
-        .filter(
-          (pair: any) =>
-            pair &&
-            typeof pair.key === 'string' &&
-            typeof pair.value === 'string' &&
-            typeof pair.confidence === 'number'
-        )
-        .map((pair: any) => ({
-          key: String(pair.key).trim(),
-          value: String(pair.value).trim(),
-          confidence: Math.max(0, Math.min(1, Number(pair.confidence))),
-        }));
+        .filter((pair: unknown) => {
+          const p = pair as Record<string, unknown>;
+          return (
+            p &&
+            typeof p.key === 'string' &&
+            typeof p.value === 'string' &&
+            typeof p.confidence === 'number'
+          );
+        })
+        .map((pair: unknown) => {
+          const p = pair as Record<string, unknown>;
+          return {
+            key: String(p.key).trim(),
+            value: String(p.value).trim(),
+            confidence: Math.max(0, Math.min(1, Number(p.confidence))),
+          };
+        });
     }
 
     return sanitized;

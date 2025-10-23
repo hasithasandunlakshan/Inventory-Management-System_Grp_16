@@ -139,29 +139,6 @@ export default function AssignmentsClient({
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'ACTIVE':
-        return 'default';
-      case 'COMPLETED':
-        return 'secondary';
-      case 'CANCELLED':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   const filteredAssignments = assignments.filter(
     assignment =>
       assignment.driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -176,7 +153,7 @@ export default function AssignmentsClient({
     window.location.href = `/assignments/${assignmentId}`;
   };
 
-  const handleUnassign = async (assignment: MinimalAssignment) => {
+  const handleUnassign = async () => {
     toast.info('Unassign feature coming soon!');
   };
 
@@ -466,7 +443,7 @@ export default function AssignmentsClient({
                     onViewDetails={() =>
                       handleViewAssignment(assignment.assignmentId)
                     }
-                    onUnassign={() => handleUnassign(assignment)}
+                    onUnassign={() => handleUnassign()}
                     showActions={canManageAssignments}
                   />
                 ))}
@@ -498,7 +475,7 @@ export default function AssignmentsClient({
                     onViewDetails={() =>
                       handleViewAssignment(assignment.assignmentId)
                     }
-                    onUnassign={() => handleUnassign(assignment)}
+                    onUnassign={() => handleUnassign()}
                     showActions={canManageAssignments}
                   />
                 ))}

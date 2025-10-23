@@ -4,17 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Car,
-  Truck,
-  Calendar,
-  Users,
-  Wrench,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Package,
-} from 'lucide-react';
+import { Calendar, Users, Wrench, Clock, Package } from 'lucide-react';
 import { Vehicle } from '@/lib/services/driverService';
 
 interface VehicleCardProps {

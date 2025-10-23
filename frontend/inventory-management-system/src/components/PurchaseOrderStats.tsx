@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -76,7 +76,7 @@ export function PurchaseOrderStats({
         const statsData = await purchaseOrderService.getStatsSummary(params);
         setStats(statsData);
         onStatsLoaded?.(statsData);
-      } catch (error) {
+      } catch {
         setError('Failed to load statistics');
       } finally {
         setLoading(false);

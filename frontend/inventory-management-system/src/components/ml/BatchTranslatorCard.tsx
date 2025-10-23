@@ -22,7 +22,6 @@ import { Badge } from '@/components/ui/badge';
 import {
   Languages,
   Loader2,
-  CheckCircle,
   AlertTriangle,
   Copy,
   RefreshCw,

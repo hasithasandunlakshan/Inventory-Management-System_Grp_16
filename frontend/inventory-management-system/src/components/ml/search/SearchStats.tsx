@@ -17,7 +17,7 @@ interface SearchStatsProps {
   totalResults: number;
   searchTime: number;
   facets: { [key: string]: Array<{ value: string; count: number }> };
-  activeFilters: { [key: string]: any };
+  activeFilters: { [key: string]: unknown };
 }
 
 export default function SearchStats({

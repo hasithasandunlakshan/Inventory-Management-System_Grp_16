@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   AlertTriangle,
   Package,
@@ -11,7 +10,6 @@ import {
   Box,
   Boxes,
 } from 'lucide-react';
-import { analyticsService } from '@/lib/services/analyticsService';
 import type {
   InventoryAnalytics,
   StockMovementData,
@@ -61,15 +59,6 @@ const CustomerColors = {
   bgPage: '#F8FAFC',
 };
 
-const CHART_COLORS = [
-  CustomerColors.brandBlue,
-  CustomerColors.accentBlue,
-  CustomerColors.success,
-  CustomerColors.warning,
-  CustomerColors.error,
-  CustomerColors.brandMedium,
-];
-
 interface InventoryTabProps {
   initialInventoryData: InventoryAnalytics | null;
   initialStockMovement: StockMovementData[];
@@ -85,44 +74,16 @@ export default function InventoryTabClient({
   initialStockMovement,
   initialCategoryData,
 }: InventoryTabProps) {
-  const [inventoryData, setInventoryData] = useState<InventoryAnalytics | null>(
+  const [inventoryData] = useState<InventoryAnalytics | null>(
     initialInventoryData
   );
-  const [stockMovement, setStockMovement] =
-    useState<StockMovementData[]>(initialStockMovement);
-  const [categoryData, setCategoryData] =
+  const [stockMovement] = useState<StockMovementData[]>(initialStockMovement);
+  const [categoryData] =
     useState<Array<{ category: string; count: number; value: number }>>(
       initialCategoryData
     );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(
-    initialInventoryData ? null : 'Failed to load initial data'
-  );
 
-  if (loading) {
-    return (
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-        {[1, 2, 3, 4].map(i => (
-          <Card
-            key={i}
-            style={{
-              backgroundColor: CustomerColors.bgCard,
-              border: `1px solid ${CustomerColors.borderDefault}`,
-            }}
-          >
-            <CardHeader className='pb-2'>
-              <div className='animate-pulse bg-gray-200 h-4 w-24 rounded'></div>
-            </CardHeader>
-            <CardContent>
-              <div className='animate-pulse bg-gray-200 h-8 w-16 rounded'></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  if (error || !inventoryData) {
+  if (!inventoryData) {
     return (
       <Card
         style={{
@@ -133,7 +94,7 @@ export default function InventoryTabClient({
         <CardContent className='p-6'>
           <div className='text-center text-red-600'>
             <AlertTriangle className='mx-auto h-12 w-12 mb-4' />
-            <p>{error || 'No inventory data available'}</p>
+            <p>No inventory data available</p>
           </div>
         </CardContent>
       </Card>

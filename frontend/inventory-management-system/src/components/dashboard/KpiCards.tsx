@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
@@ -24,23 +24,22 @@ export default function KpiCards() {
       try {
         // Check authentication first
         const token = localStorage.getItem('inventory_auth_token');
-        const userInfo = localStorage.getItem('inventory_user_info');
         if (!token) {
           setLoading(false);
           return;
         }
         // Fetch both revenue and inventory data in parallel
         const [revenueData, inventoryData] = await Promise.all([
-          revenueService.getTodayRevenue().catch(err => {
+          revenueService.getTodayRevenue().catch(() => {
             return null;
           }),
-          inventoryService.getInventoryCost().catch(err => {
+          inventoryService.getInventoryCost().catch(() => {
             return null;
           }),
         ]);
         setTodayRevenue(revenueData);
         setInventoryCost(inventoryData);
-      } catch (error) {
+      } catch {
       } finally {
         setLoading(false);
       }

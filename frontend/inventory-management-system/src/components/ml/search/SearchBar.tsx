@@ -8,14 +8,13 @@ import { AzureSearchService } from '@/lib/services/azureSearchService';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
-  onFiltersChange?: (filters: any) => void;
+  onFiltersChange?: (filters: Record<string, unknown>) => void;
   placeholder?: string;
   className?: string;
 }
 
 export default function SearchBar({
   onSearch,
-  onFiltersChange,
   placeholder = 'Search products, suppliers, documents...',
   className = '',
 }: SearchBarProps) {

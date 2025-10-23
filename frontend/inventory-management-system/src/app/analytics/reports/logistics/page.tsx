@@ -190,7 +190,7 @@ export default function LogisticsReportPage() {
         });
         const [metrics, driversData, vehiclesData, assignmentsData] =
           await Promise.all([
-            logisticsService.getLogisticsMetrics(dateFrom, dateTo),
+            logisticsService.getLogisticsMetrics(),
             logisticsService.getAllDrivers(),
             logisticsService.getAllVehicles(),
             logisticsService.getAllAssignments(),
@@ -224,7 +224,7 @@ export default function LogisticsReportPage() {
       console.log('🔄 Reloading logistics data...', { dateFrom, dateTo });
       const [metrics, driversData, vehiclesData, assignmentsData] =
         await Promise.all([
-          logisticsService.getLogisticsMetrics(dateFrom, dateTo),
+          logisticsService.getLogisticsMetrics(),
           logisticsService.getAllDrivers(),
           logisticsService.getAllVehicles(),
           logisticsService.getAllAssignments(),

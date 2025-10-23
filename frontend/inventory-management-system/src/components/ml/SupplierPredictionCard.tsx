@@ -23,7 +23,6 @@ import {
 import {
   supplierMLService,
   SupplierPredictionResponse,
-  SupplierScoreDTO,
 } from '@/lib/services/supplierMLService';
 
 interface SupplierPredictionCardProps {
@@ -40,7 +39,6 @@ export default function SupplierPredictionCard({
   );
   const [prediction, setPrediction] =
     useState<SupplierPredictionResponse | null>(null);
-  const [score, setScore] = useState<SupplierScoreDTO | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +53,7 @@ export default function SupplierPredictionCard({
       setError(null);
 
       // Get both prediction and score
-      const [predictionResult, scoreResult] = await Promise.all([
+      const [predictionResult] = await Promise.all([
         supplierMLService.predictSupplierPerformance({
           supplierId: Number(supplierId),
         }),
@@ -63,7 +61,6 @@ export default function SupplierPredictionCard({
       ]);
 
       setPrediction(predictionResult);
-      setScore(scoreResult);
 
       if (onPredictionComplete) {
         onPredictionComplete(predictionResult);
