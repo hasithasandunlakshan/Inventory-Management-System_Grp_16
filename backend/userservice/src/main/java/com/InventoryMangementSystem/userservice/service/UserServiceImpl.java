@@ -21,7 +21,6 @@ import com.InventoryMangementSystem.userservice.repository.UserRepository;
 import com.InventoryMangementSystem.userservice.repository.UserRoleRepository;
 import com.InventoryMangementSystem.userservice.security.JwtTokenUtil;
 
-
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
