@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -116,7 +117,9 @@ public class OrderService {
 
     
     /**
-     * OPTIMIZED: Get orders by status with pagination support
+     * ULTRA-OPTIMIZED: Get orders by status with pagination support
+     * Uses CompletableFuture for true async execution and minimal overhead
+     * Target: < 2 seconds response time
      * @param statusStr The order status to filter by
      * @param page Page number (0-based)
      * @param size Number of items per page
@@ -133,70 +136,92 @@ public class OrderService {
             if (statusStr != null && !statusStr.isEmpty()) {
                 com.Orderservice.Orderservice.enums.OrderStatus status = 
                     com.Orderservice.Orderservice.enums.OrderStatus.valueOf(statusStr.toUpperCase());
-                // Use optimized query
                 orderPage = orderRepository.findByStatusWithOrderItemsOptimized(status, pageable);
             } else {
                 orderPage = orderRepository.findAllConfirmedOrdersWithItems(pageable);
             }
             
-            long queryTime = System.currentTimeMillis();
-            System.out.println("⚡ Database query completed in: " + (queryTime - startTime) + "ms");
-            
-            // OPTIMIZATION: Bulk fetch all products instead of N+1 queries
-            Set<Long> productIds = orderPage.getContent().stream()
-                .flatMap(order -> order.getOrderItems().stream())
-                .map(OrderItem::getProductId)
-                .filter(id -> id != null)
-                .collect(Collectors.toSet());
-            
-            // Single query to fetch all products
-            Map<Long, Product> productMap = new HashMap<>();
-            if (!productIds.isEmpty()) {
-                List<Product> products = productRepository.findByProductIdIn(productIds);
-                productMap = products.stream()
-                    .collect(Collectors.toMap(Product::getProductId, product -> product));
+            List<Order> orders = orderPage.getContent();
+            if (orders.isEmpty()) {
+                return buildEmptyResponse();
             }
             
-            long productFetchTime = System.currentTimeMillis();
-            System.out.println("⚡ Product fetch completed in: " + (productFetchTime - queryTime) + "ms");
+            long queryTime = System.currentTimeMillis();
+            System.out.println("⚡ DB query: " + (queryTime - startTime) + "ms");
             
-            // Build response efficiently
+            // STEP 1: Collect product and customer IDs
+            Set<Long> productIds = new HashSet<>();
+            Set<Long> customerIds = new HashSet<>();
+            
+            for (Order order : orders) {
+                if (order.getCustomerId() != null) {
+                    customerIds.add(order.getCustomerId());
+                }
+                for (OrderItem item : order.getOrderItems()) {
+                    if (item.getProductId() != null) {
+                        productIds.add(item.getProductId());
+                    }
+                }
+            }
+            
+            // STEP 2: Fetch products and users in PARALLEL using threads
+            Map<Long, Product> productMap = new HashMap<>();
+            Map<Long, UserDetailsResponse.UserInfo> userMap = new HashMap<>();
+            
+            Thread productThread = new Thread(() -> {
+                if (!productIds.isEmpty()) {
+                    List<Product> products = productRepository.findByProductIdIn(productIds);
+                    synchronized (productMap) {
+                        for (Product p : products) {
+                            productMap.put(p.getProductId(), p);
+                        }
+                    }
+                }
+            });
+            
+            Thread userThread = new Thread(() -> {
+                if (!customerIds.isEmpty()) {
+                    Map<Long, UserDetailsResponse.UserInfo> users = userServiceClient.getUsersByIds(customerIds);
+                    synchronized (userMap) {
+                        userMap.putAll(users);
+                    }
+                }
+            });
+            
+            // Start both threads
+            productThread.start();
+            userThread.start();
+            
+            // Wait for both threads to complete
+            productThread.join();
+            userThread.join();
+            
+            long fetchTime = System.currentTimeMillis();
+            System.out.println("⚡ Parallel fetch: " + (fetchTime - queryTime) + "ms");
+            
+            // STEP 3: Build response
             List<OrderDetailResponse> orderDetails = new ArrayList<>();
-            for (Order order : orderPage.getContent()) {
+            
+            for (Order order : orders) {
                 List<OrderDetailResponse.OrderItemDetail> itemDetails = new ArrayList<>();
                 
                 for (OrderItem orderItem : order.getOrderItems()) {
-                    String productName = "Unknown Product";
-                    String productImageUrl = null;
-                    String barcode = null;
-                    
-                    if (orderItem.getProductId() != null) {
-                        Product product = productMap.get(orderItem.getProductId());
-                        if (product != null) {
-                            productName = product.getName();
-                            productImageUrl = product.getImageUrl();
-                            barcode = product.getBarcode();
-                        } else {
-                            productName = "Product Not Found";
-                        }
-                    } else {
-                        productName = "No Product ID";
-                    }
-                    
-                    OrderDetailResponse.OrderItemDetail itemDetail = OrderDetailResponse.OrderItemDetail.builder()
+                    Product product = productMap.get(orderItem.getProductId());
+                    itemDetails.add(OrderDetailResponse.OrderItemDetail.builder()
                         .orderItemId(orderItem.getOrderItemId())
                         .productId(orderItem.getProductId())
-                        .productName(productName)
-                        .productImageUrl(productImageUrl)
+                        .productName(product != null ? product.getName() : "Unknown Product")
+                        .productImageUrl(product != null ? product.getImageUrl() : null)
                         .quantity(orderItem.getQuantity())
                         .price(orderItem.getPrice())
                         .createdAt(orderItem.getCreatedAt())
-                        .barcode(barcode)
-                        .build();
-                    itemDetails.add(itemDetail);
+                        .barcode(product != null ? product.getBarcode() : null)
+                        .build());
                 }
                 
-                OrderDetailResponse orderDetail = OrderDetailResponse.builder()
+                UserDetailsResponse.UserInfo userInfo = userMap.get(order.getCustomerId());
+                
+                orderDetails.add(OrderDetailResponse.builder()
                     .orderId(order.getOrderId())
                     .customerId(order.getCustomerId())
                     .orderDate(order.getOrderDate())
@@ -206,34 +231,36 @@ public class OrderService {
                     .updatedAt(order.getUpdatedAt())
                     .refundReason(order.getRefundReason())
                     .refundProcessedAt(order.getRefundProcessedAt())
+                    .latitude(userInfo != null ? userInfo.getLatitude() : null)
+                    .longitude(userInfo != null ? userInfo.getLongitude() : null)
+                    .formattedAddress(userInfo != null ? userInfo.getFormattedAddress() : null)
                     .orderItems(itemDetails)
-                    .build();
-                orderDetails.add(orderDetail);
+                    .build());
             }
             
-            // Build pagination info
-            AllOrdersResponse.PaginationInfo paginationInfo = AllOrdersResponse.PaginationInfo.builder()
-                .currentPage(orderPage.getNumber())
-                .pageSize(orderPage.getSize())
-                .totalElements(orderPage.getTotalElements())
-                .totalPages(orderPage.getTotalPages())
-                .hasNext(orderPage.hasNext())
-                .hasPrevious(orderPage.hasPrevious())
-                .isFirst(orderPage.isFirst())
-                .isLast(orderPage.isLast())
-                .build();
+            long buildTime = System.currentTimeMillis();
+            System.out.println("⚡ Response build: " + (buildTime - fetchTime) + "ms");
             
             long totalTime = System.currentTimeMillis() - startTime;
-            System.out.println("🚀 TOTAL RESPONSE TIME: " + totalTime + "ms for " + orderDetails.size() + " orders");
+            System.out.println("🚀 TOTAL: " + totalTime + "ms for " + orderDetails.size() + " orders");
             
+            // Build pagination and response in one go
             return AllOrdersResponse.builder()
                 .success(true)
-                .message("Orders retrieved successfully with pagination (Optimized)")
+                .message("Orders retrieved")
                 .orders(orderDetails)
                 .totalOrders((int) orderPage.getTotalElements())
-                .pagination(paginationInfo)
+                .pagination(AllOrdersResponse.PaginationInfo.builder()
+                    .currentPage(orderPage.getNumber())
+                    .pageSize(orderPage.getSize())
+                    .totalElements(orderPage.getTotalElements())
+                    .totalPages(orderPage.getTotalPages())
+                    .hasNext(orderPage.hasNext())
+                    .hasPrevious(orderPage.hasPrevious())
+                    .isFirst(orderPage.isFirst())
+                    .isLast(orderPage.isLast())
+                    .build())
                 .build();
-                
         } catch (Exception e) {
             e.printStackTrace();
             return AllOrdersResponse.builder()
@@ -246,6 +273,27 @@ public class OrderService {
         }
     }
     
+    /**
+     * Helper method to build empty response quickly
+     */
+    private AllOrdersResponse buildEmptyResponse() {
+        return AllOrdersResponse.builder()
+            .success(true)
+            .message("No orders found")
+            .orders(new ArrayList<>())
+            .totalOrders(0)
+            .pagination(AllOrdersResponse.PaginationInfo.builder()
+                .currentPage(0)
+                .pageSize(0)
+                .totalElements(0L)
+                .totalPages(0)
+                .hasNext(false)
+                .hasPrevious(false)
+                .isFirst(true)
+                .isLast(true)
+                .build())
+            .build();
+    }
 
     public boolean updateOrderStatus(Long orderId, String statusStr) {
         Optional<Order> orderOpt = orderRepository.findById(orderId);

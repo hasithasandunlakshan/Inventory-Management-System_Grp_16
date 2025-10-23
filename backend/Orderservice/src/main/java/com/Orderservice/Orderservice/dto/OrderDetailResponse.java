@@ -1,10 +1,11 @@
 package com.Orderservice.Orderservice.dto;
 
-import lombok.Data;
-import lombok.Builder;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder
@@ -25,6 +26,12 @@ public class OrderDetailResponse {
     private LocalDateTime updatedAt;
     private String refundReason;
     private LocalDateTime refundProcessedAt;
+    
+    // User location information
+    private Double latitude;
+    private Double longitude;
+    private String formattedAddress;
+    
     private List<OrderItemDetail> orderItems;
 
     @Data

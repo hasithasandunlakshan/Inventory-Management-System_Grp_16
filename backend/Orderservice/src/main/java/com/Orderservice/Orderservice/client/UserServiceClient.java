@@ -1,7 +1,10 @@
 package com.Orderservice.Orderservice.client;
 
-import com.Orderservice.Orderservice.dto.UserDetailsResponse;
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -10,10 +13,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import com.Orderservice.Orderservice.dto.UserDetailsResponse;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @Component
 public class UserServiceClient {
@@ -92,26 +96,37 @@ public class UserServiceClient {
     }
 
     /**
-     * Fetches multiple users by their IDs
-     * Makes individual API calls but returns them as a map for efficient lookup
+     * OPTIMIZED: Fetches multiple users by their IDs using parallel processing
+     * Makes individual API calls in parallel and returns them as a map for efficient lookup
      */
     public Map<Long, UserDetailsResponse.UserInfo> getUsersByIds(Set<Long> userIds) {
-        Map<Long, UserDetailsResponse.UserInfo> userMap = new HashMap<>();
-        
-        System.out.println("Fetching " + userIds.size() + " users from User Service...");
-        
-        for (Long userId : userIds) {
-            try {
-                UserDetailsResponse.UserInfo userInfo = getUserById(userId);
-                if (userInfo != null) {
-                    userMap.put(userId, userInfo);
-                }
-            } catch (Exception e) {
-                System.err.println("Error fetching user " + userId + ": " + e.getMessage());
-            }
+        if (userIds == null || userIds.isEmpty()) {
+            return new HashMap<>();
         }
         
-        System.out.println("✓ Successfully fetched " + userMap.size() + " out of " + userIds.size() + " users");
+        System.out.println("⚡ Fetching " + userIds.size() + " users from User Service in parallel...");
+        long startTime = System.currentTimeMillis();
+        
+        // Use parallel stream for concurrent API calls
+        Map<Long, UserDetailsResponse.UserInfo> userMap = userIds.parallelStream()
+            .map(userId -> {
+                try {
+                    UserDetailsResponse.UserInfo userInfo = getUserById(userId);
+                    return userInfo != null ? Map.entry(userId, userInfo) : null;
+                } catch (Exception e) {
+                    System.err.println("Error fetching user " + userId + ": " + e.getMessage());
+                    return null;
+                }
+            })
+            .filter(entry -> entry != null)
+            .collect(Collectors.toMap(
+                Map.Entry::getKey, 
+                Map.Entry::getValue,
+                (existing, replacement) -> existing // Handle duplicates by keeping existing
+            ));
+        
+        long fetchTime = System.currentTimeMillis() - startTime;
+        System.out.println("✓ Successfully fetched " + userMap.size() + " out of " + userIds.size() + " users in " + fetchTime + "ms");
         return userMap;
     }
 }

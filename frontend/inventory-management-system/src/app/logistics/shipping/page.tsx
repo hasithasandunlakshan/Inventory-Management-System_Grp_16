@@ -420,14 +420,7 @@ function ShippingPage() {
         lat: lat,
         lng: lng,
         address: address,
-        status:
-          order.status === 'CONFIRMED'
-            ? 'Ready'
-            : order.status === 'PROCESSED'
-              ? 'Processing'
-              : order.status === 'PENDING'
-                ? 'Pending'
-                : order.status,
+        status: order.status,
         originalOrder: order,
       };
     });
@@ -450,8 +443,8 @@ function ShippingPage() {
         return;
       }
 
-      // Add cache-busting parameter to ensure fresh data
-      const response = await orderService.getAllOrders();
+      // Fetch only CONFIRMED orders for shipping
+      const response = await orderService.getOrdersByStatus('CONFIRMED');
       if (response.success && response.orders.length > 0) {
         const shippingOrders = convertToShippingOrders(response.orders);
 
@@ -459,13 +452,13 @@ function ShippingPage() {
         setRealOrders([...shippingOrders]);
         setUsingDummyData(false);
       } else {
-        setOrdersError(response.message || 'No orders found in database.');
+        setOrdersError(response.message || 'No confirmed orders found.');
         setRealOrders([]);
         setUsingDummyData(false);
       }
     } catch (error) {
       setOrdersError(
-        `Failed to load orders: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to load confirmed orders: ${error instanceof Error ? error.message : String(error)}`
       );
       setRealOrders([]);
       setUsingDummyData(false);
@@ -956,13 +949,20 @@ function ShippingPage() {
 
   // Get status color
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Pending':
+    const upperStatus = status.toUpperCase();
+    switch (upperStatus) {
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
-      case 'Processing':
+      case 'PROCESSING':
+      case 'PROCESSED':
         return 'bg-blue-100 text-blue-800';
-      case 'Ready':
+      case 'CONFIRMED':
         return 'bg-green-100 text-green-800';
+      case 'DELIVERED':
+        return 'bg-teal-100 text-teal-800';
+      case 'CANCELLED':
+      case 'REFUNDED':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
