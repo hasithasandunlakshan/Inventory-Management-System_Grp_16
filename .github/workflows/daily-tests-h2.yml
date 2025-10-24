@@ -60,15 +60,15 @@ jobs:
         mvn jacoco:report
         echo "Test report generated for ${{ matrix.service }}"
         
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: test-results-${{ matrix.service }}
-        path: |
-          ./backend/${{ matrix.service }}/target/surefire-reports/
-          ./backend/${{ matrix.service }}/target/site/jacoco/
-        retention-days: 30
+        - name: Upload Test Results
+          uses: actions/upload-artifact@v4
+          if: always()
+          with:
+            name: test-results-${{ matrix.service }}
+            path: |
+              ./backend/${{ matrix.service }}/target/surefire-reports/
+              ./backend/${{ matrix.service }}/target/site/jacoco/
+            retention-days: 30
 
   # Job 2: Frontend Testing
   frontend-tests:
@@ -115,7 +115,7 @@ jobs:
         echo "Frontend coverage report generated"
         
     - name: Upload Frontend Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: frontend-test-results
@@ -158,7 +158,7 @@ jobs:
         echo "Service communication tests completed (mocked)"
         
     - name: Upload External Service Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: external-service-test-results
@@ -238,7 +238,7 @@ jobs:
         echo "API performance tests completed"
         
     - name: Upload Performance Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: performance-test-results
@@ -294,7 +294,7 @@ jobs:
         echo "- ✅ Reliable and consistent test results" >> daily-test-summary.md
         
     - name: Upload Daily Summary Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: daily-test-summary
         path: daily-test-summary.md

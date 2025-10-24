@@ -46,7 +46,7 @@ jobs:
         mvn clean test jacoco:report -Dspring.profiles.active=test
         
     - name: Upload Coverage Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report-${{ matrix.service }}
         path: ./backend/${{ matrix.service }}/target/site/jacoco/
@@ -77,7 +77,7 @@ jobs:
         npm run test:coverage
         
     - name: Upload Frontend Coverage Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: frontend-coverage-report
         path: ./frontend/inventory-management-system/coverage/
@@ -126,7 +126,7 @@ jobs:
         echo "- Trend: 📈 Improving" >> coverage-summary.md
         
     - name: Upload Coverage Summary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-summary
         path: coverage-summary.md

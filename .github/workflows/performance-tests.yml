@@ -107,7 +107,7 @@ jobs:
         echo "API performance tests completed"
         
     - name: Upload API Performance Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: api-performance-results
         path: api-performance-report.txt
@@ -159,7 +159,7 @@ jobs:
         echo "H2 database performance tests completed"
         
     - name: Upload Database Performance Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: db-performance-results
         path: db-performance-report.txt
@@ -203,7 +203,7 @@ jobs:
         echo "External service performance tests completed"
         
     - name: Upload External Service Performance Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: external-performance-results
         path: external-performance-report.txt
@@ -261,7 +261,7 @@ jobs:
         echo "- H2 database performance is excellent (in-memory)" >> performance-summary.md
         
     - name: Upload Performance Summary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-summary
         path: performance-summary.md
