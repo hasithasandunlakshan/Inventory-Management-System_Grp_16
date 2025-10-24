@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [userservice, productservice, orderservice, inventoryservice, supplierservice, resourceservice, notificationservice]
+        service: [userservice, productservice, Orderservice, inventoryservice, supplierservice, resourseservice, notificationservice]
     
     steps:
     - name: Checkout Code
