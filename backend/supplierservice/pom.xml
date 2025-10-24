@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.5</version> <!-- Use the latest stable version if you want -->
+		<version>3.5.3</version> <!-- Use the latest stable version if you want -->
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.supplierservice</groupId>
@@ -231,7 +231,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.11</version>
+				<version>0.8.12</version>
 				<executions>
 					<execution>
 						<goals>
