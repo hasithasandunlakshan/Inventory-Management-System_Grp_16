@@ -65,15 +65,15 @@ jobs:
         mvn jacoco:report
         echo "Test report generated for ${{ matrix.service }}"
         
-        - name: Upload Test Results
-          uses: actions/upload-artifact@v4
-          if: always()
-          with:
-            name: test-results-${{ matrix.service }}
-            path: |
-              ./backend/${{ matrix.service }}/target/surefire-reports/
-              ./backend/${{ matrix.service }}/target/site/jacoco/
-            retention-days: 30
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.service }}
+        path: |
+          ./backend/${{ matrix.service }}/target/surefire-reports/
+          ./backend/${{ matrix.service }}/target/site/jacoco/
+        retention-days: 30
 
   # Job 2: Frontend Testing
   frontend-tests:
