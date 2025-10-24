@@ -51,8 +51,13 @@ jobs:
     - name: Run Integration Tests for ${{ matrix.service }} (Mocked Services)
       working-directory: ./backend/${{ matrix.service }}
       run: |
-        mvn test -Dtest=*IntegrationTest -Dspring.profiles.active=test -Dspring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-        echo "Integration tests completed for ${{ matrix.service }}"
+        # Check if integration tests exist, if not skip
+        if find src/test/java -name "*IntegrationTest.java" -type f | grep -q .; then
+          mvn test -Dtest=*IntegrationTest -Dspring.profiles.active=test -Dspring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+          echo "Integration tests completed for ${{ matrix.service }}"
+        else
+          echo "No integration tests found for ${{ matrix.service }}, skipping..."
+        fi
         
     - name: Generate Test Report for ${{ matrix.service }}
       working-directory: ./backend/${{ matrix.service }}
