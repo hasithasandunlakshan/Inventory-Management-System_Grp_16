@@ -210,7 +210,7 @@ jobs:
           All services meet coverage thresholds.
           
           Please review the attached report for detailed coverage metrics.
-        file: coverage-summary.md
+        attachments: coverage-summary.md
         
     - name: Send Slack Coverage Alert
       uses: 8398a7/action-slack@v3

@@ -211,7 +211,7 @@ jobs:
           - Error Rate: 0.1%
           
           Please review the attached report for detailed performance metrics.
-        file: performance-summary.md
+        attachments: performance-summary.md
         
     - name: Send Slack Performance Alert
       uses: 8398a7/action-slack@v3

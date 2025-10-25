@@ -297,7 +297,7 @@ jobs:
           - No additional infrastructure costs
           
           View detailed results in GitHub Actions.
-        file: daily-test-summary.md
+        attachments: daily-test-summary.md
         
     - name: Send Slack Notification
       uses: 8398a7/action-slack@v3
