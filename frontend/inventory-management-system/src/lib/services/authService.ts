@@ -1,4 +1,5 @@
 // Authentication service for JWT token management
+// Use API Gateway URL for all authentication requests
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
 

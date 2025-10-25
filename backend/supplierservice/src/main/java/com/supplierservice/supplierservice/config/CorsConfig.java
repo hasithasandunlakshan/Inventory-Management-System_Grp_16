@@ -18,9 +18,15 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow all origins using patterns (required when using credentials)
+        // Allow specific origins using patterns (required when using credentials)
         // In production, these should be restricted to specific origins
-        config.addAllowedOriginPattern("*");
+        config.addAllowedOriginPattern("http://localhost:3000");
+        config.addAllowedOriginPattern("http://127.0.0.1:3000");
+        config.addAllowedOriginPattern("https://*.vercel.app");
+        config.addAllowedOriginPattern("https://*.choreoapis.dev");
+        config.addAllowedOriginPattern("https://*.choreoapis.dev/**");
+        config.addAllowedOriginPattern("http://localhost:*");
+        config.addAllowedOriginPattern("https://localhost:*");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);

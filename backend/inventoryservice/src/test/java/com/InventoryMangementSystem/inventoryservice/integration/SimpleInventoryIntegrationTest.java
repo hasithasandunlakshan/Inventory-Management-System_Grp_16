@@ -56,7 +56,7 @@ public class SimpleInventoryIntegrationTest {
         // Create a simple JSON request
         String jsonRequest = "{\"productId\": 1, \"quantity\": 10}";
 
-        mockMvc.perform(post("/api/inventory/check")
+        mockMvc.perform(post("/api/inventory/check-availability")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest))
                 .andExpect(status().isOk());
