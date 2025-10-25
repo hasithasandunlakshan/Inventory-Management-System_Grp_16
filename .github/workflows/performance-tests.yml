@@ -64,9 +64,9 @@ jobs:
     - name: Start Services with H2 Database
       run: |
         # Start services in background with H2 database
-        cd backend/userservice && java -jar target/*.jar --server.port=8080 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE &
-        cd ../productservice && java -jar target/*.jar --server.port=8083 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE &
-        cd ../inventoryservice && java -jar target/*.jar --server.port=8085 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE &
+        cd backend/userservice && java -jar target/*.jar --server.port=8080 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.database-platform=org.hibernate.dialect.H2Dialect &
+        cd ../productservice && java -jar target/*.jar --server.port=8083 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.database-platform=org.hibernate.dialect.H2Dialect &
+        cd ../inventoryservice && java -jar target/*.jar --server.port=8085 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.database-platform=org.hibernate.dialect.H2Dialect &
         
         # Wait for services to start
         sleep 60
