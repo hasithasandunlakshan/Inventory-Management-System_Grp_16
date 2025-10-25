@@ -2,7 +2,7 @@
 # Make sure to set your environment variables before running this script
 
 param(
-    [string]$ProjectId = "api-gateway-474511",
+    [string]$ProjectId = "micro-root-466617-c0",
     [string]$ServiceName = "orderservice",
     [string]$Region = "us-central1",
     [int]$Port = 8080
