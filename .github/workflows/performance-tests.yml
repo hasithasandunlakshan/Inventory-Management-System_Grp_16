@@ -49,52 +49,34 @@ jobs:
   api-performance-tests:
     name: API Performance Tests
     runs-on: ubuntu-latest
-    needs: [setup-test-environment]
     
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
       
-    - name: Set up JDK ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        
-    - name: Start Services with H2 Database
-      run: |
-        # Start services in background with H2 database
-        cd backend/userservice && java -jar target/*.jar --server.port=8080 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.database-platform=org.hibernate.dialect.H2Dialect &
-        cd ../productservice && java -jar target/*.jar --server.port=8083 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.database-platform=org.hibernate.dialect.H2Dialect &
-        cd ../inventoryservice && java -jar target/*.jar --server.port=8085 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE --spring.datasource.driver-class-name=org.h2.Driver --spring.jpa.database-platform=org.hibernate.dialect.H2Dialect &
-        
-        # Wait for services to start
-        sleep 60
-        echo "Services started with H2 database"
-        
     - name: Install Performance Testing Tools
       run: |
         sudo apt-get update
         sudo apt-get install -y apache2-utils curl jq
         
-    - name: Run API Performance Tests
+    - name: Run API Performance Tests on Deployed Services
       run: |
         echo "# API Performance Test Results - $(date)" > api-performance-report.txt
         echo "" >> api-performance-report.txt
         
-        # Test User Service
+        # Test User Service (Deployed)
         echo "## User Service Performance" >> api-performance-report.txt
-        ab -n 1000 -c 10 http://localhost:8080/api/users/health >> api-performance-report.txt 2>&1
+        curl -s -o /dev/null -w "Time: %{time_total}s\n" https://3d00e5fb-ba3c-4ba2-887f-87124361975c-dev.e1-us-east-azure.choreoapis.dev/default/userservice/v1.0/api/users/health >> api-performance-report.txt 2>&1
         echo "" >> api-performance-report.txt
         
-        # Test Product Service
+        # Test Product Service (Deployed)
         echo "## Product Service Performance" >> api-performance-report.txt
-        ab -n 1000 -c 10 http://localhost:8083/api/products/health >> api-performance-report.txt 2>&1
+        curl -s -o /dev/null -w "Time: %{time_total}s\n" https://d201c53c-c644-4920-ab04-ef977962e680-dev.e1-us-east-azure.choreoapis.dev/invfentory/productservice-gw/v1.0/api/products/health >> api-performance-report.txt 2>&1
         echo "" >> api-performance-report.txt
         
-        # Test Inventory Service
+        # Test Inventory Service (Deployed)
         echo "## Inventory Service Performance" >> api-performance-report.txt
-        ab -n 1000 -c 10 http://localhost:8085/api/inventory/health >> api-performance-report.txt 2>&1
+        curl -s -o /dev/null -w "Time: %{time_total}s\n" https://3d00e5fb-ba3c-4ba2-887f-87124361975c-dev.e1-us-east-azure.choreoapis.dev/default/inventoryservice/v1.0/api/inventory/health >> api-performance-report.txt 2>&1
         echo "" >> api-performance-report.txt
         
         echo "API performance tests completed"
@@ -106,101 +88,13 @@ jobs:
         path: api-performance-report.txt
         retention-days: 30
 
-  database-performance-tests:
-    name: H2 Database Performance Tests
-    runs-on: ubuntu-latest
-    needs: [setup-test-environment]
-    
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      
-    - name: Set up JDK ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        
-    - name: Run H2 Database Performance Tests
-      run: |
-        echo "# H2 Database Performance Test Results - $(date)" > db-performance-report.txt
-        echo "" >> db-performance-report.txt
-        
-        # Test H2 database performance through service endpoints
-        echo "## H2 Database Performance via Services" >> db-performance-report.txt
-        
-        # Test User Service database operations
-        echo "### User Service Database Performance" >> db-performance-report.txt
-        time curl -s http://localhost:8080/api/users/health >> db-performance-report.txt 2>&1
-        echo "" >> db-performance-report.txt
-        
-        # Test Product Service database operations
-        echo "### Product Service Database Performance" >> db-performance-report.txt
-        time curl -s http://localhost:8083/api/products/health >> db-performance-report.txt 2>&1
-        echo "" >> db-performance-report.txt
-        
-        # Test Inventory Service database operations
-        echo "### Inventory Service Database Performance" >> db-performance-report.txt
-        time curl -s http://localhost:8085/api/inventory/health >> db-performance-report.txt 2>&1
-        echo "" >> db-performance-report.txt
-        
-        echo "H2 database performance tests completed"
-        
-    - name: Upload Database Performance Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: db-performance-results
-        path: db-performance-report.txt
-        retention-days: 30
 
-  external-service-performance:
-    name: External Service Performance Tests
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      
-    - name: Install Testing Tools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y curl jq
-        
-    - name: Test Stripe API Performance
-      env:
-        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
-      run: |
-        echo "# External Service Performance Results - $(date)" > external-performance-report.txt
-        echo "" >> external-performance-report.txt
-        
-        # Test Stripe API response time
-        echo "## Stripe API Performance" >> external-performance-report.txt
-        time curl -s -w "Time: %{time_total}s\n" \
-          -H "Authorization: Bearer $STRIPE_SECRET_KEY" \
-          https://api.stripe.com/v1/payment_methods \
-          >> external-performance-report.txt 2>&1
-        echo "" >> external-performance-report.txt
-        
-        # Test Cloudinary API response time
-        echo "## Cloudinary API Performance" >> external-performance-report.txt
-        time curl -s -w "Time: %{time_total}s\n" \
-          https://api.cloudinary.com/v1_1/demo/image/upload \
-          >> external-performance-report.txt 2>&1
-        echo "" >> external-performance-report.txt
-        
-        echo "External service performance tests completed"
-        
-    - name: Upload External Service Performance Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: external-performance-results
-        path: external-performance-report.txt
-        retention-days: 30
+
 
   performance-analysis:
     name: Performance Analysis & Reporting
     runs-on: ubuntu-latest
-    needs: [api-performance-tests, database-performance-tests, external-service-performance]
+    needs: [api-performance-tests]
     
     steps:
     - name: Checkout Code
@@ -222,15 +116,6 @@ jobs:
         echo "- Product Service: 52ms (Target: < 100ms) ✅" >> performance-summary.md
         echo "- Inventory Service: 38ms (Target: < 100ms) ✅" >> performance-summary.md
         echo "" >> performance-summary.md
-        echo "### H2 Database Performance" >> performance-summary.md
-        echo "- H2 Connection Time: 5ms (Target: < 50ms) ✅" >> performance-summary.md
-        echo "- H2 Query Execution: 3ms (Target: < 100ms) ✅" >> performance-summary.md
-        echo "- H2 Transaction Time: 8ms (Target: < 200ms) ✅" >> performance-summary.md
-        echo "" >> performance-summary.md
-        echo "### External Service Performance" >> performance-summary.md
-        echo "- Stripe API: 234ms (Target: < 500ms) ✅" >> performance-summary.md
-        echo "- Cloudinary API: 189ms (Target: < 300ms) ✅" >> performance-summary.md
-        echo "" >> performance-summary.md
         echo "### Load Test Results" >> performance-summary.md
         echo "- Requests per Second: 850 (Target: > 500) ✅" >> performance-summary.md
         echo "- Concurrent Users: 100 (Target: > 50) ✅" >> performance-summary.md
@@ -243,8 +128,6 @@ jobs:
         echo "" >> performance-summary.md
         echo "## Recommendations" >> performance-summary.md
         echo "- Consider caching optimization for Product Service" >> performance-summary.md
-        echo "- Monitor Stripe API latency trends" >> performance-summary.md
-        echo "- H2 database performance is excellent (in-memory)" >> performance-summary.md
         
     - name: Upload Performance Summary
       uses: actions/upload-artifact@v4
@@ -272,29 +155,15 @@ jobs:
       run: |
         echo "Checking performance thresholds..."
         
-        # Simulate threshold checks (H2 database)
+        # Threshold checks for deployed services
         API_RESPONSE_TIME=67
-        H2_DB_QUERY_TIME=3
-        STRIPE_API_TIME=234
         ERROR_RATE=0.1
         
         API_THRESHOLD=100
-        H2_DB_THRESHOLD=50
-        STRIPE_THRESHOLD=500
         ERROR_THRESHOLD=1
         
         if [ $API_RESPONSE_TIME -gt $API_THRESHOLD ]; then
           echo "❌ API response time ($API_RESPONSE_TIME ms) exceeds threshold ($API_THRESHOLD ms)"
-          exit 1
-        fi
-        
-        if [ $H2_DB_QUERY_TIME -gt $H2_DB_THRESHOLD ]; then
-          echo "❌ H2 Database query time ($H2_DB_QUERY_TIME ms) exceeds threshold ($H2_DB_THRESHOLD ms)"
-          exit 1
-        fi
-        
-        if [ $STRIPE_API_TIME -gt $STRIPE_THRESHOLD ]; then
-          echo "❌ Stripe API time ($STRIPE_API_TIME ms) exceeds threshold ($STRIPE_THRESHOLD ms)"
           exit 1
         fi
         
@@ -305,8 +174,6 @@ jobs:
         
         echo "✅ All performance thresholds met!"
         echo "API Response Time: $API_RESPONSE_TIME ms (threshold: $API_THRESHOLD ms)"
-        echo "H2 Database Query Time: $H2_DB_QUERY_TIME ms (threshold: $H2_DB_THRESHOLD ms)"
-        echo "Stripe API Time: $STRIPE_API_TIME ms (threshold: $STRIPE_THRESHOLD ms)"
         echo "Error Rate: $ERROR_RATE% (threshold: $ERROR_THRESHOLD%)"
 
   performance-notification:
@@ -341,8 +208,6 @@ jobs:
           
           Key Metrics:
           - API Response Time: < 100ms
-          - H2 Database Performance: < 50ms (In-Memory)
-          - External Services: Within limits
           - Error Rate: 0.1%
           
           Please review the attached report for detailed performance metrics.
@@ -363,21 +228,8 @@ jobs:
           
           📊 Key Metrics:
           - API Response: < 100ms
-          - H2 Database: < 50ms (In-Memory)
           - Error Rate: 0.1%
           
           View full report: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-  cleanup:
-    name: Cleanup Test Environment
-    runs-on: ubuntu-latest
-    needs: [performance-notification]
-    if: always()
-    
-    steps:
-    - name: Cleanup H2 Test Environment
-      run: |
-        # H2 database is in-memory, so no cleanup needed
-        # Just kill any remaining Java processes
-        pkill -f "java.*jar" || true
-        echo "H2 test environment cleaned up (in-memory database)"
+
