@@ -244,15 +244,19 @@ jobs:
         path: ./
         
     - name: Send Email Notification
+      if: ${{ env.NOTIFICATION_EMAIL != '' }}
       uses: dawidd6/action-send-mail@v3
+      env:
+        NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
+        EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
       with:
         server_address: smtp.gmail.com
         server_port: 587
-        username: ${{ secrets.EMAIL_USERNAME }}
+        username: ${{ env.EMAIL_USERNAME }}
         password: ${{ secrets.EMAIL_PASSWORD }}
         subject: "Complete Daily Test Results - Inventory Management System (H2 + Frontend)"
-        to: ${{ secrets.NOTIFICATION_EMAIL }}
-        from: "CI/CD Pipeline"
+        to: ${{ env.NOTIFICATION_EMAIL }}
+        from: ${{ env.EMAIL_USERNAME }}
         body: |
           Daily automated testing completed successfully!
           

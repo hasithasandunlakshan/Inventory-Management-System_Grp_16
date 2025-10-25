@@ -190,15 +190,19 @@ jobs:
         path: ./
         
     - name: Send Performance Report Email
+      if: ${{ env.NOTIFICATION_EMAIL != '' }}
       uses: dawidd6/action-send-mail@v3
+      env:
+        NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
+        EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
       with:
         server_address: smtp.gmail.com
         server_port: 587
-        username: ${{ secrets.EMAIL_USERNAME }}
+        username: ${{ env.EMAIL_USERNAME }}
         password: ${{ secrets.EMAIL_PASSWORD }}
         subject: "Performance Regression Report - Inventory Management System"
-        to: ${{ secrets.NOTIFICATION_EMAIL }}
-        from: "Performance Analysis"
+        to: ${{ env.NOTIFICATION_EMAIL }}
+        from: ${{ env.EMAIL_USERNAME }}
         body: |
           Daily performance regression testing completed!
           
