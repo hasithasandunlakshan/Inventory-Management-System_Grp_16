@@ -46,13 +46,13 @@ interface SupplierFormData {
 export default function AddSupplierPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  
+
   // Form state
   const [formData, setFormData] = useState<SupplierFormData>({
     userId: 0,
     categoryId: 0,
   });
-  
+
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +80,10 @@ export default function AddSupplierPage() {
     }
   };
 
-  const handleInputChange = (field: keyof SupplierFormData, value: string | number) => {
+  const handleInputChange = (
+    field: keyof SupplierFormData,
+    value: string | number
+  ) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -96,13 +99,13 @@ export default function AddSupplierPage() {
       setError('Please select a category');
       return false;
     }
-    
+
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -111,27 +114,24 @@ export default function AddSupplierPage() {
       setLoading(true);
       setError(null);
       setSuccess(null);
-      
+
       // Create the supplier using the supplier service
       const supplierData = {
         userId: formData.userId,
         categoryId: formData.categoryId,
       };
-      
+
       await supplierService.createSupplier(supplierData);
-      
+
       setSuccess('Supplier created successfully!');
-      
+
       // Redirect to suppliers list after a short delay
       setTimeout(() => {
         router.push('/suppliers/suppliers');
       }, 2000);
-      
     } catch (error) {
       setError(
-        error instanceof Error 
-          ? error.message 
-          : 'Failed to create supplier'
+        error instanceof Error ? error.message : 'Failed to create supplier'
       );
     } finally {
       setLoading(false);
@@ -144,32 +144,38 @@ export default function AddSupplierPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
-          <p className="text-muted-foreground">Please log in to create suppliers.</p>
+      <div className='flex items-center justify-center h-64'>
+        <div className='text-center'>
+          <AlertCircle className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
+          <h3 className='text-lg font-semibold mb-2'>
+            Authentication Required
+          </h3>
+          <p className='text-muted-foreground'>
+            Please log in to create suppliers.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className='flex items-center gap-4'>
         <Button
-          variant="outline"
-          size="sm"
+          variant='outline'
+          size='sm'
           onClick={handleBack}
-          className="flex items-center gap-2"
+          className='flex items-center gap-2'
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className='h-4 w-4' />
           Back to Suppliers
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Add New Supplier</h1>
-          <p className="text-muted-foreground">
+          <h1 className='text-3xl font-bold tracking-tight'>
+            Add New Supplier
+          </h1>
+          <p className='text-muted-foreground'>
             Create a new supplier account with contact information
           </p>
         </div>
@@ -177,8 +183,8 @@ export default function AddSupplierPage() {
 
       {/* Success Message */}
       {success && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
+        <Alert className='border-green-200 bg-green-50'>
+          <CheckCircle className='h-4 w-4 text-green-600' />
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>{success}</AlertDescription>
         </Alert>
@@ -186,62 +192,69 @@ export default function AddSupplierPage() {
 
       {/* Error Message */}
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+        <Alert variant='destructive'>
+          <AlertCircle className='h-4 w-4' />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className='space-y-6'>
         {/* Supplier Information */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
+            <CardTitle className='flex items-center gap-2'>
+              <Building2 className='h-5 w-5' />
               Supplier Information
             </CardTitle>
-            <CardDescription>
-              Enter the supplier details
-            </CardDescription>
+            <CardDescription>Enter the supplier details</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="userId">User ID *</Label>
+          <CardContent className='space-y-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='userId'>User ID *</Label>
                 <Input
-                  id="userId"
-                  type="number"
-                  placeholder="Enter user ID"
+                  id='userId'
+                  type='number'
+                  placeholder='Enter user ID'
                   value={formData.userId || ''}
-                  onChange={(e) => handleInputChange('userId', parseInt(e.target.value) || 0)}
+                  onChange={e =>
+                    handleInputChange('userId', parseInt(e.target.value) || 0)
+                  }
                   required
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className='text-sm text-muted-foreground'>
                   Enter the ID of the user to be assigned as a supplier
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='category'>Category *</Label>
                 <Select
                   value={formData.categoryId.toString()}
-                  onValueChange={(value) => handleInputChange('categoryId', parseInt(value))}
+                  onValueChange={value =>
+                    handleInputChange('categoryId', parseInt(value))
+                  }
                   disabled={loadingCategories}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder='Select a category' />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.categoryId} value={category.categoryId.toString()}>
+                    {categories.map(category => (
+                      <SelectItem
+                        key={category.categoryId}
+                        value={category.categoryId.toString()}
+                      >
                         {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {loadingCategories && (
-                  <p className="text-sm text-muted-foreground">Loading categories...</p>
+                  <p className='text-sm text-muted-foreground'>
+                    Loading categories...
+                  </p>
                 )}
               </div>
             </div>
@@ -249,28 +262,28 @@ export default function AddSupplierPage() {
         </Card>
 
         {/* Submit Buttons */}
-        <div className="flex items-center justify-between">
+        <div className='flex items-center justify-between'>
           <Button
-            type="button"
-            variant="outline"
+            type='button'
+            variant='outline'
             onClick={handleBack}
             disabled={loading}
           >
             Cancel
           </Button>
           <Button
-            type="submit"
+            type='submit'
             disabled={loading || !formData.userId || !formData.categoryId}
-            className="flex items-center gap-2"
+            className='flex items-center gap-2'
           >
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className='h-4 w-4 animate-spin' />
                 Creating...
               </>
             ) : (
               <>
-                <Save className="h-4 w-4" />
+                <Save className='h-4 w-4' />
                 Create Supplier
               </>
             )}

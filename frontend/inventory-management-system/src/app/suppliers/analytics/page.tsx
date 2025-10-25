@@ -91,7 +91,8 @@ function AnalyticsPageContent() {
               (supplier: EnhancedSupplier) =>
                 supplier.categoryId === category.categoryId
             ).length;
-            const percentage = totalSuppliersCount > 0 ? (count / totalSuppliersCount) * 100 : 0;
+            const percentage =
+              totalSuppliersCount > 0 ? (count / totalSuppliersCount) * 100 : 0;
             return {
               name: category.name,
               value: count,
@@ -100,8 +101,12 @@ function AnalyticsPageContent() {
             };
           })
           .filter(
-            (item: { name: string; value: number; color: string; percentage: number }) =>
-              item.value > 0
+            (item: {
+              name: string;
+              value: number;
+              color: string;
+              percentage: number;
+            }) => item.value > 0
           );
 
         // Add uncategorized suppliers
@@ -109,7 +114,10 @@ function AnalyticsPageContent() {
           (supplier: EnhancedSupplier) => !supplier.categoryId
         ).length;
         if (uncategorizedCount > 0) {
-          const uncategorizedPercentage = totalSuppliersCount > 0 ? (uncategorizedCount / totalSuppliersCount) * 100 : 0;
+          const uncategorizedPercentage =
+            totalSuppliersCount > 0
+              ? (uncategorizedCount / totalSuppliersCount) * 100
+              : 0;
           categoryCounts.push({
             name: 'Uncategorized',
             value: uncategorizedCount,

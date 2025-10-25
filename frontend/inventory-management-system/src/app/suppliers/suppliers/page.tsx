@@ -110,15 +110,16 @@ function SuppliersPageContent() {
   const [suppliers, setSuppliers] = useState<EnhancedSupplier[]>([]);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  
+
   // Category filtering state
   const [categories, setCategories] = useState<SupplierCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loadingCategories, setLoadingCategories] = useState(false);
-  
+
   // View supplier state
-  const [selectedSupplier, setSelectedSupplier] = useState<EnhancedSupplier | null>(null);
+  const [selectedSupplier, setSelectedSupplier] =
+    useState<EnhancedSupplier | null>(null);
   const [isViewSupplierOpen, setIsViewSupplierOpen] = useState(false);
   const [loadingSupplierDetails, setLoadingSupplierDetails] = useState(false);
 
@@ -186,10 +187,10 @@ function SuppliersPageContent() {
   const handleViewSupplier = async (supplierId: number) => {
     try {
       setLoadingSupplierDetails(true);
-      
+
       // Find the supplier in the current suppliers list
       const supplier = suppliers.find(s => s.supplierId === supplierId);
-      
+
       if (supplier) {
         setSelectedSupplier(supplier);
         setIsViewSupplierOpen(true);
@@ -206,7 +207,9 @@ function SuppliersPageContent() {
   // Handler for email action
   const handleSendEmail = (email: string) => {
     const subject = encodeURIComponent('Business Inquiry');
-    const body = encodeURIComponent('Hello,\n\nI would like to discuss business opportunities with you.\n\nBest regards');
+    const body = encodeURIComponent(
+      'Hello,\n\nI would like to discuss business opportunities with you.\n\nBest regards'
+    );
     const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`;
     window.open(mailtoUrl, '_blank');
   };
@@ -220,7 +223,11 @@ function SuppliersPageContent() {
   };
 
   // Handler for map action
-  const handleViewOnMap = (address: string, latitude?: number, longitude?: number) => {
+  const handleViewOnMap = (
+    address: string,
+    latitude?: number,
+    longitude?: number
+  ) => {
     if (latitude && longitude) {
       // If we have coordinates, use them for more accurate location
       const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
@@ -254,20 +261,25 @@ function SuppliersPageContent() {
   // Filter suppliers based on category and search term
   const filterSuppliers = (suppliersList: Supplier[]) => {
     return suppliersList.filter(supplier => {
-      const matchesCategory = !selectedCategory || selectedCategory === 'all' || supplier.category === selectedCategory;
-      const matchesSearch = !searchTerm || 
+      const matchesCategory =
+        !selectedCategory ||
+        selectedCategory === 'all' ||
+        supplier.category === selectedCategory;
+      const matchesSearch =
+        !searchTerm ||
         supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         supplier.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         supplier.contactPerson.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       return matchesCategory && matchesSearch;
     });
   };
 
   // Get suppliers to display (authenticated data or sample data)
-  const allSuppliers = isAuthenticated && suppliers.length > 0
-    ? suppliers.map(convertToDisplaySupplier)
-    : sampleSuppliers;
+  const allSuppliers =
+    isAuthenticated && suppliers.length > 0
+      ? suppliers.map(convertToDisplaySupplier)
+      : sampleSuppliers;
 
   // Apply filtering
   const displaySuppliers = filterSuppliers(allSuppliers);
@@ -307,13 +319,16 @@ function SuppliersPageContent() {
                 id='search'
                 placeholder='Search by name, email, or contact...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
-            
+
             <div className='space-y-2'>
               <Label htmlFor='category-filter'>Category</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder='All categories' />
                 </SelectTrigger>
@@ -326,19 +341,24 @@ function SuppliersPageContent() {
                   ))}
                   {/* Add sample categories for demo */}
                   <SelectItem value='Electronics'>Electronics</SelectItem>
-                  <SelectItem value='Office Supplies'>Office Supplies</SelectItem>
+                  <SelectItem value='Office Supplies'>
+                    Office Supplies
+                  </SelectItem>
                   <SelectItem value='Furniture'>Furniture</SelectItem>
                 </SelectContent>
               </Select>
               {loadingCategories && (
-                <p className='text-sm text-muted-foreground'>Loading categories...</p>
+                <p className='text-sm text-muted-foreground'>
+                  Loading categories...
+                </p>
               )}
             </div>
-            
+
             <div className='space-y-2'>
               <Label>Results</Label>
               <div className='h-10 px-3 py-2 border rounded-md bg-muted flex items-center'>
-                {displaySuppliers.length} supplier{displaySuppliers.length !== 1 ? 's' : ''} found
+                {displaySuppliers.length} supplier
+                {displaySuppliers.length !== 1 ? 's' : ''} found
               </div>
             </div>
           </div>
@@ -401,9 +421,9 @@ function SuppliersPageContent() {
                     </span>
                   </div>
                   <div className='flex gap-2 pt-2'>
-                    <Button 
-                      variant='outline' 
-                      size='sm' 
+                    <Button
+                      variant='outline'
+                      size='sm'
                       className='flex-1'
                       onClick={() => handleViewSupplier(supplier.id)}
                       disabled={loadingSupplierDetails}
@@ -411,11 +431,13 @@ function SuppliersPageContent() {
                       <Eye className='mr-2 h-4 w-4' />
                       View
                     </Button>
-                    <Button 
-                      variant='outline' 
-                      size='sm' 
+                    <Button
+                      variant='outline'
+                      size='sm'
                       className='flex-1'
-                      onClick={() => router.push(`/suppliers/suppliers/edit/${supplier.id}`)}
+                      onClick={() =>
+                        router.push(`/suppliers/suppliers/edit/${supplier.id}`)
+                      }
                     >
                       <Edit className='mr-2 h-4 w-4' />
                       Edit
@@ -468,27 +490,29 @@ function SuppliersPageContent() {
                     {supplier.orders} orders
                   </span>
                 </div>
-                  <div className='flex gap-2 pt-2'>
-                    <Button 
-                      variant='outline' 
-                      size='sm' 
-                      className='flex-1'
-                      onClick={() => handleViewSupplier(supplier.id)}
-                      disabled={loadingSupplierDetails}
-                    >
-                      <Eye className='mr-2 h-4 w-4' />
-                      View
-                    </Button>
-                    <Button 
-                      variant='outline' 
-                      size='sm' 
-                      className='flex-1'
-                      onClick={() => router.push(`/suppliers/suppliers/edit/${supplier.id}`)}
-                    >
-                      <Edit className='mr-2 h-4 w-4' />
-                      Edit
-                    </Button>
-                  </div>
+                <div className='flex gap-2 pt-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='flex-1'
+                    onClick={() => handleViewSupplier(supplier.id)}
+                    disabled={loadingSupplierDetails}
+                  >
+                    <Eye className='mr-2 h-4 w-4' />
+                    View
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='flex-1'
+                    onClick={() =>
+                      router.push(`/suppliers/suppliers/edit/${supplier.id}`)
+                    }
+                  >
+                    <Edit className='mr-2 h-4 w-4' />
+                    Edit
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -501,7 +525,9 @@ function SuppliersPageContent() {
           <SheetContent className='w-full sm:max-w-2xl overflow-y-auto'>
             <SheetHeader>
               <SheetTitle>
-                Supplier Details - {selectedSupplier.userName || `Supplier ${selectedSupplier.supplierId}`}
+                Supplier Details -{' '}
+                {selectedSupplier.userName ||
+                  `Supplier ${selectedSupplier.supplierId}`}
               </SheetTitle>
               <SheetDescription>
                 View comprehensive supplier information and contact details
@@ -557,19 +583,27 @@ function SuppliersPageContent() {
                 </h4>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div>
-                    <Label className='text-sm text-muted-foreground'>Status</Label>
+                    <Label className='text-sm text-muted-foreground'>
+                      Status
+                    </Label>
                     <div className='flex items-center gap-2'>
-                      <Badge className={
-                        selectedSupplier.userDetails?.accountStatus === 'ACTIVE' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }>
-                        {selectedSupplier.userDetails?.accountStatus || 'Unknown'}
+                      <Badge
+                        className={
+                          selectedSupplier.userDetails?.accountStatus ===
+                          'ACTIVE'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }
+                      >
+                        {selectedSupplier.userDetails?.accountStatus ||
+                          'Unknown'}
                       </Badge>
                     </div>
                   </div>
                   <div>
-                    <Label className='text-sm text-muted-foreground'>Email Verified</Label>
+                    <Label className='text-sm text-muted-foreground'>
+                      Email Verified
+                    </Label>
                     <div className='flex items-center gap-2'>
                       {selectedSupplier.userDetails?.emailVerified ? (
                         <CheckCircle className='h-4 w-4 text-green-600' />
@@ -577,7 +611,9 @@ function SuppliersPageContent() {
                         <X className='h-4 w-4 text-red-600' />
                       )}
                       <span className='text-sm'>
-                        {selectedSupplier.userDetails?.emailVerified ? 'Verified' : 'Not Verified'}
+                        {selectedSupplier.userDetails?.emailVerified
+                          ? 'Verified'
+                          : 'Not Verified'}
                       </span>
                     </div>
                   </div>
@@ -592,18 +628,22 @@ function SuppliersPageContent() {
                 </h4>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div>
-                    <Label className='text-sm text-muted-foreground'>Address</Label>
+                    <Label className='text-sm text-muted-foreground'>
+                      Address
+                    </Label>
                     <div className='text-sm font-medium'>
                       {selectedSupplier.userDetails?.formattedAddress || 'N/A'}
                     </div>
                   </div>
                   <div>
-                    <Label className='text-sm text-muted-foreground'>Coordinates</Label>
+                    <Label className='text-sm text-muted-foreground'>
+                      Coordinates
+                    </Label>
                     <div className='text-sm font-medium'>
-                      {selectedSupplier.userDetails?.latitude && selectedSupplier.userDetails?.longitude 
+                      {selectedSupplier.userDetails?.latitude &&
+                      selectedSupplier.userDetails?.longitude
                         ? `${selectedSupplier.userDetails.latitude}, ${selectedSupplier.userDetails.longitude}`
-                        : 'N/A'
-                      }
+                        : 'N/A'}
                     </div>
                   </div>
                 </div>
@@ -617,34 +657,43 @@ function SuppliersPageContent() {
                 </h4>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div>
-                    <Label className='text-sm text-muted-foreground'>Date of Birth</Label>
+                    <Label className='text-sm text-muted-foreground'>
+                      Date of Birth
+                    </Label>
                     <div className='text-sm font-medium'>
-                      {selectedSupplier.userDetails?.dateOfBirth 
-                        ? new Date(selectedSupplier.userDetails.dateOfBirth).toLocaleDateString()
-                        : 'N/A'
-                      }
+                      {selectedSupplier.userDetails?.dateOfBirth
+                        ? new Date(
+                            selectedSupplier.userDetails.dateOfBirth
+                          ).toLocaleDateString()
+                        : 'N/A'}
                     </div>
                   </div>
                   <div>
-                    <Label className='text-sm text-muted-foreground'>Account Created</Label>
+                    <Label className='text-sm text-muted-foreground'>
+                      Account Created
+                    </Label>
                     <div className='text-sm font-medium'>
-                      {selectedSupplier.userDetails?.createdAt 
-                        ? new Date(selectedSupplier.userDetails.createdAt).toLocaleDateString()
-                        : 'N/A'
-                      }
+                      {selectedSupplier.userDetails?.createdAt
+                        ? new Date(
+                            selectedSupplier.userDetails.createdAt
+                          ).toLocaleDateString()
+                        : 'N/A'}
                     </div>
                   </div>
                   <div>
-                    <Label className='text-sm text-muted-foreground'>Profile Image</Label>
+                    <Label className='text-sm text-muted-foreground'>
+                      Profile Image
+                    </Label>
                     <div className='text-sm font-medium'>
-                      {selectedSupplier.userDetails?.profileImageUrl 
-                        ? 'Available' 
-                        : 'Not provided'
-                      }
+                      {selectedSupplier.userDetails?.profileImageUrl
+                        ? 'Available'
+                        : 'Not provided'}
                     </div>
                   </div>
                   <div>
-                    <Label className='text-sm text-muted-foreground'>Role</Label>
+                    <Label className='text-sm text-muted-foreground'>
+                      Role
+                    </Label>
                     <div className='text-sm font-medium'>
                       {selectedSupplier.userDetails?.role || 'N/A'}
                     </div>
@@ -660,38 +709,45 @@ function SuppliersPageContent() {
                 </h4>
                 <div className='flex gap-2 flex-wrap'>
                   {selectedSupplier.userDetails?.email && (
-                    <Button 
-                      variant='outline' 
-                      size='sm' 
+                    <Button
+                      variant='outline'
+                      size='sm'
                       className='flex items-center gap-2'
-                      onClick={() => handleSendEmail(selectedSupplier.userDetails!.email)}
+                      onClick={() =>
+                        handleSendEmail(selectedSupplier.userDetails!.email)
+                      }
                     >
                       <Mail className='h-4 w-4' />
                       Send Email
                     </Button>
                   )}
                   {selectedSupplier.userDetails?.phoneNumber && (
-                    <Button 
-                      variant='outline' 
-                      size='sm' 
+                    <Button
+                      variant='outline'
+                      size='sm'
                       className='flex items-center gap-2'
-                      onClick={() => handleCall(selectedSupplier.userDetails!.phoneNumber!)}
+                      onClick={() =>
+                        handleCall(selectedSupplier.userDetails!.phoneNumber!)
+                      }
                     >
                       <Phone className='h-4 w-4' />
                       Call
                     </Button>
                   )}
-                  {(selectedSupplier.userDetails?.formattedAddress || 
-                    (selectedSupplier.userDetails?.latitude && selectedSupplier.userDetails?.longitude)) && (
-                    <Button 
-                      variant='outline' 
-                      size='sm' 
+                  {(selectedSupplier.userDetails?.formattedAddress ||
+                    (selectedSupplier.userDetails?.latitude &&
+                      selectedSupplier.userDetails?.longitude)) && (
+                    <Button
+                      variant='outline'
+                      size='sm'
                       className='flex items-center gap-2'
-                      onClick={() => handleViewOnMap(
-                        selectedSupplier.userDetails?.formattedAddress || '',
-                        selectedSupplier.userDetails?.latitude,
-                        selectedSupplier.userDetails?.longitude
-                      )}
+                      onClick={() =>
+                        handleViewOnMap(
+                          selectedSupplier.userDetails?.formattedAddress || '',
+                          selectedSupplier.userDetails?.latitude,
+                          selectedSupplier.userDetails?.longitude
+                        )
+                      }
                     >
                       <Globe className='h-4 w-4' />
                       View on Map

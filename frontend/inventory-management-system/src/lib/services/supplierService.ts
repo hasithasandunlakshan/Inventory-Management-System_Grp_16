@@ -201,9 +201,12 @@ class SupplierService {
   }
 
   // Edit supplier by ID
-  async editSupplierById(id: number, supplierData: {
-    categoryId: number;
-  }): Promise<SupplierDTO> {
+  async editSupplierById(
+    id: number,
+    supplierData: {
+      categoryId: number;
+    }
+  ): Promise<SupplierDTO> {
     try {
       console.log(
         '🏭 Editing supplier directly from supplier service:',
