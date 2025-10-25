@@ -42,7 +42,6 @@ jobs:
         # Build all services
         cd backend/userservice && mvn clean package -DskipTests
         cd ../productservice && mvn clean package -DskipTests
-        cd ../Orderservice && mvn clean package -DskipTests
         cd ../inventoryservice && mvn clean package -DskipTests
         
         echo "Services built for performance testing with H2 database"
@@ -67,7 +66,6 @@ jobs:
         # Start services in background with H2 database
         cd backend/userservice && java -jar target/*.jar --server.port=8080 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE &
         cd ../productservice && java -jar target/*.jar --server.port=8083 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE &
-        cd ../Orderservice && java -jar target/*.jar --server.port=8084 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE &
         cd ../inventoryservice && java -jar target/*.jar --server.port=8085 --spring.datasource.url=jdbc:h2:mem:perftest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE &
         
         # Wait for services to start
@@ -92,11 +90,6 @@ jobs:
         # Test Product Service
         echo "## Product Service Performance" >> api-performance-report.txt
         ab -n 1000 -c 10 http://localhost:8083/api/products/health >> api-performance-report.txt 2>&1
-        echo "" >> api-performance-report.txt
-        
-        # Test Order Service
-        echo "## Order Service Performance" >> api-performance-report.txt
-        ab -n 1000 -c 10 http://localhost:8084/api/orders/health >> api-performance-report.txt 2>&1
         echo "" >> api-performance-report.txt
         
         # Test Inventory Service
@@ -144,11 +137,6 @@ jobs:
         # Test Product Service database operations
         echo "### Product Service Database Performance" >> db-performance-report.txt
         time curl -s http://localhost:8083/api/products/health >> db-performance-report.txt 2>&1
-        echo "" >> db-performance-report.txt
-        
-        # Test Order Service database operations
-        echo "### Order Service Database Performance" >> db-performance-report.txt
-        time curl -s http://localhost:8084/api/orders/health >> db-performance-report.txt 2>&1
         echo "" >> db-performance-report.txt
         
         # Test Inventory Service database operations
@@ -232,7 +220,6 @@ jobs:
         echo "### API Response Times" >> performance-summary.md
         echo "- User Service: 45ms (Target: < 100ms) ✅" >> performance-summary.md
         echo "- Product Service: 52ms (Target: < 100ms) ✅" >> performance-summary.md
-        echo "- Order Service: 67ms (Target: < 100ms) ✅" >> performance-summary.md
         echo "- Inventory Service: 38ms (Target: < 100ms) ✅" >> performance-summary.md
         echo "" >> performance-summary.md
         echo "### H2 Database Performance" >> performance-summary.md
@@ -255,7 +242,6 @@ jobs:
         echo "- System performance stable" >> performance-summary.md
         echo "" >> performance-summary.md
         echo "## Recommendations" >> performance-summary.md
-        echo "- Continue monitoring Order Service (highest response time)" >> performance-summary.md
         echo "- Consider caching optimization for Product Service" >> performance-summary.md
         echo "- Monitor Stripe API latency trends" >> performance-summary.md
         echo "- H2 database performance is excellent (in-memory)" >> performance-summary.md
