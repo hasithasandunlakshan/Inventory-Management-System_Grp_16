@@ -1,53 +1,94 @@
-# Kafka VM Deployment Instructions
+# Kafka Deployment Guide
 
-## Prerequisites
-1. Google Cloud SDK installed and configured
-2. Appropriate permissions for creating VMs and firewall rules
-3. A Google Cloud Project with billing enabled
+This directory contains multiple deployment options for your Kafka setup.
 
-## Deployment Steps
+## Deployment Options
 
-### 1. Update Configuration
-Edit `create-kafka-vm.sh` and update these variables:
+### Option 1: GitHub Codespaces (Recommended for Development) ✅
+**Best for:** Development, testing, team collaboration
+
+- ✅ **Free tier:** 60 hours/month
+- ✅ **No local setup:** Everything in the cloud
+- ✅ **Easy sharing:** Team members can create their own Codespaces
+- ✅ **Port forwarding:** Automatic URLs for all services
+
+📖 **See:** `CODESPACES_SETUP.md` for complete guide
+
+**Quick Start:**
 ```bash
-PROJECT_ID="your-actual-project-id"  # Replace with your GCP project ID
-ZONE="us-central1-a"                 # Change if you prefer a different zone
+# After creating a Codespace from your repo
+cd gcp-kafka-deployment
+chmod +x start-codespaces.sh
+./start-codespaces.sh
 ```
 
-### 2. Make Scripts Executable
+### Option 2: Google Cloud Platform VM (Production)
+**Best for:** Production deployments with persistent data
+
+- ✅ **Always available:** No auto-sleep
+- ✅ **Persistent storage:** Data survives restarts
+- ✅ **Scalable:** Adjust resources as needed
+- ✅ **Static IP:** Consistent connection endpoint
+
+📖 **See:** `COMPLETE_DEPLOYMENT_GUIDE.md` for GCP setup
+
+**Quick Start:**
 ```bash
-chmod +x create-kafka-vm.sh
-chmod +x setup-kafka.sh
+./deploy-kafka-simple.ps1 -ProjectId "your-project-id"
 ```
 
-### 3. Deploy Kafka VM
+### Option 3: Local Development
+**Best for:** Offline development
+
+**Quick Start:**
 ```bash
-./create-kafka-vm.sh
+docker-compose -f docker-compose-simple.yml up -d
 ```
 
-This script will:
-- Create firewall rules for Kafka ports (9092, 2181, 8088)
-- Create a new VM instance
-- Install Docker and Docker Compose
-- Deploy Kafka, Zookeeper, and Kafka UI
-- Create necessary topics
-- Save connection details to `kafka-connection-details.txt`
+## Which Option Should You Choose?
 
-### 4. Verify Deployment
-After deployment, you can:
-- Access Kafka UI at: `http://[EXTERNAL_IP]:8088`
-- Connect to Kafka at: `[EXTERNAL_IP]:9092`
-- Test the connection using the provided test scripts
+| Use Case | Recommended Option |
+|----------|-------------------|
+| Learning & Development | GitHub Codespaces |
+| Team Collaboration | GitHub Codespaces |
+| Testing Before Production | GitHub Codespaces |
+| Production Deployment | GCP VM |
+| Offline Development | Local Docker |
+| CI/CD Pipeline | GCP VM or Cloud Service |
 
-## Security Considerations
+## Files in This Directory
 
-### Production Recommendations:
-1. **Restrict Firewall Rules**: Instead of `0.0.0.0/0`, use specific IP ranges for your Cloud Run services
-2. **Use Internal Load Balancer**: For production, consider using Google Cloud's internal load balancer
-3. **Enable Authentication**: Configure SASL authentication for Kafka
-4. **Use Managed Kafka**: Consider Google Cloud Pub/Sub or Confluent Cloud for production
+**Codespaces Setup:**
+- `.devcontainer/devcontainer.json` - Codespaces configuration
+- `docker-compose-codespaces.yml` - Docker Compose for Codespaces
+- `start-codespaces.sh` - Start script for Codespaces
+- `CODESPACES_SETUP.md` - Complete Codespaces guide
 
-### Network Security:
+**GCP VM Setup:**
+- `docker-compose-gcp.yml` - Docker Compose for GCP VM
+- `deploy-kafka-simple.ps1` - PowerShell deployment script
+- `setup-kafka.sh` - VM setup script
+- `COMPLETE_DEPLOYMENT_GUIDE.md` - Complete GCP guide
+
+**Local Development:**
+- `docker-compose-simple.yml` - Simple local setup
+
+**Utilities:**
+- `test-kafka-connection.ps1` - Test Kafka connectivity
+- `spring-kafka-config-template.properties` - Spring Boot config template
+- `kafka-topics-config.yaml` - Topic configurations
+
+## Getting Started
+
+### For GitHub Codespaces (Easiest):
+
+1. Push this repo to GitHub
+2. Click **Code** → **Codespaces** → **Create codespace**
+3. Wait for environment to build
+4. Run: `./start-codespaces.sh`
+5. Access Kafka UI from PORTS tab
+
+### For GCP VM:
 ```bash
 # Example: Restrict access to specific Cloud Run regions
 gcloud compute firewall-rules create kafka-server-ports-restricted \

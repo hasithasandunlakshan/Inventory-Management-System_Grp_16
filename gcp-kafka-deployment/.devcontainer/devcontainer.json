@@ -1,0 +1,44 @@
+{
+  "name": "Kafka Development Environment",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  
+  "workspaceFolder": "/workspaces/Inventory-Management-System_Grp_16/gcp-kafka-deployment",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  
+  "forwardPorts": [9092, 2181, 8088],
+  
+  "portsAttributes": {
+    "9092": {
+      "label": "Kafka",
+      "onAutoForward": "notify"
+    },
+    "2181": {
+      "label": "Zookeeper",
+      "onAutoForward": "silent"
+    },
+    "8088": {
+      "label": "Kafka UI",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  
+  "postCreateCommand": "docker --version && docker-compose --version",
+  
+  "remoteUser": "vscode",
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml"
+      ]
+    }
+  }
+}
