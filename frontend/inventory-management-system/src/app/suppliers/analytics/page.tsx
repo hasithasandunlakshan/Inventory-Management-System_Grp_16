@@ -55,7 +55,7 @@ import {
 function AnalyticsPageContent() {
   const { isAuthenticated } = useAuth();
   const [supplierCategoryData, setSupplierCategoryData] = useState<
-    Array<{ name: string; value: number; color: string }>
+    Array<{ name: string; value: number; color: string; percentage: number }>
   >([]);
   const [supplierSpendData, setSupplierSpendData] = useState<
     Array<{ supplierName: string; spend: number; orders: number }>
@@ -84,21 +84,29 @@ function AnalyticsPageContent() {
         ]);
 
         // Count suppliers by category with distinct colors using utility function
+        const totalSuppliersCount = suppliers.length;
         const categoryCounts = categories
           .map((category: SupplierCategory, index: number) => {
             const count = suppliers.filter(
               (supplier: EnhancedSupplier) =>
                 supplier.categoryId === category.categoryId
             ).length;
+            const percentage =
+              totalSuppliersCount > 0 ? (count / totalSuppliersCount) * 100 : 0;
             return {
               name: category.name,
               value: count,
               color: getDistinctColor(index),
+              percentage: Math.round(percentage * 100) / 100, // Round to 2 decimal places
             };
           })
           .filter(
-            (item: { name: string; value: number; color: string }) =>
-              item.value > 0
+            (item: {
+              name: string;
+              value: number;
+              color: string;
+              percentage: number;
+            }) => item.value > 0
           );
 
         // Add uncategorized suppliers
@@ -106,10 +114,15 @@ function AnalyticsPageContent() {
           (supplier: EnhancedSupplier) => !supplier.categoryId
         ).length;
         if (uncategorizedCount > 0) {
+          const uncategorizedPercentage =
+            totalSuppliersCount > 0
+              ? (uncategorizedCount / totalSuppliersCount) * 100
+              : 0;
           categoryCounts.push({
             name: 'Uncategorized',
             value: uncategorizedCount,
             color: getDistinctColor(categoryCounts.length),
+            percentage: Math.round(uncategorizedPercentage * 100) / 100, // Round to 2 decimal places
           });
         }
 

@@ -16,6 +16,12 @@ export interface EnhancedSupplier extends Supplier {
     formattedAddress?: string;
     accountStatus?: string;
     profileImageUrl?: string;
+    emailVerified?: boolean;
+    latitude?: number;
+    longitude?: number;
+    dateOfBirth?: string;
+    createdAt?: string;
+    role?: string;
   };
 }
 

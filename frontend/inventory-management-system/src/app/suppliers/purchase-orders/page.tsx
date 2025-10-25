@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -107,6 +108,7 @@ interface DeliveryLogCreateRequest {
 
 // Main component wrapped with authentication
 function PurchaseOrdersPageContent() {
+  const router = useRouter();
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderSummary[]>(
     []
   );
@@ -136,6 +138,12 @@ function PurchaseOrdersPageContent() {
   const [exporting, setExporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [isAddOrderOpen, setIsAddOrderOpen] = useState(false);
+
+  // Note and attachment state
+  const [newNote, setNewNote] = useState('');
+  const [addingNote, setAddingNote] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [addingAttachment, setAddingAttachment] = useState(false);
 
   const { isAuthenticated } = useAuth();
 
@@ -179,6 +187,78 @@ function PurchaseOrdersPageContent() {
       );
     } catch (error) {
       setError('Failed to download attachment');
+    }
+  };
+
+  // Handler to add note
+  const handleAddNote = async () => {
+    if (!selectedPurchaseOrder || !newNote.trim()) {
+      setError('Please enter a note');
+      return;
+    }
+
+    try {
+      setAddingNote(true);
+      setError(null);
+
+      await purchaseOrderService.addNote(selectedPurchaseOrder.id, {
+        text: newNote.trim(),
+        createdBy: 'Current User', // You might want to get this from auth context
+      });
+
+      // Refresh notes
+      const notes = await purchaseOrderService.getPurchaseOrderNotes(
+        selectedPurchaseOrder.id
+      );
+      setOrderNotes(notes);
+
+      // Clear the note input
+      setNewNote('');
+    } catch (error) {
+      setError('Failed to add note');
+    } finally {
+      setAddingNote(false);
+    }
+  };
+
+  // Handler to add attachment
+  const handleAddAttachment = async () => {
+    if (!selectedPurchaseOrder || !selectedFile) {
+      setError('Please select a file');
+      return;
+    }
+
+    try {
+      setAddingAttachment(true);
+      setError(null);
+
+      await purchaseOrderService.addAttachment(
+        selectedPurchaseOrder.id,
+        selectedFile,
+        'Current User' // You might want to get this from auth context
+      );
+
+      // Refresh attachments
+      const attachments =
+        await purchaseOrderService.getPurchaseOrderAttachments(
+          selectedPurchaseOrder.id
+        );
+      setOrderAttachments(attachments);
+
+      // Clear the file input
+      setSelectedFile(null);
+    } catch (error) {
+      setError('Failed to add attachment');
+    } finally {
+      setAddingAttachment(false);
+    }
+  };
+
+  // Handler for file selection
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
     }
   };
 
@@ -410,14 +490,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
   ).sort();
 
   // Get status options
-  const statusOptions = [
-    'DRAFT',
-    'SENT',
-    'CONFIRMED',
-    'SHIPPED',
-    'DELIVERED',
-    'CANCELLED',
-  ];
+  const statusOptions = ['DRAFT', 'SENT', 'PENDING', 'RECEIVED', 'CANCELLED'];
 
   return (
     <div className='space-y-6'>
@@ -430,7 +503,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
         </div>
         <div className='flex gap-2'>
           <Button
-            onClick={() => setIsAddOrderOpen(true)}
+            onClick={() => router.push('/suppliers/purchase-orders/add')}
             className='flex items-center gap-2'
           >
             <Plus className='h-4 w-4' />
@@ -601,7 +674,9 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                   : 'Try adjusting your search or filter criteria.'}
               </p>
               {purchaseOrders.length === 0 && (
-                <Button onClick={() => setIsAddOrderOpen(true)}>
+                <Button
+                  onClick={() => router.push('/suppliers/purchase-orders/add')}
+                >
                   <Plus className='h-4 w-4 mr-2' />
                   Create Purchase Order
                 </Button>
@@ -614,9 +689,8 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                 const statusColorMap = {
                   DRAFT: 'bg-gray-100 text-gray-800',
                   SENT: 'bg-blue-100 text-blue-800',
-                  CONFIRMED: 'bg-yellow-100 text-yellow-800',
-                  SHIPPED: 'bg-purple-100 text-purple-800',
-                  DELIVERED: 'bg-green-100 text-green-800',
+                  PENDING: 'bg-yellow-100 text-yellow-800',
+                  RECEIVED: 'bg-green-100 text-green-800',
                   CANCELLED: 'bg-red-100 text-red-800',
                 };
                 const statusColor =
@@ -675,7 +749,11 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                         <Button
                           variant='outline'
                           size='sm'
-                          onClick={() => handleEditOrder(order.id)}
+                          onClick={() =>
+                            router.push(
+                              `/suppliers/purchase-orders/edit/${order.id}`
+                            )
+                          }
                           disabled={loadingOrderDetails}
                         >
                           <Edit className='h-4 w-4 mr-1' />
@@ -719,7 +797,7 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
 
             <div className='space-y-6 mt-6'>
               {/* Order Details */}
-              <div className='grid grid-cols-1 gap-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div>
                   <Label>Supplier Name</Label>
                   <div className='text-sm font-medium'>
@@ -727,9 +805,31 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                   </div>
                 </div>
                 <div>
+                  <Label>Supplier ID</Label>
+                  <div className='text-sm font-medium'>
+                    {selectedPurchaseOrder.supplierId}
+                  </div>
+                </div>
+                <div>
                   <Label>Status</Label>
                   <div className='text-sm font-medium'>
-                    {selectedPurchaseOrder.status}
+                    <Badge
+                      className={
+                        selectedPurchaseOrder.status === 'DRAFT'
+                          ? 'bg-gray-100 text-gray-800'
+                          : selectedPurchaseOrder.status === 'SENT'
+                            ? 'bg-blue-100 text-blue-800'
+                            : selectedPurchaseOrder.status === 'PENDING'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : selectedPurchaseOrder.status === 'RECEIVED'
+                                ? 'bg-green-100 text-green-800'
+                                : selectedPurchaseOrder.status === 'CANCELLED'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                      }
+                    >
+                      {selectedPurchaseOrder.status}
+                    </Badge>
                   </div>
                 </div>
                 <div>
@@ -740,6 +840,101 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                 </div>
               </div>
 
+              {/* Financial Summary */}
+              <div className='border rounded-lg p-4 bg-muted/50'>
+                <h4 className='font-semibold mb-3'>Financial Summary</h4>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                  <div>
+                    <Label className='text-sm text-muted-foreground'>
+                      Subtotal
+                    </Label>
+                    <div className='text-lg font-semibold'>
+                      ${selectedPurchaseOrder.subtotal?.toFixed(2) || '0.00'}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className='text-sm text-muted-foreground'>
+                      Total
+                    </Label>
+                    <div className='text-lg font-semibold text-primary'>
+                      ${selectedPurchaseOrder.total?.toFixed(2) || '0.00'}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className='text-sm text-muted-foreground'>
+                      Items Count
+                    </Label>
+                    <div className='text-lg font-semibold'>
+                      {selectedPurchaseOrder.items?.length || 0} items
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items List */}
+              <div>
+                <h4 className='font-semibold mb-3'>
+                  Order Items ({selectedPurchaseOrder.items?.length || 0})
+                </h4>
+                {selectedPurchaseOrder.items &&
+                selectedPurchaseOrder.items.length > 0 ? (
+                  <div className='space-y-3'>
+                    {selectedPurchaseOrder.items.map((item, index) => (
+                      <div
+                        key={item.id || index}
+                        className='border rounded-lg p-4'
+                      >
+                        <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
+                          <div>
+                            <Label className='text-sm text-muted-foreground'>
+                              Item ID
+                            </Label>
+                            <div className='font-medium'>{item.itemId}</div>
+                          </div>
+                          <div>
+                            <Label className='text-sm text-muted-foreground'>
+                              Quantity
+                            </Label>
+                            <div className='font-medium'>{item.quantity}</div>
+                          </div>
+                          <div>
+                            <Label className='text-sm text-muted-foreground'>
+                              Unit Price
+                            </Label>
+                            <div className='font-medium'>
+                              ${item.unitPrice.toFixed(2)}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className='text-sm text-muted-foreground'>
+                              Line Total
+                            </Label>
+                            <div className='font-medium text-primary'>
+                              $
+                              {item.lineTotal?.toFixed(2) ||
+                                (item.quantity * item.unitPrice).toFixed(2)}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className='text-sm text-muted-foreground'>
+                              Line ID
+                            </Label>
+                            <div className='font-medium text-xs text-muted-foreground'>
+                              {item.id || 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className='text-center py-8 text-muted-foreground border rounded-lg'>
+                    <Package className='h-12 w-12 mx-auto mb-4' />
+                    <p>No items found for this purchase order.</p>
+                  </div>
+                )}
+              </div>
+
               {/* Additional Information Tabs */}
               <div className='mt-6'>
                 <div className='space-y-4'>
@@ -747,6 +942,47 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                     <h4 className='font-semibold mb-2'>
                       Notes ({orderNotes.length})
                     </h4>
+
+                    {/* Add Note Form */}
+                    <div className='mb-4 p-3 border rounded-lg bg-muted/50'>
+                      <Label
+                        htmlFor='newNote'
+                        className='text-sm font-medium mb-2 block'
+                      >
+                        Add New Note
+                      </Label>
+                      <div className='space-y-2'>
+                        <Textarea
+                          id='newNote'
+                          placeholder='Enter your note here...'
+                          value={newNote}
+                          onChange={e => setNewNote(e.target.value)}
+                          className='min-h-[80px]'
+                        />
+                        <div className='flex justify-end'>
+                          <Button
+                            onClick={handleAddNote}
+                            disabled={addingNote || !newNote.trim()}
+                            size='sm'
+                            className='flex items-center gap-2'
+                          >
+                            {addingNote ? (
+                              <>
+                                <div className='h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600' />
+                                Adding...
+                              </>
+                            ) : (
+                              <>
+                                <Send className='h-4 w-4' />
+                                Add Note
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notes List */}
                     <div className='space-y-2'>
                       {orderNotes.map(note => (
                         <div key={note.id} className='p-3 border rounded-lg'>
@@ -768,6 +1004,53 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                     <h4 className='font-semibold mb-2'>
                       Attachments ({orderAttachments.length})
                     </h4>
+
+                    {/* Add Attachment Form */}
+                    <div className='mb-4 p-3 border rounded-lg bg-muted/50'>
+                      <Label
+                        htmlFor='fileInput'
+                        className='text-sm font-medium mb-2 block'
+                      >
+                        Add New Attachment
+                      </Label>
+                      <div className='space-y-2'>
+                        <div className='flex items-center gap-2'>
+                          <Input
+                            id='fileInput'
+                            type='file'
+                            onChange={handleFileSelect}
+                            className='flex-1'
+                            accept='*/*'
+                          />
+                          <Button
+                            onClick={handleAddAttachment}
+                            disabled={addingAttachment || !selectedFile}
+                            size='sm'
+                            className='flex items-center gap-2'
+                          >
+                            {addingAttachment ? (
+                              <>
+                                <div className='h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600' />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className='h-4 w-4' />
+                                Upload
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        {selectedFile && (
+                          <div className='text-sm text-muted-foreground'>
+                            Selected: {selectedFile.name} (
+                            {(selectedFile.size / 1024).toFixed(1)} KB)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Attachments List */}
                     <div className='space-y-2'>
                       {orderAttachments.map(attachment => (
                         <div
@@ -776,9 +1059,17 @@ C,2,2025-09-12,SENT,2001,10,30.00`;
                         >
                           <div className='flex items-center gap-2'>
                             <Paperclip className='h-4 w-4' />
-                            <span className='text-sm'>
-                              {attachment.filename}
-                            </span>
+                            <div className='flex flex-col'>
+                              <span className='text-sm font-medium'>
+                                {attachment.filename}
+                              </span>
+                              <span className='text-xs text-muted-foreground'>
+                                {(attachment.sizeBytes / 1024).toFixed(1)} KB •{' '}
+                                {new Date(
+                                  attachment.uploadedAt
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
                           <Button
                             variant='outline'
