@@ -200,6 +200,36 @@ class SupplierService {
     }
   }
 
+  // Edit supplier by ID
+  async editSupplierById(id: number, supplierData: {
+    categoryId: number;
+  }): Promise<SupplierDTO> {
+    try {
+      console.log(
+        '🏭 Editing supplier directly from supplier service:',
+        `${this.baseUrl}/api/suppliers/${id}`
+      );
+      const response = await fetch(
+        `${this.baseUrl}/api/suppliers/${id}`,
+        createAuthenticatedRequestOptions('PUT', supplierData)
+      );
+      console.log('🏭 Edit supplier response status:', response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🏭 Edit supplier error:', errorText);
+        throw new Error(
+          `Failed to edit supplier: ${response.status} ${response.statusText} - ${errorText}`
+        );
+      }
+      const data = await response.json();
+      console.log('🏭 Supplier edited successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('🏭 Error editing supplier:', error);
+      throw error;
+    }
+  }
+
   // Get all supplier categories
   async getAllCategories(): Promise<SupplierCategoryDTO[]> {
     try {
