@@ -217,11 +217,13 @@ jobs:
         attachments: coverage-summary.md
         
     - name: Send Slack Coverage Alert
+      if: ${{ env.SLACK_WEBHOOK_URL != '' }}
       uses: 8398a7/action-slack@v3
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       with:
         status: ${{ job.status }}
         channel: '#code-quality'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
         text: |
           📊 Code Coverage Report
           
