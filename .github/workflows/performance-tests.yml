@@ -207,7 +207,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Download Performance Results
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: ./performance-results
         
@@ -263,7 +263,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Download Performance Summary
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: performance-summary
         path: ./
@@ -317,7 +317,7 @@ jobs:
     
     steps:
     - name: Download Performance Summary
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: performance-summary
         path: ./
