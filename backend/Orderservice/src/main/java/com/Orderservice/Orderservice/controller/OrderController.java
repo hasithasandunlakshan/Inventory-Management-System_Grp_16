@@ -26,6 +26,10 @@ import com.Orderservice.Orderservice.service.OrderService;
 
 @RestController
 @RequestMapping("/api/orders")
+<<<<<<< Updated upstream
+=======
+@CrossOrigin(origins = "https://inventory-management-system-grp-16.vercel.app/login?redirect=%2F", allowCredentials = "true")
+>>>>>>> Stashed changes
 public class OrderController {
 
     @Autowired
@@ -35,11 +39,10 @@ public class OrderController {
     private OrderRepository orderRepository;
 
     /**
-     * Get all orders for a specific user/customer
+     * Get all orders for a specific user by user ID
      * 
-     * @param userId The customer ID
-     * @return AllOrdersResponse containing all orders with details for the
-     *         specified customer
+     * @param userId The user ID
+     * @return AllOrdersResponse containing the user's orders
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<AllOrdersResponse> getOrdersByUserId(@PathVariable Long userId) {
@@ -63,17 +66,7 @@ public class OrderController {
         }
     }
 
-    /**
-     * OPTIMIZED: Get all orders (any status) with pagination and user details
-     * - Includes pagination support
-     * - Fetches user details (name, email, address, location)
-     * - Uses bulk fetching to minimize database queries
-     * - Returns orders sorted by date (newest first)
-     * 
-     * @param page Page number (0-based, optional, default: 0)
-     * @param size Number of items per page (optional, default: 20)
-     * @return AllOrdersResponse containing all orders with pagination info
-     */
+    
     @GetMapping("/all")
     public ResponseEntity<AllOrdersResponse> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
@@ -128,48 +121,7 @@ public class OrderController {
         }
     }
 
-    /**
-     * Debug endpoint to show raw database data
-     */
-    @GetMapping("/debug/raw")
-    public ResponseEntity<Map<String, Object>> getDebugOrders() {
-        try {
-            // Get raw orders from database
-            List<Order> allOrders = orderRepository.findAll();
-            List<Order> confirmedOrders = orderRepository.findAllConfirmedOrdersWithItems();
-            // Log order details
-            Map<String, Long> statusCounts = allOrders.stream()
-                    .collect(java.util.stream.Collectors.groupingBy(
-                            o -> o.getStatus().toString(),
-                            java.util.stream.Collectors.counting()));
-            Map<String, Object> debugInfo = new java.util.HashMap<>();
-            debugInfo.put("timestamp", LocalDateTime.now().toString());
-            debugInfo.put("totalOrdersInDb", allOrders.size());
-            debugInfo.put("confirmedOrders", confirmedOrders.size());
-            debugInfo.put("statusBreakdown", statusCounts);
-            debugInfo.put("latestOrderIds", allOrders.stream()
-                    .sorted((a, b) -> b.getOrderId().compareTo(a.getOrderId()))
-                    .limit(5)
-                    .map(Order::getOrderId)
-                    .toList());
-            debugInfo.put("confirmedOrderIds", confirmedOrders.stream()
-                    .map(Order::getOrderId)
-                    .toList());
-
-            return ResponseEntity.ok()
-                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                    .body(debugInfo);
-
-        } catch (Exception e) {
-            Map<String, Object> errorInfo = new java.util.HashMap<>();
-            errorInfo.put("error", e.getMessage());
-            errorInfo.put("timestamp", LocalDateTime.now().toString());
-
-            return ResponseEntity.internalServerError()
-                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                    .body(errorInfo);
-        }
-    }
+    
 
     /**
      * 
@@ -361,49 +313,7 @@ public class OrderController {
         }
     }
 
-    /**
-     * Debug endpoint to get order count by status
-     * 
-     * @return Map containing counts by status
-     */
-    @GetMapping("/debug/status-counts")
-    public ResponseEntity<Map<String, Object>> getOrderStatusCounts() {
-        try {
-            Map<String, Object> response = orderService.getOrderStatusCounts();
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of(
-                    "success", false,
-                    "message", "Internal server error: " + e.getMessage()));
-        }
-    }
 
-    /**
-     * Debug endpoint to get all orders regardless of status (for testing)
-     * 
-     * @return AllOrdersResponse containing all orders with any status
-     */
-    @GetMapping("/debug/all")
-    public ResponseEntity<AllOrdersResponse> getAllOrdersDebug() {
-        try {
-            AllOrdersResponse response = orderService.getAllOrdersDebug();
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.badRequest().body(response);
-            }
-
-        } catch (Exception e) {
-            AllOrdersResponse errorResponse = AllOrdersResponse.builder()
-                    .success(false)
-                    .message("Internal server error: " + e.getMessage())
-                    .orders(null)
-                    .totalOrders(0)
-                    .build();
-
-            return ResponseEntity.internalServerError().body(errorResponse);
-        }
-    }
 
     /**
      * Process a refund for an order

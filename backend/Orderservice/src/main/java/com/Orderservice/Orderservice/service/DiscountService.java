@@ -284,7 +284,7 @@ public class DiscountService {
                 }
             }
             
-            // Check total usage limit
+            //Check total usage limit
             if (discount.getMaxUsage() != null) {
                 Long totalUsageCount = userDiscountRepository.countByDiscountId(discountId);
                 if (totalUsageCount >= discount.getMaxUsage()) {

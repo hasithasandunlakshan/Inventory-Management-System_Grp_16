@@ -32,10 +32,7 @@ public class UserServiceClient {
         this.restTemplate = restTemplate;
     }
 
-    /**
-     * Fetches a single user by ID from User Service
-     * Uses: /api/admin/user/{userId}
-     */
+    
     public UserDetailsResponse.UserInfo getUserById(Long userId) {
         try {
             String url = userServiceUrl + "/api/admin/user/" + userId;
@@ -81,24 +78,23 @@ public class UserServiceClient {
         }
     }
 
-    /**
-     * Fetches multiple users from User Service and returns them as a map (userId -> UserInfo)
-     * This is more efficient for bulk operations - makes individual calls but caches results
-     */
+    
     public Map<Long, UserDetailsResponse.UserInfo> getAllUsersAsMap() {
         Map<Long, UserDetailsResponse.UserInfo> userMap = new HashMap<>();
         
-        // Since there's no bulk endpoint, we'll rely on the calling code to pass specific user IDs
-        // This method structure is kept for future bulk endpoint support
+
         System.out.println("Note: Using individual user fetch. Consider implementing bulk endpoint in User Service for better performance.");
         
         return userMap;
     }
 
+<<<<<<< Updated upstream
     /**
      * OPTIMIZED: Fetches multiple users by their IDs using parallel processing
      * Makes individual API calls in parallel and returns them as a map for efficient lookup
      */
+=======
+>>>>>>> Stashed changes
     public Map<Long, UserDetailsResponse.UserInfo> getUsersByIds(Set<Long> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return new HashMap<>();

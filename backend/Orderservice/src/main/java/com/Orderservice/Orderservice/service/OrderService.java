@@ -741,7 +741,7 @@ public class OrderService {
                         .build();
             }
 
-            // Collect all product IDs to fetch in bulk (OPTIMIZATION: avoid N+1 query problem)
+            // Collect all product IDs to fetch in bulk 
             Set<Long> productIds = orders.stream()
                     .flatMap(order -> order.getOrderItems().stream())
                     .map(OrderItem::getProductId)
@@ -1248,14 +1248,14 @@ public class OrderService {
         }
     }
     
-    // ============== DISCOUNT INTEGRATION METHODS ==============
+    
     
     /**
      * Apply discount to an existing order
      */
     public Order applyDiscountToOrder(Long orderId, String discountCode, Long userId) {
         try {
-            // Get the order
+            
             Optional<Order> orderOpt = orderRepository.findById(orderId);
             if (!orderOpt.isPresent()) {
                 throw new RuntimeException("Order not found with ID: " + orderId);
@@ -1263,12 +1263,12 @@ public class OrderService {
             
             Order order = orderOpt.get();
             
-            // Check if order already has a discount
+            
             if (order.getDiscountCode() != null) {
                 throw new RuntimeException("Order already has a discount applied");
             }
             
-            // Find the discount
+            // Find the discount by code
             Optional<com.Orderservice.Orderservice.entity.Discount> discountOpt = 
                     discountService.findActiveDiscountByCode(discountCode);
             if (!discountOpt.isPresent()) {
