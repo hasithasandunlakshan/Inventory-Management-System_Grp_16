@@ -32,9 +32,6 @@ import { revenueService } from '@/lib/services/revenueService';
 import {
   logisticsService,
   type LogisticsMetrics,
-  type DriverProfile,
-  type Vehicle,
-  type Assignment,
 } from '@/lib/services/logisticsService';
 import {
   costService,
@@ -589,7 +586,6 @@ export default function ReportsPage() {
     null
   );
   const [costLoading, setCostLoading] = useState(false);
-  const [costError, setCostError] = useState<string | null>(null);
 
   // Profitability Analysis state
   const [grossProfitAnalysis, setGrossProfitAnalysis] =
@@ -599,9 +595,6 @@ export default function ReportsPage() {
   const [orderProfitability, setOrderProfitability] =
     useState<OrderProfitability | null>(null);
   const [profitabilityLoading, setProfitabilityLoading] = useState(false);
-  const [profitabilityError, setProfitabilityError] = useState<string | null>(
-    null
-  );
 
   // Operational Cost Analysis state
   const [logisticsCostAnalysis, setLogisticsCostAnalysis] =
@@ -609,7 +602,6 @@ export default function ReportsPage() {
   const [operationalEfficiencyMetrics, setOperationalEfficiencyMetrics] =
     useState<OperationalEfficiencyMetrics | null>(null);
   const [operationalLoading, setOperationalLoading] = useState(false);
-  const [operationalError, setOperationalError] = useState<string | null>(null);
   const [fleetUtilization, setFleetUtilization] = useState<{
     totalDrivers: number;
     activeDrivers: number;
@@ -620,9 +612,6 @@ export default function ReportsPage() {
     driverUtilization: number;
     vehicleUtilization: number;
   } | null>(null);
-  const [drivers, setDrivers] = useState<DriverProfile[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
 
   // Supplier Analytics state
   const [supplierAnalytics, setSupplierAnalytics] =
@@ -753,7 +742,6 @@ export default function ReportsPage() {
 
         // Set drivers data
         if (driversData.status === 'fulfilled') {
-          setDrivers(driversData.value);
           console.log(
             '✅ Drivers data loaded:',
             driversData.value.length,
@@ -763,7 +751,6 @@ export default function ReportsPage() {
 
         // Set vehicles data
         if (vehiclesData.status === 'fulfilled') {
-          setVehicles(vehiclesData.value);
           console.log(
             '✅ Vehicles data loaded:',
             vehiclesData.value.length,
@@ -773,7 +760,6 @@ export default function ReportsPage() {
 
         // Set assignments data
         if (assignmentsData.status === 'fulfilled') {
-          setAssignments(assignmentsData.value);
           console.log(
             '✅ Assignments data loaded:',
             assignmentsData.value.length,
@@ -798,7 +784,6 @@ export default function ReportsPage() {
   useEffect(() => {
     const loadCostAnalysis = async () => {
       setCostLoading(true);
-      setCostError(null);
       try {
         console.log('💰 Loading cost analysis data from backend...');
 
@@ -823,11 +808,6 @@ export default function ReportsPage() {
         }
       } catch (error) {
         console.error('❌ Error loading cost analysis data:', error);
-        setCostError(
-          error instanceof Error
-            ? error.message
-            : 'Failed to load cost analysis data'
-        );
       } finally {
         setCostLoading(false);
       }
@@ -839,7 +819,6 @@ export default function ReportsPage() {
   useEffect(() => {
     const loadProfitabilityAnalysis = async () => {
       setProfitabilityLoading(true);
-      setProfitabilityError(null);
       try {
         console.log('💰 Loading profitability analysis data from backend...');
 
@@ -867,11 +846,6 @@ export default function ReportsPage() {
         }
       } catch (error) {
         console.error('❌ Error loading profitability analysis data:', error);
-        setProfitabilityError(
-          error instanceof Error
-            ? error.message
-            : 'Failed to load profitability analysis data'
-        );
       } finally {
         setProfitabilityLoading(false);
       }
@@ -883,7 +857,6 @@ export default function ReportsPage() {
   useEffect(() => {
     const loadOperationalCostAnalysis = async () => {
       setOperationalLoading(true);
-      setOperationalError(null);
       try {
         console.log(
           '🚚 Loading operational cost analysis data from backend...'
@@ -912,11 +885,6 @@ export default function ReportsPage() {
         console.error(
           '❌ Error loading operational cost analysis data:',
           error
-        );
-        setOperationalError(
-          error instanceof Error
-            ? error.message
-            : 'Failed to load operational cost analysis data'
         );
       } finally {
         setOperationalLoading(false);

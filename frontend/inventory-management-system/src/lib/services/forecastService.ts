@@ -47,7 +47,7 @@ export const forecastService = {
         ttl: cacheTTL,
       });
       return rawData;
-    } catch (error) {
+    } catch {
       throw new Error('Failed to fetch forecast - backend not available');
     }
   },
@@ -62,7 +62,6 @@ export const forecastService = {
 
   // Clear all cache
   clearAllCache(): void {
-    const size = forecastCache.size;
     forecastCache.clear();
   },
 

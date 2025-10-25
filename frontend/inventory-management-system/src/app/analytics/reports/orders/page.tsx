@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { orderService } from '@/lib/services/orderService';
+import { orderService, type Order } from '@/lib/services/orderService';
 
 // Beautiful Icon Components
 const Icons = {
@@ -181,7 +181,7 @@ export default function OrdersReportPage() {
 
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [, setOrdersError] = useState<string | null>(null);
-  const [allOrders, setAllOrders] = useState<unknown[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
 
   // Load orders data
   useEffect(() => {
@@ -227,18 +227,22 @@ export default function OrdersReportPage() {
   const ordersKpis = useMemo(() => {
     const totalOrders = allOrders.length;
     const confirmed = allOrders.filter(
-      (o: any) => o.status === 'CONFIRMED'
+      (o: Order) => o.status === 'CONFIRMED'
     ).length;
     const processed = allOrders.filter(
-      (o: any) => o.status === 'PROCESSED'
+      (o: Order) => o.status === 'PROCESSED'
     ).length;
-    const shipped = allOrders.filter((o: any) => o.status === 'SHIPPED').length;
+    const shipped = allOrders.filter(
+      (o: Order) => o.status === 'SHIPPED'
+    ).length;
     const cancelled = allOrders.filter(
-      (o: any) => o.status === 'CANCELLED'
+      (o: Order) => o.status === 'CANCELLED'
     ).length;
-    const pending = allOrders.filter((o: any) => o.status === 'PENDING').length;
+    const pending = allOrders.filter(
+      (o: Order) => o.status === 'PENDING'
+    ).length;
     const totalRevenue = allOrders.reduce(
-      (sum, o: any) => sum + (o.totalAmount || 0),
+      (sum, o: Order) => sum + (o.totalAmount || 0),
       0
     );
     const avgOrderValue =
@@ -258,7 +262,7 @@ export default function OrdersReportPage() {
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    allOrders.forEach((order: any) => {
+    allOrders.forEach((order: Order) => {
       counts[order.status] = (counts[order.status] || 0) + 1;
     });
     return counts;
@@ -271,8 +275,8 @@ export default function OrdersReportPage() {
   const filteredOrders = useMemo(() => {
     const from = new Date(dateFrom).getTime();
     const to = new Date(dateTo).getTime();
-    return allOrders.filter((order: any) => {
-      const orderDate = new Date(order.createdAt).getTime();
+    return allOrders.filter((order: Order) => {
+      const orderDate = new Date(order.createdAt || order.orderDate).getTime();
       return (
         (!Number.isNaN(from) ? orderDate >= from : true) &&
         (!Number.isNaN(to) ? orderDate <= to : true)
@@ -528,7 +532,7 @@ export default function OrdersReportPage() {
                   </tr>
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200'>
-                  {(ordersLoading ? [] : filteredOrders).map((order: any) => (
+                  {(ordersLoading ? [] : filteredOrders).map(order => (
                     <tr key={order.orderId} className='hover:bg-muted/30'>
                       <td className='px-6 py-4 text-sm font-medium'>
                         {order.orderId}
@@ -559,7 +563,7 @@ export default function OrdersReportPage() {
                         ${order.totalAmount?.toFixed(2) || '0.00'}
                       </td>
                       <td className='px-6 py-4 text-sm'>
-                        {order.items?.length || 0}
+                        {(order as { items?: unknown[] }).items?.length || 0}
                       </td>
                       <td className='px-6 py-4 text-sm'>
                         {new Date(order.createdAt).toLocaleDateString()}

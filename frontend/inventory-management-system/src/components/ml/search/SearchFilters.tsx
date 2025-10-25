@@ -32,8 +32,8 @@ import { format } from 'date-fns';
 
 interface SearchFiltersProps {
   facets: { [key: string]: Array<{ value: string; count: number }> };
-  onFiltersChange: (filters: any) => void;
-  currentFilters: any;
+  onFiltersChange: (filters: Record<string, unknown>) => void;
+  currentFilters: Record<string, unknown>;
 }
 
 export default function SearchFilters({
@@ -44,7 +44,7 @@ export default function SearchFilters({
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({});
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: unknown) => {
     const newFilters = { ...currentFilters, [key]: value };
     onFiltersChange(newFilters);
   };
@@ -104,7 +104,7 @@ export default function SearchFilters({
             Entity Type
           </label>
           <Select
-            value={currentFilters.entityType || 'all'}
+            value={String(currentFilters.entityType || 'all')}
             onValueChange={value =>
               handleFilterChange(
                 'entityType',
@@ -152,7 +152,7 @@ export default function SearchFilters({
               Category
             </label>
             <Select
-              value={currentFilters.category || 'all'}
+              value={String(currentFilters.category || 'all')}
               onValueChange={value =>
                 handleFilterChange(
                   'category',
@@ -219,7 +219,7 @@ export default function SearchFilters({
               Stock Status
             </label>
             <Select
-              value={currentFilters.stockStatus || 'all'}
+              value={String(currentFilters.stockStatus || 'all')}
               onValueChange={value =>
                 handleFilterChange(
                   'stockStatus',
@@ -330,7 +330,8 @@ export default function SearchFilters({
                   typeof value === 'object' &&
                   value !== null
                 ) {
-                  displayValue = `${(value as any).start} to ${(value as any).end}`;
+                  const rangeValue = value as Record<string, unknown>;
+                  displayValue = `${rangeValue.start} to ${rangeValue.end}`;
                 }
 
                 return (

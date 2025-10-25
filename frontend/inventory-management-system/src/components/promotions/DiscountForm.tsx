@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -195,7 +195,7 @@ export default function DiscountForm({
         }));
 
       setSelectedProducts(convertedProducts);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load associated products.');
     }
   };
@@ -205,7 +205,7 @@ export default function DiscountForm({
       setLoadingProducts(true);
       const productList = await discountService.getAllProducts();
       setProducts(productList);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load products. Please try again.');
     } finally {
       setLoadingProducts(false);
@@ -282,7 +282,7 @@ export default function DiscountForm({
       );
 
       onSave();
-    } catch (error) {
+    } catch {
       toast.error(
         `Failed to ${isEditMode ? 'update' : 'create'} discount. Please try again.`
       );

@@ -10,16 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Plus,
-  Eye,
-  Edit,
-  Mail,
-  Phone,
-  MapPin,
-  User,
-  Building2,
-} from 'lucide-react';
+import { Plus, Eye, Edit, Mail, Phone, MapPin, User } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { enhancedSupplierService } from '@/lib/services/enhancedSupplierService';
@@ -99,9 +90,8 @@ function SuppliersPageContent() {
       const enhancedSuppliers =
         await enhancedSupplierService.getAllSuppliersWithUserDetails();
       setSuppliers(enhancedSuppliers);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       // Check if it's an authentication error that requires re-login
       if (
         errorMessage.includes('login') ||

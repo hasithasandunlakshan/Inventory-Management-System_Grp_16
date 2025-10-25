@@ -194,7 +194,7 @@ export default function ProductsClient({
           setTotalElements(0);
           setTotalPages(0);
         }
-      } catch (error) {
+      } catch {
         // Set empty arrays on error to prevent map errors
         setProducts([]);
         setTotalElements(0);
@@ -404,7 +404,7 @@ export default function ProductsClient({
         {searchQuery ? (
           <>
             Showing {filteredProducts.length} of {products.length} products
-            matching "{searchQuery}"
+            matching &quot;{searchQuery}&quot;
           </>
         ) : (
           <>

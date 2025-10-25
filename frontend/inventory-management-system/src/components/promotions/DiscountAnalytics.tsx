@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -82,7 +82,7 @@ export default function DiscountAnalytics({
         discount.id!
       );
       setAnalytics(data);
-    } catch (error) {
+    } catch {
       setError('Failed to load analytics data');
     } finally {
       setLoading(false);

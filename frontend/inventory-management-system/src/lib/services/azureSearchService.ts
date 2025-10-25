@@ -141,7 +141,7 @@ export class AzureSearchService {
   /**
    * Gets search health status
    */
-  public static async getHealthStatus(): Promise<any> {
+  public static async getHealthStatus(): Promise<Record<string, unknown>> {
     try {
       const response = await fetch(
         `${this.API_BASE_URL}${this.SEARCH_ENDPOINT}`

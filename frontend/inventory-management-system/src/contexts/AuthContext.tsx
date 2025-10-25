@@ -104,7 +104,7 @@ export function AuthProvider({
               setUser(null);
               setIsAuthenticated(false);
             }
-          } catch (error) {
+          } catch {
             // Network error - could be temporary, but clear auth for safety
             authService.logout();
             setUser(null);
@@ -115,7 +115,7 @@ export function AuthProvider({
           setUser(null);
           setIsAuthenticated(false);
         }
-      } catch (error) {
+      } catch {
         // Clear everything on unexpected errors
         authService.logout();
         setUser(null);
@@ -226,7 +226,7 @@ export function AuthProvider({
         setUser(null);
         setIsAuthenticated(false);
       }
-    } catch (error) {
+    } catch {
       authService.logout();
       setUser(null);
       setIsAuthenticated(false);

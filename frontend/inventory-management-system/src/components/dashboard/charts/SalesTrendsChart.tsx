@@ -47,7 +47,7 @@ export default function SalesTrendsChart() {
           else if (change < -5) setTrend('down');
           else setTrend('stable');
         }
-      } catch (error) {
+      } catch {
       } finally {
         setLoading(false);
       }

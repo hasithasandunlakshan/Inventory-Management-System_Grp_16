@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { orderService } from '@/lib/services/orderService';
+import { orderService, type Order } from '@/lib/services/orderService';
 import { revenueService } from '@/lib/services/revenueService';
 import type {
   TodayRevenueResponse,
@@ -187,8 +187,8 @@ export default function SalesReportPage() {
 
   const [salesLoading, setSalesLoading] = useState(true);
   const [, setSalesError] = useState<string | null>(null);
-  const [recentOrders, setRecentOrders] = useState<unknown[]>([]);
-  const [allOrders, setAllOrders] = useState<unknown[]>([]);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [todayRevenue, setTodayRevenue] = useState<TodayRevenueResponse | null>(
     null
   );
@@ -266,19 +266,19 @@ export default function SalesReportPage() {
   const salesKpis = useMemo(() => {
     const totalOrders = allOrders.length;
     const confirmed = allOrders.filter(
-      (o: any) => o.status === 'CONFIRMED'
+      (o: Order) => o.status === 'CONFIRMED'
     ).length;
     const processed = allOrders.filter(
-      (o: any) => o.status === 'PROCESSED'
+      (o: Order) => o.status === 'PROCESSED'
     ).length;
     const refunds = allOrders.filter(
-      (o: any) => o.status === 'REFUNDED'
+      (o: Order) => o.status === 'CANCELLED'
     ).length;
     const todaysRevenue = todayRevenue?.revenue || 0;
     const aov =
       totalOrders > 0
         ? (allOrders.reduce(
-            (sum, o: any) => sum + (o.totalAmount || 0),
+            (sum, o: Order) => sum + (o.totalAmount || 0),
             0
           ) as number) / totalOrders
         : 0;
@@ -295,7 +295,7 @@ export default function SalesReportPage() {
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    allOrders.forEach((order: any) => {
+    allOrders.forEach((order: Order) => {
       counts[order.status] = (counts[order.status] || 0) + 1;
     });
     return counts;
@@ -563,7 +563,7 @@ export default function SalesReportPage() {
                   </tr>
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200'>
-                  {(salesLoading ? [] : recentOrders).map((order: any) => (
+                  {(salesLoading ? [] : recentOrders).map((order: Order) => (
                     <tr key={order.orderId} className='hover:bg-muted/30'>
                       <td className='px-6 py-4 text-sm font-medium'>
                         {order.orderId}
@@ -592,7 +592,9 @@ export default function SalesReportPage() {
                         ${order.totalAmount?.toFixed(2) || '0.00'}
                       </td>
                       <td className='px-6 py-4 text-sm'>
-                        {new Date(order.createdAt).toLocaleDateString()}
+                        {order.createdAt
+                          ? new Date(order.createdAt).toLocaleDateString()
+                          : 'N/A'}
                       </td>
                     </tr>
                   ))}

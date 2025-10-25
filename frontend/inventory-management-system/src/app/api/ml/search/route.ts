@@ -21,13 +21,13 @@ interface SearchResult {
   entityType: string;
   name: string;
   description: string;
-  category?: string;
-  price?: number;
-  stockLevel?: number;
-  stockStatus?: string;
-  supplier?: string;
+  category: string;
+  price: number;
+  stockLevel: number;
+  stockStatus: string;
+  supplier: string;
   score: number;
-  highlights?: { [key: string]: string[] };
+  highlights: Record<string, string[]> | Record<string, never>;
 }
 
 interface SearchResponse {
@@ -144,13 +144,13 @@ export async function GET(): Promise<NextResponse> {
  */
 function buildSearchQuery(
   query: string,
-  filters?: any,
+  filters?: Record<string, unknown>,
   facets?: string[],
   top: number = 20,
   skip: number = 0,
   orderBy?: string
-): any {
-  const searchQuery: any = {
+): Record<string, unknown> {
+  const searchQuery: Record<string, unknown> = {
     search: query || '*',
     top,
     skip,
@@ -181,7 +181,8 @@ function buildSearchQuery(
     }
 
     if (filters.priceRange) {
-      const { min, max } = filters.priceRange;
+      const priceRange = filters.priceRange as { min: number; max: number };
+      const { min, max } = priceRange;
       filterExpressions.push(`price ge ${min} and price le ${max}`);
     }
 
@@ -194,7 +195,8 @@ function buildSearchQuery(
     }
 
     if (filters.dateRange) {
-      const { start, end } = filters.dateRange;
+      const dateRange = filters.dateRange as { start: string; end: string };
+      const { start, end } = dateRange;
       filterExpressions.push(
         `createdDate ge ${start} and createdDate le ${end}`
       );
@@ -211,29 +213,35 @@ function buildSearchQuery(
 /**
  * Processes Azure Search results into our format
  */
-function processSearchResults(searchResults: any): SearchResponse {
+function processSearchResults(
+  searchResults: Record<string, unknown>
+): SearchResponse {
   const results: SearchResult[] =
-    searchResults.value?.map((item: any) => ({
-      id: item.id,
-      entityType: item.entityType,
-      name: item.name,
-      description: item.description,
-      category: item.category,
-      price: item.price,
-      stockLevel: item.stockLevel,
-      stockStatus: item.stockStatus,
-      supplier: item.supplier,
-      score: item['@search.score'],
-      highlights: item['@search.highlights'],
+    (searchResults.value as Array<Record<string, unknown>>)?.map(item => ({
+      id: String(item.id || ''),
+      entityType: String(item.entityType || ''),
+      name: String(item.name || ''),
+      description: String(item.description || ''),
+      category: String(item.category || ''),
+      price: Number(item.price || 0),
+      stockLevel: Number(item.stockLevel || 0),
+      stockStatus: String(item.stockStatus || ''),
+      supplier: String(item.supplier || ''),
+      score: Number(item['@search.score'] || 0),
+      highlights:
+        (item['@search.highlights'] as Record<string, string[]>) || {},
     })) || [];
 
   const facets: { [key: string]: Array<{ value: string; count: number }> } = {};
 
-  if (searchResults['@search.facets']) {
-    Object.entries(searchResults['@search.facets']).forEach(([key, value]) => {
-      facets[key] = (value as any[]).map((facet: any) => ({
-        value: facet.value,
-        count: facet.count,
+  const searchFacets = searchResults['@search.facets'] as
+    | Record<string, unknown>
+    | undefined;
+  if (searchFacets) {
+    Object.entries(searchFacets).forEach(([key, value]) => {
+      facets[key] = (value as Array<Record<string, unknown>>).map(facet => ({
+        value: facet.value as string,
+        count: facet.count as number,
       }));
     });
   }
@@ -241,7 +249,7 @@ function processSearchResults(searchResults: any): SearchResponse {
   return {
     results,
     facets,
-    totalCount: searchResults['@odata.count'] || results.length,
-    searchTime: searchResults['@search.time'] || 0,
+    totalCount: (searchResults['@odata.count'] as number) || results.length,
+    searchTime: (searchResults['@search.time'] as number) || 0,
   };
 }

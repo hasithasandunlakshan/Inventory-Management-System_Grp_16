@@ -2,8 +2,6 @@
 import { authService } from './authService';
 
 // Use environment variables for service URLs
-const API_GATEWAY_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL || 'http://localhost:8090';
 const RESOURCE_SERVICE_URL =
   process.env.NEXT_PUBLIC_RESOURCE_SERVICE_URL || 'http://localhost:8086';
 const ORDER_SERVICE_URL =
@@ -290,10 +288,7 @@ class LogisticsService {
   }
 
   // Comprehensive Logistics Metrics
-  async getLogisticsMetrics(
-    dateFrom?: string,
-    dateTo?: string
-  ): Promise<LogisticsMetrics> {
+  async getLogisticsMetrics(): Promise<LogisticsMetrics> {
     try {
       // Use Promise.allSettled to handle failures gracefully
       // Prioritize Resource Service data (drivers/vehicles/assignments) as they're more reliable

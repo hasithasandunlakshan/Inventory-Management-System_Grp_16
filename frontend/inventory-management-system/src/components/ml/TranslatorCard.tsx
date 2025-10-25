@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -22,7 +21,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Languages,
   Loader2,
-  CheckCircle,
   AlertTriangle,
   Copy,
   RefreshCw,

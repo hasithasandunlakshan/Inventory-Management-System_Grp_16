@@ -432,33 +432,35 @@ export default function DocumentIntelligencePage() {
               </CardHeader>
               <CardContent>
                 <div className='space-y-3 max-h-96 overflow-y-auto'>
-                  {translations
+                  {(translations as Array<Record<string, unknown>>)
                     .slice(-5)
                     .reverse()
-                    .map((translation: any, index) => (
+                    .map((translation, index: number) => (
                       <div
                         key={index}
                         className='p-3 bg-gray-50 rounded border'
                       >
                         <div className='flex items-center justify-between mb-2'>
                           <Badge variant='outline'>
-                            {translation.source_language} →{' '}
-                            {translation.target_language}
+                            {String(translation.source_language || '')} →{' '}
+                            {String(translation.target_language || '')}
                           </Badge>
                           <span className='text-xs text-gray-500'>
-                            {new Date(
-                              translation.timestamp
-                            ).toLocaleTimeString()}
+                            {translation.timestamp
+                              ? new Date(
+                                  String(translation.timestamp)
+                                ).toLocaleTimeString()
+                              : ''}
                           </span>
                         </div>
                         <div className='space-y-1'>
                           <p className='text-sm text-gray-700'>
                             <strong>Original:</strong>{' '}
-                            {translation.original_text}
+                            {String(translation.original_text || '')}
                           </p>
                           <p className='text-sm text-gray-900 font-medium'>
                             <strong>Translated:</strong>{' '}
-                            {translation.translated_text}
+                            {String(translation.translated_text || '')}
                           </p>
                         </div>
                       </div>

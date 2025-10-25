@@ -328,7 +328,6 @@ function ShippingPage() {
   const [realOrders, setRealOrders] = useState<ShippingOrder[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);
-  const [usingDummyData, setUsingDummyData] = useState(false);
   const [drivers, setDrivers] = useState<DriverWithVehicle[]>([]);
   const [isLoadingDrivers, setIsLoadingDrivers] = useState(true);
   const [showDriverDialog, setShowDriverDialog] = useState(false);
@@ -363,7 +362,7 @@ function ShippingPage() {
 
   // Convert real order data to shipping order format
   const convertToShippingOrders = (orders: Order[]): ShippingOrder[] => {
-    return orders.map((order, index) => {
+    return orders.map(order => {
       // Use real customer address from the order data
       let lat = 6.9271; // Default to Colombo coordinates
       let lng = 79.8612;
@@ -446,7 +445,6 @@ function ShippingPage() {
       if (!token) {
         setOrdersError('Please log in to view orders.');
         setRealOrders([]);
-        setUsingDummyData(false);
         return;
       }
 
@@ -457,18 +455,15 @@ function ShippingPage() {
 
         // Force state update with a new array reference
         setRealOrders([...shippingOrders]);
-        setUsingDummyData(false);
       } else {
         setOrdersError(response.message || 'No orders found in database.');
         setRealOrders([]);
-        setUsingDummyData(false);
       }
     } catch (error) {
       setOrdersError(
         `Failed to load orders: ${error instanceof Error ? error.message : String(error)}`
       );
       setRealOrders([]);
-      setUsingDummyData(false);
     } finally {
       if (showLoadingState) {
         setIsLoadingOrders(false);

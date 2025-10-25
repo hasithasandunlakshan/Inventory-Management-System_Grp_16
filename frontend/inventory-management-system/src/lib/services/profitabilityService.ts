@@ -1,5 +1,3 @@
-import { createAuthenticatedRequestOptions } from '../utils/auth/authUtils';
-
 // Profitability Analysis Service
 const ORDER_SERVICE_URL =
   process.env.NEXT_PUBLIC_ORDER_SERVICE_URL || 'http://localhost:8084';
@@ -286,7 +284,7 @@ export const profitabilityService = {
         try {
           const assignments = await assignmentsRes.value.json();
           deliveryCosts = assignments.data?.length * 50 || 0; // $50 per delivery estimate
-        } catch (e) {
+        } catch {
           console.warn('Failed to parse assignments data, using fallback');
           deliveryCosts = 500; // Fallback estimate
         }
@@ -296,7 +294,7 @@ export const profitabilityService = {
         try {
           const vehicles = await vehiclesRes.value.json();
           vehicleCosts = vehicles.data?.length * 200 || 0; // $200 per vehicle per month
-        } catch (e) {
+        } catch {
           console.warn('Failed to parse vehicles data, using fallback');
           vehicleCosts = 1000; // Fallback estimate
         }
@@ -306,7 +304,7 @@ export const profitabilityService = {
         try {
           const drivers = await driversRes.value.json();
           driverCosts = drivers.data?.length * 300 || 0; // $300 per driver per month
-        } catch (e) {
+        } catch {
           console.warn('Failed to parse drivers data, using fallback');
           driverCosts = 1500; // Fallback estimate
         }
@@ -384,7 +382,7 @@ export const profitabilityService = {
         try {
           const revenueData = await revenueRes.value.json();
           totalRevenue = revenueData.totalRevenue || 0;
-        } catch (e) {
+        } catch {
           console.warn('Failed to parse revenue data, using fallback');
           totalRevenue = 100000; // Fallback
         }
@@ -399,7 +397,7 @@ export const profitabilityService = {
           totalUsers = Array.isArray(usersData)
             ? usersData.length
             : usersData.totalUsers || 10;
-        } catch (e) {
+        } catch {
           console.warn('Failed to parse users data, using fallback');
           totalUsers = 10; // Fallback
         }
@@ -412,7 +410,7 @@ export const profitabilityService = {
         try {
           const ordersData = await ordersRes.value.json();
           totalOrders = ordersData.orders?.length || 0;
-        } catch (e) {
+        } catch {
           console.warn('Failed to parse orders data, using fallback');
           totalOrders = 50; // Fallback
         }
@@ -425,7 +423,7 @@ export const profitabilityService = {
         try {
           const inventoryData = await inventoryRes.value.json();
           totalInventoryCost = inventoryData.totalAvailableInventoryCost || 0;
-        } catch (e) {
+        } catch {
           console.warn('Failed to parse inventory data, using fallback');
           totalInventoryCost = 50000; // Fallback
         }
@@ -438,7 +436,7 @@ export const profitabilityService = {
         try {
           const assignmentsData = await assignmentsRes.value.json();
           totalAssignments = assignmentsData.data?.length || 0;
-        } catch (e) {
+        } catch {
           console.warn('Failed to parse assignments data, using fallback');
           totalAssignments = 20; // Fallback
         }

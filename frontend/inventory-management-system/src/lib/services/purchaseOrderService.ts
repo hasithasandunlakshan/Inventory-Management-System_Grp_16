@@ -702,7 +702,7 @@ export const purchaseOrderService = {
       );
 
       if (!response.ok) {
-        const errorText = await response.text();
+        await response.text();
         throw new Error(
           `Failed to update purchase order status: ${response.status} ${response.statusText}`
         );

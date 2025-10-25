@@ -48,7 +48,7 @@ export default function RevenueDashboard() {
       setTodayRevenue(todayData);
       setMonthlyRevenue(monthlyData);
       setStripeStats(stripeData);
-    } catch (error) {
+    } catch {
       setError('Failed to load revenue data. Please try again.');
     } finally {
       setLoading(false);

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +24,6 @@ import {
   Car,
   Truck,
   Plus,
-  Eye,
   Search,
   AlertTriangle,
   Wrench,
@@ -76,6 +74,7 @@ export default function VehiclesClient({
     if (vehicles.length === 0) {
       loadVehicles();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadVehicles = async () => {
@@ -94,7 +93,7 @@ export default function VehiclesClient({
       if (availableVehiclesResponse.success && availableVehiclesResponse.data) {
         setAvailableVehicles(availableVehiclesResponse.data);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load vehicles');
     } finally {
       setLoading(false);
@@ -124,38 +123,8 @@ export default function VehiclesClient({
       } else {
         toast.error(response.message || 'Failed to register vehicle');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to register vehicle');
-    }
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'AVAILABLE':
-        return 'default';
-      case 'ASSIGNED':
-        return 'secondary';
-      case 'MAINTENANCE':
-        return 'destructive';
-      case 'OUT_OF_SERVICE':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
-  };
-
-  const getVehicleIcon = (type: string) => {
-    switch (type) {
-      case 'TRUCK':
-        return <Truck className='h-5 w-5' />;
-      case 'VAN':
-        return <Car className='h-5 w-5' />;
-      case 'MOTORCYCLE':
-        return <Car className='h-5 w-5' />;
-      case 'CAR':
-        return <Car className='h-5 w-5' />;
-      default:
-        return <Car className='h-5 w-5' />;
     }
   };
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -29,11 +28,8 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  Upload,
   Download,
-  RefreshCw,
   BookOpen,
-  Eye,
   Copy,
 } from 'lucide-react';
 import { translatorService } from '@/lib/services/translatorService';
@@ -45,8 +41,8 @@ interface DocumentTranslationResult {
   target_language: string;
   created_date_time?: string;
   last_action_date_time?: string;
-  summary?: any;
-  results?: any[];
+  summary?: Record<string, unknown>;
+  results?: unknown[];
   metadata: {
     timestamp: string;
     service: string;
@@ -107,13 +103,8 @@ export default function DocumentTranslatorCard({
   const [currentOperation, setCurrentOperation] =
     useState<DocumentTranslationResult | null>(null);
   const [operationStatus, setOperationStatus] = useState<string | null>(null);
-  const [translationJobs, setTranslationJobs] = useState<any[]>([]);
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
-  const [jobDocuments, setJobDocuments] = useState<any[]>([]);
-  const [isLoadingJobs, setIsLoadingJobs] = useState(false);
   const [pdfTranslationResult, setPdfTranslationResult] =
     useState<PDFTranslationResult | null>(null);
-  const [usePdfTranslation, setUsePdfTranslation] = useState(true);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -135,7 +126,7 @@ export default function DocumentTranslatorCard({
 
     try {
       // Check if it's a PDF and use PDF translation
-      if (usePdfTranslation && selectedFile.type === 'application/pdf') {
+      if (selectedFile.type === 'application/pdf') {
         const result = await translatorService.translatePDFDocument(
           selectedFile,
           targetLanguage,
@@ -152,15 +143,16 @@ export default function DocumentTranslatorCard({
           sourceLanguage !== 'auto' ? sourceLanguage : undefined
         );
 
-        setCurrentOperation(result);
-        setOperationStatus(result.status);
+        const typedResult = result as unknown as DocumentTranslationResult;
+        setCurrentOperation(typedResult);
+        setOperationStatus(typedResult.status as string | null);
 
-        if (result.status === 'accepted') {
+        if (typedResult.status === 'accepted') {
           // Start polling for status updates
-          pollTranslationStatus(result.operation_id);
+          pollTranslationStatus(typedResult.operation_id);
         }
 
-        onTranslationComplete(result);
+        onTranslationComplete(typedResult);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Translation failed');
@@ -177,13 +169,15 @@ export default function DocumentTranslatorCard({
       try {
         const statusResult =
           await translatorService.checkDocumentTranslationStatus(operationId);
-        setOperationStatus(statusResult.status);
+        const typedStatus =
+          statusResult as unknown as DocumentTranslationResult;
+        setOperationStatus(typedStatus.status as string | null);
 
         if (
-          statusResult.status === 'Succeeded' ||
-          statusResult.status === 'Failed'
+          typedStatus.status === 'Succeeded' ||
+          typedStatus.status === 'Failed'
         ) {
-          setCurrentOperation(statusResult);
+          setCurrentOperation(typedStatus);
           return; // Stop polling
         }
 
@@ -229,39 +223,6 @@ export default function DocumentTranslatorCard({
         return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const loadTranslationJobs = async () => {
-    setIsLoadingJobs(true);
-    try {
-      const result = await translatorService.getAllTranslationJobs();
-      setTranslationJobs(result.jobs);
-    } catch (err) {
-      setError('Failed to load translation jobs');
-    } finally {
-      setIsLoadingJobs(false);
-    }
-  };
-
-  const loadJobDocuments = async (jobId: string) => {
-    try {
-      const result = await translatorService.getJobDocumentsStatus(jobId);
-      setJobDocuments(result.documents);
-      setSelectedJob(jobId);
-    } catch (err) {
-      setError('Failed to load job documents');
-    }
-  };
-
-  const refreshJobStatus = async (jobId: string) => {
-    try {
-      const result = await translatorService.getTranslationJobStatus(jobId);
-      setTranslationJobs(prev =>
-        prev.map(job => (job.id === jobId ? { ...job, ...result } : job))
-      );
-    } catch (err) {
-      setError('Failed to refresh job status');
     }
   };
 
@@ -422,10 +383,16 @@ export default function DocumentTranslatorCard({
                   <div className='text-sm'>
                     <strong>Results:</strong>
                     <div className='mt-2 space-y-2'>
-                      {currentOperation.results.map((result, index) => (
+                      {(
+                        currentOperation.results as Array<
+                          Record<string, unknown>
+                        >
+                      ).map((result, index: number) => (
                         <div key={index} className='p-2 bg-gray-50 rounded'>
-                          <div className='font-medium'>{result.status}</div>
-                          {result.path && (
+                          <div className='font-medium'>
+                            {String(result.status || 'Unknown')}
+                          </div>
+                          {typeof result.path === 'string' && result.path && (
                             <div className='text-xs text-gray-600'>
                               Path: {result.path}
                             </div>
@@ -517,17 +484,17 @@ export default function DocumentTranslatorCard({
                 <TabsContent value='pages' className='space-y-4'>
                   <div className='space-y-4 max-h-96 overflow-y-auto'>
                     {pdfTranslationResult.pages.map(
-                      (page: any, index: number) => (
+                      (page: Record<string, unknown>, index: number) => (
                         <div
                           key={index}
                           className='border rounded-lg p-4 space-y-3'
                         >
                           <div className='flex items-center justify-between'>
                             <Badge variant='outline'>
-                              Page {page.page_number}
+                              Page {String(page.page_number || '')}
                             </Badge>
                             <span className='text-sm text-gray-500'>
-                              {page.character_count} characters
+                              {String(page.character_count || 0)} characters
                             </span>
                           </div>
 
@@ -537,7 +504,7 @@ export default function DocumentTranslatorCard({
                                 Original Text
                               </Label>
                               <Textarea
-                                value={page.original_text}
+                                value={String(page.original_text || '')}
                                 readOnly
                                 className='min-h-[100px] text-sm'
                                 placeholder='Original text...'
@@ -548,7 +515,7 @@ export default function DocumentTranslatorCard({
                                 Translated Text
                               </Label>
                               <Textarea
-                                value={page.translated_text}
+                                value={String(page.translated_text || '')}
                                 readOnly
                                 className='min-h-[100px] text-sm'
                                 placeholder='Translated text...'

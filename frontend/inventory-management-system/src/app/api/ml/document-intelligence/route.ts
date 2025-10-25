@@ -14,23 +14,6 @@ interface DocumentAnalysisRequest {
   };
 }
 
-interface DocumentAnalysisResult {
-  success: boolean;
-  data?: {
-    text?: string;
-    tables?: Array<{
-      headers: string[];
-      rows: string[][];
-    }>;
-    keyValuePairs?: Array<{
-      key: string;
-      value: string;
-      confidence: number;
-    }>;
-  };
-  error?: string;
-}
-
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Get Azure configuration from environment variables
@@ -180,7 +163,7 @@ export async function GET(): Promise<NextResponse> {
 async function pollForResults(
   operationLocation: string,
   apiKey: string
-): Promise<any> {
+): Promise<Record<string, unknown>> {
   const maxAttempts = 30; // 30 seconds max
   const pollInterval = 1000; // 1 second
 
@@ -215,43 +198,57 @@ async function pollForResults(
 /**
  * Extracts structured data from Azure analysis result
  */
-function extractStructuredData(result: any, options: any): any {
-  const extractedData: any = {};
+function extractStructuredData(
+  result: Record<string, unknown>,
+  options: Record<string, unknown>
+): Record<string, unknown> {
+  const extractedData: Record<string, unknown> = {};
 
   try {
     // Extract text content
-    if (options.extractText !== false && result.analyzeResult?.content) {
-      extractedData.text = result.analyzeResult.content;
+    const analyzeResult = result.analyzeResult as Record<string, unknown>;
+    if (options.extractText !== false && analyzeResult?.content) {
+      extractedData.text = String(analyzeResult.content);
     }
 
     // Extract tables
-    if (options.extractTables !== false && result.analyzeResult?.tables) {
-      extractedData.tables = result.analyzeResult.tables.map((table: any) => ({
-        headers: table.cells
-          .filter((cell: any) => cell.rowIndex === 0)
-          .map((cell: any) => cell.content),
-        rows: extractTableRows(table.cells),
-      }));
+    if (options.extractTables !== false && analyzeResult?.tables) {
+      const tables = analyzeResult.tables as Array<Record<string, unknown>>;
+      extractedData.tables = tables.map(table => {
+        const cells = table.cells as Array<Record<string, unknown>>;
+        return {
+          headers: cells
+            .filter(cell => (cell.rowIndex as number) === 0)
+            .map(cell => cell.content as string),
+          rows: extractTableRows(cells),
+        };
+      });
     }
 
     // Extract key-value pairs
     if (
       options.extractKeyValuePairs !== false &&
-      result.analyzeResult?.keyValuePairs
+      analyzeResult?.keyValuePairs
     ) {
-      extractedData.keyValuePairs = result.analyzeResult.keyValuePairs.map(
-        (kvp: any) => ({
-          key: kvp.key?.content || '',
-          value: kvp.value?.content || '',
-          confidence: kvp.confidence || 0,
-        })
-      );
+      const kvps = analyzeResult.keyValuePairs as Array<
+        Record<string, unknown>
+      >;
+      extractedData.keyValuePairs = kvps.map(kvp => {
+        const key = kvp.key as Record<string, unknown> | undefined;
+        const value = kvp.value as Record<string, unknown> | undefined;
+        return {
+          key: (key?.content as string) || '',
+          value: (value?.content as string) || '',
+          confidence: (kvp.confidence as number) || 0,
+        };
+      });
     }
   } catch (error) {
     console.error('Error extracting structured data:', error);
     // Return basic text if available
-    if (result.analyzeResult?.content) {
-      extractedData.text = result.analyzeResult.content;
+    const analyzeResult = result.analyzeResult as Record<string, unknown>;
+    if (analyzeResult?.content) {
+      extractedData.text = String(analyzeResult.content);
     }
   }
 
@@ -261,16 +258,16 @@ function extractStructuredData(result: any, options: any): any {
 /**
  * Extracts table rows from Azure table cells
  */
-function extractTableRows(cells: any[]): string[][] {
-  const maxRow = Math.max(...cells.map(cell => cell.rowIndex));
+function extractTableRows(cells: Array<Record<string, unknown>>): string[][] {
+  const maxRow = Math.max(...cells.map(cell => cell.rowIndex as number));
   const rows: string[][] = [];
 
   for (let rowIndex = 0; rowIndex <= maxRow; rowIndex++) {
     const rowCells = cells
-      .filter(cell => cell.rowIndex === rowIndex)
-      .sort((a, b) => a.columnIndex - b.columnIndex);
+      .filter(cell => (cell.rowIndex as number) === rowIndex)
+      .sort((a, b) => (a.columnIndex as number) - (b.columnIndex as number));
 
-    rows.push(rowCells.map(cell => cell.content));
+    rows.push(rowCells.map(cell => cell.content as string));
   }
 
   return rows;

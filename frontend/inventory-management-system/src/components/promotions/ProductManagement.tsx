@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +42,7 @@ export default function ProductManagement({
       setLoading(true);
       const productList = await discountService.getAllProducts();
       setProducts(productList);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load products. Please try again.');
     } finally {
       setLoading(false);
@@ -69,7 +69,7 @@ export default function ProductManagement({
       toast.success(`${selectedProducts.length} products added to discount.`);
 
       onClose();
-    } catch (error) {
+    } catch {
       toast.error('Failed to add products to discount. Please try again.');
     } finally {
       setSaving(false);
@@ -89,7 +89,7 @@ export default function ProductManagement({
       );
 
       setSelectedProducts([]);
-    } catch (error) {
+    } catch {
       toast.error('Failed to remove products from discount. Please try again.');
     } finally {
       setSaving(false);
@@ -272,7 +272,7 @@ export default function ProductManagement({
                       {isSelected && (
                         <div className='flex items-center justify-center mt-2'>
                           <Badge className='bg-blue-500 text-white'>
-                            ✓ Selected
+                            âœ“ Selected
                           </Badge>
                         </div>
                       )}

@@ -53,7 +53,7 @@ export const enhancedSupplierService = {
                 profileImageUrl: userDetails.profileImageUrl || undefined,
               },
             };
-          } catch (error) {
+          } catch {
             // Return supplier without user details if user fetch fails
             return {
               ...supplier,
@@ -71,7 +71,7 @@ export const enhancedSupplierService = {
           .map(result => result.value)
       );
       return enhancedSuppliers;
-    } catch (error) {
+    } catch {
       throw new Error(
         'Failed to fetch suppliers with user details - backend not available'
       );
@@ -104,7 +104,7 @@ export const enhancedSupplierService = {
             profileImageUrl: userDetails.profileImageUrl || undefined,
           },
         };
-      } catch (userError) {
+      } catch {
         // Return supplier without user details if user fetch fails
         return {
           ...supplier,
