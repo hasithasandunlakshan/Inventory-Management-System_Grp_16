@@ -120,12 +120,10 @@ class SupplierService {
         '🏭 Fetching suppliers directly from supplier service:',
         `${this.baseUrl}/api/suppliers`
       );
-      const response = await fetch(`${this.baseUrl}/api/suppliers`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/suppliers`,
+        createAuthenticatedRequestOptions('GET')
+      );
       console.log('🏭 Supplier response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
@@ -153,10 +151,10 @@ class SupplierService {
         '🏭 Creating supplier directly from supplier service:',
         `${this.baseUrl}/api/suppliers`
       );
-      const response = await fetch(`${this.baseUrl}/api/suppliers`, {
-        ...createAuthenticatedRequestOptions('POST', supplierData),
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/suppliers`,
+        createAuthenticatedRequestOptions('POST', supplierData)
+      );
       console.log('🏭 Create supplier response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
@@ -181,12 +179,10 @@ class SupplierService {
         '🏭 Fetching supplier directly from supplier service:',
         `${this.baseUrl}/api/suppliers/${id}`
       );
-      const response = await fetch(`${this.baseUrl}/api/suppliers/${id}`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/suppliers/${id}`,
+        createAuthenticatedRequestOptions('GET')
+      );
       console.log('🏭 Supplier response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
@@ -211,12 +207,10 @@ class SupplierService {
         '🏭 Fetching supplier categories directly from supplier service:',
         `${this.baseUrl}/api/supplier-categories`
       );
-      const response = await fetch(`${this.baseUrl}/api/supplier-categories`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/supplier-categories`,
+        createAuthenticatedRequestOptions('GET')
+      );
       console.log('🏭 Supplier categories response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
@@ -241,12 +235,10 @@ class SupplierService {
         '🏭 Fetching purchase orders directly from supplier service:',
         `${this.baseUrl}/api/purchase-orders`
       );
-      const response = await fetch(`${this.baseUrl}/api/purchase-orders`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/purchase-orders`,
+        createAuthenticatedRequestOptions('GET')
+      );
       console.log('🏭 Purchase orders response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
@@ -285,12 +277,10 @@ class SupplierService {
         url
       );
 
-      const response = await fetch(url, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        url,
+        createAuthenticatedRequestOptions('GET')
+      );
       console.log('🏭 Purchase order stats response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
@@ -325,12 +315,10 @@ class SupplierService {
         url
       );
 
-      const response = await fetch(url, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        url,
+        createAuthenticatedRequestOptions('GET')
+      );
       console.log('🏭 Supplier spend response status:', response.status);
       if (!response.ok) {
         const errorText = await response.text();
