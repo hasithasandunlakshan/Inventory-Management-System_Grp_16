@@ -104,13 +104,13 @@ jobs:
     - name: Run Component Tests
       working-directory: ./frontend/inventory-management-system
       run: |
-        npm run test -- --testPathPattern="components" --watchAll=false --passWithNoTests
+        npm run test -- --testPathPatterns="components" --watchAll=false --passWithNoTests
         echo "Frontend component tests completed"
         
     - name: Run Service Tests
       working-directory: ./frontend/inventory-management-system
       run: |
-        npm run test -- --testPathPattern="services" --watchAll=false --passWithNoTests
+        npm run test -- --testPathPatterns="services" --watchAll=false --passWithNoTests
         echo "Frontend service tests completed"
         
     - name: Generate Coverage Report
